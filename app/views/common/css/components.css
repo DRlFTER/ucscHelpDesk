@@ -29,7 +29,8 @@ body {
   gap: 5px;
   min-width: 300px;
   width: auto;
-  height: 300px;
+  min-height: 300px;
+  height: auto;
   background-color: #f0f0f0;
   border-radius: 10px;
 }
@@ -59,4 +60,12 @@ body {
   border-radius: 10px;
   background: var(--CTA, #8c8cf9);
   cursor: pointer;
+  transition: background-color 0.25s ease, transform 0.15s ease,
+    box-shadow 0.25s ease;
+}
+
+.btnPrimary:hover {
+  background-color: #6a6af5;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
 }
