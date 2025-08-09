@@ -9,9 +9,112 @@
     <div class="container">
       <div class="row">
         <div class="box">
-          <h4>btnPrimary btnPrimaryText</h4>
-          <div class="btnHolder">
-            <button class="btnPrimary btnPrimaryText">Submit ticket</button>
+          <h4>Form-group</h4>
+          <div class="form-elements">
+  <h2>Form Elements</h2>
+
+  <!-- Text Input -->
+  <div class="form-group">
+    <label for="name">Name</label>
+    <input type="text" id="name" placeholder="Enter your name">
+  </div>
+
+  <!-- Registration -->
+  <div class="form-group">
+    <label for="registration">Registration Number</label>
+    <input type="text" id="registration" placeholder="Enter your registration number">
+  </div>
+
+  <!-- Email Input -->
+  <div class="form-group">
+    <label for="email">Email</label>
+    <input type="email" id="email" placeholder="Enter your email">
+  </div>
+
+  <!-- Password Input -->
+  <div class="form-group">
+    <label for="password">Password</label>
+    <input type="password" id="password" placeholder="Enter your password">
+  </div>
+
+  <!-- Contact Input -->
+  <div class="form-group">
+    <label for="contact">Contact Number</label>
+    <input type="text" id="contact" placeholder="Enter your contact number">
+  </div>
+
+  <!-- Textarea -->
+  <div class="form-group">
+    <label for="message">Message</label>
+    <textarea id="message" rows="4" placeholder="Write your message here"></textarea>
+  </div>
+
+  <!-- Dropdown -->
+  <div class="form-group">
+    <label for="country">Academic Year</label>
+    <select id="dropdown">
+      <option value="">Select an academic year</option>
+      <option>1st Year</option>
+      <option>2nd Year</option>
+      <option>3rd Year</option>
+      <option>4th Year</option>
+    </select>
+  </div>
+
+ 
+
+  <!-- Radio Buttons -->
+  <div class="form-group">
+    <label>Gender</label>
+    <div class="radio-group">
+      <label><input type="radio" name="gender" value="male"> Male</label>
+      <label><input type="radio" name="gender" value="female"> Female</label>
+    </div>
+  </div>
+
+  <!-- Checkboxes -->
+  <div class="form-group">
+    <label>Request/ Inquiry type</label>
+    <select id="dropdown_prob">
+      <option value="">Select an issue type</option>
+      <option>Technical Support</option>
+      <option>Administrative Request</option>
+      <option>Academic Support</option>
+      <option>General Inquiry</option>
+      <option>Complaint / Feedback</option>
+  
+    </select>
+  </div>
+
+  <!-- Select Division -->
+  <div class="form-group"> 
+    <label for="division">Relevant Division</label>
+    <select id="division">
+      <option value="">Select a division</option>
+      <option>Administration Division</option>
+      <option>Examination & Registration Division</option>
+      <option>Network Operations Center (NOC)</option>
+      <option>Library Services</option>
+      <option>Technical Support Division</option>
+      <option>Student Counseling & Welfare</option>
+      <option>Academic Coordination Division</option>
+      <option>Other</option>
+    </select>
+  </div>
+
+<!-- File Input -->
+  <div class="form-group">  
+    <label for="file">Upload File</label>
+    <input type="file" id="file"> 
+  </div>
+
+
+  <!-- Submit Button -->
+  <div class="btnHolder">
+    <button type="submit" class="btnPrimary btnPrimaryText">Submit</button>
+  </div>
+</div>
+
           </div>
         </div>
       </div>
