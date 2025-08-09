@@ -16,6 +16,7 @@ body {
   width: 100%;
   justify-content: flex-start;
   align-items: center;
+
   gap: 10px;
   flex-wrap: wrap;
 }
@@ -37,7 +38,7 @@ body {
 
 .btnPrimaryText {
   color: #fff;
-  font-family: "Poppins";
+  font-family: "SF Pro";
   font-size: 17px;
   font-style: normal;
   font-weight: 700;
