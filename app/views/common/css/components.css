@@ -1,6 +1,31 @@
+@font-face {
+  font-family: "Poppins";
+  src: url("../../../../public/assets/fonts/Poppins-Regular.ttf")
+    format("truetype");
+  font-weight: 400;
+  font-style: normal;
+}
+
+@font-face {
+  font-family: "Poppins";
+  src: url("../../../../public/assets/fonts/Poppins-Medium.ttf")
+    format("truetype");
+  font-weight: 500;
+  font-style: normal;
+}
+
+@font-face {
+  font-family: "Poppins";
+  src: url("../../../../public/assets/fonts/Poppins-Bold.ttf")
+    format("truetype");
+  font-weight: 700;
+  font-style: normal;
+}
+
 body {
   width: 100%;
   min-height: 100vh;
+  font-family: "Poppins", Arial, sans-serif;
 }
 
 .container {
@@ -42,7 +67,7 @@ body {
 
 .btnPrimaryText {
   color: #fff;
-  font-family: "SF Pro";
+  font-family: "Poppins";
   font-size: 15px;
   font-style: normal;
   font-weight: 400;
@@ -77,7 +102,7 @@ body {
 
 .btnSecondaryText {
   color: #000;
-  font-family: "SF Pro";
+  font-family: "Poppins";
   font-size: 15px;
   font-style: normal;
   font-weight: 400;
@@ -147,7 +172,7 @@ body {
 
 .btnAttachText {
   color: #374151;
-  font-family: "SF Pro";
+  font-family: "Poppins";
   font-size: 14px;
   font-style: normal;
   font-weight: 400;
