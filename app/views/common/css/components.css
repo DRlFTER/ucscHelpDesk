@@ -222,3 +222,116 @@ body {
   margin-right: 15px;
   font-weight: normal;
 }
+
+/* ----- NAVBAR STYLES ----- */
+
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
+}
+
+.navbar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 8px 20px;
+    background-color: white;
+    border-bottom: 1px solid #eee;
+}
+
+.navbar-left {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.navbar-right {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+}
+
+.navbar-center {
+  flex: 1;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.navbar-menu-container {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  background-color: #f2f2f2;
+  padding: 5px 6px;
+  border-radius: 30px;
+}
+
+.logo {
+    width: 24px;
+    height: 24px;
+}
+
+.navbar-brand {
+    font-size: 23px;
+    font-weight: 500;
+}
+
+.nav-link {
+    text-decoration: none;
+    color: black;
+    padding: 6px 14px;
+    border-radius: 20px;
+    font-size: 14px;
+    transition: background 0.2s;
+}
+
+.nav-link:hover {
+    background-color: #d6d6d6;
+}
+
+.nav-link.active {
+    background-color: #cccccc;
+    font-weight: 500;
+}
+
+
+.navbar-new-ticket {
+    background-color: #b19cff;
+    color: white;
+    border: none;
+    padding: 6px 14px;
+    border-radius: 20px;
+    font-size: 14px;
+    cursor: pointer;
+    transition: background 0.2s;
+}
+
+.navbar-new-ticket:hover {
+    background-color: #9d87ff;
+}
+
+.notification {
+    width: 20px;
+    height: 20px;
+    background-image: url('../assets/icons/bell-icon.svg'); 
+    background-size: cover;
+    cursor: pointer;
+}
+
+.profile {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    cursor: pointer;
+}
+
+.profile img {
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+}
+
+/* ----- NAVBAR STYLES ----- */
