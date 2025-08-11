@@ -23,6 +23,7 @@
 }
 
 @font-face {
+<<<<<<< HEAD
   font-family: "Poppins";
   src: url("../../../../public/assets/fonts/Poppins-Light.ttf")
     format("truetype");
@@ -30,6 +31,40 @@
   font-style: normal;
 }
 
+=======
+  font-family: "SF Pro";
+  src: url("../../../../public/assets/fonts/SFPro/SF-Pro-Text-Regular.otf")
+    format("opentype");
+  font-weight: 400;
+  font-style: normal;
+}
+
+@font-face {
+  font-family: "SF Pro";
+  src: url("../../../../public/assets/fonts/SFPro/SF-Pro-Text-Medium.otf")
+    format("opentype");
+  font-weight: 500;
+  font-style: normal;
+}
+
+@font-face {
+  font-family: "SF Pro";
+  src: url("../../../../public/assets/fonts/SFPro/SF-Pro-Text-Semibold.otf")
+    format("opentype");
+  font-weight: 600;
+  font-style: normal;
+}
+
+@font-face {
+  font-family: "SF Pro";
+  src: url("../../../../public/assets/fonts/SFPro/SF-Pro-Text-Bold.otf")
+    format("opentype");
+  font-weight: 700;
+  font-style: normal;
+}
+
+
+>>>>>>> fdc7d1838f9b5bc9476a8ef81e97365af55503fe
 body {
   width: 100%;
   min-height: 100vh;
@@ -298,8 +333,8 @@ body {
   margin: 0;
   padding: 0;
   box-sizing: border-box;
-  font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
-    Oxygen, Ubuntu, Cantarell, "Open Sans", "Helvetica Neue", sans-serif;
+  font-family: "SF Pro";
+  font-weight: 400;
 }
 
 .navbar {
@@ -311,30 +346,30 @@ body {
   border-bottom: 1px solid #eee;
 }
 
-.navbar-left {
+.navbarLeft {
   display: flex;
   align-items: center;
   gap: 10px;
 }
 
-.navbar-right {
+.navbarRight {
   display: flex;
   align-items: center;
   gap: 20px;
 }
 
-.navbar-center {
+.navbarCenter {
   flex: 1;
   display: flex;
   justify-content: center;
   align-items: center;
 }
 
-.navbar-menu-container {
+.navbarMenuContainer {
   display: flex;
   align-items: center;
-  gap: 7px;
-  background-color: #f2f2f2;
+  gap: 5px;
+  background-color: #f3f3f3;
   padding: 5px 6px;
   border-radius: 30px;
 }
@@ -342,44 +377,45 @@ body {
 .logo {
   width: 24px;
   height: 24px;
+  cursor: pointer;
 }
 
-.navbar-brand {
-  font-size: 23px;
+.navbarBrand {
+  font-size: 21px;
   font-weight: 500;
+  cursor: pointer;
 }
 
-.nav-link {
+.navbarLink {
   text-decoration: none;
   color: black;
-  padding: 6px 14px;
+  padding: 10px 14px;
   border-radius: 20px;
-  font-size: 14px;
+  font-size: 15px;
   transition: background 0.2s;
 }
 
-.nav-link:hover {
+.navbarLink:hover {
   background-color: #d6d6d6;
 }
 
-.nav-link.active {
+.navbarLink.active {
   background-color: #cccccc;
   font-weight: 500;
 }
 
-.navbar-new-ticket {
-  background-color: #b19cff;
+.navbarNewTicket {
   color: white;
   border: none;
   padding: 6px 14px;
   border-radius: 20px;
-  font-size: 14px;
   cursor: pointer;
   transition: background 0.2s;
 }
 
-.navbar-new-ticket:hover {
-  background-color: #9d87ff;
+.navbarNewTicket:hover {
+  transform: none;
+  box-shadow: none;
 }
 
 .notification {
@@ -390,6 +426,7 @@ body {
   cursor: pointer;
 }
 
+
 .profile {
   display: flex;
   align-items: center;
@@ -398,9 +435,154 @@ body {
 }
 
 .profile img {
-  width: 28px;
-  height: 28px;
+  width: 30px;
+  height: 30px;
   border-radius: 50%;
 }
 
 /* ----- NAVBAR STYLES ----- */
+
+/* ----- ICON STATUS ----- */
+
+.status {
+  display: flex;
+  flex-direction: row;
+  justify-content: center;
+  align-items: center;
+  width: 100%;
+  padding: 10px;
+  background-color: #e0e0e0;
+  border-radius: 10px;
+}
+
+.under-review {
+  background-color: #fff8b3;
+  color: #ff9800;
+  font-family: "Poppins";
+  font-size: 16px;
+  font-style: normal;
+  font-weight: 600;
+  line-height: normal;
+}
+
+.pending {
+  background-color: #ffe6b3;
+  color: #8b4d00;
+  font-family: "Poppins";
+  font-size: 16px;
+  font-style: normal;
+  font-weight: 600;
+  line-height: normal;
+}
+
+.resolved {
+  background-color: #d4edda;
+  color: #155724;
+  font-family: "Poppins";
+  font-size: 16px;
+  font-style: normal;
+  font-weight: 600;
+  line-height: normal;
+}
+
+.rejected {
+  background-color: #9f444c;
+  color: #721c24;
+  font-family: "Poppins";
+  font-size: 16px;
+  font-style: normal;
+  font-weight: 600;
+  line-height: normal;
+}
+
+.in-progress {
+  background-color: #467fbc;
+  color: #1056a1;
+  font-family: "Poppins";
+  font-size: 16px;
+  font-style: normal;
+  font-weight: 600;
+  line-height: normal;
+}
+
+.open {
+  background-color: #9f444c;
+  color: #721c24;
+  font-family: "Poppins";
+  font-size: 16px;
+  font-style: normal;
+  font-weight: 600;
+  line-height: normal;
+}
+
+.closed {
+  background-color: #d4edda;
+  color: #155724;
+  font-family: "Poppins";
+  font-size: 16px;
+  font-style: normal;
+  font-weight: 600;
+  line-height: normal;
+}
+
+.requested {
+  background-color: #467fbc;
+  color: #000000;
+  font-family: "Poppins";
+  font-size: 16px;
+  font-style: normal;
+  font-weight: 600;
+  line-height: normal;
+}
+
+.completed {
+  background-color: #d4edda;
+  color: #091b0d;
+  font-family: "Poppins";
+  font-size: 16px;
+  font-style: normal;
+  font-weight: 600;
+  line-height: normal;
+}
+
+.cancelled {
+  background-color: #f8d7da;
+  color: #721c24;
+  font-family: "Poppins";
+  font-size: 16px;
+  font-style: normal;
+  font-weight: 600;
+  line-height: normal;
+}
+
+.high {
+  background-color: #f8d7da;
+  color: #721c24;
+  font-family: "Poppins";
+  font-size: 16px;
+  font-style: normal;
+  font-weight: 600;
+  line-height: normal;
+}
+
+.medium {
+  background-color: #fff3cd;
+  color: #856404;
+  font-family: "Poppins";
+  font-size: 16px;
+  font-style: normal;
+  font-weight: 600;
+  line-height: normal;
+}
+
+.low {
+  background-color: #467fbc;
+  color: #1056a1;
+  font-family: "Poppins";
+  font-size: 16px;
+  font-style: normal;
+  font-weight: 600;
+  line-height: normal;
+}
+
+/* ----- ICON STATUS ----- */
