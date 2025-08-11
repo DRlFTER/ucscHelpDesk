@@ -23,7 +23,6 @@
 }
 
 @font-face {
-<<<<<<< HEAD
   font-family: "Poppins";
   src: url("../../../../public/assets/fonts/Poppins-Light.ttf")
     format("truetype");
@@ -31,7 +30,7 @@
   font-style: normal;
 }
 
-=======
+@font-face {
   font-family: "SF Pro";
   src: url("../../../../public/assets/fonts/SFPro/SF-Pro-Text-Regular.otf")
     format("opentype");
@@ -63,8 +62,6 @@
   font-style: normal;
 }
 
-
->>>>>>> fdc7d1838f9b5bc9476a8ef81e97365af55503fe
 body {
   width: 100%;
   min-height: 100vh;
@@ -393,6 +390,7 @@ body {
   border-radius: 20px;
   font-size: 15px;
   transition: background 0.2s;
+  font-weight: 300;
 }
 
 .navbarLink:hover {
