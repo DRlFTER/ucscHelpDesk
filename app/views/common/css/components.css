@@ -22,6 +22,14 @@
   font-style: normal;
 }
 
+@font-face {
+  font-family: "Poppins";
+  src: url("../../../../public/assets/fonts/Poppins-Light.ttf")
+    format("truetype");
+  font-weight: 300;
+  font-style: normal;
+}
+
 body {
   width: 100%;
   min-height: 100vh;
@@ -198,6 +206,42 @@ body {
   background-color: #e5e7eb;
   transform: translateY(-2px);
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+/* Containers */
+
+.infoContainer {
+  display: flex;
+  padding: 10px 15px;
+  justify-content: center;
+  align-items: center;
+  gap: 10px;
+  border-radius: 9px;
+}
+
+.infoContainerText {
+  color: #454545;
+  font-family: "Poppins";
+  font-size: 13px;
+  font-style: normal;
+  font-weight: 00;
+  line-height: normal;
+  letter-spacing: 0.26px;
+}
+
+.infoContainerBlue {
+  background: #e0f2ff;
+  color: #454545;
+}
+
+.infoContainerBrown {
+  background: #ffdbaa;
+  color: #454545;
+}
+
+.infoContainerGray {
+  background: #f9fafb;
+  color: #374151;
 }
 
 .form-elements {
