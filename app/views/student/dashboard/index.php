@@ -1,6 +1,6 @@
 <?php
 $pageTitle = "Admin Dashboard";
-$pageCSS = "/dashboard.css";
+$pageCSS = "./dashboard.css";
 include_once(__DIR__ . "/../../common/header.php");
 include_once(__DIR__ . "/../../common/navbar.php");
 ?>
