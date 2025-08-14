@@ -419,11 +419,10 @@ body {
 .notification {
   width: 20px;
   height: 20px;
-  background-image: url("../assets/icons/bell-icon.svg");
+  background-image: url("/public/assets/bell-icon.svg");
   background-size: cover;
   cursor: pointer;
 }
-
 
 .profile {
   display: flex;
