@@ -63,18 +63,18 @@ include_once(__DIR__ . "/../../common/footer.php");
         <div class="priority sectionCard">
           <h3>Priority</h3>
           <div class="priorityItem">
-            Lecture - SCS2308 moved to lecture hall - S203, 10:00-12:00
+            <span class="priorityTitle">Lecture - SCS2308 moved to lecture hall - S203, 10:00-12:00</span>
           </div>
         </div>
         <div class="announcements sectionCard">
           <h3>Announcements</h3>
           <div class="announcement warning">
-            <strong>System Maintenance</strong><br>
-            Scheduled maintenance on Dec 25, 2:00-4:00 AM
+            <span class="announcementTitle">System Maintenance</span><br>
+            <span class="announcementDescription">Scheduled maintenance on Dec 25, 2:00-4:00 AM</span>
           </div>
           <div class="announcement info">
-            <strong>New FAQ Section</strong><br>
-            Check out our new updated WIFI troubleshooting guide
+            <span class="announcementTitle">New FAQ Section</span><br>
+            <span class="announcementDescription">Check out our new updated WIFI troubleshooting guide</span>
           </div>
         </div>
         <div class="calendar sectionCard">

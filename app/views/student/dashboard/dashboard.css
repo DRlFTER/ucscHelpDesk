@@ -63,7 +63,7 @@ main {
 
 .welcomeCard {
   width: 100%;
-  background-color: #1f40b0;
+  background-color: #2c92ff;
   color: white;
   padding: 20px;
   border-radius: 8px;
@@ -181,6 +181,7 @@ h3 {
 }
 
 .status {
+  font-family: 'SF Pro';
   align-self: flex-end;
   padding: 3px 8px;
   width: fit-content;
@@ -239,22 +240,35 @@ h3 {
 
 .priorityItem {
   background: #ffd7d3;
+  color: #FA6060;
   padding: 3%;
-  border-radius: 7px;
+    border-left: 6px solid #FA6060;
 }
+
+.priorityTitle,
+.announcementTitle {
+  font-size: 17px;
+  font-weight: 500;
+}
+
 .announcement.warning {
-  background: #fff3cd;
+  font-size: 15px;
+  background: #FEF9C3;
+  color: #9D5226;
   padding: 3%;
-  border-radius: 7px;
+  border-left: 6px solid #9D5226;
 }
 .announcement.info {
+  font-size: 15px;
   background: #d1ecf1;
+  color: #2786FF;
   padding: 3%;
-  border-radius: 7px;
+  border-left: 6px solid #2786FF;
 }
 
 .calendar .event {
   background: #d4edda;
+  color: #00AB36;
   padding: 7px;
-  border-radius: 6px;
+  border-left: 6px solid #00AB36;
 }
