@@ -114,19 +114,33 @@ h3 {
 .quickActions a {
   flex: 1;
   padding: 12px;
+  height: 80px;
   border-radius: 6px;
-  font-weight: bold;
+  font-weight: 500;
   text-align: center;
   cursor: pointer;
   color: white;
   text-decoration: none;
   transition: all 0.2s ease;
   box-shadow: 0 2px 6px rgba(0,0,0,0.15);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-direction: column;
+  gap: 6px;
 }
 
 .quickActions a:hover {
-  transform: translateY(-2px);
+  transform: translateY(-5px);
   box-shadow: 0 4px 10px rgba(0,0,0,0.2);
+}
+
+.quickActions .quickActionItem .quickActionSvg svg {
+    width: 30px; 
+    height: 30px;
+    fill: white;      
+    opacity: 0.85;    
+    transition: fill 0.3s ease, transform 0.2s ease;
 }
 
 .quickActions a:nth-child(1) { background: #8C8CF9; }
@@ -140,7 +154,7 @@ h3 {
   border-radius: 6px;
   border: 1px solid #ccc;
   font-size: 14px;
-  background-image: url('./icons/search.svg');
+  background-image: url('../../../../public/assets/search.svg');
   background-repeat: no-repeat;
   background-position: 10px center;
   padding-left: 36px;
@@ -170,6 +184,18 @@ h3 {
 
 .ticket:hover {
   background: #f0f8ff;
+}
+
+.ticketTitle {
+  font-weight: 600;
+  font-size: 15px;
+  margin-bottom: 2px;
+} 
+
+.quickActions a svg {
+  width: 20px;
+  height: 20px;
+  fill: white;
 }
 
 .ticketIcon {
