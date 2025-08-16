@@ -111,8 +111,15 @@ h3 {
   width: 100%;
 }
 
+.quickActions.sectionCard {
+  flex-wrap: nowrap;
+  justify-content: space-between;
+  flex-direction: column;
+  align-items: stretch;
+}
+
 .quickActions a {
-  flex: 1;
+  flex:1;
   padding: 12px;
   height: 80px;
   border-radius: 6px;
@@ -205,31 +212,6 @@ h3 {
 .clockIcon {
   margin-right: 6px;
 }
-
-.status {
-  font-family: 'SF Pro';
-  align-self: flex-end;
-  padding: 3px 8px;
-  width: fit-content;
-  border-radius: 12px;
-  font-size: 12px;
-  font-weight: 500;
-  background-repeat: no-repeat;
-  background-position: 6px center;
-}
-.status.inProgress {
-  background: #FEF9C3;
-  color: #92400e;
-}
-.status.open {
-  background: #FEE2E1;
-  color: #7f1d1d;
-}
-.status.resolved {
-  background: #DCFCE7;
-  color: #155724; 
-}
-
 .sectionCard {
   background: white;
   border-radius: 8px;
