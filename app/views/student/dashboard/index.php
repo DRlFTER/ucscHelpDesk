@@ -51,55 +51,64 @@ include_once(__DIR__ . "/../../common/footer.php");
         </div>
           <div class="recentTickets sectionCard">
             <h3>Recent Tickets</h3>
-            <div class="ticket">
+            <a href="#" class="ticket">
               <div class="ticketDetails">
-                <p><span class="ticketTitle">Wifi connection issues in library</span></p>
-                <span class="ticketIcon">Technical Support<span>
-                <span class="clockIcon">Updated 2 hours ago<span>
+                <p><span class="ticketTitle">WIFI connection issue in Library</span></p>
+                <span class="ticketCategory">Technical Support<span>
+                <span class="ticketTimestamp">Updated 2 hours ago<span>
               </div>
               <span class="status inProgress">In Progress</span>
-            </div>
-            <div class="ticket ">
+            </a>
+            <a href="#" class="ticket">
               <div class="ticketDetails">
                 <p><span class="ticketTitle">Password reset request</span></p>
-                <span class="ticketIcon">Account Access<span>
-                <span class="clockIcon">Updated 1 day ago<span>
+                <span class="ticketCategory">Account Access<span>
+                <span class="ticketTimestamp">Updated 1 day ago<span>
               </div>
               <span class="status open">Open</span>
-            </div>
-            <div class="ticket">
+            </a>
+            <a href="#" class="ticket">
               <div class="ticketDetails">
                 <p><span class="ticketTitle">Course registration problem</span></p>
-                <span class="ticketIcon">Academic<span>
-                <span class="clockIcon">Updated 3 days ago</span>
+                <span class="ticketCategory">Academic<span>
+                <span class="ticketTimestamp">Updated 3 days ago</span>
               </div>
               <span class="status resolved">Resolved</span>
-            </div>
+            </a>
           </div>
       </div>
       <div class="dashboardColumnTwo">
         <div class="priority sectionCard">
           <h3>Priority</h3>
-          <div class="priorityItem">
-            <span class="priorityTitle">Lecture - SCS2308 moved to lecture hall - S203, 10:00-12:00</span>
-          </div>
+          <a href="#" class="priorityItem">
+            <svg xmlns="http://www.w3.org/2000/svg" height="30px" viewBox="0 -960 960 960" width="30px" fill="red"><path d="M200-80v-760h640l-80 200 80 200H280v360h-80Z"/></svg>
+            <span class="priorityText">Lecture - SCS2308 moved to lecture hall - S203, 10:00-12:00</span>
+          </a>
         </div>
         <div class="announcements sectionCard">
           <h3>Announcements</h3>
-          <div class="announcement warning">
-            <span class="announcementTitle">System Maintenance</span><br>
+          <a href="#" class="announcement warning">
+            <svg xmlns="http://www.w3.org/2000/svg" height="40px" viewBox="0 -960 960 960" width="40px" fill="#9D5226"><path d="M480-79q-16 0-30.5-6T423-102L102-423q-11-12-17-26.5T79-480q0-16 6-31t17-26l321-321q12-12 26.5-17.5T480-881q16 0 31 5.5t26 17.5l321 321q12 11 17.5 26t5.5 31q0 16-5.5 30.5T858-423L537-102q-11 11-26 17t-31 6Zm-40-361h80v-240h-80v240Zm40 120q17 0 28.5-11.5T520-360q0-17-11.5-28.5T480-400q-17 0-28.5 11.5T440-360q0 17 11.5 28.5T480-320Z"/></svg>
+            <div>
+              <span class="announcementTitle">System Maintenance</span><br>
             <span class="announcementDescription">Scheduled maintenance on Dec 25, 2:00-4:00 AM</span>
-          </div>
-          <div class="announcement info">
-            <span class="announcementTitle">New FAQ Section</span><br>
-            <span class="announcementDescription">Check out our new updated WIFI troubleshooting guide</span>
-          </div>
+            </div>
+          </a>
+          <a href="#" class="announcement info">
+            <svg xmlns="http://www.w3.org/2000/svg" height="40px" viewBox="0 -960 960 960" width="40px" fill="#2786FF"><path d="M440-280h80v-240h-80v240Zm40-320q17 0 28.5-11.5T520-640q0-17-11.5-28.5T480-680q-17 0-28.5 11.5T440-640q0 17 11.5 28.5T480-600Zm0 520q-83 0-156-31.5T197-197q-54-54-85.5-127T80-480q0-83 31.5-156T197-763q54-54 127-85.5T480-880q83 0 156 31.5T763-763q54 54 85.5 127T880-480q0 83-31.5 156T763-197q-54 54-127 85.5T480-80Z"/></svg>
+            <div>
+              <span class="announcementTitle">New FAQ Section</span><br>
+              <span class="announcementDescription">Check out our new updated WIFI troubleshooting guide</span>
+            </div>
+          </a>
         </div>
         <div class="calendar sectionCard">
           <h3>Calendar</h3>
-          <div class="event">
-            <strong>June 28</strong> Meeting with Mr. Prasad at W003 — 5:00 PM
-          </div>
+          <a href="#" class="event">
+            <div>June 28</div>
+            <div>Meeting with Mr. Prasad at W003</div>
+            <div>5:00 PM</div>
+          </a>
         </div>
         <div class="account sectionCard">
           <h3>Account</h3>
