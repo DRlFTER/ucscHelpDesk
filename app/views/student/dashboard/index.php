@@ -21,7 +21,9 @@ include_once(__DIR__ . "/../../common/footer.php");
             <span>Last Activity: 2 hours ago</span>
           </div>
         </div>
-        <div class="quickActions">
+        <div class="sectionCard">
+          <h3>Quick Actions</h3>
+          <div class="quickActions">
           <a href="#" class="quickActionItem"><div class="icon">
             <div class="quickActionSvg">
               <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 -960 960 960"><path d="M440-440H200v-80h240v-240h80v240h240v80H520v240h-80v-240Z"/></svg></div>
@@ -42,13 +44,14 @@ include_once(__DIR__ . "/../../common/footer.php");
             </div>
           </div>Appoinments</a>
         </div>
+</div>
         <div class="knowledgeBase sectionCard">
           <h3>Knowledge Base</h3>
           <input type="text" placeholder="Search FAQs, forums, and help articles..." />
         </div>
           <div class="recentTickets sectionCard">
             <h3>Recent Tickets</h3>
-            <div class="ticket inProgress">
+            <div class="ticket">
               <div class="ticketDetails">
                 <p><span class="ticketTitle">Wifi connection issues in library</span></p>
                 <span class="ticketIcon">Technical Support<span>
