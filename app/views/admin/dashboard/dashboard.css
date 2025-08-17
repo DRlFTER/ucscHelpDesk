@@ -12,74 +12,157 @@ main {
   flex: 1;
 }
 
+body {
+  font-family: "SF Pro", sans-serif;
+  background: #f9fafb;
+  margin: 0;
+  color: #111827;
+}
+
+h3 {
+  font-weight: 600;
+  margin-bottom: 0.5rem;
+}
+
 .dashboardContainer {
-  width: 100%;
-  height: 100%;
-  margin: 0 auto;
-  padding: 20px;
   display: flex;
-  flex-direction: row;
-  justify-content: flex-start;
-  align-items: flex-start;
-  background-color: #000000;
-  gap: 20px;
+  height: 100vh;
 }
 
 .navMenu {
-  flex: 0 0 15%;
-  height: 100%;
-  background-color: #1a1a1a;
+  width: 220px;
+  background: #f3f4f6;
+  padding: 1rem;
+  border-right: 1px solid #e5e7eb;
+}
+
+.navMenu ul {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.menuItem {
+  padding: 10px;
+  margin: 8px 0;
+  cursor: pointer;
+  border-radius: 8px;
+  transition: background 0.2s ease;
+}
+
+.menuItem:hover {
+  background: #e5e7eb;
 }
 
 .dashboardContent {
   flex: 1;
-  height: 100%;
-  display: flex;
-  flex-direction: row;
-  gap: 20px;
-}
-
-.dashboardColumnOne {
+  padding: 1.5rem;
   display: flex;
   flex-direction: column;
-  justify-content: flex-start;
-  align-items: flex-start;
-  gap: 20px;
-  width: 60%;
-  height: 100%;
-  background-color: #3a3a3a;
+  gap: 1.5rem;
+  overflow-y: auto;
 }
 
-.dashboardColumnTwo {
+.cardContainer {
   display: flex;
-  flex-direction: column;
-  justify-content: flex-start;
-  align-items: flex-start;
-  width: 40%;
-  height: 100%;
-  background-color: #3a3a3a;
+  gap: 1rem;
 }
 
-.welcomeCard {
-  width: 100%;
-  height: 200px;
-  background-color: #1f40b0;
+.infoCard {
+  flex: 1;
+  padding: 1rem;
+  background: white;
+  border-radius: 12px;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.05);
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
 }
 
-.quickCard {
-  width: 100%;
-  height: 200px;
-  background-color: #1f40b0;
+.infoCard:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
 }
 
-.knowledgeCard {
-  width: 100%;
-  height: 150px;
-  background-color: #1f40b0;
+.infoCard .value {
+  font-size: 1.5rem;
+  font-weight: 600;
 }
 
-.studentTickets {
+.infoCard .change {
+  font-size: 0.9rem;
+  color: #6b7280;
+}
+
+.contentRow {
+  display: flex;
+  gap: 1rem;
+}
+
+.cardBox,
+.chartBox {
+  flex: 1;
+  padding: 1rem;
+  background: white;
+  border-radius: 12px;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.05);
+  transition: box-shadow 0.2s ease;
+}
+
+.cardBox:hover,
+.chartBox:hover {
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+}
+
+.platformStatus ul,
+.recentTickets ul {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.platformStatus li,
+.recentTickets li {
+  padding: 8px 0;
+  border-bottom: 1px solid #f3f4f6;
+}
+
+.ticketItem {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.priority.high {
+  color: #ef4444;
+  font-weight: 600;
+}
+.priority.medium {
+  color: #f59e0b;
+  font-weight: 600;
+}
+.priority.low {
+  color: #10b981;
+  font-weight: 600;
+}
+
+.operational {
+  color: #10b981;
+}
+.degraded {
+  color: #f59e0b;
+}
+
+.topAgents table {
   width: 100%;
-  height: 100%;
-  background-color: #1f40b0;
+  border-collapse: collapse;
+}
+
+.topAgents th,
+.topAgents td {
+  text-align: left;
+  padding: 10px;
+  border-bottom: 1px solid #f3f4f6;
+}
+
+.topAgents tr:hover {
+  background: #f9fafb;
 }
