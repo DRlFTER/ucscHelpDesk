@@ -1,0 +1,126 @@
+body {
+  height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+header {
+  flex-shrink: 0;
+}
+
+main {
+  flex: 1;
+}
+
+body {
+  font-family: "SF Pro", sans-serif;
+  background: #f9fafb;
+  margin: 0;
+  color: #111827;
+}
+
+h3 {
+  font-weight: 600;
+  margin-bottom: 0.5rem;
+}
+
+.dashboardContainer {
+  display: flex;
+  height: 100vh;
+}
+
+.navMenu {
+  width: 220px;
+  background: #f3f4f6;
+  padding: 1rem;
+  border-right: 1px solid #e5e7eb;
+}
+
+.navMenu ul {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.menuItem {
+  padding: 10px;
+  margin: 8px 0;
+  cursor: pointer;
+  border-radius: 8px;
+  transition: background 0.2s ease;
+}
+
+.menuItem:hover {
+  background: #e5e7eb;
+}
+
+.dashboardContent {
+  flex: 1;
+  padding: 1.5rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+  overflow-y: auto;
+}
+
+.cardContainer {
+  display: flex;
+  gap: 1rem;
+}
+
+.infoCard {
+  flex: 1;
+  padding: 1rem;
+  background: white;
+  border-radius: 12px;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.05);
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.infoCard:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+}
+
+.infoCard .value {
+  font-size: 1.5rem;
+  font-weight: 600;
+}
+
+.infoCard .change {
+  font-size: 0.9rem;
+  color: #6b7280;
+}
+
+.contentRow {
+  display: flex;
+  gap: 1rem;
+}
+
+.cardBox,
+.chartBox {
+  flex: 1;
+  padding: 1rem;
+  background: white;
+  border-radius: 12px;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.05);
+  transition: box-shadow 0.2s ease;
+}
+
+.cardBox:hover,
+.chartBox:hover {
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+}
+
+.platformStatus li,
+.recentTickets li {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 8px 0;
+  border-bottom: 1px solid #f3f4f6;
+}
+
+.ticketItem .status {
+  margin-left: auto;
+}

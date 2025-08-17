@@ -1,6 +1,71 @@
+@font-face {
+  font-family: "Poppins";
+  src: url("../../../../public/assets/fonts/Poppins-Regular.ttf")
+    format("truetype");
+  font-weight: 400;
+  font-style: normal;
+}
+
+@font-face {
+  font-family: "Poppins";
+  src: url("../../../../public/assets/fonts/Poppins-Medium.ttf")
+    format("truetype");
+  font-weight: 500;
+  font-style: normal;
+}
+
+@font-face {
+  font-family: "Poppins";
+  src: url("../../../../public/assets/fonts/Poppins-Bold.ttf")
+    format("truetype");
+  font-weight: 700;
+  font-style: normal;
+}
+
+@font-face {
+  font-family: "Poppins";
+  src: url("../../../../public/assets/fonts/Poppins-Light.ttf")
+    format("truetype");
+  font-weight: 300;
+  font-style: normal;
+}
+
+@font-face {
+  font-family: "SF Pro";
+  src: url("../../../../public/assets/fonts/SFPro/SF-Pro-Text-Regular.otf")
+    format("opentype");
+  font-weight: 400;
+  font-style: normal;
+}
+
+@font-face {
+  font-family: "SF Pro";
+  src: url("../../../../public/assets/fonts/SFPro/SF-Pro-Text-Medium.otf")
+    format("opentype");
+  font-weight: 500;
+  font-style: normal;
+}
+
+@font-face {
+  font-family: "SF Pro";
+  src: url("../../../../public/assets/fonts/SFPro/SF-Pro-Text-Semibold.otf")
+    format("opentype");
+  font-weight: 600;
+  font-style: normal;
+}
+
+@font-face {
+  font-family: "SF Pro";
+  src: url("../../../../public/assets/fonts/SFPro/SF-Pro-Text-Bold.otf")
+    format("opentype");
+  font-weight: 700;
+  font-style: normal;
+}
+
 body {
   width: 100%;
   min-height: 100vh;
+  font-family: 'SF Pro';
 }
 
 .container {
@@ -18,6 +83,7 @@ body {
   width: 100%;
   justify-content: flex-start;
   align-items: center;
+
   gap: 10px;
   flex-wrap: wrap;
 }
@@ -35,15 +101,16 @@ body {
   height: auto;
   background-color: #f0f0f0;
   border-radius: 10px;
-  
 }
+
+/* Buttons */
 
 .btnPrimaryText {
   color: #fff;
   font-family: "Poppins";
-  font-size: 17px;
+  font-size: 15px;
   font-style: normal;
-  font-weight: 700;
+  font-weight: 400;
   line-height: normal;
   letter-spacing: 0.17px;
 }
@@ -71,6 +138,142 @@ body {
   background-color: #6a6af5;
   transform: translateY(-2px);
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+.btnSecondaryText {
+  color: #000;
+  font-family: "Poppins";
+  font-size: 15px;
+  font-style: normal;
+  font-weight: 400;
+  line-height: normal;
+  letter-spacing: 0.17px;
+}
+
+.btnSecondary {
+  padding: 10px 20px;
+  flex: 1;
+  border: none;
+  border-radius: 10px;
+  background: var(--CTA, #e6e6e6);
+  cursor: pointer;
+  transition: background-color 0.25s ease, transform 0.15s ease,
+    box-shadow 0.25s ease;
+}
+
+.btnSecondary:hover {
+  background-color: #cecece;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+.btnSvg {
+  display: flex;
+  width: 46px;
+  height: 46px;
+  padding-left: 5px;
+  justify-content: center;
+  align-items: center;
+  gap: 10px;
+  aspect-ratio: 1/1;
+  cursor: pointer;
+  border: none;
+  border-radius: 100px;
+  background: var(--CTA, #8c8cf9);
+  transition: background-color 0.25s ease, transform 0.15s ease,
+    box-shadow 0.25s ease;
+}
+
+.btnSvg:hover {
+  background-color: #6a6af5;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+.btnWSvg {
+  padding: 10px 20px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 10px;
+  border: none;
+  border-radius: 100px;
+  background: var(--CTA, #8c8cf9);
+  cursor: pointer;
+  transition: background-color 0.25s ease, transform 0.15s ease,
+    box-shadow 0.25s ease;
+}
+
+.btnWSvg:hover {
+  background-color: #6a6af5;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+.btnAttachText {
+  color: #374151;
+  font-family: "Poppins";
+  font-size: 14px;
+  font-style: normal;
+  font-weight: 400;
+  line-height: normal;
+  letter-spacing: 0.28px;
+}
+
+.btnAttach {
+  display: flex;
+  padding: 10px 15px;
+  justify-content: center;
+  align-items: center;
+  gap: 10px;
+  border: none;
+  border-radius: 9px;
+  background: #f9fafb;
+  cursor: pointer;
+  transition: background-color 0.25s ease, transform 0.15s ease,
+    box-shadow 0.25s ease;
+}
+
+.btnAttach:hover {
+  background-color: #e5e7eb;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+/* Containers */
+
+.infoContainer {
+  display: flex;
+  padding: 10px 15px;
+  justify-content: center;
+  align-items: center;
+  gap: 10px;
+  border-radius: 9px;
+}
+
+.infoContainerText {
+  color: #454545;
+  font-family: "Poppins";
+  font-size: 13px;
+  font-style: normal;
+  font-weight: 00;
+  line-height: normal;
+  letter-spacing: 0.26px;
+}
+
+.infoContainerBlue {
+  background: #e0f2ff;
+  color: #454545;
+}
+
+.infoContainerBrown {
+  background: #ffdbaa;
+  color: #454545;
+}
+
+.infoContainerGray {
+  background: #f9fafb;
+  color: #374151;
 }
 
 .form-elements {
@@ -120,3 +323,163 @@ body {
   margin-right: 15px;
   font-weight: normal;
 }
+
+/* ----- NAVBAR STYLES ----- */
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+  font-family: "SF Pro";
+  font-weight: 400;
+}
+
+.navbar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 8px 20px;
+  background-color: white;
+  border-bottom: 1px solid #eee;
+}
+
+.navbarLeft {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.navbarRight {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+}
+
+.navbarCenter {
+  flex: 1;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.navbarMenuContainer {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  background-color: #f3f3f3;
+  padding: 5px 6px;
+  border-radius: 30px;
+}
+
+.logo {
+  width: 24px;
+  height: 24px;
+  cursor: pointer;
+}
+
+.navbarBrand {
+  font-size: 21px;
+  font-weight: 500;
+  cursor: pointer;
+}
+
+.navbarLink {
+  text-decoration: none;
+  color: black;
+  padding: 10px 14px;
+  border-radius: 20px;
+  font-size: 15px;
+  transition: background 0.2s;
+  font-weight: 300;
+}
+
+.navbarLink:hover {
+  background-color: #d6d6d6;
+}
+
+.navbarLink.active {
+  background-color: #cccccc;
+  font-weight: 500;
+}
+
+.navbarNewTicket {
+  color: white;
+  border: none;
+  padding: 6px 14px;
+  border-radius: 20px;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+.navbarNewTicket:hover {
+  transform: none;
+  box-shadow: none;
+}
+
+.notification {
+  width: 20px;
+  height: 20px;
+  background-image: url("/public/assets/bell-icon.svg");
+  background-size: cover;
+  cursor: pointer;
+}
+
+.profile {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  cursor: pointer;
+}
+
+.profile img {
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+}
+
+/* ----- NAVBAR STYLES ----- */
+
+/* ----- ICON STATUS ----- */
+
+.status {
+  font-family: 'SF Pro';
+  align-self: flex-end;
+  padding: 3px 8px;
+  width: fit-content;
+  border-radius: 12px;
+  font-size: 12px;
+  font-weight: 500;
+  background-repeat: no-repeat;
+  background-position: 6px center;
+}
+
+.medium,
+.inProgress,
+.pending,
+.underReview {
+  background: #FEF9C3;
+  color: #92400e;
+}
+
+.open,
+.cancelled,
+.high,
+.rejected {
+  background: #FEE2E1;
+  color: #7f1d1d;
+}
+
+.completed,
+.closed,
+.resolved {
+  background: #DCFCE7;
+  color: #155724; 
+}
+
+.requested,
+.low {
+  background-color: #BADBFF;
+  color: #3300FF;
+}
+
+/* ----- ICON STATUS ----- */
