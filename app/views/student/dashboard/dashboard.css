@@ -12,6 +12,17 @@ main {
   flex: 1;
 }
 
+.sectionCard {
+  background: white;
+  border-radius: 8px;
+  padding: 15px;
+  box-shadow: 0 3px 8px rgba(0, 0, 0, 0.08);
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  width: 100%;
+}
+
 .dashboardContainer {
   width: 100%;
   height: 100%;
@@ -21,14 +32,14 @@ main {
   flex-direction: row;
   justify-content: flex-start;
   align-items: flex-start;
-  background-color: #000000;
+  background: #f5f5f5;
   gap: 20px;
 }
 
 .navMenu {
   flex: 0 0 15%;
   height: 100%;
-  background-color: #1a1a1a;
+  background-color: #ffffff;
 }
 
 .dashboardContent {
@@ -45,9 +56,9 @@ main {
   justify-content: flex-start;
   align-items: flex-start;
   gap: 20px;
-  width: 60%;
+  width: 120%;
   height: 100%;
-  background-color: #3a3a3a;
+  background: transparent;
 }
 
 .dashboardColumnTwo {
@@ -55,31 +66,293 @@ main {
   flex-direction: column;
   justify-content: flex-start;
   align-items: flex-start;
-  width: 40%;
+  width: 35%;
   height: 100%;
-  background-color: #3a3a3a;
+  background: transparent;
+  margin-left: auto;
 }
 
 .welcomeCard {
   width: 100%;
-  height: 200px;
-  background-color: #1f40b0;
+  background: linear-gradient(135deg, #6a6af5 0%, #babaff 100%);
+  color: white;
+  padding: 20px;
+  border-radius: 8px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  height: auto;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
 }
 
-.quickCard {
-  width: 100%;
-  height: 200px;
-  background-color: #1f40b0;
+.welcomeCard h2 {
+  font-weight: 500;
 }
 
-.knowledgeCard {
-  width: 100%;
-  height: 150px;
-  background-color: #1f40b0;
+.welcomeCard p {
+  font-size: 0.95rem;
+  font-weight: 400;
+  opacity: 0.9;
 }
 
-.studentTickets {
+.welcomeCard .ticket-info {
+  display: flex;
+  gap: 20px;
+  font-size: 14px;
+}
+
+.welcomeCard .ticket-info span {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+h3 {
+  font-size: 1rem;
+  font-weight: 600;
+  margin-bottom: 8px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.quickActions {
+  display: flex;
+  gap: 10px;
   width: 100%;
-  height: 100%;
-  background-color: #1f40b0;
+}
+
+.quickActions.sectionCard {
+  flex-wrap: nowrap;
+  justify-content: space-between;
+  flex-direction: column;
+  align-items: stretch;
+}
+
+.quickActions a {
+  flex:1;
+  padding: 12px;
+  height: 80px;
+  border-radius: 6px;
+  font-weight: 500;
+  text-align: center;
+  cursor: pointer;
+  color: white;
+  text-decoration: none;
+  transition: all 0.2s ease;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.15);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.quickActions a:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 4px 10px rgba(0,0,0,0.2);
+}
+
+.quickActionSvg svg {
+    width: 30px; 
+    height: 30px;
+    fill: white;      
+    opacity: 0.85;    
+    transition: fill 0.3s ease, transform 0.2s ease;
+}
+
+.quickActions a:nth-child(1) { background: #8C8CF9; }
+.quickActions a:nth-child(1):hover { background: #6a6af5; }
+.quickActions a:nth-child(2) { background: #5BE38C; }
+.quickActions a:nth-child(2):hover { background: #2acc65; }
+.quickActions a:nth-child(3) { background: #C185FB; }
+.quickActions a:nth-child(3):hover { background: #aa50ff; }
+.quickActions a:nth-child(4) { background: #FF6262; }
+.quickActions a:nth-child(4):hover { background: #ff3636; }
+
+.knowledgeBase input {
+  width: 100%;
+  padding: 10px;
+  border-radius: 6px;
+  border: 1px solid #ccc;
+  font-size: 14px;
+  background-image: url('../../../../public/assets/search.svg');
+  background-repeat: no-repeat;
+  background-position: 10px center;
+  padding-left: 36px;
+}
+
+.recentTickets {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  background: white;
+  border-radius: 8px;
+  padding: 15px;
+}
+
+.ticket {
+  background: #f9f9f9;
+  color: black;
+  text-decoration: none;
+  border: 1px solid #ddd;
+  border-radius: 6px;
+  padding: 10px;
+  display: flex;
+  flex-direction: row;
+  justify-content: space-between;
+  align-items: center;
+  cursor: pointer;
+  transition: background 0.2s ease;
+}
+
+.ticketDetails {
+  display: flex;
+  padding-top: 12px;
+  padding-bottom: 12px;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.status {
+  align-self: center;
+  margin-top: 0;
+}
+
+.ticket:hover {
+  background: rgb(241, 243, 244);
+}
+
+.ticketTitle {
+  font-weight: 400;
+  font-size: 15px;
+  margin-bottom: 2px;
+} 
+
+.ticketMeta {
+  display: flex;
+  flex-direction: row;
+  gap: 20px;
+  align-items: center;
+  flex-wrap: wrap;
+}
+
+.ticketCategory,
+.ticketTimestamp {
+  font-size: 13px;
+  color: #666666;
+  margin-right: 6px;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.ticketCategory svg,
+.ticketTimestamp svg {
+  width: 17px;
+  height: 17px;
+  fill: #9f9e9e;
+}
+.dashboardColumnTwo > .sectionCard {
+  margin-bottom: 20px;
+  align-items:flex-start;
+}
+.dashboardColumnTwo > .sectionCard:last-child {
+  margin-bottom: 0;
+}
+
+.priority,
+.announcements,
+.calendar,
+.account {
+  background: white;
+  border-radius: 8px;
+  padding: 15px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  width: 100%;
+  box-shadow: 0 3px 8px rgba(0, 0, 0, 0.08);
+  
+}
+
+.priorityItem{
+  text-decoration: none;
+  background: #ffd7d3;
+  color: #FA6060;
+  padding: 3%;
+  padding-top: 5%;
+  padding-bottom: 5%;
+  border-radius: 10px;
+  border: 1px solid #FA6060;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+
+.priorityTitle,
+.announcementTitle {
+  font-size: 15px;
+  font-weight: 500;
+}
+
+.priorityDescription{
+  font-size: 13px;
+  font-weight: 400;
+}
+
+
+.announcement.warning {
+  font-size: 13px;
+  background: #FEF9C3;
+  color: #9D5226;
+  padding: 3%;
+  padding-top: 5%;
+  padding-bottom: 5%;
+  border-radius: 10px;
+  border: 1px solid #9D5226;
+  text-decoration: none;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  box-sizing: border-box;
+}
+.announcement.info {
+  font-size: 13px;
+  background: #d1ecf1;
+  color: #2786FF;
+  padding: 3%;
+  padding-top: 5%;
+  padding-bottom: 5%;
+  border-radius: 10px;
+  border: 1px solid #2786FF;
+  text-decoration: none;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.calendar .event {
+  display: flex;
+  font-size: 14px;
+  background: #d4edda;
+  color: #00AB36;
+  padding: 3%;
+  padding-top: 5%;
+  padding-bottom: 5%;
+  border-radius: 10px;
+  border: 1px solid #00AB36;
+  text-decoration: none;
+  width: 100%;
+  box-sizing: border-box;
+  flex-direction: row;
+  align-items: center;
+  gap: 15px;
 }
