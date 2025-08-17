@@ -10,7 +10,7 @@ include_once(__DIR__ . "/../../common/footer.php");
 
 <main>
   <div class="dashboardContainer">
-    <div class="navMenu"></div>
+
     <div class="dashboardContent">
       <div class="dashboardColumnOne">
         <div class="welcomeCard">
@@ -20,31 +20,31 @@ include_once(__DIR__ . "/../../common/footer.php");
             <span>2 Open Tickets</span>
             <span>Last Activity: 2 hours ago</span>
           </div>
+          </div>
+          <div class="sectionCard">
+            <h3>Quick Actions</h3>
+            <div class="quickActions">
+            <a href="#" class="quickActionItem"><div class="icon">
+              <div class="quickActionSvg">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 -960 960 960"><path d="M440-440H200v-80h240v-240h80v240h240v80H520v240h-80v-240Z"/></svg></div>
+            </div>New Ticket</a>
+            <a href="#" class="quickActionItem"><div class="icon">
+              <div class="quickActionSvg">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 -960 960 960"><path d="M478-240q21 0 35.5-14.5T528-290q0-21-14.5-35.5T478-340q-21 0-35.5 14.5T428-290q0 21 14.5 35.5T478-240Zm-36-154h74q0-33 7.5-52t42.5-52q26-26 41-49.5t15-56.5q0-56-41-86t-97-30q-57 0-92.5 30T342-618l66 26q5-18 22.5-39t53.5-21q32 0 48 17.5t16 38.5q0 20-12 37.5T506-526q-44 39-54 59t-10 73Zm38 314q-83 0-156-31.5T197-197q-54-54-85.5-127T80-480q0-83 31.5-156T197-763q54-54 127-85.5T480-880q83 0 156 31.5T763-763q54 54 85.5 127T880-480q0 83-31.5 156T763-197q-54 54-127 85.5T480-80Zm0-80q134 0 227-93t93-227q0-134-93-227t-227-93q-134 0-227 93t-93 227q0 134 93 227t227 93Zm0-320Z"/></svg>
+              </div>
+              </div>View FAQs</a>
+            <a href="#" class="quickActionItem"><div class="icon">
+              <div class="quickActionSvg">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 -960 960 960"><path d="M880-80 720-240H320q-33 0-56.5-23.5T240-320v-40h440q33 0 56.5-23.5T760-440v-280h40q33 0 56.5 23.5T880-640v560ZM160-473l47-47h393v-280H160v327ZM80-280v-520q0-33 23.5-56.5T160-880h440q33 0 56.5 23.5T680-800v280q0 33-23.5 56.5T600-440H240L80-280Zm80-240v-280 280Z"/></svg>
+              </div>
+              </div>Forums</a>
+            <a href="#" class="quickActionItem"><div class="icon">
+              <div class="quickActionSvg">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 -960 960 960"><path d="M580-240q-42 0-71-29t-29-71q0-42 29-71t71-29q42 0 71 29t29 71q0 42-29 71t-71 29ZM200-80q-33 0-56.5-23.5T120-160v-560q0-33 23.5-56.5T200-880h40v-80h80v80h320v-80h80v80h40q33 0 56.5 23.5T840-720v560q0 33-23.5 56.5T760-80H200Zm0-80h560v-400H200v400Zm0-480h560v-80H200v80Zm0 0v-80 80Z"/></svg>
+              </div>
+            </div>Appointments</a>
+          </div>
         </div>
-        <div class="sectionCard">
-          <h3>Quick Actions</h3>
-          <div class="quickActions">
-          <a href="#" class="quickActionItem"><div class="icon">
-            <div class="quickActionSvg">
-              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 -960 960 960"><path d="M440-440H200v-80h240v-240h80v240h240v80H520v240h-80v-240Z"/></svg></div>
-          </div>New Ticket</a>
-          <a href="#" class="quickActionItem"><div class="icon">
-            <div class="quickActionSvg">
-              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 -960 960 960"><path d="M478-240q21 0 35.5-14.5T528-290q0-21-14.5-35.5T478-340q-21 0-35.5 14.5T428-290q0 21 14.5 35.5T478-240Zm-36-154h74q0-33 7.5-52t42.5-52q26-26 41-49.5t15-56.5q0-56-41-86t-97-30q-57 0-92.5 30T342-618l66 26q5-18 22.5-39t53.5-21q32 0 48 17.5t16 38.5q0 20-12 37.5T506-526q-44 39-54 59t-10 73Zm38 314q-83 0-156-31.5T197-197q-54-54-85.5-127T80-480q0-83 31.5-156T197-763q54-54 127-85.5T480-880q83 0 156 31.5T763-763q54 54 85.5 127T880-480q0 83-31.5 156T763-197q-54 54-127 85.5T480-80Zm0-80q134 0 227-93t93-227q0-134-93-227t-227-93q-134 0-227 93t-93 227q0 134 93 227t227 93Zm0-320Z"/></svg>
-            </div>
-            </div>View FAQs</a>
-          <a href="#" class="quickActionItem"><div class="icon">
-            <div class="quickActionSvg">
-              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 -960 960 960"><path d="M880-80 720-240H320q-33 0-56.5-23.5T240-320v-40h440q33 0 56.5-23.5T760-440v-280h40q33 0 56.5 23.5T880-640v560ZM160-473l47-47h393v-280H160v327ZM80-280v-520q0-33 23.5-56.5T160-880h440q33 0 56.5 23.5T680-800v280q0 33-23.5 56.5T600-440H240L80-280Zm80-240v-280 280Z"/></svg>
-            </div>
-            </div>Forums</a>
-          <a href="#" class="quickActionItem"><div class="icon">
-            <div class="quickActionSvg">
-              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 -960 960 960"><path d="M580-240q-42 0-71-29t-29-71q0-42 29-71t71-29q42 0 71 29t29 71q0 42-29 71t-71 29ZM200-80q-33 0-56.5-23.5T120-160v-560q0-33 23.5-56.5T200-880h40v-80h80v80h320v-80h80v80h40q33 0 56.5 23.5T840-720v560q0 33-23.5 56.5T760-80H200Zm0-80h560v-400H200v400Zm0-480h560v-80H200v80Zm0 0v-80 80Z"/></svg>
-            </div>
-          </div>Appoinments</a>
-        </div>
-</div>
         <div class="knowledgeBase sectionCard">
           <h3>Knowledge Base</h3>
           <input type="text" placeholder="Search FAQs, forums, and help articles..." />
@@ -54,24 +54,48 @@ include_once(__DIR__ . "/../../common/footer.php");
             <a href="#" class="ticket">
               <div class="ticketDetails">
                 <p><span class="ticketTitle">WIFI connection issue in Library</span></p>
-                <span class="ticketCategory">Technical Support<span>
-                <span class="ticketTimestamp">Updated 2 hours ago<span>
+                <div class="ticketMeta">
+                  <span class="ticketCategory">
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 -960 960 960" ><path d="M447-80q-15 0-30-6t-27-18L104-390q-12-12-17.5-26.5T81-446q0-15 5.5-30t17.5-27l352-353q11-11 26-17.5t31-6.5h287q33 0 56.5 23.5T880-800v287q0 16-6 30.5T857-457L504-104q-12 12-27 18t-30 6Zm253-560q25 0 42.5-17.5T760-700q0-25-17.5-42.5T700-760q-25 0-42.5 17.5T640-700q0 25 17.5 42.5T700-640Z"/></svg>
+                    Technical Support
+                  </span>
+                  <span class="ticketTimestamp">
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 -960 960 960" ><path d="m612-292 56-56-148-148v-184h-80v216l172 172ZM480-80q-83 0-156-31.5T197-197q-54-54-85.5-127T80-480q0-83 31.5-156T197-763q54-54 127-85.5T480-880q83 0 156 31.5T763-763q54 54 85.5 127T880-480q0 83-31.5 156T763-197q-54 54-127 85.5T480-80Z"/></svg>
+                    Updated 2 hours ago
+                  </span>
+                </div>
               </div>
               <span class="status inProgress">In Progress</span>
             </a>
             <a href="#" class="ticket">
               <div class="ticketDetails">
                 <p><span class="ticketTitle">Password reset request</span></p>
-                <span class="ticketCategory">Account Access<span>
-                <span class="ticketTimestamp">Updated 1 day ago<span>
+                <div class="ticketMeta">
+                  <span class="ticketCategory">
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 -960 960 960" ><path d="M447-80q-15 0-30-6t-27-18L104-390q-12-12-17.5-26.5T81-446q0-15 5.5-30t17.5-27l352-353q11-11 26-17.5t31-6.5h287q33 0 56.5 23.5T880-800v287q0 16-6 30.5T857-457L504-104q-12 12-27 18t-30 6Zm253-560q25 0 42.5-17.5T760-700q0-25-17.5-42.5T700-760q-25 0-42.5 17.5T640-700q0 25 17.5 42.5T700-640Z"/></svg>
+                    Account Access
+                  </span>
+                  <span class="ticketTimestamp">
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 -960 960 960" ><path d="m612-292 56-56-148-148v-184h-80v216l172 172ZM480-80q-83 0-156-31.5T197-197q-54-54-85.5-127T80-480q0-83 31.5-156T197-763q54-54 127-85.5T480-880q83 0 156 31.5T763-763q54 54 85.5 127T880-480q0 83-31.5 156T763-197q-54 54-127 85.5T480-80Z"/></svg>
+                    Updated 1 day ago
+                  </span>
+                </div>
               </div>
               <span class="status open">Open</span>
             </a>
             <a href="#" class="ticket">
               <div class="ticketDetails">
                 <p><span class="ticketTitle">Course registration problem</span></p>
-                <span class="ticketCategory">Academic<span>
-                <span class="ticketTimestamp">Updated 3 days ago</span>
+                <div class="ticketMeta">
+                  <span class="ticketCategory">
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 -960 960 960" ><path d="M447-80q-15 0-30-6t-27-18L104-390q-12-12-17.5-26.5T81-446q0-15 5.5-30t17.5-27l352-353q11-11 26-17.5t31-6.5h287q33 0 56.5 23.5T880-800v287q0 16-6 30.5T857-457L504-104q-12 12-27 18t-30 6Zm253-560q25 0 42.5-17.5T760-700q0-25-17.5-42.5T700-760q-25 0-42.5 17.5T640-700q0 25 17.5 42.5T700-640Z"/></svg>
+                    Academic
+                  </span>
+                  <span class="ticketTimestamp">
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 -960 960 960" ><path d="m612-292 56-56-148-148v-184h-80v216l172 172ZM480-80q-83 0-156-31.5T197-197q-54-54-85.5-127T80-480q0-83 31.5-156T197-763q54-54 127-85.5T480-880q83 0 156 31.5T763-763q54 54 85.5 127T880-480q0 83-31.5 156T763-197q-54 54-127 85.5T480-80Z"/></svg>
+                    Updated 3 days ago
+                  </span>
+                </div>
               </div>
               <span class="status resolved">Resolved</span>
             </a>
@@ -81,8 +105,11 @@ include_once(__DIR__ . "/../../common/footer.php");
         <div class="priority sectionCard">
           <h3>Priority</h3>
           <a href="#" class="priorityItem">
-            <svg xmlns="http://www.w3.org/2000/svg" height="30px" viewBox="0 -960 960 960" width="30px" fill="red"><path d="M200-80v-760h640l-80 200 80 200H280v360h-80Z"/></svg>
-            <span class="priorityText">Lecture - SCS2308 moved to lecture hall - S203, 10:00-12:00</span>
+            <svg xmlns="http://www.w3.org/2000/svg" height="40px" viewBox="0 -960 960 960" width="40px" fill="red"><path d="M200-80v-760h640l-80 200 80 200H280v360h-80Z"/></svg>
+            <div>
+              <span class="priorityTitle">Lecture Hall Changed</span><br>
+            <span class="priorityDescription">Lecture - SCS2308 moved to lecture hall - S203, 10:00-12:00</span>
+            </div>
           </a>
         </div>
         <div class="announcements sectionCard">

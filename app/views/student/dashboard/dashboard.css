@@ -66,7 +66,7 @@ main {
   flex-direction: column;
   justify-content: flex-start;
   align-items: flex-start;
-  width: 30%;
+  width: 35%;
   height: 100%;
   background: transparent;
   margin-left: auto;
@@ -153,7 +153,7 @@ h3 {
   box-shadow: 0 4px 10px rgba(0,0,0,0.2);
 }
 
-.quickActions .quickActionItem .quickActionSvg svg {
+.quickActionSvg svg {
     width: 30px; 
     height: 30px;
     fill: white;      
@@ -209,8 +209,8 @@ h3 {
 
 .ticketDetails {
   display: flex;
-  padding-top: 25px;
-  padding-bottom: 25px;
+  padding-top: 12px;
+  padding-bottom: 12px;
   flex-direction: column;
   gap: 2px;
 }
@@ -225,26 +225,37 @@ h3 {
 }
 
 .ticketTitle {
-  font-weight: 600;
+  font-weight: 400;
   font-size: 15px;
   margin-bottom: 2px;
 } 
 
-.quickActions a svg {
-  width: 20px;
-  height: 20px;
-  fill: white;
+.ticketMeta {
+  display: flex;
+  flex-direction: row;
+  gap: 20px;
+  align-items: center;
+  flex-wrap: wrap;
 }
 
 .ticketCategory,
 .ticketTimestamp {
+  font-size: 13px;
   color: #666666;
   margin-right: 6px;
+  display: flex;
+  align-items: center;
+  gap: 4px;
 }
 
+.ticketCategory svg,
+.ticketTimestamp svg {
+  width: 17px;
+  height: 17px;
+  fill: #9f9e9e;
+}
 .dashboardColumnTwo > .sectionCard {
   margin-bottom: 20px;
-  width: 350px;
   align-items:flex-start;
 }
 .dashboardColumnTwo > .sectionCard:last-child {
@@ -263,6 +274,7 @@ h3 {
   gap: 10px;
   width: 100%;
   box-shadow: 0 3px 8px rgba(0, 0, 0, 0.08);
+  
 }
 
 .priorityItem{
@@ -270,24 +282,29 @@ h3 {
   background: #ffd7d3;
   color: #FA6060;
   padding: 3%;
-  padding-top: 7%;
-  padding-bottom: 7%;
+  padding-top: 5%;
+  padding-bottom: 5%;
   border-radius: 10px;
   border: 1px solid #FA6060;
   display: flex;
   align-items: center;
   gap: 8px;
+  width: 100%;
+  box-sizing: border-box;
 }
 
 
-.priorityText{
-  font-size: 13px;
-  font-weight: 400;
-}
+.priorityTitle,
 .announcementTitle {
   font-size: 15px;
   font-weight: 500;
 }
+
+.priorityDescription{
+  font-size: 13px;
+  font-weight: 400;
+}
+
 
 .announcement.warning {
   font-size: 13px;
@@ -302,6 +319,8 @@ h3 {
   display: flex;
   align-items: center;
   gap: 8px;
+  width: 100%;
+  box-sizing: border-box;
 }
 .announcement.info {
   font-size: 13px;
@@ -316,6 +335,8 @@ h3 {
   display: flex;
   align-items: center;
   gap: 8px;
+  width: 100%;
+  box-sizing: border-box;
 }
 
 .calendar .event {
@@ -329,4 +350,9 @@ h3 {
   border-radius: 10px;
   border: 1px solid #00AB36;
   text-decoration: none;
+  width: 100%;
+  box-sizing: border-box;
+  flex-direction: row;
+  align-items: center;
+  gap: 15px;
 }

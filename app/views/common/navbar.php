@@ -2,7 +2,7 @@
   <nav class="navbar">
     <div class="navbarLeft">
       <img src="/public/assets/logo.svg" alt="UCSC Logo" class="logo" />
-      <span class="navbarBrand">UCSC Help Desk</span>
+      <span class="navbarBrand">UCSC HelpDesk</span>
     </div>
     <div class="navbarCenter">
       <div class="navbarMenuContainer">
