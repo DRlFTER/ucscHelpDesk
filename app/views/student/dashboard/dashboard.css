@@ -37,9 +37,29 @@ main {
 }
 
 .navMenu {
-  flex: 0 0 15%;
+  flex: 0 0 10%;
   height: 100%;
-  background-color: #ffffff;
+}
+
+.sideNav {
+  display: flex;
+  flex-direction: column;
+  padding: 20px 10px;
+  gap: 12px;
+}
+
+.sideNav a {
+  color: #333;
+  text-decoration: none;
+  padding: 10px 14px;
+  border-radius: 6px;
+  font-weight: 500;
+  transition: background 0.2s ease, color 0.2s ease;
+}
+
+.sideNav a:hover {
+  background: #f0f0f0;
+  color: #1f40b0;
 }
 
 .dashboardContent {
@@ -293,7 +313,6 @@ h3 {
   box-sizing: border-box;
 }
 
-
 .priorityTitle,
 .announcementTitle {
   font-size: 15px;
@@ -304,7 +323,6 @@ h3 {
   font-size: 13px;
   font-weight: 400;
 }
-
 
 .announcement.warning {
   font-size: 13px;
@@ -355,4 +373,22 @@ h3 {
   flex-direction: row;
   align-items: center;
   gap: 15px;
+}
+
+.accountItem {
+  display: flex;
+  align-items: center;
+  color: #394353;
+  gap: 8px;
+  margin-left: 10px;
+  padding: 10px 0;
+  text-decoration: none;
+}
+
+.accountItem:last-child {
+  border-bottom: none;
+}
+
+.accountItem svg{
+  color: #394353;
 }

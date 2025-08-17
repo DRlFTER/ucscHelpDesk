@@ -12,6 +12,16 @@ include_once(__DIR__ . "/../../common/footer.php");
   <div class="dashboardContainer">
 
     <div class="dashboardContent">
+      <div class="navMenu">
+        <div class="sideNav">
+          <a href="#">Dashboard</a>
+          <a href="#">My Tickets</a>
+          <a href="#">FAQs</a>
+          <a href="#">Forums</a>
+          <a href="#">Calendar</a>
+          <a href="#">Settings</a>
+        </div>
+      </div>
       <div class="dashboardColumnOne">
         <div class="welcomeCard">
           <h2>Welcome Back, Brian!</h2>
@@ -139,9 +149,19 @@ include_once(__DIR__ . "/../../common/footer.php");
         </div>
         <div class="account sectionCard">
           <h3>Account</h3>
+        <div class="accountItems">
+          <a href="#" class="accountItem">
+            <svg xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 -960 960 960" width="24px"><path d="M480-480q-66 0-113-47t-47-113q0-66 47-113t113-47q66 0 113 47t47 113q0 66-47 113t-113 47ZM160-160v-112q0-34 17.5-62.5T224-378q62-31 126-46.5T480-440q66 0 130 15.5T736-378q29 15 46.5 43.5T800-272v112H160Z"/></svg>
             Profile Settings<br>
+          </a>
+          <a href="#" class="accountItem">
+            <svg xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 -960 960 960" width="24px"><path d="M480-80q-33 0-56.5-23.5T400-160h160q0 33-23.5 56.5T480-80ZM160-200v-80h80v-280q0-83 50-147.5T420-792v-28q0-25 17.5-42.5T480-880q25 0 42.5 17.5T540-820v13q-10 20-15 42t-5 45q0 83 58.5 141.5T720-520v240h80v80H160Zm560-400q-50 0-85-35t-35-85q0-50 35-85t85-35q50 0 85 35t35 85q0 50-35 85t-85 35Z"/></svg>
             Notifications<br>
+          </a>
+          <a href="#" class="accountItem">
+            <svg xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 -960 960 960" width="24px"><path d="M480-120q-138 0-240.5-91.5T122-440h82q14 104 92.5 172T480-200q117 0 198.5-81.5T760-480q0-117-81.5-198.5T480-760q-69 0-129 32t-101 88h110v80H120v-240h80v94q51-64 124.5-99T480-840q75 0 140.5 28.5t114 77q48.5 48.5 77 114T840-480q0 75-28.5 140.5t-77 114q-48.5 48.5-114 77T480-120Zm112-192L440-464v-216h80v184l128 128-56 56Z"/></svg>
             Ticket History<br>
+          </a>
         </div>
       </div>
     </div>
