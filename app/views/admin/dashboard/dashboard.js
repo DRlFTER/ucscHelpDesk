@@ -1,4 +1,3 @@
-// ---------- Sample Data ----------
 const menuItems = [
   { name: "Analytics", icon: "" },
   { name: "Tickets", icon: "" },
@@ -71,10 +70,12 @@ document.getElementById("platformStatus").innerHTML = `
   <ul>
     ${platformStatus
       .map(
-        (p) =>
-          `<li>${p.name} - <span class="${p.status.toLowerCase()}">${
-            p.status
-          }</span></li>`
+        (p) => `
+      <li>
+        ${p.name} 
+        <span class="status ${p.status.toLowerCase()}">${p.status}</span>
+      </li>
+    `
       )
       .join("")}
   </ul>
@@ -91,7 +92,7 @@ document.getElementById("recentTickets").innerHTML = `
           <strong>${t.title}</strong><br>
           <small>${t.agent} • ${t.time}</small>
         </div>
-        <span class="priority ${t.priority.toLowerCase()}">${t.priority}</span>
+        <span class="status ${t.priority.toLowerCase()}">${t.priority}</span>
       </li>
     `
       )

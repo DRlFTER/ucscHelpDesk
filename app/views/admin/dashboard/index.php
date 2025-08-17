@@ -31,7 +31,7 @@ include_once(__DIR__ . "/../../common/navbar.php");
   </div>
 </main>
 
-<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1" integrity="sha384-+QwQJQw1QwQJQw1QwQJQw1QwQJQw1QwQJQw1QwQJQw1QwQJQw1QwQJQw1QwQJQw1QwQJQw1QwQJQw1Qw==" crossorigin="anonymous"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1" crossorigin="anonymous"></script>
 <script src="dashboard.js"></script>
 
 <?php include_once(__DIR__ . "/../../common/footer.php"); ?>

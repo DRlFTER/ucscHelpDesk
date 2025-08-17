@@ -112,57 +112,15 @@ h3 {
   box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
 }
 
-.platformStatus ul,
-.recentTickets ul {
-  list-style: none;
-  padding: 0;
-  margin: 0;
-}
-
 .platformStatus li,
 .recentTickets li {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
   padding: 8px 0;
   border-bottom: 1px solid #f3f4f6;
 }
 
-.ticketItem {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-}
-
-.priority.high {
-  color: #ef4444;
-  font-weight: 600;
-}
-.priority.medium {
-  color: #f59e0b;
-  font-weight: 600;
-}
-.priority.low {
-  color: #10b981;
-  font-weight: 600;
-}
-
-.operational {
-  color: #10b981;
-}
-.degraded {
-  color: #f59e0b;
-}
-
-.topAgents table {
-  width: 100%;
-  border-collapse: collapse;
-}
-
-.topAgents th,
-.topAgents td {
-  text-align: left;
-  padding: 10px;
-  border-bottom: 1px solid #f3f4f6;
-}
-
-.topAgents tr:hover {
-  background: #f9fafb;
+.ticketItem .status {
+  margin-left: auto;
 }
