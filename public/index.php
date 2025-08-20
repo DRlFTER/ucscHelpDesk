@@ -2,7 +2,8 @@
 
 session_start();
 
-require __DIR__ . "/../app/core/init.php";
+require '../app/core/init.php';
 
-$app =  new App();
+DEBUG ? ini_set('display_errors', 1) : ini_set('display_errors', 0);
+$app = new App;
 $app->loadController();

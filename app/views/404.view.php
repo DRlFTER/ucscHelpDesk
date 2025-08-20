@@ -1,1 +1,3 @@
-Page not found (View 404)
+<?php
+
+echo ("View File not Found");
