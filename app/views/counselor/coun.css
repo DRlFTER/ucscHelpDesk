@@ -1,0 +1,59 @@
+    header {
+        text-align: center;
+        margin-top: 20px;
+        color: #333;
+        font-size: 24px;
+        font-weight: bold;
+        margin-bottom: 20px;
+        padding: 20px;
+    }
+    .ticket-container {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+        gap: 40px;
+        padding: 20px;
+    }
+    .ticket-card {
+      border: 1px solid #ddd;
+      border-radius: 10px;
+      padding: 20px;
+      background: #fff;
+      box-shadow: 0px 2px 6px rgba(0,0,0,0.1);
+      position: relative;
+    }
+    .ticket-title {
+      font-size: 20px;
+      font-weight: bold;
+      margin-bottom: 8px;
+    }
+    .ticket-sub {
+        font-size: 14px;
+        color: #666;
+        margin-bottom: 14px;
+    }
+    .status, .priority {
+      display: inline-block;
+      padding: 5px 12px;
+      border-radius: 12px;
+      font-size: 12px;
+      font-weight: bold;
+      margin-bottom: 12px;
+    }
+   
+    .status.resolved { background: #DCFCE7; color: #155724; }
+    .status.rejected { background: #FEE2E1; color: #7f1d1d; }
+    .status.pending { background: #FEF9C3; color: #92400e; }
+    
+    .status.closed { background: #DCFCE7; color: #155724;  }
+    .status.open { background: #FEE2E1; color: #7f1d1d; }
+    .status.cancelled { background: #FEE2E1; color: #7f1d1d; }
+    .status.progress { background: #FEF9C3; color: #92400e; }        
+    .status.review { background: #FEF9C3; color: #92400e; }
+    .status.completed { background: #DCFCE7; color: #155724; }
+    .status.requested { background: #BADBFF; color: #3300FF; }
+
+    .priority.high { background: #FEE2E1; color: #7f1d1d; }
+    .priority.medium { background: #FEF9C3; color: #92400e; }
+    .priority.low { background: #BADBFF; color: #3300FF; }
+
+    
