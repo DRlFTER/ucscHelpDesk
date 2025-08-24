@@ -1,55 +1,27 @@
 <?php
 
-trait Database
+class Database
 {
-    private $host = DBHOST;
-    private $port = DBPORT;
-    private $dbname = DBNAME;
-    private $user = DBNAME;
-    private $password = DBPASSWORD;
+	private static $instance = null; // mysqli instance
 
-    protected $pdo;
+	public static function getInstance()
+	{
+		if (self::$instance === null) {
+			$host = defined('DBHOST') ? DBHOST : 'localhost';
+			$user = defined('DBUSER') ? DBUSER : 'root';
+			$pass = defined('DBPASSWORD') ? DBPASSWORD : '';
+			$name = defined('DBNAME') ? DBNAME : 'ucschelpdesk';
+			$port = defined('DBPORT') ? (int)DBPORT : 3306;
 
-    // Initialize PDO only once
-    private function connect()
-    {
-        if ($this->pdo) {
-            return $this->pdo;
-        }
-
-        try {
-            $dsn = "pgsql:host={$this->host};port={$this->port};dbname={$this->dbname}";
-            $this->pdo = new PDO($dsn, $this->user, $this->password);
-            $this->pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
-            return $this->pdo;
-        } catch (PDOException $e) {
-            die("Database connection failed: " . $e->getMessage());
-        }
-    }
-
-    public function query($query, $data = [])
-    {
-        $conn = $this->connect();
-        $stmt = $conn->prepare($query);
-
-        if ($stmt->execute($data)) {
-            $result = $stmt->fetchAll(PDO::FETCH_OBJ);
-            return (!empty($result)) ? $result : false;
-        }
-
-        return false;
-    }
-
-    public function get_row($query, $data = [])
-    {
-        $conn = $this->connect();
-        $stmt = $conn->prepare($query);
-
-        if ($stmt->execute($data)) {
-            $result = $stmt->fetch(PDO::FETCH_OBJ);
-            return $result ?: false;
-        }
-
-        return false;
-    }
+			$mysqli = @new mysqli($host, $user, $pass, $name, $port);
+			if ($mysqli->connect_error) {
+				die('Database connection failed: ' . $mysqli->connect_error);
+			}
+			// Set utf8mb4 for proper unicode support
+			$mysqli->set_charset('utf8mb4');
+			self::$instance = $mysqli;
+		}
+		return self::$instance;
+	}
 }
+

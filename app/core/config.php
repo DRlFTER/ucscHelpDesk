@@ -7,11 +7,12 @@ if ($_SERVER['SERVER_NAME'] == 'ucschelpdesk.local') {
     define('ROOT', 'https://www.yourwebsite.com');
 }
 
-define('DBHOST', "localhost");
-define('DBPORT', 5432);
-define('DBNAME', "ucschelpdesk");
-define('DBUSER', "postgres");
-define('DBPASSWORD', "0000");
+// MySQL connection settings (simple local defaults)
+define('DBHOST', 'localhost');
+define('DBPORT', 3306);
+define('DBNAME', 'ucscHelpDesk');
+define('DBUSER', 'root');
+define('DBPASSWORD', '');
 
 define('DEBUG', true);
 
