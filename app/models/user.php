@@ -2,6 +2,23 @@
 
 class User extends Model
 {
+	public function findByEmail(string $email)
+	{
+		$sql = "SELECT id, role, full_name, username, email, password_hash FROM users WHERE email = ? LIMIT 1";
+		$stmt = $this->db->prepare($sql);
+		if (!$stmt) {
+			throw new Exception('Prepare failed: ' . $this->db->error);
+		}
+		$stmt->bind_param('s', $email);
+		if (!$stmt->execute()) {
+			throw new Exception('Execute failed: ' . $stmt->error);
+		}
+		$result = $stmt->get_result();
+		$row = $result ? $result->fetch_assoc() : null;
+		$stmt->close();
+		return $row ?: null;
+	}
+
 	public function createUser(string $role, string $fullName, ?string $username, string $email, string $password): int
 	{
 		$sql = "INSERT INTO users (role, full_name, username, email, password_hash) VALUES (?, ?, ?, ?, ?)";
