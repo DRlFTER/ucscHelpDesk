@@ -10,9 +10,7 @@
     <link rel="icon" type="image/png" sizes="32x32" href="/assets/images/logo-min.svg">
 
     <!-- Global styles -->
-    <link rel="stylesheet" href="/assets/css/variables.css">
-    <link rel="stylesheet" href="/assets/css/reset.css">
-    <link rel="stylesheet" href="/assets/css/typography.css">
+    <link rel="stylesheet" href="../common/css/components.css">
 
     <!-- Page-specific head content -->
     <?= $head ?? '' ?>
