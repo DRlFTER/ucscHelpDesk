@@ -1,5 +1,5 @@
 <?php
-include_once(__DIR__ . "/../views/common/navbar.php");
+include_once(__DIR__ . "/../../views/common/navbar.php");
 ?>
 
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1" crossorigin="anonymous"></script>
