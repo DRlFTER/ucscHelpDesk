@@ -14,18 +14,27 @@ class App
     public function loadController()
     {
         $URL = $this->splitURL();
-        $filename = "../app/controllers/" . ucfirst($URL[0]) . ".php";
+    $controllerSegment = ucfirst($URL[0]);
+    $basePath = "../app/controllers/";
+    $filename = $basePath . $controllerSegment . ".php";
 
         /** Select Controller **/
         if (file_exists($filename)) {
             require $filename;
-            $this->controller = ucfirst($URL[0]);
+            $this->controller = $controllerSegment;
             unset($URL[0]);
         } else {
-            $filename = "../app/controllers/_404.php";
-            require $filename;
-
-            $this->controller = "_404";
+            // Try nested folder: e.g., controllers/student/Student.php
+            $nested = $basePath . strtolower($controllerSegment) . "/" . $controllerSegment . ".php";
+            if (file_exists($nested)) {
+                require $nested;
+                $this->controller = $controllerSegment;
+                unset($URL[0]);
+            } else {
+                $filename = "../app/controllers/_404.php";
+                require $filename;
+                $this->controller = "_404";
+            }
         }
 
         $controller = new $this->controller;
