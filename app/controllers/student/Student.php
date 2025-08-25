@@ -6,7 +6,7 @@ class Student extends Controller
     {
         $headContent = '
         <link rel="stylesheet" href="/app/views/common/css/components.css" />
-        <link rel="stylesheet" href="/app/views/dashboard.css"/>';
+        <link rel="stylesheet" href="/app/views/student/dashboard.css"/>';
          $this->view('dashboardStudent', ['title' => 'Student Dashboard', 'head' => $headContent]);
     }
 }

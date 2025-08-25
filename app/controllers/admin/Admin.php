@@ -6,7 +6,7 @@ class Admin extends Controller
     {
         $headContent = '
         <link rel="stylesheet" href="/app/views/common/css/components.css" />
-        <link rel="stylesheet" href="/app/views/adminDashboard.css"/>';
+        <link rel="stylesheet" href="/app/views/admin/adminDashboard.css"/>';
          $this->view('adminDashboard', ['title' => 'Admin Dashboard', 'head' => $headContent]);
     }
 }
