@@ -37,7 +37,7 @@ class Auth extends Controller
 
 			// route by role (placeholder dashboards)
 				switch ($user['role']) {
-				case 'student':
+					case 'student':
 						header('Location: ' . ROOT . '/public/student/dashboard');
 					break;
 				case 'lecturer':
