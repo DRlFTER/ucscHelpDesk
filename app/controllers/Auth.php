@@ -49,6 +49,9 @@ class Auth extends Controller
 				case 'counselor':
 					header('Location: ' . ROOT . '/public/counselor/dashboard');
 					break;
+				case 'admin':
+					header('Location: ' . ROOT . '/public/admin/dashboard');
+					break;
 				default:
 					header('Location: ' . ROOT . '/public');
 			}
