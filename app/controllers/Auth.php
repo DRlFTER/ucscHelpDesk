@@ -41,16 +41,16 @@ class Auth extends Controller
 						header('Location: ' . ROOT . '/public/student/dashboard');
 					break;
 				case 'lecturer':
-						header('Location: ' . ROOT . '/public/lecturer/dashboard');
+					header('Location: ' . ROOT . '/public/lecturer/dashboard');
 					break;
 				case 'staff':
-						header('Location: ' . ROOT . '/public/staff/dashboard');
+					header('Location: ' . ROOT . '/public/staff/dashboard');
 					break;
 				case 'counselor':
-						header('Location: ' . ROOT . '/public/counselor/dashboard');
+					header('Location: ' . ROOT . '/public/counselor/dashboard');
 					break;
 				default:
-						header('Location: ' . ROOT . '/public');
+					header('Location: ' . ROOT . '/public');
 			}
 			exit;
 		} catch (Throwable $e) {
