@@ -7,6 +7,14 @@
         margin-bottom: 20px;
         padding: 20px;
     }
+    body {
+    margin: 0;
+    font-family: 'Inter', 'SF Pro', sans-serif;
+    background-color: #ffffff;
+    color: #000;
+    }
+
+
     .ticket-container {
         display: grid;
         grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
@@ -56,4 +64,5 @@
     .priority.medium { background: #FEF9C3; color: #92400e; }
     .priority.low { background: #BADBFF; color: #3300FF; }
 
+    
     

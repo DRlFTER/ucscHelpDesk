@@ -1,17 +1,18 @@
 <?php
 // --- Temporary Students (replace later with DB query) ---
 $students = [
-    ["id" => 1, "name" => "Alice Perera"],
-    ["id" => 2, "name" => "Nimal Silva"],
-    ["id" => 3, "name" => "Kavindu Fernando"],
-    ["id" => 4, "name" => "Samanthi Jayasuriya"]
+    ["id" => "2023cs01", "name" => "Alice Perera"],
+    ["id" => "2023is02", "name" => "Nimal Silva"],
+    ["id" => "2023cs03", "name" => "Kavindu Fernando"],
+    ["id" => "2023cs04", "name" => "Samanthi Jayasuriya"],
+    ["id" => "2023is05", "name" => "Ruwantha Kumara"]
 ];
 
 // --- Temporary Tickets (replace later with DB query) ---
 $tickets = [
     [
-        "id" => "TKT-202301",
-        "student_id" => 1,
+        "id" => "1",
+        "student_id" => "2023cs01",
         "title" => "Struggling with Exam Stress",
         "category" => "Mental Health",
         "priority" => "High",
@@ -19,8 +20,8 @@ $tickets = [
         "date" => "Jan 12, 2024"
     ],
     [
-        "id" => "TKT-202302",
-        "student_id" => 2,
+        "id" => "2",
+        "student_id" => "2023is02",
         "title" => "Homesickness Issue",
         "category" => "Personal Support",
         "priority" => "Medium",
@@ -28,8 +29,8 @@ $tickets = [
         "date" => "Jan 10, 2024"
     ],
     [
-        "id" => "TKT-202303",
-        "student_id" => 1,
+        "id" => "3",
+        "student_id" => "2023cs03",
         "title" => "Sleep Problems",
         "category" => "Mental Health",
         "priority" => "Low",
@@ -37,8 +38,8 @@ $tickets = [
         "date" => "Jan 9, 2024"
     ],
     [
-        "id" => "TKT-202304",
-        "student_id" => 3,
+        "id" => "4",
+        "student_id" => "2023cs04",
         "title" => "Time Management",
         "category" => "Personal Support",
         "priority" => "Medium",
@@ -46,8 +47,8 @@ $tickets = [
         "date" => "Jan 8, 2024"
     ],
     [
-        "id" => "TKT-202305",
-        "student_id" => 4,
+        "id" => "5",
+        "student_id" => "2023is05",
         "title" => "Anxiety Issues",
         "category" => "Mental Health",
         "priority" => "High",
