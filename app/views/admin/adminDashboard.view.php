@@ -1,4 +1,36 @@
-const menuItems = [
+<?php
+include_once(__DIR__ . "/../../views/common/navbar.php");
+?>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1" crossorigin="anonymous"></script>
+
+<main>
+  <div class="dashboardContainer">
+    <div class="navMenu">
+      <ul id="menuList"></ul>
+    </div>
+    <div class="dashboardContent">
+      <div class="cardContainer" id="cardContainer"></div>
+      <div class="contentRow">
+        <div class="ticketTrends chartBox">
+          <h3>Ticket Trends</h3>
+          <canvas id="ticketTrendsChart"></canvas>
+        </div>
+        <div class="ticketsByCategory chartBox">
+          <h3>Tickets by Category</h3>
+          <canvas id="ticketsByCategoryChart"></canvas>
+        </div>
+      </div>
+      <div class="contentRow">
+        <div class="platformStatus cardBox" id="platformStatus"></div>
+        <div class="recentTickets cardBox" id="recentTickets"></div>
+      </div>
+      <div class="topAgents cardBox" id="topAgents"></div>
+    </div>
+  </div>
+</main>
+
+<script>const menuItems = [
   { name: "Analytics", icon: "" },
   { name: "Tickets", icon: "" },
   { name: "Agents", icon: "" },
@@ -157,3 +189,4 @@ new Chart(ctxPie, {
   },
   options: { responsive: true },
 });
+</script>
