@@ -7,13 +7,32 @@
         margin-bottom: 20px;
         padding: 20px;
     }
-    body {
-    margin: 0;
-    font-family: 'Inter', 'SF Pro', sans-serif;
-    background-color: #ffffff;
-    color: #000;
+    .filters {
+        display: flex;
+        gap: 12px;
+        margin-bottom: 20px;
+        flex-wrap: wrap;  /* allows wrapping on smaller screens */
     }
 
+    /* Common filter button & select styling */
+    .btn {
+        appearance: none;           /* removes default browser style for select */
+        -webkit-appearance: none;
+        -moz-appearance: none;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 8px;
+        background-color: var(--color-bg-filter);
+        border: 1px solid var(--color-border-medium);
+        border-radius: 30px;
+        padding: 10px 18px;
+        font-size: 15px;
+        font-weight: 500;
+        color: var(--color-text-dark);
+        cursor: pointer;
+        min-width: 160px;           /* optional, keeps dropdowns same width */
+    }
 
     .ticket-container {
         display: grid;
