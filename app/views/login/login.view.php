@@ -8,9 +8,10 @@
     <div class="logInBox">
         <div class="imgsHolder">
             <div class="imgCarousel">
-                <img src="/public/assets/imgs/pirateBG.png" alt="Login Image 1" class="carouselImage active">
+                <div class="imgGradient"></div>
+                <img src="/public/assets/imgs/3.png" alt="Login Image 1" class="carouselImage active">
                 <div class="textCarousel">
-                    <h2>Lorem ipsum</h2>
+                    <h2></h2>
                     <div class="pillContainer">
                         <div class="pill pillActive"></div>
                         <div class="pill"></div>
@@ -30,7 +31,7 @@
                  <input type="password" id="password" name="password" placeholder="Enter password" required>
              </div>
              <div class="btnHolder">
-                <button class="btnPrimary btnPrimaryText" type="submit">Log In</button>
+                <button class="btnPrimary btnPrimaryText" type="submit">Log in</button>
              </div></form>
             </div>
           
