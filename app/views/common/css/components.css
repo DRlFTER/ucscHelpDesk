@@ -65,7 +65,15 @@
 body {
   width: 100%;
   min-height: 100vh;
-  font-family: 'SF Pro';
+  font-family: "SF Pro";
+}
+
+.titleText {
+  font-size: 100px;
+  font-family: "SF Pro";
+  font-weight: 700;
+  line-height: 32px;
+  letter-spacing: -0.5px;
 }
 
 .container {
@@ -442,7 +450,7 @@ body {
 /* ----- ICON STATUS ----- */
 
 .status {
-  font-family: 'SF Pro';
+  font-family: "SF Pro";
   align-self: flex-end;
   padding: 3px 8px;
   width: fit-content;
@@ -457,7 +465,7 @@ body {
 .inProgress,
 .pending,
 .underReview {
-  background: #FEF9C3;
+  background: #fef9c3;
   color: #92400e;
 }
 
@@ -465,21 +473,21 @@ body {
 .cancelled,
 .high,
 .rejected {
-  background: #FEE2E1;
+  background: #fee2e1;
   color: #7f1d1d;
 }
 
 .completed,
 .closed,
 .resolved {
-  background: #DCFCE7;
-  color: #155724; 
+  background: #dcfce7;
+  color: #155724;
 }
 
 .requested,
 .low {
-  background-color: #BADBFF;
-  color: #3300FF;
+  background-color: #badbff;
+  color: #3300ff;
 }
 
 /* ----- ICON STATUS ----- */
