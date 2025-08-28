@@ -4,6 +4,8 @@ class Student extends Controller
 {
     public function dashboard()
     {
+        $this->requireLogin('student');
+
         $headContent = '
         <link rel="stylesheet" href="/app/views/common/css/components.css" />
         <link rel="stylesheet" href="/app/views/student/dashboard.css"/>';

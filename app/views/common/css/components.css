@@ -478,7 +478,7 @@ body {
   border-radius: 10px;
 }
 
-.profileDropdown a:hover {
+.dropdownContent > a:hover {
   background-color: #f2f2f2;
 }
 
@@ -524,6 +524,15 @@ body {
   width: 100%;
   border-top: 1px solid #eee;
 }
+
+.login {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  width: 100%;
+  border-top: 1px solid #eee;
+}
+
 .logout a {
   text-align: center;
   align-items: center;
@@ -533,6 +542,18 @@ body {
   margin-top: 10px;
   border-radius: 10px;
 }
+
+.login a {
+  text-align: center;
+  align-items: center;
+  width: 100%;
+  color: white;
+  font-weight: bold;
+  margin-top: 10px;
+  border-radius: 10px;
+  background-color: #8c8cf9;
+}
+
 .logout a:hover {
   background-color: #ffeaea;
 }

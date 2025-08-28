@@ -24,7 +24,7 @@
             <div class="formContainer">
              <div class="logInTitles">
                 <h2 class="titleText">Sign in</h2>
-                <p class="paraText">Don't have an account? <a href="/public/register">Sign up</a></p>
+                <p class="paraText">Don't have an account? log in as a <a href="/public/guest/dashboard">Guest user</a></p>
              </div><form action="/public/auth/login" method="POST">
               <div class="formFields">
                  <input type="email" id="email" name="email" placeholder="Enter email" required>
