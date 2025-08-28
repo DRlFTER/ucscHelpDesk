@@ -1,9 +1,5 @@
 <?php
-$pageTitle = "Student Dashboard";
-$pageCSS = "./dashboard.css";
-include_once(__DIR__ . "/../../common/header.php");
-include_once(__DIR__ . "/../../common/navbar.php");
-include_once(__DIR__ . "/../../common/footer.php");
+include_once(__DIR__ . "/../../views/common/navbar.php");
 ?>
 
 <script src="./dashboard.js"></script>

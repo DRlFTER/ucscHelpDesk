@@ -65,7 +65,15 @@
 body {
   width: 100%;
   min-height: 100vh;
-  font-family: 'SF Pro';
+  font-family: "SF Pro";
+}
+
+.titleText {
+  font-size: 100px;
+  font-family: "SF Pro";
+  font-weight: 700;
+  line-height: 32px;
+  letter-spacing: -0.5px;
 }
 
 .container {
@@ -429,6 +437,12 @@ body {
   align-items: center;
   gap: 8px;
   cursor: pointer;
+  padding: 5px 8px;
+  border-radius: 20px;
+}
+
+.profile:hover {
+  background-color: #f0f0f0;
 }
 
 .profile img {
@@ -437,12 +451,98 @@ body {
   border-radius: 50%;
 }
 
+.profileDropdown {
+  display: none;
+  position: absolute;
+  right: 20px;
+  top: 60px;
+  margin-top: 8px;
+  padding: 12px;
+  background-color: #fff;
+  min-width: 220px;
+  border: 1px solid #ddd;
+  border-radius: 10px;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+  overflow: hidden;
+  z-index: 100;
+}
+
+/* Dropdown links */
+.profileDropdown a {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  padding: 10px 14px;
+  text-decoration: none;
+  color: #333;
+  border-radius: 10px;
+}
+
+.profileDropdown a:hover {
+  background-color: #f2f2f2;
+}
+
+/* User info */
+.userInfo {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  padding: 12px;
+  border-bottom: 1px solid #eee;
+}
+
+.userInfo .profilePicture {
+  width: 100px;
+  height: 100px;
+  border-radius: 50%;
+  background-color: #eee;
+  margin-bottom: 8px;
+}
+
+.userInfo .name {
+  font-weight: bold;
+  margin: 0;
+}
+.userInfo .email {
+  font-size: 12px;
+  color: #555;
+  margin: 2px 0;
+}
+.userInfo .role {
+  font-size: 12px;
+  color: #0073e6;
+  font-weight: 500;
+  margin: 0;
+}
+
+/* Logout */
+.logout {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  width: 100%;
+  border-top: 1px solid #eee;
+}
+.logout a {
+  text-align: center;
+  align-items: center;
+  width: 100%;
+  color: #c00;
+  font-weight: bold;
+  margin-top: 10px;
+  border-radius: 10px;
+}
+.logout a:hover {
+  background-color: #ffeaea;
+}
+
 /* ----- NAVBAR STYLES ----- */
 
 /* ----- ICON STATUS ----- */
 
 .status {
-  font-family: 'SF Pro';
+  font-family: "SF Pro";
   align-self: flex-end;
   padding: 3px 8px;
   width: fit-content;
@@ -457,7 +557,7 @@ body {
 .inProgress,
 .pending,
 .underReview {
-  background: #FEF9C3;
+  background: #fef9c3;
   color: #92400e;
 }
 
@@ -465,21 +565,21 @@ body {
 .cancelled,
 .high,
 .rejected {
-  background: #FEE2E1;
+  background: #fee2e1;
   color: #7f1d1d;
 }
 
 .completed,
 .closed,
 .resolved {
-  background: #DCFCE7;
-  color: #155724; 
+  background: #dcfce7;
+  color: #155724;
 }
 
 .requested,
 .low {
-  background-color: #BADBFF;
-  color: #3300FF;
+  background-color: #badbff;
+  color: #3300ff;
 }
 
 /* ----- ICON STATUS ----- */

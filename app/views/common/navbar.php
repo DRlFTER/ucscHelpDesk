@@ -22,10 +22,56 @@
     </div>
     <div class="navbarRight">
       <div class="icon notification"></div>
+      <?php
+        $sessionUser = $_SESSION['user'] ?? null;
+        $displayName = $sessionUser['name'] ?? 'Guest';
+        $displayEmail = $sessionUser['email'] ?? '';
+        $displayRole = isset($sessionUser['role']) ? ucfirst($sessionUser['role']) : '';
+      ?>
       <div class="profile">
         <img src="/public/assets/profile.svg" alt="Profile" />
-        <span>Profile Name</span>
+        <span><?= htmlspecialchars($displayName) ?></span>
+        <div class="profileDropdown">
+         <div class="dropdownContent">
+          <div class="userInfo">
+           <div class="profilePicture"></div>
+           <p class="name"><?= htmlspecialchars($displayName) ?></p>
+           <?php if ($displayEmail): ?>
+           <p class="email"><?= htmlspecialchars($displayEmail) ?></p>
+           <?php endif; ?>
+           <?php if ($displayRole): ?>
+           <p class="role"><?= htmlspecialchars($displayRole) ?></p>
+           <?php endif; ?>
+          </div>
+         <a href="#">My Account</a>
+         <a href="#">Help / FAQ</a>
+         <a href="#">Settings</a>
+
+        <div class="logout">
+          <a href="/public/auth/logout">Logout</a>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
       </div>
     </div>
   </nav>
 </header>
+
+<script>// Toggle dropdown on profile click
+document.addEventListener('DOMContentLoaded', function () {
+  const profile = document.querySelector('.profile');
+  const dropdown = document.querySelector('.profileDropdown');
+
+  profile.addEventListener('click', function (e) {
+    e.stopPropagation(); // Prevent click from closing immediately
+    dropdown.style.display = dropdown.style.display === 'block' ? 'none' : 'block';
+  });
+
+  // Close dropdown when clicking outside
+  document.addEventListener('click', function () {
+    dropdown.style.display = 'none';
+  });
+});
+</script>
