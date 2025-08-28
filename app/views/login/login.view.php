@@ -25,7 +25,7 @@
              <div class="logInTitles">
                 <h2 class="titleText">Sign in</h2>
                 <p class="paraText">Don't have an account? <a href="/public/register">Sign up</a></p>
-             </div><form action="/public/auth/login" method="POST">
+             </div><form action="/public/login" method="POST">
               <div class="formFields">
                  <input type="email" id="email" name="email" placeholder="Enter email" required>
                  <input type="password" id="password" name="password" placeholder="Enter password" required>

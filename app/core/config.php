@@ -1,18 +1,12 @@
 <?php
 
-// Set the server name based on each user's virtual host or host name.
-if ($_SERVER['SERVER_NAME'] == 'ucschelpdesk.local') {
-    define('ROOT', 'http://ucschelpdesk.local');
-} else {
-    define('ROOT', 'https://www.yourwebsite.com');
-}
+define('ROOT', 'http://ucschelpdesk.local/'); // change this with the actual root URL of your project (WAMP/XAMPP)
 
-// MySQL connection settings (simple local defaults)
-define('DBHOST', 'localhost');
+// MySQL connection settings (AlwaysData cloud DB)
+define('DBHOST', 'mysql-ucschelpdesk.alwaysdata.net'); 
 define('DBPORT', 3306);
-define('DBNAME', 'ucscHelpDesk');
-define('DBUSER', 'root');
-define('DBPASSWORD', '');
+define('DBNAME', 'ucschelpdesk_db');        
+define('DBUSER', '428160_kaweesha');   // change this with the username you created to access the database
+define('DBPASSWORD', '6..CveWDDNe2zaV');   // change this with the password your created in alwaysdata
 
 define('DEBUG', true);
-
