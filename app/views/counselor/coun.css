@@ -1,3 +1,4 @@
+<<<<<<< HEAD
     header {
         text-align: center;
         margin-top: 20px;
@@ -39,6 +40,16 @@
         grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
         gap: 40px;
         padding: 20px;
+=======
+.filter-box {
+      margin: 20px;
+    }
+    .ticket-container {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+      gap: 20px;
+      padding: 20px;
+>>>>>>> 2eb2553609417f49604a6ff7e8574453858372b0
     }
     .ticket-card {
       border: 1px solid #ddd;
@@ -46,6 +57,7 @@
       padding: 20px;
       background: #fff;
       box-shadow: 0px 2px 6px rgba(0,0,0,0.1);
+<<<<<<< HEAD
       position: relative;
     }
     .ticket-title {
@@ -85,3 +97,35 @@
 
     
     
+=======
+    }
+    .ticket-title {
+      font-size: 18px;
+      font-weight: bold;
+      margin-bottom: 8px;
+    }
+    .ticket-category {
+      font-size: 14px;
+      color: #666;
+      margin-bottom: 12px;
+    }
+    .ticket-actions {
+      display: flex;
+      justify-content: flex-end;
+      gap: 10px;
+    }
+    .btn {
+      padding: 6px 12px;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+    }
+    .btn-primary {
+      background-color: #6200ea;
+      color: white;
+    }
+    .btn-secondary {
+      background-color: #f1f1f1;
+      color: #333;
+    }
+>>>>>>> 2eb2553609417f49604a6ff7e8574453858372b0
