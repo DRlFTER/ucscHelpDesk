@@ -47,25 +47,26 @@
          <a href="#">Help / FAQ</a>
          <a href="#">Settings</a>
 
-        <div class="logout">
-          <a href="/public/auth/logout">Logout</a>
+        <div class="<?= $sessionUser ? 'logout' : 'login' ?>">
+          <a href="<?= $sessionUser ? '/public/auth/logout' : '/public/login' ?>">
+           <?= $sessionUser ? 'Log out' : 'Log in' ?>
+          </a>
         </div>
       </div>
     </div>
   </div>
 </div>
-      </div>
     </div>
   </nav>
 </header>
 
-<script>// Toggle dropdown on profile click
+<script>
 document.addEventListener('DOMContentLoaded', function () {
   const profile = document.querySelector('.profile');
   const dropdown = document.querySelector('.profileDropdown');
 
   profile.addEventListener('click', function (e) {
-    e.stopPropagation(); // Prevent click from closing immediately
+    e.stopPropagation(); 
     dropdown.style.display = dropdown.style.display === 'block' ? 'none' : 'block';
   });
 

@@ -4,6 +4,7 @@ class Admin extends Controller
 {
     public function dashboard()
     {
+        $this->requireLogin('admin');
         $headContent = '
         <link rel="stylesheet" href="/app/views/common/css/components.css" />
         <link rel="stylesheet" href="/app/views/admin/adminDashboard.css"/>';

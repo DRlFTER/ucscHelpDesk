@@ -70,4 +70,23 @@ class Controller
         }
         return new $model();
     }
+
+    function requireLogin($role)
+{
+    if (!isset($_SESSION['user'])) {
+        echo "Access denied. Please log in as $role.";
+        header("Refresh:2; url=/public/login"); // Wait 2s then redirect
+        exit();
+    }
+
+    // if role mismatch
+    if ($_SESSION['user']['role'] !== $role) {
+        echo "Access denied. Please log in as $role.";
+        header("Refresh:2; url=/public/login");
+        exit();
+    }
+}
+    
+
+  
 }
