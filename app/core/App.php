@@ -1,22 +1,29 @@
 <?php
 class App
 {
-    private $controller = 'Home';
-    private $method = 'index';
+    private $controller = 'Login';   // default controller
+    private $method = 'index';       // default method
 
     private function splitURL()
     {
-        $URL = $_GET['url'] ?? "home";
+        $URL = $_GET['url'] ?? "login";
         $URL = explode("/", trim($URL, "/"));
         return $URL;
+    }
+
+    private function load404()
+    {
+        require "../app/controllers/_404.php";
+        $this->controller = "_404";
+        return new _404;
     }
 
     public function loadController()
     {
         $URL = $this->splitURL();
-    $controllerSegment = ucfirst($URL[0]);
-    $basePath = "../app/controllers/";
-    $filename = $basePath . $controllerSegment . ".php";
+        $controllerSegment = ucfirst($URL[0]);
+        $basePath = "../app/controllers/";
+        $filename = $basePath . $controllerSegment . ".php";
 
         /** Select Controller **/
         if (file_exists($filename)) {
@@ -31,9 +38,9 @@ class App
                 $this->controller = $controllerSegment;
                 unset($URL[0]);
             } else {
-                $filename = "../app/controllers/_404.php";
-                require $filename;
-                $this->controller = "_404";
+                $controller = $this->load404();
+                call_user_func_array([$controller, $this->method], $URL);
+                return;
             }
         }
 
@@ -45,9 +52,7 @@ class App
                 $this->method = $URL[1];
                 unset($URL[1]);
             } else {
-                // Fallback to a 404 controller
-                require "../app/controllers/_404.php";
-                $controller = new _404;
+                $controller = $this->load404();
             }
         }
 
