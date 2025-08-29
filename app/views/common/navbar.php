@@ -29,7 +29,7 @@
         $displayRole = isset($sessionUser['role']) ? ucfirst($sessionUser['role']) : '';
       ?>
       <div class="profile">
-        <img src="/public/assets/profile.svg" alt="Profile" />
+        <img src="/assets/profile.svg" alt="Profile" />
         <span><?= htmlspecialchars($displayName) ?></span>
         <div class="profileDropdown">
          <div class="dropdownContent">
