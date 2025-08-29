@@ -1,7 +1,7 @@
 <header>
   <nav class="navbar">
     <div class="navbarLeft">
-      <img src="/public/assets/logo.svg" alt="UCSC Logo" class="logo" />
+      <img src="/assets/logo.svg" alt="UCSC Logo" class="logo" />
       <span class="navbarBrand">UCSC HelpDesk</span>
     </div>
     <div class="navbarCenter">
@@ -48,7 +48,7 @@
          <a href="#">Settings</a>
 
         <div class="<?= $sessionUser ? 'logout' : 'login' ?>">
-          <a href="<?= $sessionUser ? '/public/auth/logout' : '/public/login' ?>">
+          <a href="<?= $sessionUser ? '/auth/logout' : '/auth/login' ?>">
            <?= $sessionUser ? 'Log out' : 'Log in' ?>
           </a>
         </div>
