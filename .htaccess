@@ -1,0 +1,10 @@
+RewriteEngine On
+
+# If the request is for an existing file or directory at the repo root, serve it directly
+RewriteCond %{REQUEST_FILENAME} -f [OR]
+RewriteCond %{REQUEST_FILENAME} -d
+RewriteRule ^ - [L]
+
+# Otherwise, route everything to the public front controller with the URL param
+RewriteRule ^(.*)$ /public/index.php?url=$1 [L,QSA]
+

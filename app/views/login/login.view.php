@@ -9,7 +9,7 @@
         <div class="imgsHolder">
             <div class="imgCarousel">
                 <div class="imgGradient"></div>
-                <img src="/public/assets/imgs/3.png" alt="Login Image 1" class="carouselImage active">
+                <img src="/assets/imgs/3.png" alt="Login Image 1" class="carouselImage active">
                 <div class="textCarousel">
                     <h2></h2>
                     <div class="pillContainer">
@@ -24,8 +24,8 @@
             <div class="formContainer">
              <div class="logInTitles">
                 <h2 class="titleText">Sign in</h2>
-                <p class="paraText">Don't have an account? log in as a <a href="/public/guest/dashboard">Guest user</a></p>
-             </div><form action="/public/auth/login" method="POST">
+                <p class="paraText">Don't have an account? log in as a <a href="/guest/dashboard">Guest user</a></p>
+             </div><form action="/auth/login" method="POST">
               <div class="formFields">
                  <input type="email" id="email" name="email" placeholder="Enter email" required>
                  <input type="password" id="password" name="password" placeholder="Enter password" required>
@@ -38,4 +38,4 @@
         </div>
     </div>
 </div>
-<script src="/app/views/login/login.js"></script>
+<script src="/js/login/login.js"></script>
