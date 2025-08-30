@@ -16,8 +16,9 @@ class Student extends Controller
     {
         $this->requireLogin('student');
 
-        $headContent = '
-        <link rel="stylesheet" href="/css/global/components.css" />';
+    $headContent = '
+    <link rel="stylesheet" href="/css/global/components.css" />
+    <link rel="stylesheet" href="/css/student/ticket.css" />';
 
     $this->view('student/ticketStudent', [
             'title' => 'New Ticket',
