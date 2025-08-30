@@ -1,7 +1,3 @@
-<?php
-include_once(__DIR__ . "/../../views/common/navbar.php");
-?>
-
 <main>
   <div class="dashboardContainer">
 

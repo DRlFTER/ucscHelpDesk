@@ -7,7 +7,6 @@ class Student extends Controller
         $this->requireLogin('student');
 
         $headContent = '
-        <link rel="stylesheet" href="/css/global/components.css" />
         <link rel="stylesheet" href="/css/student/dashboard.css"/>';
          $this->view('dashboardStudent', ['title' => 'Student Dashboard', 'head' => $headContent]);
     }
@@ -17,7 +16,6 @@ class Student extends Controller
         $this->requireLogin('student');
 
     $headContent = '
-    <link rel="stylesheet" href="/css/global/components.css" />
     <link rel="stylesheet" href="/css/student/ticket.css" />';
 
     $this->view('ticketStudent', [
