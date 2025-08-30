@@ -1,0 +1,8 @@
+{
+  // Associate .htaccess with Apache configuration for syntax highlighting
+  "files.associations": {
+    ".htaccess": "apacheconf"
+  },
+  // Ignore .htaccess files for markdownlint (they are not Markdown)
+  "markdownlint.ignore": [".htaccess", "**/.htaccess"]
+}

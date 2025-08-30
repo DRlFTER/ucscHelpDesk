@@ -7,8 +7,20 @@ class Student extends Controller
         $this->requireLogin('student');
 
         $headContent = '
-        <link rel="stylesheet" href="/app/views/common/css/components.css" />
-        <link rel="stylesheet" href="/app/views/student/dashboard.css"/>';
+        <link rel="stylesheet" href="/css/student/dashboard.css"/>';
          $this->view('dashboardStudent', ['title' => 'Student Dashboard', 'head' => $headContent]);
+    }
+
+    public function ticket()
+    {
+        $this->requireLogin('student');
+
+    $headContent = '
+    <link rel="stylesheet" href="/css/student/ticket.css" />';
+
+    $this->view('ticketStudent', [
+            'title' => 'New Ticket',
+            'head' => $headContent,
+        ]);
     }
 }

@@ -13,7 +13,7 @@ class Auth extends Controller
 	public function login()
 	{
 		if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
-			header('Location: ' . ROOT . '/public/auth');
+			header('Location: ' . ROOT . 'login');
 			exit;
 		}
 
@@ -38,22 +38,22 @@ class Auth extends Controller
 			// route by role (placeholder dashboards)
 				switch ($user['role']) {
 					case 'student':
-						header('Location: ' . ROOT . '/public/student/dashboard');
+						header('Location: ' . ROOT . 'student/dashboard');
 					break;
 				case 'lecturer':
-					header('Location: ' . ROOT . '/public/lecturer/dashboard');
+					header('Location: ' . ROOT . 'lecturer/dashboard');
 					break;
 				case 'staff':
-					header('Location: ' . ROOT . '/public/staff/dashboard');
+					header('Location: ' . ROOT . 'staff/dashboard');
 					break;
 				case 'counselor':
-					header('Location: ' . ROOT . '/public/counselor/dashboard');
+					header('Location: ' . ROOT . 'counselor/dashboard');
 					break;
 				case 'admin':
-					header('Location: ' . ROOT . '/public/admin/dashboard');
+					header('Location: ' . ROOT . 'admin/dashboard');
 					break;
 				default:
-					header('Location: ' . ROOT . '/public');
+					header('Location: ' . ROOT . '');
 			}
 			exit;
 		} catch (Throwable $e) {
@@ -72,7 +72,7 @@ class Auth extends Controller
 			setcookie(session_name(), '', time() - 42000, $params['path'], $params['domain'], $params['secure'], $params['httponly']);
 		}
 		session_destroy();
-			header('Location: ' . ROOT . 'public/login');
+			header('Location: ' . ROOT . 'login');
 		exit;
 	}
 }

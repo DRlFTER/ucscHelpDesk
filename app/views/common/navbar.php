@@ -1,7 +1,7 @@
 <header>
   <nav class="navbar">
     <div class="navbarLeft">
-      <img src="/public/assets/logo.svg" alt="UCSC Logo" class="logo" />
+      <img src="/assets/logo.svg" alt="UCSC Logo" class="logo" />
       <span class="navbarBrand">UCSC HelpDesk</span>
     </div>
     <div class="navbarCenter">
@@ -11,12 +11,13 @@
         <a href="#" class="navbarLink">Tickets</a>
         <a href="#" class="navbarLink">Forum</a>
         <div class="btnHolder">
-          <button class="navbarNewTicket btnWSvg btnPrimaryText">
+          <?php $isStudent = isset($_SESSION['user']) && (($_SESSION['user']['role'] ?? null) === 'student'); ?>
+          <a href="<?= $isStudent ? '/student/ticket' : '#' ?>" class="navbarNewTicket btnWSvg btnPrimaryText" style="text-decoration:none; display:inline-flex; align-items:center; gap:6px; <?= $isStudent ? "" : 'pointer-events:none; opacity:0.5;' ?>">
             <svg xmlns="http://www.w3.org/2000/svg" width="25" height="25" viewBox="0 0 30 30" fill="none">
               <path d="M13.75 16.25H6.25V13.75H13.75V6.25H16.25V13.75H23.75V16.25H16.25V23.75H13.75V16.25Z" fill="#FEF7FF"/>
             </svg>
             <span>New Ticket</span>
-          </button>
+          </a>
         </div>
       </div>
     </div>
@@ -29,7 +30,7 @@
         $displayRole = isset($sessionUser['role']) ? ucfirst($sessionUser['role']) : '';
       ?>
       <div class="profile">
-        <img src="/public/assets/profile.svg" alt="Profile" />
+        <img src="/assets/profile.svg" alt="Profile" />
         <span><?= htmlspecialchars($displayName) ?></span>
         <div class="profileDropdown">
          <div class="dropdownContent">
@@ -48,7 +49,7 @@
          <a href="#">Settings</a>
 
         <div class="<?= $sessionUser ? 'logout' : 'login' ?>">
-          <a href="<?= $sessionUser ? '/public/auth/logout' : '/public/login' ?>">
+          <a href="<?= $sessionUser ? '/auth/logout' : '/auth/login' ?>">
            <?= $sessionUser ? 'Log out' : 'Log in' ?>
           </a>
         </div>

@@ -11,7 +11,8 @@ class Register extends Controller
                 $fullName = $_POST['fullName'] ?? '';
                 $userName = $_POST['userName'] ?? null; // not required for counselor form
                 $email = $_POST['email'] ?? '';
-                $password = $_POST['password'] ?? ($_POST['confirmPassword'] ?? '');
+                $password = $_POST['password'] ?? '';
+                $confirmPassword = $_POST['confirmPassword'] ?? '';
                 $regNumber = $_POST['regNumber'] ?? null;
                 $department = $_POST['department'] ?? null;
                 $staffId = $_POST['staffId'] ?? null;
@@ -21,7 +22,16 @@ class Register extends Controller
                     throw new Exception('Missing required fields.');
                 }
 
+                if ($confirmPassword !== '' && $password !== $confirmPassword) {
+                    throw new Exception('Passwords do not match.');
+                }
+
                 $userModel = $this->model('User');
+
+                // Prevent duplicate email
+                if ($userModel->findByEmail($email)) {
+                    throw new Exception('An account with this email already exists.');
+                }
                 $userId = $userModel->createUser($role, $fullName, $userName, $email, $password);
 
                 switch ($role) {
@@ -53,17 +63,9 @@ class Register extends Controller
         }
 
         $headContent = '
-            <style>
-                .role-buttons button { margin: 5px; padding: 10px 15px; cursor: pointer; }
-                .form-container { display: none; margin-top: 20px; }
-                .form-container.active { display: block; }
-                form input, form select { display: block; margin: 10px 0; padding: 8px; width: 280px; }
-                .role-buttons .active-btn { background-color: #007bff; color: #fff; }
-                .alert { padding: 10px 14px; border-radius: 6px; margin: 12px 0; }
-                .alert.error { background: #fde2e1; color: #7a1c1c; border: 1px solid #f5b5b2; }
-                .alert.success { background: #e7f7ea; color: #145c2c; border: 1px solid #bfe6c9; }
-            </style>
-        ';
+        <link rel="stylesheet" href="/css/global/components.css" />
+        <link rel="stylesheet" href="/css/register/register.css"/>';
+
         // render register view once; layout will wrap it
         $this->view('register', [
             'title' => 'UCSC Help Desk - Register',

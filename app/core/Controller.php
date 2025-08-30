@@ -75,14 +75,14 @@ class Controller
 {
     if (!isset($_SESSION['user'])) {
         echo "Access denied. Please log in as $role.";
-        header("Refresh:2; url=/public/login"); // Wait 2s then redirect
+        header("Refresh:2; url=" . ROOT . "login"); // Wait 2s then redirect
         exit();
     }
 
-    // if role mismatch
-    if ($_SESSION['user']['role'] !== $role) {
+    // if role mismatch (case-insensitive)
+    if (strtolower($_SESSION['user']['role'] ?? '') !== strtolower($role)) {
         echo "Access denied. Please log in as $role.";
-        header("Refresh:2; url=/public/login");
+        header("Refresh:2; url=" . ROOT . "login");
         exit();
     }
 }
