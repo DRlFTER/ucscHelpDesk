@@ -1,0 +1,339 @@
+.ticketPage {
+  max-width: 1280px;
+  margin: 32px auto;
+  padding: 50px 24px 0;
+}
+
+.ticketPage,
+.ticketPage * {
+  font-family: "SF Pro" !important;
+}
+
+.ticketHeader h1,
+.ticketHeader h2 {
+  font-size: 30px;
+  font-weight: 400;
+  margin: 0 0 4px 0;
+}
+
+.ticketHeader .subtitle {
+  color: #6b7280;
+  margin: 0 0 16px 0;
+}
+
+.ticketGrid {
+  display: grid;
+  grid-template-columns: 3fr 1fr;
+  gap: 24px;
+}
+
+.ticketCard {
+  background: #fff;
+  border: 1px solid #e5e7eb;
+  border-radius: 12px;
+  padding: 20px;
+}
+
+.label {
+  display: block;
+  font-size: 14px;
+  font-weight: 500;
+  margin-bottom: 8px;
+}
+
+.field { 
+  margin-bottom: 16px; 
+}
+
+.ticketCard .label {
+  font-size: 16px;
+  font-weight: 400;
+  margin-bottom: 10px;
+}
+.ticketCard .field {
+  margin-bottom: 20px;
+}
+.ticketCard .row2 {
+  gap: 18px;
+}
+.ticketCard .btnHolder { margin-top: 12px; }
+
+.ticketToggle {
+  display: inline-flex;
+  gap: 8px;
+}
+.ticketToggle .btnAttach {
+  background: #f3f4f6;
+  color: #1f2937;
+  padding: 8px 12px;
+  font-size: 13px;
+  gap: 8px;
+  /* Keep hover smooth but avoid transform animations that cause jiggle */
+  transition: background-color 0.25s ease, box-shadow 0.25s ease;
+}
+.ticketToggle .btnAttach:hover {
+  background-color: #e5e7eb;
+  /* Override global .btnAttach:hover translateY */
+  transform: none;
+}
+.ticketToggle .btnAttach.active {
+  background: var(--CTA, #8c8cf9);
+  color: #fff;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.12);
+  font-weight: 400;
+}
+.ticketToggle .btnAttach svg { width: 18px; height: 18px; display: block; }
+.ticketToggle .btnAttach.active:hover { background-color: #6a6af5; transform: none; }
+.ticketToggle .btnAttach svg {
+  fill: currentColor;
+}
+
+#title,
+#category,
+#priority,
+#details {
+  width: 100%;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  padding: 12px 14px;
+  font-size: 14px;
+  background: #fff;
+}
+
+
+#category,
+#priority {
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  appearance: none;
+  background-color: #fff;
+  background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%236b7280' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'><polyline points='6 9 12 15 18 9'/></svg>");
+  background-repeat: no-repeat;
+  background-position: right 12px center;
+  background-size: 16px 16px;
+  padding-right: 42px;
+  color: #111827;
+  box-shadow: inset 0 1px 2px rgba(0,0,0,0.03);
+  transition: border-color 0.2s ease, box-shadow 0.2s ease, background-color 0.2s ease;
+  cursor: pointer;
+}
+
+#category:invalid,
+#priority:invalid {
+  color: #9ca3af;
+}
+
+#category:hover,
+#priority:hover {
+  background-color: #fcfcfc;
+}
+
+#category:focus,
+#priority:focus {
+  outline: none;
+  border-color: var(--CTA, #8c8cf9);
+  box-shadow: 0 0 0 4px rgba(140,140,249,0.15);
+  background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%238c8cf9' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'><polyline points='6 9 12 15 18 9'/></svg>");
+}
+
+select::-ms-expand { display: none; }
+
+.selectHidden {
+  position: absolute !important;
+  opacity: 0 !important;
+  pointer-events: none;
+  height: 0;
+  width: 0;
+}
+
+.selectWrap {
+  position: relative;
+}
+
+.selectButton {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  padding: 12px 14px;
+  background: #fff;
+  color: #111827;
+  font-size: 14px;
+  cursor: pointer;
+  box-shadow: inset 0 1px 2px rgba(0,0,0,0.03);
+  transition: border-color 0.2s ease, box-shadow 0.2s ease, background-color 0.2s ease;
+}
+.selectButton:hover { background-color: #fcfcfc; }
+.selectWrap.open .selectButton { border-color: var(--CTA, #8c8cf9); box-shadow: 0 0 0 4px rgba(140,140,249,0.15); }
+
+.selectChevron { display: grid; place-items: center; color: #6b7280; }
+.selectWrap.open .selectChevron { color: var(--CTA, #8c8cf9); }
+
+.selectList {
+  position: absolute;
+  z-index: 10;
+  top: calc(100% + 6px);
+  left: 0;
+  right: 0;
+  background: #fff;
+  border: 1px solid #e5e7eb;
+  border-radius: 10px;
+  padding: 6px;
+  box-shadow: 0 10px 24px rgba(0,0,0,0.08);
+  max-height: 260px;
+  overflow: auto;
+  display: none;
+}
+.selectWrap.open .selectList { display: block; }
+
+.selectOption {
+  list-style: none;
+  padding: 10px 10px;
+  border-radius: 8px;
+  font-size: 14px;
+  color: #111827;
+  cursor: pointer;
+}
+.selectOption:hover { background: #f3f4f6; }
+.selectOption.isSelected { background: #eef2ff; color: #4338ca; }
+.selectOption.isDisabled { color: #9ca3af; cursor: not-allowed; }
+
+.titleText {
+  font-size: 30px;
+  font-family: "SF Pro";
+  font-weight: 400;
+  line-height: 32px;
+  letter-spacing: -0.5px;
+}
+
+.row2 {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+}
+
+textarea#details {
+  resize: vertical;
+}
+
+.dropzone {
+  border: 2px dashed #d1d5db;
+  border-radius: 10px;
+  padding: 22px;
+  background: #fafafa;
+  transition: background-color 0.25s ease, border-color 0.25s ease, box-shadow 0.25s ease, transform 0.15s ease;
+}
+
+.dropzone:hover {
+  background-color: #fcfcff;
+  border-color: #cdd6e2;
+  box-shadow: 0 4px 14px rgba(0,0,0,0.06);
+  cursor: pointer;
+}
+
+.dropzone.drag {
+  border-color: var(--CTA, #8c8cf9);
+  background: #f8f8ff;
+  box-shadow: 0 0 0 4px rgba(140,140,249,0.15) inset;
+}
+
+.dzInner {
+  text-align: center;
+  color: #6b7280;
+  display: grid;
+  gap: 8px;
+  justify-items: center;
+}
+
+.dzIconLg { width: 56px; height: 56px; }
+
+.fileList {
+  list-style: none;
+  margin: 10px 0 0;
+  padding: 0;
+}
+.fileList li {
+  font-size: 13px;
+  color: #374151;
+}
+
+/* File item styles */
+.fileItem {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 10px 12px;
+  border: 1px solid #e5e7eb;
+  border-radius: 10px;
+  background: #fff;
+  margin-bottom: 8px;
+  transition: box-shadow 0.2s ease, border-color 0.2s ease, transform 0.1s ease;
+}
+.fileItem:hover { box-shadow: 0 6px 14px rgba(0,0,0,0.06); border-color: #dde1e6; }
+
+.fileMeta { display: flex; align-items: center; gap: 10px; min-width: 0; }
+.fileIcon { color: #6b7280; display: grid; place-items: center; }
+.fileName { font-weight: 500; color: #111827; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.fileSize { color: #6b7280; font-size: 12px; }
+
+.fileRemove {
+  border: none;
+  background: #fee2e2;
+  color: #991b1b;
+  border-radius: 8px;
+  padding: 6px 8px;
+  display: grid;
+  place-items: center;
+  cursor: pointer;
+  transition: background-color 0.2s ease, transform 0.1s ease, box-shadow 0.2s ease;
+}
+.fileRemove:hover { background: #fecaca; box-shadow: 0 4px 10px rgba(0,0,0,0.08); }
+.fileRemove:active { transform: translateY(1px); }
+
+.sidebar {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.sideCard {
+.tipsList { display: grid; gap: 8px; }
+.tipLine { display: flex; align-items: center; gap: 8px; color: #374151; }
+.tipIcon { color: #22c55e; fill: currentColor; stroke: currentColor; }
+  background: #fff;
+  border: 1px solid #e5e7eb;
+  border-radius: 12px;
+  padding: 20px;
+}
+
+.sideCard h3 {
+  margin: 0 0 10px 0;
+}
+
+.kbSearch {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  padding: 10px 12px;
+}
+
+.kbSearch input {
+  border: none;
+  font-size: 14px;
+  outline: none;
+  flex: 1;
+}
+
+@media (max-width: 1200px) {
+  .ticketPage { max-width: 100%; }
+}
+
+@media (max-width: 900px) {
+  .ticketGrid { grid-template-columns: 1fr; }
+}
