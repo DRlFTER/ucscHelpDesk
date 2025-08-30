@@ -97,9 +97,18 @@ h3 {
   gap: 1rem;
 }
 
+.chartHolder {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 100%;
+  width: 100%;
+}
+
 .cardBox,
 .chartBox {
   flex: 1;
+  height: 400px;
   padding: 1rem;
   background: white;
   border-radius: 12px;
