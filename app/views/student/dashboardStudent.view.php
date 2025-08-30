@@ -2,8 +2,6 @@
 include_once(__DIR__ . "/../../views/common/navbar.php");
 ?>
 
-<script src="./dashboard.js"></script>
-
 <main>
   <div class="dashboardContainer">
 
@@ -163,3 +161,5 @@ include_once(__DIR__ . "/../../views/common/navbar.php");
     </div>
   </div>
 </main>
+
+<script src="/js/student/dashboard.js"></script>
