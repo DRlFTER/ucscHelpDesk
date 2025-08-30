@@ -18,14 +18,14 @@ include_once(__DIR__ . "/../../views/common/navbar.php");
         </div>
         <div class="ticketsByCategory chartBox">
           <h3>Tickets by Category</h3>
-          <canvas id="ticketsByCategoryChart"></canvas>
+          <div class="chartHolder">
+          <canvas id="ticketsByCategoryChart"></canvas></div>
         </div>
       </div>
       <div class="contentRow">
         <div class="platformStatus cardBox" id="platformStatus"></div>
         <div class="recentTickets cardBox" id="recentTickets"></div>
       </div>
-      <div class="topAgents cardBox" id="topAgents"></div>
     </div>
   </div>
 </main>
@@ -33,7 +33,7 @@ include_once(__DIR__ . "/../../views/common/navbar.php");
 <script>const menuItems = [
   { name: "Analytics", icon: "" },
   { name: "Tickets", icon: "" },
-  { name: "Agents", icon: "" },
+  { name: "Users", icon: "" },
   { name: "Settings", icon: "" },
 ];
 
@@ -57,6 +57,24 @@ const recentTickets = [
     agent: "Kaweesha",
     time: "2h ago",
     priority: "HIGH",
+  },
+  {
+    title: "Library book renewal",
+    agent: "Kavindu",
+    time: "5h ago",
+    priority: "LOW",
+  },
+  {
+    title: "Power sockets isn’t working in S104",
+    agent: "Tharushi",
+    time: "19h ago",
+    priority: "MEDIUM",
+  },
+  {
+    title: "Library book renewal",
+    agent: "Kavindu",
+    time: "5h ago",
+    priority: "LOW",
   },
   {
     title: "Library book renewal",
@@ -132,23 +150,27 @@ document.getElementById("recentTickets").innerHTML = `
   </ul>
 `;
 
-document.getElementById("topAgents").innerHTML = `
-  <h3>Top Performing Agents</h3>
-  <table>
-    <tr><th>Agent</th><th>Tickets Resolved</th><th>Avg Response Time</th></tr>
-    ${topAgents
-      .map(
-        (a) => `
-      <tr>
-        <td>${a.name}</td>
-        <td>${a.resolved}</td>
-        <td>${a.responseTime}</td>
-      </tr>
-    `
-      )
-      .join("")}
-  </table>
-`;
+const topAgentsContainer = document.getElementById("topAgents");
+if (topAgentsContainer) {
+  topAgentsContainer.innerHTML = `
+    <h3>Top Performing Agents</h3>
+    <table>
+      <tr><th>Agent</th><th>Tickets Resolved</th><th>Avg Response Time</th></tr>
+      ${topAgents
+        .map(
+          (a) => `
+        <tr>
+          <td>${a.name}</td>
+          <td>${a.resolved}</td>
+          <td>${a.responseTime}</td>
+        </tr>
+      `
+        )
+        .join("")}
+    </table>
+  `;
+}
+
 
 const ctxLine = document.getElementById("ticketTrendsChart").getContext("2d");
 new Chart(ctxLine, {
@@ -160,12 +182,13 @@ new Chart(ctxLine, {
         label: "New Tickets",
         data: [45, 55, 38, 67],
         borderColor: "#3b82f6",
-        fill: false,
+        backgroundColor: "#3b82f6",
       },
       {
-        label: "Resolved",
+        label: "Resolved tickets",
         data: [37, 50, 41, 60],
         borderColor: "#10b981",
+        backgroundColor: "#10b981",
         fill: false,
       },
     ],
@@ -176,6 +199,7 @@ new Chart(ctxLine, {
 const ctxPie = document
   .getElementById("ticketsByCategoryChart")
   .getContext("2d");
+
 new Chart(ctxPie, {
   type: "pie",
   data: {
@@ -187,6 +211,14 @@ new Chart(ctxPie, {
       },
     ],
   },
-  options: { responsive: true },
+  options: {
+    responsive: true,
+    plugins: {
+      legend: {
+        position: "right", // 👈 move legend to the left
+      },
+    },
+  },
 });
+
 </script>
