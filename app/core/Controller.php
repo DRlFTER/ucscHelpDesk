@@ -79,8 +79,8 @@ class Controller
         exit();
     }
 
-    // if role mismatch
-    if ($_SESSION['user']['role'] !== $role) {
+    // if role mismatch (case-insensitive)
+    if (strtolower($_SESSION['user']['role'] ?? '') !== strtolower($role)) {
         echo "Access denied. Please log in as $role.";
         header("Refresh:2; url=" . ROOT . "login");
         exit();
