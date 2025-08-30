@@ -20,7 +20,7 @@ class Student extends Controller
     <link rel="stylesheet" href="/css/global/components.css" />
     <link rel="stylesheet" href="/css/student/ticket.css" />';
 
-    $this->view('student/ticketStudent', [
+    $this->view('ticketStudent', [
             'title' => 'New Ticket',
             'head' => $headContent,
         ]);

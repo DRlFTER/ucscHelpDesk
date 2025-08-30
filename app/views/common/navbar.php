@@ -12,7 +12,7 @@
         <a href="#" class="navbarLink">Forum</a>
         <div class="btnHolder">
           <?php $isStudent = isset($_SESSION['user']) && (($_SESSION['user']['role'] ?? null) === 'student'); ?>
-          <a href="<?= $isStudent ? '/student/ticket' : '#' ?>" class="navbarNewTicket btnWSvg btnPrimaryText" style="text-decoration:none; display:inline-flex; align-items:center; gap:6px;">
+          <a href="<?= $isStudent ? '/student/ticket' : '#' ?>" class="navbarNewTicket btnWSvg btnPrimaryText" style="text-decoration:none; display:inline-flex; align-items:center; gap:6px; <?= $isStudent ? "" : 'pointer-events:none; opacity:0.5;' ?>">
             <svg xmlns="http://www.w3.org/2000/svg" width="25" height="25" viewBox="0 0 30 30" fill="none">
               <path d="M13.75 16.25H6.25V13.75H13.75V6.25H16.25V13.75H23.75V16.25H16.25V23.75H13.75V16.25Z" fill="#FEF7FF"/>
             </svg>

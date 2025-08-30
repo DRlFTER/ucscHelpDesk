@@ -179,7 +179,7 @@ const ctxPie = document
 new Chart(ctxPie, {
   type: "pie",
   data: {
-    labels: ["Technical Issues", "Account Problems", "Course Support", "Other"],
+    labels: ["Technical", "Academic", "Course", "Other"],
     datasets: [
       {
         data: [40, 25, 20, 15],
