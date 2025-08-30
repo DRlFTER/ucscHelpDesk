@@ -1,5 +1,3 @@
-/* register.css - Styles for the UCSC Help Desk Register Page */
-
 body {
   font-family: 'Poppins', Arial, sans-serif;
   background: #f7f8fa;
@@ -20,9 +18,9 @@ body {
   border-radius: 20px;
   box-shadow: 0 4px 24px rgba(0,0,0,0.08);
   overflow: hidden;
-  width: 520px; /* reduced overall width of the register box */
+  width: 520px; 
   max-width: 98vw;
-  min-height: auto; /* let height adjust to content */
+  min-height: auto;
 }
 
 .registerRight {
@@ -72,30 +70,29 @@ body {
   flex-wrap: wrap;
 }
 .role-buttons button {
-  min-width: 100px; /* slightly smaller to fit reduced width */
+  min-width: 100px; 
   padding: 8px 14px;
   border: none;
   border-radius: 10px;
-  background: #e6e6e6; /* aligns with btnSecondary base */
+  background: #e6e6e6; 
   color: #000;
   font-family: "Poppins";
   font-weight: 400;
   font-size: 15px;
   cursor: pointer;
-  /* Match global button transitions for smoother hover */
   transition: background-color 0.25s ease, transform 0.15s ease, box-shadow 0.25s ease;
 }
 .role-buttons button:hover {
-  background-color: #cecece; /* same as .btnSecondary:hover */
+  background-color: #cecece; 
   transform: translateY(-2px);
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
 }
 .role-buttons .active-btn {
-  background: #8c8cf9; /* same as var(--CTA) used by btnPrimary */
+  background: #8c8cf9; 
   color: #fff;
 }
 .role-buttons .active-btn:hover {
-  background-color: #6a6af5; /* same hover color as primary */
+  background-color: #6a6af5; 
   transform: translateY(-2px);
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
 }
@@ -115,7 +112,7 @@ body {
 .form-container input[type="password"],
 .form-container select {
   width: 100%;
-  box-sizing: border-box; /* ensures padding fits inside width */
+  box-sizing: border-box; 
   padding: 12px 14px;
   border: 1px solid #e0e0e0;
   border-radius: 8px;
