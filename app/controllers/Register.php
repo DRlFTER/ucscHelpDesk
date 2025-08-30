@@ -53,17 +53,9 @@ class Register extends Controller
         }
 
         $headContent = '
-            <style>
-                .role-buttons button { margin: 5px; padding: 10px 15px; cursor: pointer; }
-                .form-container { display: none; margin-top: 20px; }
-                .form-container.active { display: block; }
-                form input, form select { display: block; margin: 10px 0; padding: 8px; width: 280px; }
-                .role-buttons .active-btn { background-color: #007bff; color: #fff; }
-                .alert { padding: 10px 14px; border-radius: 6px; margin: 12px 0; }
-                .alert.error { background: #fde2e1; color: #7a1c1c; border: 1px solid #f5b5b2; }
-                .alert.success { background: #e7f7ea; color: #145c2c; border: 1px solid #bfe6c9; }
-            </style>
-        ';
+        <link rel="stylesheet" href="/css/global/components.css" />
+        <link rel="stylesheet" href="/css/register/register.css"/>';
+        
         // render register view once; layout will wrap it
         $this->view('register', [
             'title' => 'UCSC Help Desk - Register',
