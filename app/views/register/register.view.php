@@ -1,5 +1,5 @@
-<link rel="stylesheet" href="/public/css/global/components.css">
-<link rel="stylesheet" href="/public/css/register/register.css">
+<link rel="stylesheet" href="/css/global/components.css">
+<link rel="stylesheet" href="/css/register/register.css">
 <div class="registerContainer">
     <div class="registerBox">
         <div class="registerRight">
@@ -17,7 +17,7 @@
                 <button class="btnSecondary btnSecondaryText" onclick="showForm('counselor', this)">Counselor</button>
             </div>
             <div id="student" class="form-container active">
-                <form action="/public/register" method="POST">
+                <form action="/register" method="POST">
                     <input type="hidden" name="role" value="student">
                     <input type="text" name="fullName" placeholder="Full Name" required>
                     <input type="text" name="userName" placeholder="User name" required>
@@ -31,7 +31,7 @@
                 </form>
             </div>
             <div id="lecturer" class="form-container">
-                <form action="/public/register" method="POST">
+                <form action="/register" method="POST">
                     <input type="hidden" name="role" value="lecturer">
                     <input type="text" name="fullName" placeholder="Full Name" required>
                     <input type="text" name="userName" placeholder="User name" required>
@@ -44,7 +44,7 @@
                 </form>
             </div>
             <div id="staff" class="form-container">
-                <form action="/public/register" method="POST">
+                <form action="/register" method="POST">
                     <input type="hidden" name="role" value="staff">
                     <input type="text" name="fullName" placeholder="Full Name" required>
                     <input type="text" name="userName" placeholder="User name" required>
@@ -57,7 +57,7 @@
                 </form>
             </div>
             <div id="counselor" class="form-container">
-                <form action="/public/register" method="POST">
+                <form action="/register" method="POST">
                     <input type="hidden" name="role" value="counselor">
                     <input type="text" name="fullName" placeholder="Full Name" required>
                     <input type="email" name="email" placeholder="Counselor Email" required>

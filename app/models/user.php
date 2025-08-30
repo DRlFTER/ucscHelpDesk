@@ -95,7 +95,7 @@ class User extends Model
 		if (!$stmt->execute()) {
 			throw new Exception('Execute failed: ' . $stmt->error);
 		}
-		$id = $stmt->insert_id;
+		$id = $this->db->insert_id; // fix: get insert id from mysqli connection
 		$stmt->close();
 		return $id;
 	}

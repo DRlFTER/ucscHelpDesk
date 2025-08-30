@@ -11,7 +11,8 @@ class Register extends Controller
                 $fullName = $_POST['fullName'] ?? '';
                 $userName = $_POST['userName'] ?? null; // not required for counselor form
                 $email = $_POST['email'] ?? '';
-                $password = $_POST['password'] ?? ($_POST['confirmPassword'] ?? '');
+                $password = $_POST['password'] ?? '';
+                $confirmPassword = $_POST['confirmPassword'] ?? '';
                 $regNumber = $_POST['regNumber'] ?? null;
                 $department = $_POST['department'] ?? null;
                 $staffId = $_POST['staffId'] ?? null;
@@ -21,7 +22,16 @@ class Register extends Controller
                     throw new Exception('Missing required fields.');
                 }
 
+                if ($confirmPassword !== '' && $password !== $confirmPassword) {
+                    throw new Exception('Passwords do not match.');
+                }
+
                 $userModel = $this->model('User');
+
+                // Prevent duplicate email
+                if ($userModel->findByEmail($email)) {
+                    throw new Exception('An account with this email already exists.');
+                }
                 $userId = $userModel->createUser($role, $fullName, $userName, $email, $password);
 
                 switch ($role) {
@@ -55,7 +65,7 @@ class Register extends Controller
         $headContent = '
         <link rel="stylesheet" href="/css/global/components.css" />
         <link rel="stylesheet" href="/css/register/register.css"/>';
-        
+
         // render register view once; layout will wrap it
         $this->view('register', [
             'title' => 'UCSC Help Desk - Register',
