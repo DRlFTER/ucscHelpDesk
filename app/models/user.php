@@ -2,9 +2,13 @@
 
 class User extends Model
 {
-	public function findByEmail(string $email)
+	/**
+	 * Find a user by email in the new users schema.
+	 * Returns: [u_id, email, name, role, password_hash, number, year, designation]
+	 */
+	public function findByEmail(string $email): ?array
 	{
-		$sql = "SELECT id, role, full_name, username, email, password_hash FROM users WHERE email = ? LIMIT 1";
+		$sql = "SELECT u_id, email, name, role, password_hash, number, year, designation FROM users WHERE email = ? LIMIT 1";
 		$stmt = $this->db->prepare($sql);
 		if (!$stmt) {
 			throw new Exception('Prepare failed: ' . $this->db->error);
@@ -19,85 +23,26 @@ class User extends Model
 		return $row ?: null;
 	}
 
-	public function createUser(string $role, string $fullName, ?string $username, string $email, string $password): int
+	/**
+	 * Create user in the new users schema. Optional fields are nullable.
+	 * @return int inserted u_id
+	 */
+	public function createUser(string $role, string $name, string $email, string $password, ?string $number = null, ?string $year = null, ?string $designation = null): int
 	{
-		$sql = "INSERT INTO users (role, full_name, username, email, password_hash) VALUES (?, ?, ?, ?, ?)";
+		$sql = "INSERT INTO users (role, name, email, password_hash, number, year, designation) VALUES (?, ?, ?, ?, ?, ?, ?)";
 		$stmt = $this->db->prepare($sql);
 		if (!$stmt) {
 			throw new Exception('Prepare failed: ' . $this->db->error);
 		}
 		$hash = password_hash($password, PASSWORD_BCRYPT);
-		$stmt->bind_param('sssss', $role, $fullName, $username, $email, $hash);
-	if (!$stmt->execute()) {
-			throw new Exception('Execute failed: ' . $stmt->error);
-		}
-	$userId = $this->db->insert_id;
-		$stmt->close();
-		return $userId;
-	}
-
-	public function createStudent(int $userId, string $regNumber): int
-	{
-		$sql = "INSERT INTO students (user_id, reg_number) VALUES (?, ?)";
-		$stmt = $this->db->prepare($sql);
-		if (!$stmt) {
-			throw new Exception('Prepare failed: ' . $this->db->error);
-		}
-		$stmt->bind_param('is', $userId, $regNumber);
-	if (!$stmt->execute()) {
-			throw new Exception('Execute failed: ' . $stmt->error);
-		}
-	$id = $this->db->insert_id;
-		$stmt->close();
-		return $id;
-	}
-
-	public function createLecturer(int $userId, string $department): int
-	{
-		$sql = "INSERT INTO lecturers (user_id, department) VALUES (?, ?)";
-		$stmt = $this->db->prepare($sql);
-		if (!$stmt) {
-			throw new Exception('Prepare failed: ' . $this->db->error);
-		}
-		$stmt->bind_param('is', $userId, $department);
-	if (!$stmt->execute()) {
-			throw new Exception('Execute failed: ' . $stmt->error);
-		}
-	$id = $this->db->insert_id;
-		$stmt->close();
-		return $id;
-	}
-
-	public function createStaff(int $userId, string $staffId): int
-	{
-		$sql = "INSERT INTO staff (user_id, staff_id) VALUES (?, ?)";
-		$stmt = $this->db->prepare($sql);
-		if (!$stmt) {
-			throw new Exception('Prepare failed: ' . $this->db->error);
-		}
-		$stmt->bind_param('is', $userId, $staffId);
-	if (!$stmt->execute()) {
-			throw new Exception('Execute failed: ' . $stmt->error);
-		}
-	$id = $this->db->insert_id;
-		$stmt->close();
-		return $id;
-	}
-
-	public function createCounselor(int $userId): int
-	{
-		$sql = "INSERT INTO counselors (user_id) VALUES (?)";
-		$stmt = $this->db->prepare($sql);
-		if (!$stmt) {
-			throw new Exception('Prepare failed: ' . $this->db->error);
-		}
-		$stmt->bind_param('i', $userId);
+		$stmt->bind_param('sssssss', $role, $name, $email, $hash, $number, $year, $designation);
 		if (!$stmt->execute()) {
 			throw new Exception('Execute failed: ' . $stmt->error);
 		}
-		$id = $this->db->insert_id; // fix: get insert id from mysqli connection
+		$userId = (int)$this->db->insert_id;
 		$stmt->close();
-		return $id;
+		return $userId;
 	}
 }
+
 
