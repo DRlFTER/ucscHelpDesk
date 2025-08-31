@@ -1,9 +1,9 @@
 <?php
-// db.php - you can put this in a separate file and include it everywhere
+// Database connection
 $host = "localhost";
-$user = "root";       // your DB username
-$pass = "";           // your DB password
-$dbname = "support_desk_my_version"; // your DB name
+$user = "root";
+$pass = "";
+$dbname = "support_desk_my_version";
 
 $conn = new mysqli($host, $user, $pass, $dbname);
 
@@ -11,16 +11,10 @@ if ($conn->connect_error) {
     die("DB Connection failed: " . $conn->connect_error);
 }
 
-// Fetch tickets (e.g., only raised by students)
-session_start();
-$staff_id = isset($_SESSION['u_id']) ? (int)$_SESSION['u_id'] : 0; // Assuming staff is logged in with u_id
-
-$sql = "SELECT t.ticket_id, t.created_at, t.title, u.name AS student_name, t.category, t.status, t.priority, t.meeting_requested
-        FROM tickets t
-        INNER JOIN users u ON t.u_id = u.u_id
-        WHERE u.role = 'student'
-        ORDER BY t.created_at DESC";
-
+// Fetch tickets
+$sql = "SELECT ticket_id, created_at, title, student_name, category, status, priority, meeting_requested
+        FROM tickets
+        ORDER BY created_at DESC";
 $result = $conn->query($sql);
 
 $tickets = [];
@@ -28,10 +22,9 @@ if ($result->num_rows > 0) {
     while ($row = $result->fetch_assoc()) {
         $tickets[] = $row;
     }
-} else {
-    // Debug: Log if no tickets are found
-    error_log("No tickets found at " . date('Y-m-d H:i:s') . " for staff_id: " . $staff_id . ". Query: " . $sql);
 }
+
+$conn->close();
 
 $pageTitle = "Support Staff - Ticket Dashboard";
 include_once("./staff_nabar.html");
@@ -46,7 +39,7 @@ include_once("./staff_nabar.html");
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Poppins:wght@400;500&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="./general.css">
+  <link rel="stylesheet" href="./global.css">
   <script>
     // Pass tickets to JavaScript
     window.tickets = <?php echo json_encode($tickets); ?>;
@@ -69,10 +62,9 @@ include_once("./staff_nabar.html");
         <select id="status-filter" class="filter-btn">
           <option value="">All Statuses</option>
           <option value="all">All</option>
-          <option value="pending">Pending</option>
-          <option value="resolved">Resolved</option>
+          <option value="open">Open</option>
+          <option value="in_progress">In Progress</option>
           <option value="closed">Closed</option>
-          <option value="assigned">Assigned</option>
         </select>
         <select id="priority-filter" class="filter-btn">
           <option value="">All Priorities</option>

@@ -19,9 +19,9 @@ if ($ticket_id === 0) {
 }
 
 // Fetch ticket details
-$sql = "SELECT ticket_id, created_at, title, student_name, category, status, priority, meeting_requested
-        FROM tickets
-        WHERE ticket_id = ?";
+$sql = "SELECT t.ticket_id, created_at, title, u.name AS student_name, category, status, priority, meeting_requested
+        FROM tickets t, users u
+        WHERE t.ticket_id = ? AND t.u_id = u.u_id";
 $stmt = $conn->prepare($sql);
 $stmt->bind_param("i", $ticket_id);
 $stmt->execute();
