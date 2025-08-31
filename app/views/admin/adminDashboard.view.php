@@ -33,63 +33,14 @@
   { name: "Settings", icon: "" },
 ];
 
-const cardsData = [
-  { title: "Total Tickets", value: 194, change: "+12% from last month" },
-  { title: "Open Tickets", value: 38, change: "-5% from yesterday" },
-  { title: "Average Response Time", value: "2.4h", change: "+15% improvement" },
-  { title: "Satisfaction Rate", value: "94%", change: "+2% from last week" },
-];
+// Server-provided datasets
+const cardsData = <?= json_encode($cardsData ?? [], JSON_UNESCAPED_UNICODE) ?>;
 
-const platformStatus = [
-  { name: "Student Portal", status: "Operational" },
-  { name: "Lecturer Portal", status: "Operational" },
-  { name: "Email Notifications", status: "Degraded" },
-  { name: "Ticketing System", status: "Operational" },
-];
+const platformStatus = <?= json_encode($platformStatus ?? [], JSON_UNESCAPED_UNICODE) ?>;
 
-const recentTickets = [
-  {
-    title: "Unable to reset password",
-    agent: "Kaweesha",
-    time: "2h ago",
-    priority: "HIGH",
-  },
-  {
-    title: "Library book renewal",
-    agent: "Kavindu",
-    time: "5h ago",
-    priority: "LOW",
-  },
-  {
-    title: "Power sockets isn’t working in S104",
-    agent: "Tharushi",
-    time: "19h ago",
-    priority: "MEDIUM",
-  },
-  {
-    title: "Library book renewal",
-    agent: "Kavindu",
-    time: "5h ago",
-    priority: "LOW",
-  },
-  {
-    title: "Library book renewal",
-    agent: "Kavindu",
-    time: "5h ago",
-    priority: "LOW",
-  },
-  {
-    title: "Power sockets isn’t working in S104",
-    agent: "Tharushi",
-    time: "19h ago",
-    priority: "MEDIUM",
-  },
-];
+const recentTickets = <?= json_encode($recentTickets ?? [], JSON_UNESCAPED_UNICODE) ?>;
 
-const topAgents = [
-  { name: "Kaweesha Pathirana", resolved: 127, responseTime: "1.8h" },
-  { name: "Kavindu Attanayake", resolved: 96, responseTime: "2.4h" },
-];
+const topAgents = <?= json_encode($topAgents ?? [], JSON_UNESCAPED_UNICODE) ?>;
 
 document.getElementById("menuList").innerHTML = menuItems
   .map(
@@ -169,20 +120,21 @@ if (topAgentsContainer) {
 
 
 const ctxLine = document.getElementById("ticketTrendsChart").getContext("2d");
+const trends = <?= json_encode($trends ?? ['labels'=>[], 'new'=>[], 'resolved'=>[]], JSON_UNESCAPED_UNICODE) ?>;
 new Chart(ctxLine, {
   type: "line",
   data: {
-    labels: ["Week 1", "Week 2", "Week 3", "Week 4"],
+  labels: trends.labels,
     datasets: [
       {
         label: "New Tickets",
-        data: [45, 55, 38, 67],
+    data: trends.new,
         borderColor: "#3b82f6",
         backgroundColor: "#3b82f6",
       },
       {
         label: "Resolved tickets",
-        data: [37, 50, 41, 60],
+    data: trends.resolved,
         borderColor: "#10b981",
         backgroundColor: "#10b981",
         fill: false,
@@ -196,13 +148,14 @@ const ctxPie = document
   .getElementById("ticketsByCategoryChart")
   .getContext("2d");
 
+const categories = <?= json_encode($categories ?? ['labels'=>[], 'data'=>[]], JSON_UNESCAPED_UNICODE) ?>;
 new Chart(ctxPie, {
   type: "pie",
   data: {
-    labels: ["Technical", "Academic", "Course", "Other"],
+  labels: categories.labels,
     datasets: [
       {
-        data: [40, 25, 20, 15],
+    data: categories.data,
         backgroundColor: ["#3b82f6", "#f59e0b", "#10b981", "#6b7280"],
       },
     ],

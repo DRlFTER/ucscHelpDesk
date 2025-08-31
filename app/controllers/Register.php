@@ -53,7 +53,6 @@ class Register extends Controller
         <link rel="stylesheet" href="/css/global/components.css" />
         <link rel="stylesheet" href="/css/register/register.css"/>';
 
-        // render register view once; layout will wrap it
         $this->view('register', [
             'title' => 'UCSC Help Desk - Register',
             'head'  => $headContent,
