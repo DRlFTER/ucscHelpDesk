@@ -47,15 +47,20 @@
     <?= $content ?>
 
      <script>
-    const loader = document.getElementById("pageLoader");
+  const loader = document.getElementById("pageLoader");
+  let loaderTimeout;
 
-    window.addEventListener("beforeunload", () => {
+  window.addEventListener("beforeunload", () => {
+    loaderTimeout = setTimeout(() => {
       loader.style.display = "flex";
-    });
+    }, 1000);
+  });
 
-    window.addEventListener("load", () => {
-      loader.style.display = "none";
-    });
-  </script>
+  window.addEventListener("load", () => {
+    clearTimeout(loaderTimeout);
+    loader.style.display = "none";
+  });
+</script>
+
 </body>
 </html>

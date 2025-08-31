@@ -1,5 +1,5 @@
 body {
-  font-family: 'Poppins', Arial, sans-serif;
+  font-family: "Poppins", Arial, sans-serif;
   background: #f7f8fa;
   margin: 0;
   padding: 0;
@@ -16,9 +16,9 @@ body {
   display: flex;
   background: #fff;
   border-radius: 20px;
-  box-shadow: 0 4px 24px rgba(0,0,0,0.08);
+  box-shadow: 0 4px 24px rgba(0, 0, 0, 0.08);
   overflow: hidden;
-  width: 520px; 
+  width: 520px;
   max-width: 98vw;
   min-height: auto;
 }
@@ -59,8 +59,14 @@ body {
   font-size: 1rem;
   text-align: center;
 }
-.alert.success { background: #e6f9ed; color: #1a7f37; }
-.alert.error { background: #ffeaea; color: #d32f2f; }
+.alert.success {
+  background: #e6f9ed;
+  color: #1a7f37;
+}
+.alert.error {
+  background: #ffeaea;
+  color: #d32f2f;
+}
 
 .role-buttons {
   display: flex;
@@ -70,35 +76,40 @@ body {
   flex-wrap: wrap;
 }
 .role-buttons button {
-  min-width: 100px; 
+  min-width: 100px;
   padding: 8px 14px;
   border: none;
   border-radius: 10px;
-  background: #e6e6e6; 
+  background: #e6e6e6;
   color: #000;
   font-family: "Poppins";
   font-weight: 400;
   font-size: 15px;
   cursor: pointer;
-  transition: background-color 0.25s ease, transform 0.15s ease, box-shadow 0.25s ease;
+  transition: background-color 0.25s ease, transform 0.15s ease,
+    box-shadow 0.25s ease;
 }
 .role-buttons button:hover {
-  background-color: #cecece; 
+  background-color: #cecece;
   transform: translateY(-2px);
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
 }
 .role-buttons .active-btn {
-  background: #8c8cf9; 
+  background: #8c8cf9;
   color: #fff;
 }
 .role-buttons .active-btn:hover {
-  background-color: #6a6af5; 
+  background-color: #6a6af5;
   transform: translateY(-2px);
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
 }
 
-.form-container { display: none; }
-.form-container.active { display: block; }
+.form-container {
+  display: none;
+}
+.form-container.active {
+  display: block;
+}
 
 .form-container form {
   width: 100%;
@@ -128,6 +139,12 @@ body {
 }
 
 @media (max-width: 600px) {
-  .registerBox { width: 96vw; min-height: unset; }
-  .role-buttons button { font-size: 0.95rem; padding: 8px 12px; }
+  .registerBox {
+    width: 96vw;
+    min-height: unset;
+  }
+  .role-buttons button {
+    font-size: 0.95rem;
+    padding: 8px 12px;
+  }
 }

@@ -29,11 +29,18 @@ class Auth extends Controller
 
 			// minimal session
 			$_SESSION['user'] = [
-				'id' => (int)$user['id'],
+				// keep both for backward compatibility
+				'u_id' => (int)$user['u_id'],
+				'id'   => (int)$user['u_id'],
 				'email' => $user['email'],
-				'role' => $user['role'],
-				'name' => $user['full_name'],
+				'role'  => $user['role'],
+				'name'  => $user['name'],
 			];
+
+			// legacy session keys some views rely on
+			$_SESSION['u_id'] = (int)$user['u_id'];
+			$_SESSION['role'] = $user['role'];
+			$_SESSION['name'] = $user['name'];
 
 			// route by role (placeholder dashboards)
 				switch ($user['role']) {

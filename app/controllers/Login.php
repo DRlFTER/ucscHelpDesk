@@ -6,6 +6,7 @@ class Login extends Controller
        $headContent = '
         <link rel="stylesheet" href="/css/global/components.css" />
         <link rel="stylesheet" href="/css/login/login.css"/>';
-        $this->view('login', ['title' => 'Log in', 'head' => $headContent]);
+        // Explicitly use the login view under views/login/
+        $this->view('login/login', ['title' => 'Log in', 'head' => $headContent]);
     }
 }
