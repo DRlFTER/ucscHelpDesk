@@ -1,17 +1,17 @@
 <header>
   <nav class="navbar">
+  <?php $isStudent = isset($_SESSION['user']) && (($_SESSION['user']['role'] ?? null) === 'student'); ?>
     <div class="navbarLeft">
       <img src="/assets/logo.svg" alt="UCSC Logo" class="logo" />
       <span class="navbarBrand">UCSC HelpDesk</span>
     </div>
     <div class="navbarCenter">
       <div class="navbarMenuContainer">
-        <a href="#" class="navbarLink active">Dashboard</a>
+    <a href="<?= $isStudent ? '/student/dashboard' : '#' ?>" class="navbarLink active">Dashboard</a>
         <a href="#" class="navbarLink">Calendar</a>
         <a href="#" class="navbarLink">Tickets</a>
         <a href="#" class="navbarLink">Forum</a>
         <div class="btnHolder">
-          <?php $isStudent = isset($_SESSION['user']) && (($_SESSION['user']['role'] ?? null) === 'student'); ?>
           <a href="<?= $isStudent ? '/student/ticket' : '#' ?>" class="navbarNewTicket btnWSvg btnPrimaryText" style="text-decoration:none; display:inline-flex; align-items:center; gap:6px; <?= $isStudent ? "" : 'pointer-events:none; opacity:0.5;' ?>">
             <svg xmlns="http://www.w3.org/2000/svg" width="25" height="25" viewBox="0 0 30 30" fill="none">
               <path d="M13.75 16.25H6.25V13.75H13.75V6.25H16.25V13.75H23.75V16.25H16.25V23.75H13.75V16.25Z" fill="#FEF7FF"/>
