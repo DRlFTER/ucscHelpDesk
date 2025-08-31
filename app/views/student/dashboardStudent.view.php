@@ -14,7 +14,16 @@
       </div>
       <div class="dashboardColumnOne">
         <div class="welcomeCard">
-          <h2>Welcome Back, Brian!</h2>
+          <?php
+            $fullName = trim($_SESSION['user']['name'] ?? '');
+            $firstName = '';
+            if ($fullName !== '') {
+              $parts = preg_split('/\s+/', $fullName);
+              $firstName = $parts[0] ?? '';
+            }
+            if ($firstName === '') { $firstName = 'Student'; }
+          ?>
+          <h2>Welcome Back, <?= htmlspecialchars($firstName) ?>!</h2>
           <p>Here’s what’s happening with your support requests</p>
           <div class="ticket-info">
             <span>2 Open Tickets</span>
@@ -24,7 +33,7 @@
           <div class="sectionCard">
             <h3>Quick Actions</h3>
             <div class="quickActions">
-            <a href="#" class="quickActionItem"><div class="icon">
+            <a href="/student/ticket" class="quickActionItem"><div class="icon">
               <div class="quickActionSvg">
                 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 -960 960 960"><path d="M440-440H200v-80h240v-240h80v240h240v80H520v240h-80v-240Z"/></svg></div>
             </div>New Ticket</a>
@@ -51,54 +60,32 @@
         </div>
           <div class="recentTickets sectionCard">
             <h3>Recent Tickets</h3>
-            <a href="#" class="ticket">
-              <div class="ticketDetails">
-                <p><span class="ticketTitle">WIFI connection issue in Library</span></p>
-                <div class="ticketMeta">
-                  <span class="ticketCategory">
-                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 -960 960 960" ><path d="M447-80q-15 0-30-6t-27-18L104-390q-12-12-17.5-26.5T81-446q0-15 5.5-30t17.5-27l352-353q11-11 26-17.5t31-6.5h287q33 0 56.5 23.5T880-800v287q0 16-6 30.5T857-457L504-104q-12 12-27 18t-30 6Zm253-560q25 0 42.5-17.5T760-700q0-25-17.5-42.5T700-760q-25 0-42.5 17.5T640-700q0 25 17.5 42.5T700-640Z"/></svg>
-                    Technical Support
-                  </span>
-                  <span class="ticketTimestamp">
-                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 -960 960 960" ><path d="m612-292 56-56-148-148v-184h-80v216l172 172ZM480-80q-83 0-156-31.5T197-197q-54-54-85.5-127T80-480q0-83 31.5-156T197-763q54-54 127-85.5T480-880q83 0 156 31.5T763-763q54 54 85.5 127T880-480q0 83-31.5 156T763-197q-54 54-127 85.5T480-80Z"/></svg>
-                    Updated 2 hours ago
-                  </span>
-                </div>
-              </div>
-              <span class="status inProgress">In Progress</span>
-            </a>
-            <a href="#" class="ticket">
-              <div class="ticketDetails">
-                <p><span class="ticketTitle">Password reset request</span></p>
-                <div class="ticketMeta">
-                  <span class="ticketCategory">
-                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 -960 960 960" ><path d="M447-80q-15 0-30-6t-27-18L104-390q-12-12-17.5-26.5T81-446q0-15 5.5-30t17.5-27l352-353q11-11 26-17.5t31-6.5h287q33 0 56.5 23.5T880-800v287q0 16-6 30.5T857-457L504-104q-12 12-27 18t-30 6Zm253-560q25 0 42.5-17.5T760-700q0-25-17.5-42.5T700-760q-25 0-42.5 17.5T640-700q0 25 17.5 42.5T700-640Z"/></svg>
-                    Account Access
-                  </span>
-                  <span class="ticketTimestamp">
-                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 -960 960 960" ><path d="m612-292 56-56-148-148v-184h-80v216l172 172ZM480-80q-83 0-156-31.5T197-197q-54-54-85.5-127T80-480q0-83 31.5-156T197-763q54-54 127-85.5T480-880q83 0 156 31.5T763-763q54 54 85.5 127T880-480q0 83-31.5 156T763-197q-54 54-127 85.5T480-80Z"/></svg>
-                    Updated 1 day ago
-                  </span>
-                </div>
-              </div>
-              <span class="status open">Open</span>
-            </a>
-            <a href="#" class="ticket">
-              <div class="ticketDetails">
-                <p><span class="ticketTitle">Course registration problem</span></p>
-                <div class="ticketMeta">
-                  <span class="ticketCategory">
-                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 -960 960 960" ><path d="M447-80q-15 0-30-6t-27-18L104-390q-12-12-17.5-26.5T81-446q0-15 5.5-30t17.5-27l352-353q11-11 26-17.5t31-6.5h287q33 0 56.5 23.5T880-800v287q0 16-6 30.5T857-457L504-104q-12 12-27 18t-30 6Zm253-560q25 0 42.5-17.5T760-700q0-25-17.5-42.5T700-760q-25 0-42.5 17.5T640-700q0 25 17.5 42.5T700-640Z"/></svg>
-                    Academic
-                  </span>
-                  <span class="ticketTimestamp">
-                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 -960 960 960" ><path d="m612-292 56-56-148-148v-184h-80v216l172 172ZM480-80q-83 0-156-31.5T197-197q-54-54-85.5-127T80-480q0-83 31.5-156T197-763q54-54 127-85.5T480-880q83 0 156 31.5T763-763q54 54 85.5 127T880-480q0 83-31.5 156T763-197q-54 54-127 85.5T480-80Z"/></svg>
-                    Updated 3 days ago
-                  </span>
-                </div>
-              </div>
-              <span class="status resolved">Resolved</span>
-            </a>
+            <?php if (!empty($recentTickets)): ?>
+              <?php foreach ($recentTickets as $t): ?>
+                <a href="/student/details/<?= (int)$t['ticket_id'] ?>" class="ticket">
+                  <div class="ticketDetails">
+                    <p><span class="ticketTitle"><?= htmlspecialchars($t['title']) ?></span></p>
+                    <div class="ticketMeta">
+                      <span class="ticketCategory">
+                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 -960 960 960"><path d="M447-80q-15 0-30-6t-27-18L104-390q-12-12-17.5-26.5T81-446q0-15 5.5-30t17.5-27l352-353q11-11 26-17.5t31-6.5h287q33 0 56.5 23.5T880-800v287q0 16-6 30.5T857-457L504-104q-12 12-27 18t-30 6Zm253-560q25 0 42.5-17.5T760-700q0-25-17.5-42.5T700-760q-25 0-42.5 17.5T640-700q0 25 17.5 42.5T700-640Z"/></svg>
+                        <?= htmlspecialchars($t['category']) ?>
+                      </span>
+                      <span class="ticketTimestamp">
+                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 -960 960 960"><path d="m612-292 56-56-148-148v-184h-80v216l172 172ZM480-80q-83 0-156-31.5T197-197q-54-54-85.5-127T80-480q0-83 31.5-156T197-763q54-54 127-85.5T480-880q83 0 156 31.5T763-763q54 54 85.5 127T880-480q0 83-31.5 156T763-197q-54 54-127 85.5T480-80Z"/></svg>
+                        <?= htmlspecialchars(time_ago($t['created_at'])) ?>
+                      </span>
+                    </div>
+                  </div>
+                  <?php
+                    $status = strtolower($t['status']);
+                    $statusClass = $status === 'resolved' ? 'resolved' : ($status === 'open' ? 'open' : 'inProgress');
+                  ?>
+                  <span class="status <?= $statusClass ?>"><?php echo ucfirst(htmlspecialchars($t['status'])); ?></span>
+                </a>
+              <?php endforeach; ?>
+            <?php else: ?>
+              <p style="color:#6b7280;">No recent tickets yet.</p>
+            <?php endif; ?>
           </div>
       </div>
       <div class="dashboardColumnTwo">
