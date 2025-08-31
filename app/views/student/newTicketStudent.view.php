@@ -135,24 +135,6 @@ include_once(__DIR__ . "/../../views/common/navbar.php");
 
 <script src="/js/student/ticket.js"></script>
 <?php if (!empty($flash) && ($flash['type'] ?? '') === 'success'): ?>
-	<style>
-		.toast {
-			position: fixed;
-			top: 20px;
-			right: 20px;
-			background: #10b981; /* green */
-			color: #fff;
-			padding: 12px 16px;
-			border-radius: 8px;
-			box-shadow: 0 8px 20px rgba(0,0,0,0.15);
-			z-index: 99999;
-			display: flex;
-			align-items: center;
-			gap: 10px;
-			font-family: "SF Pro", system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
-		}
-		.toast svg { width: 18px; height: 18px; display: block; fill: currentColor; }
-	</style>
 	<div class="toast" role="status" aria-live="polite">
 		<svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M9 16.2 4.8 12l1.4-1.4L9 13.4 17.8 4.6l1.4 1.4z"/></svg>
 		<span><?= htmlspecialchars($flash['message']) ?></span>
