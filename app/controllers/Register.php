@@ -4,57 +4,44 @@ class Register extends Controller
 {
     public function index()
     {
-        // If POST, attempt basic registration flow
+        // If POST, attempt registration into consolidated users table
         if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             try {
                 $role = $_POST['role'] ?? '';
-                $fullName = $_POST['fullName'] ?? '';
-                $userName = $_POST['userName'] ?? null; // not required for counselor form
-                $email = $_POST['email'] ?? '';
+                $fullName = trim($_POST['fullName'] ?? '');
+                $email = trim($_POST['email'] ?? '');
                 $password = $_POST['password'] ?? '';
                 $confirmPassword = $_POST['confirmPassword'] ?? '';
-                $regNumber = $_POST['regNumber'] ?? null;
-                $department = $_POST['department'] ?? null;
-                $staffId = $_POST['staffId'] ?? null;
 
-                // minimal check to avoid empty required core fields
+                // optional by role
+                $number = $_POST['number'] ?? null; // phone
+                $year = null; // students may pass regNumber/year
+                $designation = null; // staff/counselor/admin designation
+
+                // map UI-specific fields
+                if ($role === 'student') {
+                    $year = $_POST['regNumber'] ?? ($_POST['year'] ?? null);
+                } elseif ($role === 'lecturer') {
+                    $designation = $_POST['department'] ?? null;
+                } elseif ($role === 'staff') {
+                    $designation = $_POST['staffId'] ?? null;
+                }
+
                 if (!$role || !$fullName || !$email || !$password) {
                     throw new Exception('Missing required fields.');
                 }
-
                 if ($confirmPassword !== '' && $password !== $confirmPassword) {
                     throw new Exception('Passwords do not match.');
                 }
 
                 $userModel = $this->model('User');
-
-                // Prevent duplicate email
                 if ($userModel->findByEmail($email)) {
                     throw new Exception('An account with this email already exists.');
                 }
-                $userId = $userModel->createUser($role, $fullName, $userName, $email, $password);
 
-                switch ($role) {
-                    case 'student':
-                        if (!$regNumber) throw new Exception('Registration number required.');
-                        $userModel->createStudent((int)$userId, $regNumber);
-                        break;
-                    case 'lecturer':
-                        if (!$department) throw new Exception('Department required.');
-                        $userModel->createLecturer((int)$userId, $department);
-                        break;
-                    case 'staff':
-                        if (!$staffId) throw new Exception('Staff ID required.');
-                        $userModel->createStaff((int)$userId, $staffId);
-                        break;
-                    case 'counselor':
-                        $userModel->createCounselor((int)$userId);
-                        break;
-                    default:
-                        throw new Exception('Invalid role.');
-                }
+                $userId = $userModel->createUser($role, $fullName, $email, $password, $number, $year, $designation);
 
-                $flash = ['type' => 'success', 'message' => 'Registration successful.'];
+                $flash = ['type' => 'success', 'message' => 'Registration successful. You can now sign in.'];
             } catch (Throwable $e) {
                 $flash = ['type' => 'error', 'message' => $e->getMessage()];
             }

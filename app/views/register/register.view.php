@@ -16,13 +16,13 @@
                 <button class="btnSecondary btnSecondaryText" onclick="showForm('staff', this)">Staff</button>
                 <button class="btnSecondary btnSecondaryText" onclick="showForm('counselor', this)">Counselor</button>
             </div>
-            <div id="student" class="form-container active">
+        <div id="student" class="form-container active">
                 <form action="/register" method="POST">
                     <input type="hidden" name="role" value="student">
-                    <input type="text" name="fullName" placeholder="Full Name" required>
-                    <input type="text" name="userName" placeholder="User name" required>
-                    <input type="email" name="email" placeholder="Student Email" required>
-                    <input type="text" name="regNumber" placeholder="Registration Number" required>
+            <input type="text" name="fullName" placeholder="Full Name" required>
+            <input type="email" name="email" placeholder="Student Email" required>
+            <input type="text" name="regNumber" placeholder="Registration Number / Year" required>
+            <input type="text" name="number" placeholder="Phone Number (optional)">
                     <input type="password" name="password" placeholder="Password" required>
                     <input type="password" name="confirmPassword" placeholder="Confirm Password" required>
                     <div class="btnHolder">
@@ -33,11 +33,12 @@
             <div id="lecturer" class="form-container">
                 <form action="/register" method="POST">
                     <input type="hidden" name="role" value="lecturer">
-                    <input type="text" name="fullName" placeholder="Full Name" required>
-                    <input type="text" name="userName" placeholder="User name" required>
-                    <input type="email" name="email" placeholder="Lecturer Email" required>
-                    <input type="text" name="department" placeholder="Department" required>
-                    <input type="password" name="password" placeholder="Password" required>
+            <input type="text" name="fullName" placeholder="Full Name" required>
+            <input type="email" name="email" placeholder="Lecturer Email" required>
+            <input type="text" name="department" placeholder="Department / Designation" required>
+            <input type="text" name="number" placeholder="Phone Number (optional)">
+            <input type="password" name="password" placeholder="Password" required>
+            <input type="password" name="confirmPassword" placeholder="Confirm Password" required>
                     <div class="btnHolder">
                         <button class="btnPrimary btnPrimaryText" type="submit">Register as Lecturer</button>
                     </div>
@@ -46,11 +47,12 @@
             <div id="staff" class="form-container">
                 <form action="/register" method="POST">
                     <input type="hidden" name="role" value="staff">
-                    <input type="text" name="fullName" placeholder="Full Name" required>
-                    <input type="text" name="userName" placeholder="User name" required>
-                    <input type="email" name="email" placeholder="Staff Email" required>
-                    <input type="text" name="staffId" placeholder="Staff ID" required>
-                    <input type="password" name="password" placeholder="Password" required>
+            <input type="text" name="fullName" placeholder="Full Name" required>
+            <input type="email" name="email" placeholder="Staff Email" required>
+            <input type="text" name="staffId" placeholder="Staff ID / Designation" required>
+            <input type="text" name="number" placeholder="Phone Number (optional)">
+            <input type="password" name="password" placeholder="Password" required>
+            <input type="password" name="confirmPassword" placeholder="Confirm Password" required>
                     <div class="btnHolder">
                         <button class="btnPrimary btnPrimaryText" type="submit">Register as Staff</button>
                     </div>
@@ -61,7 +63,9 @@
                     <input type="hidden" name="role" value="counselor">
                     <input type="text" name="fullName" placeholder="Full Name" required>
                     <input type="email" name="email" placeholder="Counselor Email" required>
-                    <input type="password" name="password" placeholder="Password" required>
+            <input type="text" name="number" placeholder="Phone Number (optional)">
+            <input type="password" name="password" placeholder="Password" required>
+            <input type="password" name="confirmPassword" placeholder="Confirm Password" required>
                     <div class="btnHolder">
                         <button class="btnPrimary btnPrimaryText" type="submit">Register as Counselor</button>
                     </div>
