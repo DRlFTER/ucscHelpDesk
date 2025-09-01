@@ -5,6 +5,8 @@
 <?php endif; ?>
 
 <div class="logInContainer">
+    <div class="msgHolder">
+    </div>
     <img class="loginGradient" src="/assets/imgs/loginGradient.jpg" alt="Gradient Background">
     <div class="logInBox">
         <div class="imgsHolder">

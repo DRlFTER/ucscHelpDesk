@@ -6,7 +6,7 @@ class Auth extends Controller
 	{
 		// show login form
 		$this->view('login', [
-			'title' => 'UCSC Help Desk - Login',
+			'title' => 'UCSC Help Desk',
 		]);
 	}
 
@@ -64,10 +64,8 @@ class Auth extends Controller
 			}
 			exit;
 		} catch (Throwable $e) {
-			$this->view('login', [
-				'title' => 'UCSC Help Desk - Login',
-				'flash' => ['type' => 'error', 'message' => 'Login failed: ' . $e->getMessage()],
-			]);
+			header('Location: ' . ROOT . 'login?invalid=1');
+			exit;
 		}
 	}
 
