@@ -170,6 +170,97 @@ class Admin extends Controller
         ]);
     }
 
+    public function tickets() {
+        $this->requireLogin('admin');
+        $headContent = '
+        <link rel="stylesheet" href="/css/admin/adminTickets.css"/>';
+        $this->view('adminTickets', ['title' => 'Tickets', 'head' => $headContent]);
+    }
+
+    /**
+     * Return tickets for admin as JSON for the Tickets page.
+     * Shape per item:
+     * {
+     *   code: string,           // e.g., TKT-123
+     *   createdAt: string,      // YYYY-MM-DD
+     *   title: string,
+     *   student: { id: int|null, name: string },
+     *   category: string|null,
+     *   status: 'open'|'in-progress'|'resolved'|'rejected'|string,
+     *   meeting: 'none'|'requested'|'scheduled'|string,
+     *   priority: 'low'|'medium'|'high'|'urgent'|string
+     * }
+     */
+    public function ticketsData()
+    {
+        $this->requireLogin('admin');
+
+        header('Content-Type: application/json');
+
+        $db = Database::getInstance();
+        $sql = "SELECT t.ticket_id, t.created_at, t.title, t.category, t.status, t.priority, t.meeting_requested, t.u_id, u.name AS student_name
+                FROM tickets t
+                LEFT JOIN users u ON u.u_id = t.u_id
+                ORDER BY t.created_at DESC";
+
+        $rows = [];
+        if ($res = $db->query($sql)) {
+            while ($row = $res->fetch_assoc()) {
+                $rows[] = $row;
+            }
+            $res->free();
+        }
+
+        // Normalizers
+        $mapStatus = function ($s) {
+            $s = strtolower((string)$s);
+            switch ($s) {
+                case 'pending':
+                    return 'open';
+                case 'agent assigned':
+                    return 'in-progress';
+                case 'resolved':
+                case 'closed':
+                case 'agent-closed':
+                    return 'resolved';
+                default:
+                    return $s ?: '';
+            }
+        };
+        $mapMeeting = function ($m) {
+            $m = strtolower(trim((string)$m));
+            if ($m === 'requested') return 'requested';
+            if ($m === 'scheduled') return 'scheduled';
+            return 'none';
+        };
+        $mapDate = function ($dt) {
+            if (!$dt) return '';
+            $ts = strtotime($dt);
+            if ($ts === false) return '';
+            return date('Y-m-d', $ts);
+        };
+
+        $out = [];
+        foreach ($rows as $r) {
+            $out[] = [
+                'code' => 'TKT-' . (string)($r['ticket_id'] ?? ''),
+                'createdAt' => $mapDate($r['created_at'] ?? null),
+                'title' => (string)($r['title'] ?? ''),
+                'student' => [
+                    'id' => isset($r['u_id']) ? (int)$r['u_id'] : null,
+                    'name' => (string)($r['student_name'] ?? 'Unknown'),
+                ],
+                'category' => (string)($r['category'] ?? ''),
+                'status' => $mapStatus($r['status'] ?? ''),
+                'meeting' => $mapMeeting($r['meeting_requested'] ?? ''),
+                'priority' => strtolower((string)($r['priority'] ?? '')),
+            ];
+        }
+
+        echo json_encode([ 'data' => $out ]);
+        exit;
+    }
+
     /**
      * Convert a MySQL datetime string to a short relative time like "2h ago".
      */
