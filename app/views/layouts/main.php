@@ -20,6 +20,7 @@
       <div id="pageLoader" style="display:none;">
         <div class="loader"></div>
       </div>
+      <img class="loginGradient" src="/assets/imgs/loginGradient.jpg" alt="Gradient Background">
 
   <style>
     #pageLoader {
@@ -42,11 +43,20 @@
     @keyframes spin {
       to { transform: rotate(360deg); }
     }
+    .loginGradient {
+      position: fixed;
+      inset: 0;           
+      width: 100vw;
+      height: 100vh;
+      object-fit: cover;
+      z-index: -10;
+      opacity: 0.8;  
+    }
   </style>
   
     <?= $content ?>
 
-     <script>
+<script>
   const loader = document.getElementById("pageLoader");
   let loaderTimeout;
 
