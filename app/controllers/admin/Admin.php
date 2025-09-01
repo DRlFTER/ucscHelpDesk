@@ -170,6 +170,13 @@ class Admin extends Controller
         ]);
     }
 
+    public function tickets() {
+        $this->requireLogin('admin');
+        $headContent = '
+        <link rel="stylesheet" href="/css/admin/adminTickets.css"/>';
+        $this->view('adminTickets', ['title' => 'Tickets', 'head' => $headContent]);
+    }
+
     /**
      * Convert a MySQL datetime string to a short relative time like "2h ago".
      */
