@@ -30,5 +30,8 @@
 
     <div class="tickets-container"></div>
   </main>
-
+  <script>
+    // Inject tickets fetched by controller as a global variable
+    var tickets = <?= json_encode($tickets ?? []) ?>;
+  </script>
   <script src="/js/staff/staffTickets.js"></script>
