@@ -60,6 +60,10 @@
   const loader = document.getElementById("pageLoader");
   let loaderTimeout;
 
+  document.addEventListener("DOMContentLoaded", () => {
+    loader.style.display = "none";
+  });
+
   window.addEventListener("beforeunload", () => {
     loaderTimeout = setTimeout(() => {
       loader.style.display = "flex";
@@ -67,6 +71,11 @@
   });
 
   window.addEventListener("load", () => {
+    clearTimeout(loaderTimeout);
+    loader.style.display = "none";
+  });
+
+  window.addEventListener("pageshow", (e) => {
     clearTimeout(loaderTimeout);
     loader.style.display = "none";
   });

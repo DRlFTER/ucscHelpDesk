@@ -17,9 +17,18 @@
   margin: 0 0 4px 0;
 }
 
+.ticketHeader { 
+  text-align: left; 
+}
+
+.ticketHeader .titleText { 
+  text-align: left; 
+}
+
 .ticketHeader .subtitle {
   color: #6b7280;
   margin: 0 0 16px 0;
+  text-align: left;
 }
 
 .ticketGrid {
