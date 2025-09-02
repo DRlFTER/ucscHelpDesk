@@ -1,11 +1,9 @@
 <?php
-// db.php - you can put this in a separate file and include it everywhere
-$host = "localhost";
-$user = "root";       // your DB username
-$pass = "";           // your DB password
-$dbname = "support_desk_my_version"; // your DB name
+// Include the config.php file
+require_once('../../core/config.php');
 
-$conn = new mysqli($host, $user, $pass, $dbname);
+// Database connection using settings from config.php
+$conn = new mysqli(DBHOST, DBUSER, DBPASSWORD, DBNAME, DBPORT);
 
 if ($conn->connect_error) {
     die("DB Connection failed: " . $conn->connect_error);
@@ -18,7 +16,6 @@ $staff_id = isset($_SESSION['u_id']) ? (int)$_SESSION['u_id'] : 0; // Assuming s
 $sql = "SELECT t.ticket_id, t.created_at, t.title, u.name AS student_name, t.category, t.status, t.priority, t.meeting_requested
         FROM tickets t
         INNER JOIN users u ON t.u_id = u.u_id
-        WHERE u.role = 'student'
         ORDER BY t.created_at DESC";
 
 $result = $conn->query($sql);
@@ -36,55 +33,3 @@ if ($result->num_rows > 0) {
 $pageTitle = "Support Staff - Ticket Dashboard";
 include_once("./staff_nabar.html");
 ?>
-
-<!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>UCSC Help Desk - Assigned Tickets</title>
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Poppins:wght@400;500&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="./general.css">
-  <script>
-    // Pass tickets to JavaScript
-    window.tickets = <?php echo json_encode($tickets); ?>;
-  </script>
-  <script src="./dashboard.js" defer></script>
-</head>
-<body>
-  <main id="main-content" class="main-content">
-    <div class="page-header">
-      <h2 class="page-title">Assigned Tickets</h2>
-      <p class="page-subtitle">Manage and respond to your assigned student issues</p>
-    </div>
-
-    <div class="controls-bar">
-      <div class="search-bar">
-        <img src="images/173_2471.svg" alt="Search Icon">
-        <input type="text" placeholder="Search tickets, students...">
-      </div>
-      <div class="filters">
-        <select id="status-filter" class="filter-btn">
-          <option value="">All Statuses</option>
-          <option value="all">All</option>
-          <option value="pending">Pending</option>
-          <option value="resolved">Resolved</option>
-          <option value="closed">Closed</option>
-          <option value="assigned">Assigned</option>
-        </select>
-        <select id="priority-filter" class="filter-btn">
-          <option value="">All Priorities</option>
-          <option value="all">All</option>
-          <option value="high">High</option>
-          <option value="medium">Medium</option>
-          <option value="low">Low</option>
-        </select>
-      </div>
-    </div>
-
-    <div class="tickets-container"></div>
-  </main>
-</body>
-</html>

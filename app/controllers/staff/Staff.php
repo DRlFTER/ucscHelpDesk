@@ -2,8 +2,15 @@
 
 class Staff extends Controller
 {
-    public function dashboard()
+    public function staffTickets()
     {
-        echo '<h1>Staff Dashboard (placeholder)</h1>';
+         $this->requireLogin('staff');
+        $headContent = '
+        <link rel="stylesheet" href="/css/staff/staffTickets.css"/>';
+         $this->view('staffTickets', [
+            'title' => 'Tickets',
+            'head' => $headContent,
+            'recentTickets' => $recent,
+        ]);
     }
 }

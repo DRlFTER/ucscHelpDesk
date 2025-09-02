@@ -1,11 +1,9 @@
 <?php
 // db.php - Database connection
-$host = "localhost";
-$user = "root";
-$pass = "";
-$dbname = "support_desk_my_version";
+require_once('../../core/config.php');
 
-$conn = new mysqli($host, $user, $pass, $dbname);
+// Database connection using settings from config.php
+$conn = new mysqli(DBHOST, DBUSER, DBPASSWORD, DBNAME, DBPORT);
 
 if ($conn->connect_error) {
     die("DB Connection failed: " . $conn->connect_error);
@@ -19,7 +17,7 @@ if ($ticket_id === 0) {
 }
 
 // Fetch ticket details
-$sql = "SELECT t.ticket_id, created_at, title, u.name AS student_name, category, status, priority, meeting_requested
+$sql = "SELECT t.ticket_id, created_at, title, u.name AS student_name, category, status, priority, meeting_requested,t.description
         FROM tickets t, users u
         WHERE t.ticket_id = ? AND t.u_id = u.u_id";
 $stmt = $conn->prepare($sql);
@@ -315,7 +313,8 @@ include_once("./staff_nabar.html");
         <h3>Description</h3>
         <p>
           <!-- Replace with actual description if available in DB -->
-          This is a placeholder for the ticket description. If your database has a 'description' field, update the SQL query to include it and echo it here.
+          <?php echo htmlspecialchars($ticket['description']); ?>
+
         </p>
       </div>
 
