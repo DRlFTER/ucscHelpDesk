@@ -74,15 +74,13 @@ class Controller
     function requireLogin($role)
     {
      if (!isset($_SESSION['user'])) {
-        echo "Access denied. Please log in as $role.";
-        header("Refresh:2; url=" . ROOT . "login"); // Wait 2s then redirect
+        header("Location: " . ROOT . "login?denied=1");
         exit();
      }
 
     // if role mismatch
      if (strtolower($_SESSION['user']['role'] ?? '') !== strtolower($role)) {
-        echo "Access denied. Please log in as $role.";
-        header("Refresh:2; url=" . ROOT . "login");
+        header("Location: " . ROOT . "login?denied=$role");
         exit();
      }
     }

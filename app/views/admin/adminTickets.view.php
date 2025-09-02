@@ -17,7 +17,15 @@
                  <select id="priorityFilter" aria-label="Priority filter"></select>
             </div>
         </div>
-        <div class="tickets">
+        <div class="tickets"></div>
+        <div class="ticketsPagination">
+            <div class="ticketsPageHolder">
+                    <div class="ticketsPageNum"><h2>1</h2></div>
+                    <div class="ticketsPageNum active"><h2>2</h2></div>
+                    <div class="ticketsPageNum"><h2>3</h2></div>
+                    <div class="ticketsPageNum"><h2>4</h2></div>
+                </div>
+            </div>
         </div>
     </div>
 </main>
