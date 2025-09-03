@@ -198,10 +198,69 @@ class Admin extends Controller
         header('Content-Type: application/json');
 
         $db = Database::getInstance();
+
+        // Query params for pagination and filtering
+        $page    = isset($_GET['page']) ? max(1, (int)$_GET['page']) : 1;
+        $perPage = isset($_GET['perPage']) ? max(1, min(100, (int)$_GET['perPage'])) : 10;
+        $search  = isset($_GET['search']) ? trim((string)$_GET['search']) : '';
+        $category= isset($_GET['category']) ? trim((string)$_GET['category']) : '';
+        $status  = isset($_GET['status']) ? trim((string)$_GET['status']) : '';
+        $priority= isset($_GET['priority']) ? trim((string)$_GET['priority']) : '';
+
+        $where = [];
+        // Search by ticket title or student name
+        if ($search !== '') {
+            $s = $db->real_escape_string($search);
+            $where[] = "(t.title LIKE '%$s%' OR u.name LIKE '%$s%')";
+        }
+        // Filter by category
+        if ($category !== '') {
+            $c = $db->real_escape_string($category);
+            $where[] = "t.category = '$c'";
+        }
+        // Map UI status to DB statuses
+        if ($status !== '') {
+            $s = strtolower($status);
+            if ($s === 'open') {
+                $where[] = "t.status = 'pending'";
+            } elseif ($s === 'in-progress') {
+                $where[] = "t.status = 'agent assigned'";
+            } elseif ($s === 'resolved') {
+                $where[] = "t.status IN ('resolved','closed','agent-closed')";
+            } else {
+                // fallback to direct match
+                $sEsc = $db->real_escape_string($status);
+                $where[] = "t.status = '$sEsc'";
+            }
+        }
+        // Filter by priority
+        if ($priority !== '') {
+            $p = $db->real_escape_string($priority);
+            $where[] = "LOWER(t.priority) = LOWER('$p')";
+        }
+
+        $whereSql = count($where) ? ('WHERE ' . implode(' AND ', $where)) : '';
+
+        // Total count for pagination
+        $total = 0;
+        $countSql = "SELECT COUNT(*) AS c FROM tickets t LEFT JOIN users u ON u.u_id = t.u_id $whereSql";
+        if ($res = $db->query($countSql)) {
+            $row = $res->fetch_assoc();
+            $total = (int)($row['c'] ?? 0);
+            $res->free();
+        }
+
+        $totalPages = $perPage > 0 ? (int)max(1, ceil($total / $perPage)) : 1;
+        if ($page > $totalPages) { $page = $totalPages; }
+        $offset = ($page - 1) * $perPage;
+
+        // Data query with pagination
         $sql = "SELECT t.ticket_id, t.created_at, t.title, t.category, t.status, t.priority, t.meeting_requested, t.u_id, u.name AS student_name
                 FROM tickets t
                 LEFT JOIN users u ON u.u_id = t.u_id
-                ORDER BY t.created_at DESC";
+                $whereSql
+                ORDER BY t.created_at DESC
+                LIMIT $perPage OFFSET $offset";
 
         $rows = [];
         if ($res = $db->query($sql)) {
@@ -257,7 +316,15 @@ class Admin extends Controller
             ];
         }
 
-        echo json_encode([ 'data' => $out ]);
+        echo json_encode([
+            'data' => $out,
+            'meta' => [
+                'page' => $page,
+                'perPage' => $perPage,
+                'total' => $total,
+                'totalPages' => $totalPages,
+            ],
+        ]);
         exit;
     }
 
