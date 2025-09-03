@@ -1,4 +1,3 @@
-// Admin tickets data now fetched from backend. We'll attach it to window for reuse.
 window.adminTicketsData = [];
 
 (function () {
@@ -40,6 +39,10 @@ window.adminTicketsData = [];
   const categorySelect = document.getElementById("categoryFilter");
   const statusSelect = document.getElementById("statusFilter");
   const prioritySelect = document.getElementById("priorityFilter");
+  const searchInput = document.getElementById("ticketSearch");
+  const paginationHolder = document.querySelector(
+    ".ticketsPagination .ticketsPageHolder"
+  );
 
   populateSelect(categorySelect, categories);
   populateSelect(statusSelect, statuses);
@@ -90,7 +93,7 @@ window.adminTicketsData = [];
           .querySelectorAll(".selectOption")
           .forEach((el) => el.classList.remove("isSelected"));
         li.classList.add("isSelected");
-        wrap.classList.remove("open");
+        wrap.classList.remove("isOpen");
       });
       list.appendChild(li);
     });
@@ -131,6 +134,32 @@ window.adminTicketsData = [];
 
   // Initialize custom selects
   [categorySelect, statusSelect, prioritySelect].forEach(buildCustomSelect);
+
+  // Pagination & state
+  let page = 1;
+  const perPage = 10;
+  let meta = { total: 0, totalPages: 1 };
+
+  function debounce(fn, wait) {
+    let t;
+    return (...args) => {
+      clearTimeout(t);
+      t = setTimeout(() => fn.apply(null, args), wait);
+    };
+  }
+
+  function valueOrEmpty(v) {
+    return v == null ? "" : String(v);
+  }
+
+  function buildQueryParams() {
+    return {
+      search: valueOrEmpty(searchInput?.value || "").trim(),
+      category: valueOrEmpty(categorySelect?.value || ""),
+      status: valueOrEmpty(statusSelect?.value || ""),
+      priority: valueOrEmpty(prioritySelect?.value || ""),
+    };
+  }
 
   // --- Tickets rendering using map() ---
   function esc(s) {
@@ -208,20 +237,13 @@ window.adminTicketsData = [];
                         <div class="ticketInfo">
                             <p>${esc(t.code)}</p>
                             <p>${formatDate(t.createdAt)}</p>
+                            <p>${esc(t.student?.name || "")}</p>
                         </div>
                     </div>
-                    <div class="status ${esc(status.cls)}">${esc(
-          status.label
-        )}</div>
+                    <div class="ticketStatus">${esc(status.label)}</div>
                 </div>
                 <div class="ticketRow2">
                     <div class="ticketDetails">
-                        <div class="ticketDetail">
-                            <h2>Student:</h2>
-                            <div class="ticketDetailHolder">${esc(
-                              t.student?.name
-                            )}</div>
-                        </div>
                         <div class="ticketDetail">
                             <h2>Category:</h2>
                             <div class="ticketDetailHolder">${esc(
@@ -251,20 +273,69 @@ window.adminTicketsData = [];
     container.innerHTML = html;
   }
 
+  function renderPagination() {
+    if (!paginationHolder) return;
+    paginationHolder.innerHTML = "";
+    const totalPages = Math.max(1, parseInt(meta.totalPages || 1, 10));
+
+    const makeBtn = (num, active = false, label) => {
+      const d = document.createElement("div");
+      d.className = "ticketsPageNum" + (active ? " active" : "");
+      d.innerHTML = `<h2>${esc(label || String(num))}</h2>`;
+      d.addEventListener("click", () => {
+        if (num >= 1 && num <= totalPages && num !== page) {
+          page = num;
+          loadTickets(page);
+        }
+      });
+      return d;
+    };
+
+    // Previous
+    if (page > 1) paginationHolder.appendChild(makeBtn(page - 1, false, "<"));
+
+    // Windowed pages (max 5)
+    const maxButtons = 5;
+    let start = Math.max(1, page - Math.floor(maxButtons / 2));
+    let end = Math.min(totalPages, start + maxButtons - 1);
+    start = Math.max(1, Math.min(start, Math.max(1, end - maxButtons + 1)));
+    for (let p = start; p <= end; p++) {
+      paginationHolder.appendChild(makeBtn(p, p === page));
+    }
+
+    // Next
+    if (page < totalPages)
+      paginationHolder.appendChild(makeBtn(page + 1, false, ">"));
+  }
+
   // Fetch tickets from backend API and render
-  async function loadTickets() {
+  async function loadTickets(nextPage) {
+    if (typeof nextPage === "number") page = nextPage;
     const container = document.querySelector(".tickets");
     if (container) {
       container.innerHTML =
         '<div class="ticketsLoading">Loading tickets…</div>';
     }
     try {
-      const res = await fetch("/admin/ticketsData", { credentials: "include" });
+      const p = buildQueryParams();
+      const qs = new URLSearchParams({
+        page: String(page),
+        perPage: String(perPage),
+        search: p.search,
+        category: p.category,
+        status: p.status,
+        priority: p.priority,
+      });
+      const res = await fetch(`/admin/ticketsData?${qs.toString()}`, {
+        credentials: "include",
+      });
       if (!res.ok) throw new Error("Failed to load tickets");
       const payload = await res.json();
       const data = Array.isArray(payload?.data) ? payload.data : [];
+      meta = payload?.meta || { total: data.length, totalPages: 1 };
       window.adminTicketsData = data;
       renderTickets(window.adminTicketsData);
+      renderPagination();
     } catch (err) {
       if (container) {
         container.innerHTML =
@@ -275,5 +346,23 @@ window.adminTicketsData = [];
     }
   }
 
-  loadTickets();
+  // Wire up filters/search
+  if (searchInput) {
+    searchInput.addEventListener(
+      "input",
+      debounce(() => {
+        page = 1;
+        loadTickets(page);
+      }, 300)
+    );
+  }
+  [categorySelect, statusSelect, prioritySelect].forEach((sel) => {
+    if (!sel) return;
+    sel.addEventListener("change", () => {
+      page = 1;
+      loadTickets(page);
+    });
+  });
+
+  loadTickets(1);
 })();
