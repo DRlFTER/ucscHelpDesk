@@ -383,6 +383,7 @@ body {
   height: 30px;
   border-radius: 100%;
   cursor: pointer;
+  color: #000; /* Ensure SVG arrows (using currentColor) match numeric color */
 }
 
 .ticketsPageNum:hover {

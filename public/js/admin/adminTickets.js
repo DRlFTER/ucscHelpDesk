@@ -48,6 +48,31 @@ window.adminTicketsData = [];
   populateSelect(statusSelect, statuses);
   populateSelect(prioritySelect, priorities);
 
+  // Read initial state from URL before building custom selects
+  const urlParams = new URLSearchParams(window.location.search);
+  const initial = {
+    search: (urlParams.get("search") || "").trim(),
+    category: urlParams.get("category") || "",
+    status: urlParams.get("status") || "",
+    priority: urlParams.get("priority") || "",
+    page: (() => {
+      const p = parseInt(urlParams.get("page"), 10);
+      return Number.isFinite(p) && p > 0 ? p : 1;
+    })(),
+  };
+
+  if (searchInput) searchInput.value = initial.search;
+  // Safe set for selects only if the value exists in options
+  function setIfOptionExists(select, value) {
+    if (!select) return;
+    if (!value) return; // default already selected
+    const has = Array.from(select.options).some((o) => o.value === value);
+    if (has) select.value = value;
+  }
+  setIfOptionExists(categorySelect, initial.category);
+  setIfOptionExists(statusSelect, initial.status);
+  setIfOptionExists(prioritySelect, initial.priority);
+
   // Build custom selects for better option UI consistency
   function buildCustomSelect(nativeSelect) {
     if (!nativeSelect) return;
@@ -137,6 +162,8 @@ window.adminTicketsData = [];
 
   // Pagination & state
   let page = 1;
+  // Apply initial page from URL
+  page = initial.page;
   const perPage = 10;
   let meta = { total: 0, totalPages: 1 };
 
@@ -159,6 +186,20 @@ window.adminTicketsData = [];
       status: valueOrEmpty(statusSelect?.value || ""),
       priority: valueOrEmpty(prioritySelect?.value || ""),
     };
+  }
+
+  function syncUrlState() {
+    const p = buildQueryParams();
+    const params = new URLSearchParams();
+    // Only include non-empty filters to keep URL clean
+    if (p.search) params.set("search", p.search);
+    if (p.category) params.set("category", p.category);
+    if (p.status) params.set("status", p.status);
+    if (p.priority) params.set("priority", p.priority);
+    params.set("page", String(page));
+    const qs = params.toString();
+    const newUrl = `${window.location.pathname}${qs ? `?${qs}` : ""}`;
+    window.history.replaceState(null, "", newUrl);
   }
 
   // --- Tickets rendering using map() ---
@@ -240,7 +281,7 @@ window.adminTicketsData = [];
                             <p>${esc(t.student?.name || "")}</p>
                         </div>
                     </div>
-                    <div class="ticketStatus">${esc(status.label)}</div>
+                    <div class="status ${status.cls}">${esc(status.label)}</div>
                 </div>
                 <div class="ticketRow2">
                     <div class="ticketDetails">
@@ -278,10 +319,22 @@ window.adminTicketsData = [];
     paginationHolder.innerHTML = "";
     const totalPages = Math.max(1, parseInt(meta.totalPages || 1, 10));
 
-    const makeBtn = (num, active = false, label) => {
+    // Helper to create a page button; can render text or raw HTML content (e.g., SVG)
+    const makeBtn = (
+      num,
+      active = false,
+      label,
+      isHtml = false,
+      ariaLabel = null
+    ) => {
       const d = document.createElement("div");
       d.className = "ticketsPageNum" + (active ? " active" : "");
-      d.innerHTML = `<h2>${esc(label || String(num))}</h2>`;
+      if (isHtml) {
+        d.innerHTML = label;
+      } else {
+        d.innerHTML = `<h2>${esc(label || String(num))}</h2>`;
+      }
+      if (ariaLabel) d.setAttribute("aria-label", ariaLabel);
       d.addEventListener("click", () => {
         if (num >= 1 && num <= totalPages && num !== page) {
           page = num;
@@ -292,7 +345,13 @@ window.adminTicketsData = [];
     };
 
     // Previous
-    if (page > 1) paginationHolder.appendChild(makeBtn(page - 1, false, "<"));
+    if (page > 1) {
+      const leftSvg =
+        '<svg xmlns="http://www.w3.org/2000/svg" height="15px" viewBox="0 -960 960 960" width="15px" fill="#000000"><path d="m121.38-480 289.31 289.31q10.92 10.92 11.12 27.07.19 16.16-10.73 27.08-10.93 10.92-27.08 10.92t-27.08-10.92L59.08-434.77q-9.85-9.85-14.08-21.31-4.23-11.46-4.23-23.92T45-503.92q4.23-11.46 14.08-21.31l297.84-297.85q10.93-10.92 26.89-11.11 15.96-.19 26.88 10.73 10.92 10.92 10.92 27.08 0 16.15-10.92 27.07L121.38-480Z"/></svg>';
+      paginationHolder.appendChild(
+        makeBtn(page - 1, false, leftSvg, true, "Previous page")
+      );
+    }
 
     // Windowed pages (max 5)
     const maxButtons = 5;
@@ -304,13 +363,20 @@ window.adminTicketsData = [];
     }
 
     // Next
-    if (page < totalPages)
-      paginationHolder.appendChild(makeBtn(page + 1, false, ">"));
+    if (page < totalPages) {
+      const rightSvg =
+        '<svg xmlns="http://www.w3.org/2000/svg" height="15px" viewBox="0 -960 960 960" width="15px" fill="#000000"><path d="M550.23-480 260.92-769.31q-10.92-10.92-11.11-26.88-.19-15.96 10.73-26.89Q271.46-834 287.42-834q15.96 0 26.89 10.92l298.23 297.85q9.84 9.85 14.07 21.31 4.24 11.46 4.24 23.92t-4.24 23.92q-4.23 11.46-14.07 21.31L314.69-136.92q-10.92 10.92-27.07 11.11-16.16.19-27.08-10.73-10.92-10.92-10.92-26.88 0-15.96 10.92-26.89L550.23-480Z"/></svg>';
+      paginationHolder.appendChild(
+        makeBtn(page + 1, false, rightSvg, true, "Next page")
+      );
+    }
   }
 
   // Fetch tickets from backend API and render
   async function loadTickets(nextPage) {
     if (typeof nextPage === "number") page = nextPage;
+    // Keep URL in sync with current UI state and page
+    syncUrlState();
     const container = document.querySelector(".tickets");
     if (container) {
       container.innerHTML =
@@ -364,5 +430,5 @@ window.adminTicketsData = [];
     });
   });
 
-  loadTickets(1);
+  loadTickets(page);
 })();
