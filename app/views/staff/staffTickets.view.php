@@ -34,4 +34,4 @@
     // Inject tickets fetched by controller as a global variable
     var tickets = <?= json_encode($tickets ?? []) ?>;
   </script>
-  <script src="/js/staff/staffTickets.js"></script>
+  <script src="/js/staff/staffTickets.js?v=<?= time() ?>"></script>

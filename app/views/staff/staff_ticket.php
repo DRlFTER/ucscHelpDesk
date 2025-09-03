@@ -33,3 +33,55 @@ if ($result->num_rows > 0) {
 $pageTitle = "Support Staff - Ticket Dashboard";
 include_once("./staff_nabar.html");
 ?>
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>UCSC Help Desk - Assigned Tickets</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Poppins:wght@400;500&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="./general.css">
+  <script>
+    // Pass tickets to JavaScript
+    
+  </script>
+  <script src="./dashboard.js" defer></script>
+</head>
+<body>
+  <main id="main-content" class="main-content">
+    <div class="page-header">
+      <h2 class="page-title">Assigned Tickets</h2>
+      <p class="page-subtitle">Manage and respond to your assigned student issues</p>
+    </div>
+
+    <div class="controls-bar">
+      <div class="search-bar">
+        <img src="images/173_2471.svg" alt="Search Icon">
+        <input type="text" placeholder="Search tickets, students...">
+      </div>
+      <div class="filters">
+        <select id="status-filter" class="filter-btn">
+          <option value="">All Statuses</option>
+          <option value="all">All</option>
+          <option value="pending">Pending</option>
+          <option value="resolved">Resolved</option>
+          <option value="closed">Closed</option>
+          <option value="assigned">Assigned</option>
+        </select>
+        <select id="priority-filter" class="filter-btn">
+          <option value="">All Priorities</option>
+          <option value="all">All</option>
+          <option value="high">High</option>
+          <option value="medium">Medium</option>
+          <option value="low">Low</option>
+        </select>
+      </div>
+    </div>
+
+    <div class="tickets-container"></div>
+  </main>
+</body>
+</html>
