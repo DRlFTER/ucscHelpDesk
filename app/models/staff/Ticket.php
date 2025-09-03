@@ -42,7 +42,7 @@ class StaffTicket
     public function getTicketById(int $ticket_id): ?array
     {
         $conn = self::getConnection();
-        $sql = "SELECT t.ticket_id, t.created_at, t.title, u.name AS student_name, t.category, t.status, t.priority, t.meeting_requested
+        $sql = "SELECT t.ticket_id, t.created_at, t.title, u.name AS student_name, t.category, t.status, t.priority, t.meeting_requested, t.description
                 FROM tickets t
                 INNER JOIN users u ON t.u_id = u.u_id
                 WHERE t.ticket_id = ?
@@ -65,6 +65,12 @@ class StaffTicket
         $stmt->close();
         $conn->close();
         return $ticket;
+    }
+
+    // Backwards compatible method name used elsewhere in the codebase
+    public function getById(int $ticket_id): ?array
+    {
+        return $this->getTicketById($ticket_id);
     }
 }
 ?>

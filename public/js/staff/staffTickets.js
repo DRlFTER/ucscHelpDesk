@@ -22,7 +22,7 @@ document.addEventListener("DOMContentLoaded", () => {
             ${displayStatus}
           </span>
           <div class="ticket-action">
-            <button class="ticket-action-btn" onclick="window.location.href='ticket_page.php?ticket_id=${ticket.ticket_id || 0}'">
+            <button class="ticket-action-btn" onclick="window.location.href='/index.php?url=staff/ticketDetails&ticket_id=${ticket.ticket_id || 0}'">
               <span>See Ticket</span>
             </button>
           </div>
