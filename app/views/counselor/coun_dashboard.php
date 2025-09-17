@@ -1,6 +1,10 @@
 <?php
-// --- Temporary Data (replace with actual database queries) ---
-$counselor_name = "Brian Weerasinghe"; // Replace with actual counselor name from session
+// counselor_dashboard.php
+// Include database connection
+include 'db_connect.php';
+
+// --- Counselor Information ---
+$counselor_name = "Mrs. Nalani Perera"; // Replace with actual counselor name from session
 
 // Dashboard Statistics
 $stats = [
@@ -9,56 +13,123 @@ $stats = [
     'resolved_this_week' => 12
 ];
 
-// Recent Tickets Data
-$recent_tickets = [
+// --- Students Data (same as your original) ---
+$students = [
+    ["id" => "2023cs01", "name" => "Alice Perera"],
+    ["id" => "2023is02", "name" => "Nimal Silva"],
+    ["id" => "2023cs03", "name" => "Kavindu Fernando"],
+    ["id" => "2023cs04", "name" => "Samanthi Jayasuriya"],
+    ["id" => "2023is05", "name" => "Ruwantha Kumara"]
+];
+
+// --- Tickets Data (same as your original) ---
+$tickets = [
     [
-        'id' => 'ST190847',
-        'title' => 'Database Query Issue',
-        'description' => 'Student needs assistance with database queries',
-        'date' => 'June 28, 2025',
-        'status' => 'Pending',
-        'student' => 'P.A.K.N. Pethiyagoda',
-        'student_id' => '230067234'
+        "id" => "1",
+        "student_id" => "2023cs01",
+        "title" => "Struggling with Exam Stress",
+        "category" => "Mental Health",
+        "priority" => "High",
+        "status" => "Under Review",
+        "date" => "Jan 12, 2024"
     ],
     [
-        'id' => 'ST190848', 
-        'title' => 'Algorithms Explanation',
-        'description' => 'Binary search implementation help needed',
-        'date' => 'June 25, 2025',
-        'status' => 'In Progress',
-        'student' => 'K.M.K.S. Altikarathna',
-        'student_id' => '230053432'
+        "id" => "2",
+        "student_id" => "2023is02",
+        "title" => "Homesickness Issue",
+        "category" => "Personal Support",
+        "priority" => "Medium",
+        "status" => "Resolved",
+        "date" => "Jan 10, 2024"
     ],
     [
-        'id' => 'ST190849',
-        'title' => 'Lab Equipment Access',
-        'description' => 'Server room permission request',
-        'date' => 'June 24, 2025', 
-        'status' => 'Pending',
-        'student' => 'L.A.T.M. Malalasena',
-        'student_id' => '230046738'
+        "id" => "3",
+        "student_id" => "2023cs03",
+        "title" => "Sleep Problems",
+        "category" => "Mental Health",
+        "priority" => "Low",
+        "status" => "Rejected",
+        "date" => "Jan 9, 2024"
+    ],
+    [
+        "id" => "4",
+        "student_id" => "2023cs04",
+        "title" => "Time Management",
+        "category" => "Personal Support",
+        "priority" => "Medium",
+        "status" => "Resolved",
+        "date" => "Jan 8, 2024"
+    ],
+    [
+        "id" => "5",
+        "student_id" => "2023is05",
+        "title" => "Anxiety Issues",
+        "category" => "Mental Health",
+        "priority" => "High",
+        "status" => "Under Review",
+        "date" => "Jan 7, 2024"
     ]
 ];
+
+// Get recent tickets (limit to 3 for dashboard)
+$recent_tickets = array_slice($tickets, 0, 3);
+
+// Function to get student name by ID
+function getStudentName($student_id, $students) {
+    foreach ($students as $student) {
+        if ($student['id'] == $student_id) {
+            return $student['name'];
+        }
+    }
+    return "Unknown Student";
+}
 
 // Announcements
 $announcements = [
     [
         'title' => 'System Maintenance',
         'description' => 'Scheduled maintenance on Dec 2%, 2:00-4:00 AM',
-        'type' => 'maintenance',
-        'icon' => '⚙️'
+        'type' => 'maintenance'
     ]
 ];
 
-// Calendar Events
-$calendar_events = [
-    [
-        'title' => 'Meeting with Mr. Prasad',
-        'location' => 'at WCC1',
-        'time' => '8:00 PM',
-        'date' => 'June 28'
-    ]
-];
+// Get upcoming events from calendar
+$upcoming_events = [];
+try {
+    $result = $conn->query("SELECT * FROM events WHERE start >= CURDATE() ORDER BY start ASC LIMIT 3");
+    if ($result && $result->num_rows > 0) {
+        while ($row = $result->fetch_assoc()) {
+            $upcoming_events[] = [
+                'title' => $row['title'],
+                'date' => date('M j', strtotime($row['start'])),
+                'time' => date('g:i A', strtotime($row['start'])),
+                'location' => 'Counseling Room'
+            ];
+        }
+    }
+} catch (Exception $e) {
+    // Fallback data if database query fails
+    $upcoming_events = [
+        [
+            'title' => 'Student Counseling Session',
+            'date' => 'June 28',
+            'time' => '2:00 PM',
+            'location' => 'Room 101'
+        ]
+    ];
+}
+
+// If no events from database, add fallback
+if (empty($upcoming_events)) {
+    $upcoming_events = [
+        [
+            'title' => 'Student Counseling Session',
+            'date' => 'June 28',
+            'time' => '2:00 PM',
+            'location' => 'Room 101'
+        ]
+    ];
+}
 
 // Function to get status class
 function getStatusClass($status) {
@@ -66,7 +137,8 @@ function getStatusClass($status) {
         'Pending' => 'status-pending',
         'In Progress' => 'status-progress', 
         'Resolved' => 'status-resolved',
-        'Under Review' => 'status-review'
+        'Under Review' => 'status-review',
+        'Rejected' => 'status-review'
     ];
     return $classes[$status] ?? 'status-default';
 }
@@ -78,444 +150,36 @@ function getStatusClass($status) {
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>UCSC Help Desk - Counselor Dashboard</title>
-    <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-
-        body {
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-            background-color: #f5f7fa;
-            color: #333;
-        }
-
-        /* Header */
-        .header {
-            background: white;
-            padding: 12px 24px;
-            border-bottom: 1px solid #e1e5e9;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
-        }
-
-        .logo {
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            font-weight: 600;
-            color: #4285f4;
-        }
-
-        .logo-icon {
-            width: 24px;
-            height: 24px;
-            background: #4285f4;
-            border-radius: 4px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            color: white;
-            font-size: 12px;
-        }
-
-        .user-profile {
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            cursor: pointer;
-            padding: 6px 12px;
-            border-radius: 20px;
-            transition: background-color 0.2s;
-        }
-
-        .user-profile:hover {
-            background-color: #f1f3f4;
-        }
-
-        .user-avatar {
-            width: 32px;
-            height: 32px;
-            border-radius: 50%;
-            background: #ff4444;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            color: white;
-            font-weight: 600;
-        }
-
-        /* Main Content */
-        .container {
-            max-width: 1200px;
-            margin: 0 auto;
-            padding: 24px;
-        }
-
-        .welcome-section {
-            margin-bottom: 32px;
-        }
-
-        .welcome-section h1 {
-            font-size: 28px;
-            font-weight: 600;
-            margin-bottom: 8px;
-        }
-
-        .welcome-section p {
-            color: #666;
-            margin-bottom: 4px;
-        }
-
-        .last-activity {
-            color: #666;
-            font-size: 14px;
-            display: flex;
-            align-items: center;
-            gap: 4px;
-        }
-
-        /* Stats Cards */
-        .stats-row {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-            gap: 16px;
-            margin-bottom: 32px;
-        }
-
-        .stat-card {
-            background: white;
-            padding: 20px;
-            border-radius: 8px;
-            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
-            text-align: center;
-            transition: transform 0.2s;
-        }
-
-        .stat-card:hover {
-            transform: translateY(-2px);
-        }
-
-        .stat-number {
-            font-size: 32px;
-            font-weight: 700;
-            color: #333;
-            margin-bottom: 4px;
-        }
-
-        .stat-card:nth-child(1) .stat-number { color: #4285f4; }
-        .stat-card:nth-child(2) .stat-number { color: #ff9800; }
-        .stat-card:nth-child(3) .stat-number { color: #4caf50; }
-
-        .stat-label {
-            color: #666;
-            font-size: 14px;
-            font-weight: 500;
-        }
-
-        /* Main Grid */
-        .main-grid {
-            display: grid;
-            grid-template-columns: 2fr 1fr;
-            gap: 24px;
-        }
-
-        /* Quick Actions */
-        .quick-actions {
-            background: white;
-            padding: 24px;
-            border-radius: 8px;
-            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
-            margin-bottom: 24px;
-        }
-
-        .section-title {
-            font-size: 18px;
-            font-weight: 600;
-            margin-bottom: 16px;
-        }
-
-        .actions-grid {
-            display: grid;
-            grid-template-columns: repeat(2, 1fr);
-            gap: 12px;
-        }
-
-        .action-btn {
-            display: flex;
-            align-items: center;
-            gap: 12px;
-            padding: 16px;
-            border: none;
-            border-radius: 8px;
-            cursor: pointer;
-            text-decoration: none;
-            font-size: 14px;
-            font-weight: 500;
-            transition: transform 0.2s, box-shadow 0.2s;
-        }
-
-        .action-btn:hover {
-            transform: translateY(-1px);
-            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
-        }
-
-        .action-icon {
-            width: 24px;
-            height: 24px;
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            color: white;
-            font-weight: 600;
-        }
-
-        .action-new { background: #4285f4; color: white; }
-        .action-view { background: #4caf50; color: white; }
-        .action-post { background: #9c27b0; color: white; }
-        .action-resources { background: #f44336; color: white; }
-        .action-reports { background: #ffeb3b; color: #333; }
-        .action-students { background: #e91e63; color: white; }
-
-        .action-new .action-icon { background: rgba(255,255,255,0.2); }
-        .action-view .action-icon { background: rgba(255,255,255,0.2); }
-        .action-post .action-icon { background: rgba(255,255,255,0.2); }
-        .action-resources .action-icon { background: rgba(255,255,255,0.2); }
-        .action-reports .action-icon { background: rgba(0,0,0,0.1); }
-        .action-students .action-icon { background: rgba(255,255,255,0.2); }
-
-        /* Recent Tickets */
-        .recent-tickets {
-            background: white;
-            padding: 24px;
-            border-radius: 8px;
-            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
-        }
-
-        .tickets-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 16px;
-        }
-
-        .view-all-btn {
-            background: #4285f4;
-            color: white;
-            padding: 6px 12px;
-            border: none;
-            border-radius: 4px;
-            cursor: pointer;
-            font-size: 12px;
-            text-decoration: none;
-            font-weight: 500;
-        }
-
-        .ticket-item {
-            display: grid;
-            grid-template-columns: 80px 1fr auto auto;
-            gap: 16px;
-            padding: 12px 0;
-            border-bottom: 1px solid #f0f0f0;
-            align-items: center;
-        }
-
-        .ticket-item:last-child {
-            border-bottom: none;
-        }
-
-        .ticket-id {
-            font-weight: 600;
-            color: #4285f4;
-        }
-
-        .ticket-info h4 {
-            font-size: 14px;
-            font-weight: 600;
-            margin-bottom: 4px;
-        }
-
-        .ticket-student {
-            font-size: 13px;
-            color: #666;
-        }
-
-        .ticket-date {
-            font-size: 13px;
-            color: #666;
-        }
-
-        .ticket-status {
-            padding: 4px 8px;
-            border-radius: 12px;
-            font-size: 12px;
-            font-weight: 500;
-        }
-
-        .status-pending { background: #fff3cd; color: #856404; }
-        .status-progress { background: #cce5ff; color: #0056b3; }
-        .status-resolved { background: #d4edda; color: #155724; }
-        .status-review { background: #f8d7da; color: #721c24; }
-
-        .ticket-actions {
-            display: flex;
-            gap: 8px;
-        }
-
-        .action-link {
-            color: #4285f4;
-            text-decoration: none;
-            font-size: 12px;
-            font-weight: 500;
-        }
-
-        .action-link:hover {
-            text-decoration: underline;
-        }
-
-        /* Sidebar */
-        .sidebar {
-            display: flex;
-            flex-direction: column;
-            gap: 24px;
-        }
-
-        .sidebar-section {
-            background: white;
-            padding: 20px;
-            border-radius: 8px;
-            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
-        }
-
-        .announcement {
-            display: flex;
-            align-items: flex-start;
-            gap: 12px;
-            padding: 16px;
-            background: #fff8e1;
-            border-radius: 8px;
-            border-left: 4px solid #ff9800;
-        }
-
-        .announcement-icon {
-            font-size: 20px;
-        }
-
-        .announcement-content h4 {
-            font-size: 14px;
-            font-weight: 600;
-            margin-bottom: 4px;
-        }
-
-        .announcement-content p {
-            font-size: 13px;
-            color: #666;
-        }
-
-        .calendar-event {
-            padding: 12px 0;
-            border-bottom: 1px solid #f0f0f0;
-        }
-
-        .calendar-event:last-child {
-            border-bottom: none;
-        }
-
-        .event-date {
-            font-size: 12px;
-            color: #666;
-            margin-bottom: 4px;
-        }
-
-        .event-title {
-            font-weight: 600;
-            font-size: 14px;
-            margin-bottom: 2px;
-        }
-
-        .event-details {
-            font-size: 13px;
-            color: #666;
-        }
-
-        .account-menu {
-            list-style: none;
-        }
-
-        .account-menu li {
-            margin-bottom: 12px;
-        }
-
-        .account-menu a {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            color: #333;
-            text-decoration: none;
-            font-size: 14px;
-            padding: 8px 0;
-            transition: color 0.2s;
-        }
-
-        .account-menu a:hover {
-            color: #4285f4;
-        }
-
-        .search-box {
-            width: 100%;
-            padding: 10px 12px;
-            border: 1px solid #e1e5e9;
-            border-radius: 6px;
-            font-size: 14px;
-            margin-bottom: 16px;
-        }
-
-        .search-box:focus {
-            outline: none;
-            border-color: #4285f4;
-        }
-
-        @media (max-width: 768px) {
-            .main-grid {
-                grid-template-columns: 1fr;
-            }
-            
-            .actions-grid {
-                grid-template-columns: 1fr;
-            }
-            
-            .stats-row {
-                grid-template-columns: 1fr;
-            }
-        }
-    </style>
+    <link rel="stylesheet" href="counselor_dashboard.css">
+    
 </head>
 <body>
     <!-- Header -->
     <header class="header">
-        <div class="logo">
-            <div class="logo-icon">🎓</div>
-            UCSC Help Desk
-        </div>
-        <div class="user-profile">
-            <span>🔔</span>
-            <div class="user-avatar">B</div>
-            <span><?= $counselor_name ?></span>
-            <span>▼</span>
-        </div>
-    </header>
+  <div class="logo">
+    <div class="logo-icon">
+      <img src="images/logo.png" alt="UCSC Logo" class="logo-image">
+    </div>
+    UCSC Help Desk
+  </div>
+  <div class="user-profile">
+    <img src="images/notification.png" alt="Notifications" class="notification-icon">
+    <div class="user-avatar">N</div>
+    <span><?= $counselor_name ?></span>
+    <span>▼</span>
+  </div>
+</header>
+
 
     <div class="container">
         <!-- Welcome Section -->
         <div class="welcome-section">
-            <h1>Welcome Back, <?= explode(' ', $counselor_name)[0] ?>!</h1>
+            <h1>Welcome Back, <?= explode(' ', explode('.', $counselor_name)[1] ?? $counselor_name)[0] ?>!</h1>
             <p>Here's what needs your attention today</p>
             <div class="last-activity">
-                <span>⏰</span>
+                <svg class="clock-icon" viewBox="0 0 24 24">
+                    <path d="M12,2A10,10 0 0,0 2,12A10,10 0 0,0 12,22A10,10 0 0,0 22,12A10,10 0 0,0 12,2M16.2,16.2L11,13V7H12.5V12.2L17,14.7L16.2,16.2Z"/>
+                </svg>
                 <span>Last Activity: 2 hours ago</span>
             </div>
         </div>
@@ -543,29 +207,45 @@ function getStatusClass($status) {
                 <div class="quick-actions">
                     <h3 class="section-title">Quick Actions</h3>
                     <div class="actions-grid">
-                        <a href="new_ticket.php" class="action-btn action-new">
-                            <div class="action-icon">📝</div>
-                            New Ticket
-                        </a>
-                        <a href="view_tickets.php" class="action-btn action-view">
-                            <div class="action-icon">👁️</div>
+                        <a href="coun_ticket.php" class="action-btn action-view">
+                            <div class="action-icon">
+                                <svg viewBox="0 0 24 24">
+                                    <path d="M12,9A3,3 0 0,0 9,12A3,3 0 0,0 12,15A3,3 0 0,0 15,12A3,3 0 0,0 12,9M12,17A5,5 0 0,1 7,12A5,5 0 0,1 12,7A5,5 0 0,1 17,12A5,5 0 0,1 12,17M12,4.5C7,4.5 2.73,7.61 1,12C2.73,16.39 7,19.5 12,19.5C17,19.5 21.27,16.39 23,12C21.27,7.61 17,4.5 12,4.5Z"/>
+                                </svg>
+                            </div>
                             View Tickets
                         </a>
                         <a href="post_announcement.php" class="action-btn action-post">
-                            <div class="action-icon">📢</div>
+                            <div class="action-icon">
+                                <svg viewBox="0 0 24 24">
+                                    <path d="M12,2A3,3 0 0,1 15,5V11A3,3 0 0,1 12,14A3,3 0 0,1 9,11V5A3,3 0 0,1 12,2M19,11C19,14.53 16.39,17.44 13,17.93V21H11V17.93C7.61,17.44 5,14.53 5,11H7A5,5 0 0,0 12,16A5,5 0 0,0 17,11H19Z"/>
+                                </svg>
+                            </div>
                             Post Announcement
                         </a>
                         <a href="resources.php" class="action-btn action-resources">
-                            <div class="action-icon">📚</div>
+                            <div class="action-icon">
+                                <svg viewBox="0 0 24 24">
+                                    <path d="M19,3H5C3.9,3 3,3.9 3,5V19C3,20.1 3.9,21 5,21H19C20.1,21 21,20.1 21,19V5C21,3.9 20.1,3 19,3M5,19V5H19V19H5Z"/>
+                                </svg>
+                            </div>
                             View Resources
                         </a>
-                        <a href="reports.php" class="action-btn action-reports">
-                            <div class="action-icon">📊</div>
+                        <a href="coun_reports.php" class="action-btn action-reports">
+                            <div class="action-icon">
+                                <svg viewBox="0 0 24 24">
+                                    <path d="M19,3H5A2,2 0 0,0 3,5V19A2,2 0 0,0 5,21H19A2,2 0 0,0 21,19V5A2,2 0 0,0 19,3M9,17H7V10H9V17M13,17H11V7H13V17M17,17H15V13H17V17Z"/>
+                                </svg>
+                            </div>
                             Reports
                         </a>
-                        <a href="students.php" class="action-btn action-students">
-                            <div class="action-icon">👥</div>
-                            Students
+                        <a href="coun_calender.php" class="action-btn action-calendar" style="grid-column: 1 / -1;">
+                            <div class="action-icon">
+                                <svg viewBox="0 0 24 24">
+                                    <path d="M19,3H18V1H16V3H8V1H6V3H5A2,2 0 0,0 3,5V19A2,2 0 0,0 5,21H19A2,2 0 0,0 21,19V5A2,2 0 0,0 19,3M19,19H5V8H19V19Z"/>
+                                </svg>
+                            </div>
+                            My Calendar
                         </a>
                     </div>
                 </div>
@@ -574,23 +254,25 @@ function getStatusClass($status) {
                 <div class="recent-tickets">
                     <div class="tickets-header">
                         <h3 class="section-title">Recent Tickets</h3>
-                        <a href="view_all_tickets.php" class="view-all-btn">View All</a>
+                        <a href="coun_ticket.php" class="view-all-btn">View All</a>
                     </div>
 
-                    <?php foreach ($recent_tickets as $ticket): ?>
+                    <?php foreach ($recent_tickets as $ticket): 
+                        $studentName = getStudentName($ticket['student_id'], $students);
+                    ?>
                     <div class="ticket-item">
                         <div class="ticket-id"><?= $ticket['id'] ?></div>
                         <div class="ticket-info">
                             <h4><?= htmlspecialchars($ticket['title']) ?></h4>
-                            <div class="ticket-student"><?= $ticket['student'] ?> • <?= $ticket['student_id'] ?></div>
+                            <div class="ticket-student"><?= $studentName ?> • <?= $ticket['student_id'] ?></div>
                         </div>
                         <div class="ticket-date"><?= $ticket['date'] ?></div>
                         <div class="ticket-status <?= getStatusClass($ticket['status']) ?>">
                             <?= $ticket['status'] ?>
                         </div>
                         <div class="ticket-actions">
-                            <a href="view_ticket.php?id=<?= $ticket['id'] ?>" class="action-link">View Details</a>
-                            <?php if ($ticket['status'] === 'Pending'): ?>
+                            <a href="coun_ticket.php?id=<?= $ticket['id'] ?>" class="action-link">View Details</a>
+                            <?php if ($ticket['status'] === 'Pending' || $ticket['status'] === 'Under Review'): ?>
                             <a href="respond_ticket.php?id=<?= $ticket['id'] ?>" class="action-link">Respond</a>
                             <?php endif; ?>
                         </div>
@@ -606,7 +288,7 @@ function getStatusClass($status) {
                     <h3 class="section-title">Announcements</h3>
                     <?php foreach ($announcements as $announcement): ?>
                     <div class="announcement">
-                        <div class="announcement-icon"><?= $announcement['icon'] ?></div>
+                        <div class="announcement-icon">⚙️</div>
                         <div class="announcement-content">
                             <h4><?= $announcement['title'] ?></h4>
                             <p><?= $announcement['description'] ?></p>
@@ -619,13 +301,14 @@ function getStatusClass($status) {
                 <div class="sidebar-section">
                     <h3 class="section-title">Calendar</h3>
                     <div style="color: #666; font-size: 14px; margin-bottom: 12px;">Upcoming</div>
-                    <?php foreach ($calendar_events as $event): ?>
+                    <?php foreach ($upcoming_events as $event): ?>
                     <div class="calendar-event">
                         <div class="event-date"><?= $event['date'] ?></div>
-                        <div class="event-title"><?= $event['title'] ?></div>
+                        <div class="event-title"><?= htmlspecialchars($event['title']) ?></div>
                         <div class="event-details"><?= $event['location'] ?> • <?= $event['time'] ?></div>
                     </div>
                     <?php endforeach; ?>
+                    <a href="coun_calender.php" style="color: #4285f4; text-decoration: none; font-size: 13px; margin-top: 12px; display: inline-block;">View Full Calendar →</a>
                 </div>
 
                 <!-- Knowledge Base -->
@@ -638,9 +321,39 @@ function getStatusClass($status) {
                 <div class="sidebar-section">
                     <h3 class="section-title">Account</h3>
                     <ul class="account-menu">
-                        <li><a href="profile_settings.php">👤 Profile Settings <span>›</span></a></li>
-                        <li><a href="notifications.php">🔔 Notifications <span>›</span></a></li>
-                        <li><a href="ticket_history.php">📋 Ticket History <span>›</span></a></li>
+                        <li>
+                            <a href="profile_settings.php">
+                                <div style="display: flex; align-items: center;">
+                                    <svg class="menu-icon" viewBox="0 0 24 24">
+                                        <path d="M12,2A10,10 0 0,1 22,12A10,10 0 0,1 12,22A10,10 0 0,1 2,12A10,10 0 0,1 12,2M7.07,18.28C7.5,17.38 10.12,16.5 12,16.5C13.88,16.5 16.5,17.38 16.93,18.28C15.57,19.36 13.86,20 12,20C10.14,20 8.43,19.36 7.07,18.28M18.36,16.83C16.93,15.09 13.46,14.5 12,14.5C10.54,14.5 7.07,15.09 5.64,16.83C4.62,15.5 4,13.82 4,12C4,7.59 7.59,4 12,4C16.41,4 20,7.59 20,12C20,13.82 19.38,15.5 18.36,16.83M12,6C10.06,6 8.5,7.56 8.5,9.5C8.5,11.44 10.06,13 12,13C13.94,13 15.5,11.44 15.5,9.5C15.5,7.56 13.94,6 12,6M12,11A1.5,1.5 0 0,1 10.5,9.5A1.5,1.5 0 0,1 12,8A1.5,1.5 0 0,1 13.5,9.5A1.5,1.5 0 0,1 12,11Z"/>
+                                    </svg>
+                                    Profile Settings
+                                </div>
+                                <span>›</span>
+                            </a>
+                        </li>
+                        <li>
+                            <a href="notifications.php">
+                                <div style="display: flex; align-items: center;">
+                                    <svg class="menu-icon" viewBox="0 0 24 24">
+                                        <path d="M12,2C13.1,2 14,2.9 14,4C14,5.1 13.1,6 12,6C10.9,6 10,5.1 10,4C10,2.9 10.9,2 12,2ZM21,19V20H3V19L5,17V11C5,7.9 7.03,5.17 10,4.29C10,4.19 10,4.1 10,4C10,2.34 11.34,1 13,1S16,2.34 16,4C16,4.1 16,4.19 16,4.29C18.97,5.17 21,7.9 21,11V17L23,19H21ZM12,22C10.9,22 10,21.1 10,20H14C14,21.1 13.1,22 12,22Z"/>
+                                    </svg>
+                                    Notifications
+                                </div>
+                                <span>›</span>
+                            </a>
+                        </li>
+                        <li>
+                            <a href="ticket_history.php">
+                                <div style="display: flex; align-items: center;">
+                                    <svg class="menu-icon" viewBox="0 0 24 24">
+                                        <path d="M14,2H6A2,2 0 0,0 4,4V20A2,2 0 0,0 6,22H18A2,2 0 0,0 20,20V8L14,2M18,20H6V4H13V9H18V20Z"/>
+                                    </svg>
+                                    Ticket History
+                                </div>
+                                <span>›</span>
+                            </a>
+                        </li>
                     </ul>
                 </div>
             </div>
@@ -652,25 +365,31 @@ function getStatusClass($status) {
         document.addEventListener('DOMContentLoaded', function() {
             // Search functionality
             const searchBox = document.querySelector('.search-box');
-            searchBox.addEventListener('keypress', function(e) {
-                if (e.key === 'Enter') {
-                    // Implement search functionality
-                    alert('Search functionality will be implemented');
-                }
-            });
+            if (searchBox) {
+                searchBox.addEventListener('keypress', function(e) {
+                    if (e.key === 'Enter') {
+                        // Implement search functionality
+                        alert('Search functionality will be implemented');
+                    }
+                });
+            }
 
             // User profile dropdown (placeholder)
             const userProfile = document.querySelector('.user-profile');
-            userProfile.addEventListener('click', function() {
-                alert('Profile dropdown menu will be implemented');
-            });
+            if (userProfile) {
+                userProfile.addEventListener('click', function() {
+                    alert('Profile dropdown menu will be implemented');
+                });
+            }
 
             // Notification bell
-            const notificationBell = document.querySelector('.user-profile span:first-child');
-            notificationBell.addEventListener('click', function(e) {
-                e.stopPropagation();
-                alert('Notifications panel will be implemented');
-            });
+            const notificationBell = document.querySelector('.bell-icon');
+            if (notificationBell) {
+                notificationBell.addEventListener('click', function(e) {
+                    e.stopPropagation();
+                    alert('Notifications panel will be implemented');
+                });
+            }
         });
     </script>
 </body>
