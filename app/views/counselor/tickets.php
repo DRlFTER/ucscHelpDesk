@@ -150,7 +150,7 @@ if ($resStudents->num_rows > 0) {
 
     <!-- NEW TICKET FORM -->
     <div class="new-ticket">
-        <h3>Create New Ticket</h3>
+        <h3>See New Ticket</h3>
         <form method="POST" action="">
             <select name="student_id" required>
                 <option value="">Select Student</option>
@@ -165,7 +165,7 @@ if ($resStudents->num_rows > 0) {
                 <option>Medium</option>
                 <option>High</option>
             </select>
-            <button type="submit" name="add_ticket" class="btn">Add Ticket</button>
+            <button type="submit" name="add_ticket" class="btn">See Ticket</button>
         </form>
     </div>
 
