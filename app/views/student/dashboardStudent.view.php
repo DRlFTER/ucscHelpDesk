@@ -8,6 +8,7 @@
           <a href="#">FAQs</a>
           <a href="#">Forums</a>
           <a href="#">Calendar</a>
+            <a href="/student/lostfound">Lost &amp; Found</a>
           <a href="#">Settings</a>
         </div>
       </div>
@@ -25,8 +26,12 @@
           <h2>Welcome Back, <?= htmlspecialchars($firstName) ?>!</h2>
           <p>Here’s what’s happening with your support requests</p>
           <div class="ticket-info">
-            <span>2 Open Tickets</span>
-            <span>Last Activity: 2 hours ago</span>
+            <?php
+              $openCount = isset($openCount) ? (int)$openCount : 0;
+              $lastActivity = $lastActivity ?? null;
+            ?>
+            <span><?= $openCount ?> Open Ticket<?= $openCount === 1 ? '' : 's' ?></span>
+            <span>Last Activity: <?= $lastActivity ? htmlspecialchars(time_ago($lastActivity)) : '—' ?></span>
           </div>
           </div>
           <div class="sectionCard">

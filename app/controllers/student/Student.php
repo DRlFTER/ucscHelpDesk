@@ -8,8 +8,13 @@ class Student extends Controller
         require_once __DIR__ . '/../../models/student/Ticket.php';
         $ticketModel = new StudentTicket();
         $recent = [];
+        $openCount = 0;
+        $lastActivity = null;
         try {
-            $recent = $ticketModel->getRecentByUser((int)($_SESSION['user']['u_id'] ?? 0), 5);
+            $uId = (int)($_SESSION['user']['u_id'] ?? 0);
+            $recent = $ticketModel->getRecentByUser($uId, 5);
+            $openCount = $ticketModel->countOpenByUser($uId);
+            $lastActivity = $ticketModel->getLastActivityByUser($uId);
         } catch (Throwable $e) {
             $recent = [];
         }
@@ -20,6 +25,8 @@ class Student extends Controller
             'title' => 'Student Dashboard',
             'head' => $headContent,
             'recentTickets' => $recent,
+                'openCount' => $openCount,
+                'lastActivity' => $lastActivity,
         ]);
     }
 
@@ -118,5 +125,15 @@ class Student extends Controller
         }
         header('Location: /student/dashboard');
         exit;
+    }
+
+    public function lostfound()
+    {
+        $this->requireLogin('student');
+        $headContent = '<link rel="stylesheet" href="/css/student/lostFound.css" />';
+        $this->view('student/lostFound', [
+            'title' => 'Lost & Found',
+            'head' => $headContent,
+        ]);
     }
 }
