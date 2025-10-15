@@ -31,9 +31,10 @@ h3 {
 
 .navMenu {
   width: 220px;
-  background: #f3f4f6;
-  padding: 1rem;
-  border-right: 1px solid #e5e7eb;
+  margin: 20px 0px 20px 20px;
+  border-radius: 12px;
+  padding: 10px;
+  background: #f3f4f6ff;
 }
 
 .navMenu ul {
@@ -52,6 +53,15 @@ h3 {
 
 .menuItem:hover {
   background: #e5e7eb;
+}
+
+.menuItemDiv {
+  margin: 0;
+  padding: 0;
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  gap: 8px;
 }
 
 .dashboardContent {

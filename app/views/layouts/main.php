@@ -20,6 +20,7 @@
       <div id="pageLoader" style="display:none;">
         <div class="loader"></div>
       </div>
+      <img class="loginGradient" src="/assets/imgs/loginGradient.jpg" alt="Gradient Background">
 
   <style>
     #pageLoader {
@@ -42,13 +43,26 @@
     @keyframes spin {
       to { transform: rotate(360deg); }
     }
+    .loginGradient {
+      position: fixed;
+      inset: 0;           
+      width: 100vw;
+      height: 100vh;
+      object-fit: cover;
+      z-index: -10;
+      opacity: 0.8;  
+    }
   </style>
   
     <?= $content ?>
 
-     <script>
+<script>
   const loader = document.getElementById("pageLoader");
   let loaderTimeout;
+
+  document.addEventListener("DOMContentLoaded", () => {
+    loader.style.display = "none";
+  });
 
   window.addEventListener("beforeunload", () => {
     loaderTimeout = setTimeout(() => {
@@ -57,6 +71,11 @@
   });
 
   window.addEventListener("load", () => {
+    clearTimeout(loaderTimeout);
+    loader.style.display = "none";
+  });
+
+  window.addEventListener("pageshow", (e) => {
     clearTimeout(loaderTimeout);
     loader.style.display = "none";
   });

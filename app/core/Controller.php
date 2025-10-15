@@ -2,6 +2,7 @@
 
 class Controller
 {
+    protected $timeout = 20;
     public function view($view, $data = [])
     {
         extract($data);
@@ -70,22 +71,19 @@ class Controller
         }
         return new $model();
     }
-
     function requireLogin($role)
-{
-    if (!isset($_SESSION['user'])) {
-        echo "Access denied. Please log in as $role.";
-        header("Refresh:2; url=" . ROOT . "login"); // Wait 2s then redirect
+    {
+     if (!isset($_SESSION['user'])) {
+        header("Location: " . ROOT . "login?denied=1");
         exit();
-    }
+     }
 
-    // if role mismatch (case-insensitive)
-    if (strtolower($_SESSION['user']['role'] ?? '') !== strtolower($role)) {
-        echo "Access denied. Please log in as $role.";
-        header("Refresh:2; url=" . ROOT . "login");
+    // if role mismatch
+     if (strtolower($_SESSION['user']['role'] ?? '') !== strtolower($role)) {
+        header("Location: " . ROOT . "login?denied=$role");
         exit();
+     }
     }
-}
     
 
   

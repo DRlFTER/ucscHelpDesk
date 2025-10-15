@@ -32,7 +32,6 @@ main {
   flex-direction: row;
   justify-content: flex-start;
   align-items: flex-start;
-  background: #f5f5f5;
   gap: 20px;
 }
 
@@ -129,7 +128,7 @@ main {
 
 h3 {
   font-size: 1rem;
-  font-weight: 600;
+  font-weight: 400;
   margin-bottom: 8px;
   display: flex;
   align-items: center;
@@ -190,16 +189,21 @@ h3 {
 .quickActions a:nth-child(4) { background: #FF6262; }
 .quickActions a:nth-child(4):hover { background: #ff3636; }
 
-.knowledgeBase input {
-  width: 100%;
-  padding: 10px;
-  border-radius: 6px;
-  border: 1px solid #ccc;
+.knowledgeBase .kbSearch {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  padding: 10px 12px;
+  background: #fff;
+}
+
+.knowledgeBase .kbSearch input {
+  border: none;
+  outline: none;
   font-size: 14px;
-  background-image: url('../../../../public/assets/search.svg');
-  background-repeat: no-repeat;
-  background-position: 10px center;
-  padding-left: 36px;
+  flex: 1;
 }
 
 .recentTickets {
@@ -232,7 +236,7 @@ h3 {
   padding-top: 12px;
   padding-bottom: 12px;
   flex-direction: column;
-  gap: 2px;
+  gap: 8px;
 }
 
 .status {

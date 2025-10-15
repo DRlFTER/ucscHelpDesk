@@ -1,11 +1,9 @@
 <?php
-// db.php - you can put this in a separate file and include it everywhere
-$host = "localhost";
-$user = "root";       // your DB username
-$pass = "";           // your DB password
-$dbname = "support_desk_my_version"; // your DB name
+// Include the config.php file
+require_once('../../core/config.php');
 
-$conn = new mysqli($host, $user, $pass, $dbname);
+// Database connection using settings from config.php
+$conn = new mysqli(DBHOST, DBUSER, DBPASSWORD, DBNAME, DBPORT);
 
 if ($conn->connect_error) {
     die("DB Connection failed: " . $conn->connect_error);
@@ -18,7 +16,6 @@ $staff_id = isset($_SESSION['u_id']) ? (int)$_SESSION['u_id'] : 0; // Assuming s
 $sql = "SELECT t.ticket_id, t.created_at, t.title, u.name AS student_name, t.category, t.status, t.priority, t.meeting_requested
         FROM tickets t
         INNER JOIN users u ON t.u_id = u.u_id
-        WHERE u.role = 'student'
         ORDER BY t.created_at DESC";
 
 $result = $conn->query($sql);
@@ -49,7 +46,7 @@ include_once("./staff_nabar.html");
   <link rel="stylesheet" href="./general.css">
   <script>
     // Pass tickets to JavaScript
-    window.tickets = <?php echo json_encode($tickets); ?>;
+    
   </script>
   <script src="./dashboard.js" defer></script>
 </head>

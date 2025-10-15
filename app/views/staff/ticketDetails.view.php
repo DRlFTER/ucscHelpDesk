@@ -1,51 +1,4 @@
-<?php
-// db.php - Database connection
-require_once('../../core/config.php');
-
-// Database connection using settings from config.php
-$conn = new mysqli(DBHOST, DBUSER, DBPASSWORD, DBNAME, DBPORT);
-
-if ($conn->connect_error) {
-    die("DB Connection failed: " . $conn->connect_error);
-}
-
-// Get ticket_id from URL
-$ticket_id = isset($_GET['ticket_id']) ? intval($_GET['ticket_id']) : 0;
-
-if ($ticket_id === 0) {
-    die("Invalid ticket ID.");
-}
-
-// Fetch ticket details
-$sql = "SELECT t.ticket_id, created_at, title, u.name AS student_name, category, status, priority, meeting_requested,t.description
-        FROM tickets t, users u
-        WHERE t.ticket_id = ? AND t.u_id = u.u_id";
-$stmt = $conn->prepare($sql);
-$stmt->bind_param("i", $ticket_id);
-$stmt->execute();
-$result = $stmt->get_result();
-
-$ticket = $result->fetch_assoc();
-
-if (!$ticket) {
-    die("Ticket not found.");
-}
-
-$pageTitle = "Support Staff - Ticket Details";
-include_once("./staff_nabar.html");
-?>
-
-<!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>UCSC Help Desk - Ticket Details</title>
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Poppins:wght@400;500&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="./global.css">
-  <style>
+<style>
     /* Reuse styles from dashboard for consistency */
     .main-content {
         padding: 45px 84px;
@@ -257,9 +210,8 @@ include_once("./staff_nabar.html");
         .actions-bar { flex-direction: column; }
     }
   </style>
-</head>
-<body>
-  <main id="main-content" class="main-content">
+
+<main id="main-content" class="main-content">
     <div class="page-header">
       <h2 class="page-title">Ticket Details</h2>
       <p class="page-subtitle">View and manage this ticket</p>
@@ -325,5 +277,3 @@ include_once("./staff_nabar.html");
       </div>
     </div>
   </main>
-</body>
-</html>

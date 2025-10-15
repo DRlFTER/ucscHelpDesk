@@ -1,18 +1,84 @@
 <header>
   <nav class="navbar">
+  <?php
+    // Determine role-based routes
+    $sessionUser = $_SESSION['user'] ?? null;
+    $role = strtolower($sessionUser['role'] ?? 'guest');
+    $routes = [
+      'admin' => [
+        'dashboard' => '/admin/dashboard',
+        'tickets'   => '/admin/tickets',
+        'newTicket' => null,
+      ],
+      'student' => [
+        'dashboard' => '/student/dashboard',
+        // No dedicated tickets list route yet; fall back to dashboard
+        'tickets'   => '/student/dashboard',
+        'newTicket' => '/student/ticket',
+      ],
+      'staff' => [
+        // No separate dashboard; use tickets view for landing
+        'dashboard' => '/staff/staffTickets',
+        'tickets'   => '/staff/staffTickets',
+        'newTicket' => null,
+      ],
+      'counselor' => [
+        'dashboard' => '/counselor/dashboard',
+        'tickets'   => null,
+        'newTicket' => null,
+      ],
+      'lecturer' => [
+        'dashboard' => '/lecturer/dashboard',
+        'tickets'   => null,
+        'newTicket' => null,
+      ],
+      'guest' => [
+        'dashboard' => '/guest/dashboard',
+        'tickets'   => null,
+        'newTicket' => null,
+      ],
+    ];
+
+    $dashboardHref = $routes[$role]['dashboard'] ?? '#';
+    $ticketsHref   = $routes[$role]['tickets']   ?? '#';
+    $newTicketHref = $routes[$role]['newTicket'] ?? null;
+    $hasNewTicket  = !empty($newTicketHref);
+
+    // Determine current path for active link highlighting
+    $currentPath = parse_url($_SERVER['REQUEST_URI'] ?? '/', PHP_URL_PATH) ?? '/';
+    $isActive = function (?string $href) use ($currentPath): bool {
+      if (!$href || $href === '#') return false;
+      return strpos($currentPath, $href) === 0;
+    };
+    $dashboardActive = $isActive($dashboardHref);
+    $ticketsActive   = $isActive($ticketsHref);
+
+    // Avoid both active if both hrefs are the same (e.g., student)
+    if (($routes[$role]['tickets'] ?? null) === ($routes[$role]['dashboard'] ?? null)) {
+      $ticketsActive = false;
+    }
+
+    // Role-specific tweaks
+    if ($role === 'staff') {
+      // Mark tickets active on ticket detail routes too
+      if (!$ticketsActive && strpos($currentPath, '/staff/ticket') === 0) {
+        $ticketsActive = true;
+        $dashboardActive = false;
+      }
+    }
+  ?>
     <div class="navbarLeft">
       <img src="/assets/logo.svg" alt="UCSC Logo" class="logo" />
       <span class="navbarBrand">UCSC HelpDesk</span>
     </div>
     <div class="navbarCenter">
       <div class="navbarMenuContainer">
-        <a href="#" class="navbarLink active">Dashboard</a>
+  <a href="<?= htmlspecialchars($dashboardHref) ?>" class="navbarLink <?= $dashboardActive ? 'active' : '' ?>">Dashboard</a>
         <a href="#" class="navbarLink">Calendar</a>
-        <a href="#" class="navbarLink">Tickets</a>
+    <a href="<?= $ticketsHref ? htmlspecialchars($ticketsHref) : '#' ?>" class="navbarLink <?= $ticketsActive ? 'active' : '' ?>" style="<?= $ticketsHref ? '' : 'pointer-events:none; opacity:0.5;' ?>">Tickets</a>
         <a href="#" class="navbarLink">Forum</a>
         <div class="btnHolder">
-          <?php $isStudent = isset($_SESSION['user']) && (($_SESSION['user']['role'] ?? null) === 'student'); ?>
-          <a href="<?= $isStudent ? '/student/ticket' : '#' ?>" class="navbarNewTicket btnWSvg btnPrimaryText" style="text-decoration:none; display:inline-flex; align-items:center; gap:6px; <?= $isStudent ? "" : 'pointer-events:none; opacity:0.5;' ?>">
+          <a href="<?= $hasNewTicket ? htmlspecialchars($newTicketHref) : '#' ?>" class="navbarNewTicket btnWSvg btnPrimaryText" style="text-decoration:none; display:inline-flex; align-items:center; gap:6px; <?= $hasNewTicket ? '' : 'pointer-events:none; opacity:0.5;' ?>">
             <svg xmlns="http://www.w3.org/2000/svg" width="25" height="25" viewBox="0 0 30 30" fill="none">
               <path d="M13.75 16.25H6.25V13.75H13.75V6.25H16.25V13.75H23.75V16.25H16.25V23.75H13.75V16.25Z" fill="#FEF7FF"/>
             </svg>
@@ -24,7 +90,6 @@
     <div class="navbarRight">
       <div class="icon notification"></div>
       <?php
-        $sessionUser = $_SESSION['user'] ?? null;
         $displayName = $sessionUser['name'] ?? 'Guest';
         $displayEmail = $sessionUser['email'] ?? '';
         $displayRole = isset($sessionUser['role']) ? ucfirst($sessionUser['role']) : '';

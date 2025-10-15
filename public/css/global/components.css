@@ -61,11 +61,24 @@ body {
 }
 
 .titleText {
-  font-size: 100px;
+  color: #000;
+  text-align: center;
   font-family: "SF Pro";
-  font-weight: 700;
-  line-height: 32px;
-  letter-spacing: -0.5px;
+  font-size: 30px;
+  font-style: normal;
+  font-weight: 510;
+  line-height: normal;
+}
+
+.titleSubText {
+  color: #394353;
+  text-align: center;
+  font-family: "SF Pro";
+  font-size: 20px;
+  font-style: normal;
+  font-weight: 400;
+  line-height: normal;
+  letter-spacing: 0.5px;
 }
 
 .container {
@@ -339,8 +352,8 @@ body {
   justify-content: space-between;
   align-items: center;
   padding: 8px 20px;
-  background-color: white;
-  border-bottom: 1px solid #eee;
+  background-color: #fff;
+  z-index: 1000;
 }
 
 .navbarLeft {
@@ -446,7 +459,7 @@ body {
 .profileDropdown {
   display: none;
   position: absolute;
-  right: 20px;
+  right: 10px;
   top: 60px;
   margin-top: 8px;
   padding: 12px;
@@ -456,7 +469,8 @@ body {
   border-radius: 10px;
   box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
   overflow: hidden;
-  z-index: 100;
+  z-index: 9999; /* very high */
+  isolation: isolate;
 }
 
 /* Dropdown links */
