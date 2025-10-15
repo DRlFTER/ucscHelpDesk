@@ -206,6 +206,34 @@ h3 {
   flex: 1;
 }
 
+/* Account section button-like items */
+.account .accountItems {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.account .accountItem {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 12px;
+  border-radius: 8px;
+  background: transparent;
+  color: #111827;
+  text-decoration: none;
+  transition: background-color .2s ease, box-shadow .2s ease, transform .1s ease;
+  cursor: pointer;
+  width: 100%;
+}
+
+.account .accountItem svg {
+  flex-shrink: 0;
+}
+
+/* Hide manual line breaks inside account buttons for cleaner layout */
+.account .accountItem br { display: none; }
+
 .recentTickets {
   width: 100%;
   display: flex;
