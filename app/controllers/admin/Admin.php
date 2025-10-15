@@ -21,14 +21,14 @@ class Admin extends Controller
         if ($res = $db->query("SELECT COUNT(*) AS c FROM tickets")) {
             $row = $res->fetch_assoc();
             $totalTickets = (int)($row['c'] ?? 0);
-            $res->free();
+            $res->free_result();
         }
 
         // Open tickets (pending, agent assigned)
         if ($res = $db->query("SELECT COUNT(*) AS c FROM tickets WHERE status IN ('pending','agent assigned')")) {
             $row = $res->fetch_assoc();
             $openTickets = (int)($row['c'] ?? 0);
-            $res->free();
+            $res->free_result();
         }
 
         // Avg first response time in minutes
@@ -42,14 +42,14 @@ class Admin extends Controller
         if ($res = $db->query($sqlAvg)) {
             $row = $res->fetch_assoc();
             $avgRespMinutes = isset($row['avg_minutes']) ? (float)$row['avg_minutes'] : null;
-            $res->free();
+            $res->free_result();
         }
 
         // Resolved tickets (resolved, closed, agent-closed)
         if ($res = $db->query("SELECT COUNT(*) AS c FROM tickets WHERE status IN ('resolved','closed','agent-closed')")) {
             $row = $res->fetch_assoc();
             $resolvedTickets = (int)($row['c'] ?? 0);
-            $res->free();
+            $res->free_result();
         }
 
         $avgRespText = $avgRespMinutes !== null ? round($avgRespMinutes / 60, 1) . 'h' : '—';
@@ -78,7 +78,7 @@ class Admin extends Controller
                     'priority' => strtoupper((string)$row['priority']),
                 ];
             }
-            $res->free();
+            $res->free_result();
         }
 
         // 3) Top agents (by number of ticket responses)
@@ -106,7 +106,7 @@ class Admin extends Controller
                     'responseTime' => $avgMin !== null ? round($avgMin / 60, 1) . 'h' : '—',
                 ];
             }
-            $res->free();
+            $res->free_result();
         }
 
         // 4) Trends (last 4 weeks: tickets created per ISO week, and those that are currently resolved)
@@ -129,13 +129,13 @@ class Admin extends Controller
             // New tickets in this week
             $qNew = "SELECT COUNT(*) AS c FROM tickets WHERE created_at >= '$startEsc' AND created_at < '$endEsc'";
             $countNew = 0;
-            if ($res = $db->query($qNew)) { $r = $res->fetch_assoc(); $countNew = (int)($r['c'] ?? 0); $res->free(); }
+            if ($res = $db->query($qNew)) { $r = $res->fetch_assoc(); $countNew = (int)($r['c'] ?? 0); $res->free_result(); }
             $trends['new'][] = $countNew;
 
             // Resolved tickets created this week (approximation)
             $qRes = "SELECT COUNT(*) AS c FROM tickets WHERE created_at >= '$startEsc' AND created_at < '$endEsc' AND status IN ('resolved','closed','agent-closed')";
             $countRes = 0;
-            if ($res = $db->query($qRes)) { $r = $res->fetch_assoc(); $countRes = (int)($r['c'] ?? 0); $res->free(); }
+            if ($res = $db->query($qRes)) { $r = $res->fetch_assoc(); $countRes = (int)($r['c'] ?? 0); $res->free_result(); }
             $trends['resolved'][] = $countRes;
         }
 
@@ -146,7 +146,7 @@ class Admin extends Controller
                 $categories['labels'][] = (string)$row['category'];
                 $categories['data'][] = (int)$row['c'];
             }
-            $res->free();
+            $res->free_result();
         }
 
         // 6) Platform status (no table yet; keep static placeholders)
