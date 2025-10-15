@@ -164,7 +164,7 @@ new Chart(ctxPie, {
     responsive: true,
     plugins: {
       legend: {
-        position: "right", // 👈 move legend to the left
+        position: "right", // move legend to the left
       },
     },
   },
