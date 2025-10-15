@@ -64,7 +64,7 @@ class Admin extends Controller
 
         // 2) Recent tickets (latest 6)
         $recentTickets = [];
-        $sqlRecent = "SELECT t.title, u.name AS requester, t.created_at, t.priority
+        $sqlRecent = "SELECT t.ticket_id, t.title, u.name AS requester, t.created_at, t.priority
                       FROM tickets t
                       LEFT JOIN users u ON u.u_id = t.u_id
                       ORDER BY t.created_at DESC
@@ -72,6 +72,7 @@ class Admin extends Controller
         if ($res = $db->query($sqlRecent)) {
             while ($row = $res->fetch_assoc()) {
                 $recentTickets[] = [
+                    'id' => (int)$row['ticket_id'],
                     'title' => (string)$row['title'],
                     'agent' => (string)($row['requester'] ?? 'Unknown'), // shown under agent label in UI
                     'time' => self::relativeTime($row['created_at']),
@@ -175,6 +176,118 @@ class Admin extends Controller
         $headContent = '
         <link rel="stylesheet" href="/css/admin/adminTickets.css"/>';
         $this->view('adminTickets', ['title' => 'Tickets', 'head' => $headContent]);
+    }
+
+     public function ticket() {
+        $this->requireLogin('admin');
+        $headContent = '
+        <link rel="stylesheet" href="/css/admin/adminTicketFull.css"/>';
+        $this->view('adminTicketFull', ['title' => 'Ticket Details', 'head' => $headContent]);
+    }
+
+    /**
+     * Return a single ticket's details as JSON for the full ticket view.
+     * Accepts id (preferred) or code like TKT-123.
+     */
+    public function ticketData()
+    {
+        $this->requireLogin('admin');
+        header('Content-Type: application/json');
+        $db = Database::getInstance();
+
+        $id = isset($_GET['id']) ? (int)$_GET['id'] : 0;
+        $code = isset($_GET['code']) ? trim((string)$_GET['code']) : '';
+        if (!$id && $code) {
+            if (preg_match('/TKT[-\s]?(\d+)/i', $code, $m)) {
+                $id = (int)$m[1];
+            }
+        }
+        if (!$id) {
+            http_response_code(400);
+            echo json_encode(['error' => 'Missing ticket id']);
+            exit;
+        }
+
+        $idEsc = (int)$id;
+        $sql = "SELECT t.ticket_id, t.created_at, t.title, t.category, t.status, t.priority, t.description, t.u_id, u.name AS student_name
+                FROM tickets t
+                LEFT JOIN users u ON u.u_id = t.u_id
+                WHERE t.ticket_id = $idEsc
+                LIMIT 1";
+
+        $row = null;
+        if ($res = $db->query($sql)) {
+            $row = $res->fetch_assoc();
+            $res->free();
+        }
+        if (!$row) {
+            http_response_code(404);
+            echo json_encode(['error' => 'Ticket not found']);
+            exit;
+        }
+
+        // attachments from supporting_documents
+        $attachments = [];
+        if ($res = $db->query("SELECT doc_name, location FROM supporting_documents WHERE ticket_id = $idEsc")) {
+            while ($r = $res->fetch_assoc()) {
+                $attachments[] = [
+                    'name' => (string)($r['doc_name'] ?? ''),
+                    'url' => '/' . ltrim((string)($r['location'] ?? ''), '/'),
+                ];
+            }
+            $res->free();
+        }
+
+        $statusRaw = strtolower((string)($row['status'] ?? ''));
+        $statusUi = ($statusRaw === 'pending' || $statusRaw === 'agent assigned') ? 'Under Review' : (in_array($statusRaw, ['resolved','closed','agent-closed']) ? 'Resolved' : ucfirst($statusRaw));
+
+        $createdAt = $row['created_at'] ?? null;
+        $createdPretty = '';
+        if ($createdAt) {
+            $ts = strtotime($createdAt);
+            if ($ts !== false) $createdPretty = date('M d, Y \\a\\t g:i A', $ts);
+        }
+
+        echo json_encode([
+            'id' => (int)$row['ticket_id'],
+            'code' => 'TKT-' . (int)$row['ticket_id'],
+            'title' => (string)($row['title'] ?? ''),
+            'description' => (string)($row['description'] ?? ''),
+            'category' => (string)($row['category'] ?? ''),
+            'priority' => ucfirst((string)($row['priority'] ?? '')),
+            'status' => $statusUi,
+            'createdOn' => $createdPretty,
+            'student' => [
+                'id' => isset($row['u_id']) ? (int)$row['u_id'] : null,
+                'name' => (string)($row['student_name'] ?? ''),
+            ],
+            'assigned' => null,
+            'attachments' => $attachments,
+        ]);
+        exit;
+    }
+
+    /** Delete a ticket by id and return JSON */
+    public function ticketDelete()
+    {
+        $this->requireLogin('admin');
+        header('Content-Type: application/json');
+        $db = Database::getInstance();
+        $id = isset($_POST['id']) ? (int)$_POST['id'] : (isset($_GET['id']) ? (int)$_GET['id'] : 0);
+        if (!$id) {
+            http_response_code(400);
+            echo json_encode(['error' => 'Missing id']);
+            exit;
+        }
+        $idEsc = (int)$id;
+        $ok = $db->query("DELETE FROM tickets WHERE ticket_id = $idEsc");
+        if (!$ok) {
+            http_response_code(500);
+            echo json_encode(['error' => 'Delete failed']);
+            exit;
+        }
+        echo json_encode(['success' => true]);
+        exit;
     }
 
     /**
@@ -302,6 +415,7 @@ class Admin extends Controller
         $out = [];
         foreach ($rows as $r) {
             $out[] = [
+                'id' => isset($r['ticket_id']) ? (int)$r['ticket_id'] : null,
                 'code' => 'TKT-' . (string)($r['ticket_id'] ?? ''),
                 'createdAt' => $mapDate($r['created_at'] ?? null),
                 'title' => (string)($r['title'] ?? ''),

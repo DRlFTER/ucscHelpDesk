@@ -1,0 +1,299 @@
+main {
+  width: 100%;
+  display: flex;
+  justify-content: center;
+  min-height: calc(
+    100dvh - var(--navbar-height, 64px)
+  ); /* Fill the remaining viewport space after the navbar height */
+}
+
+.ticketFullPage {
+  width: 90%;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  padding: 16px 0 40px;
+  min-height: calc(
+    100dvh - var(--navbar-height, 64px)
+  ); /* Fill the remaining viewport space after the navbar height */
+}
+
+.pageHeader {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.pageTitle {
+  font-size: 26px;
+  font-weight: 600;
+}
+.pageSubtitle {
+  color: #394353;
+  font-size: 13px;
+}
+
+.ticketLayout {
+  display: flex;
+  align-items: stretch; /* columns match height */
+  gap: 16px;
+  flex: 1; /* occupy remaining height */
+}
+
+.ticketLeft {
+  flex: 1 1 68%;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  min-height: 0; /* allow flex children to size/scroll */
+}
+
+.ticketRight {
+  flex: 0 0 340px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  min-height: 0;
+}
+
+.card {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  background: #fff;
+  border-radius: 12px;
+  padding: 16px;
+  box-shadow: none; /* remove shadows */
+  border: 1px solid #eee; /* subtle separation without shadow */
+}
+
+/* make conversation and timeline take available space */
+.conversation {
+  flex: 1;
+  min-height: 0;
+}
+.ticketTimeline {
+  flex: 1;
+  min-height: 0;
+}
+
+.ticketHeader {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.ticketTitle {
+  flex: 1;
+  font-size: 17px;
+  font-weight: 600;
+}
+.ticketMeta {
+  font-size: 11.5px;
+  color: #6b7280;
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+/* Summary body inside the header card */
+.summaryBody {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+.summarySection {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.sectionTitleRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+.sectionTitle {
+  font-size: 15px;
+  font-weight: 600;
+}
+.descriptionText {
+  color: #374151;
+  font-size: 13px;
+  line-height: 1.5;
+}
+
+.attachmentsList {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+.attachmentItem {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 10px;
+  border-radius: 8px;
+  background: #f9fafb;
+  color: #111827;
+  font-size: 12.5px;
+}
+.attachmentItem button {
+  border: none;
+  background: transparent;
+  color: #6b7280;
+  cursor: pointer;
+}
+
+.messages {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  flex: 1; /* grow to fill card */
+  min-height: 0; /* enable scrolling within flex parent */
+  overflow-y: auto; /* scroll when long */
+}
+.message {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+}
+.messageBubble {
+  flex: 1;
+  background: #f9fafb;
+  border-radius: 10px;
+  padding: 10px 12px;
+}
+/* color coding for author types */
+.messageBubble.staff {
+  background: #e7f1ff;
+} /* light blue for lecturer */
+.messageBubble.student {
+  background: #f3f4f6;
+} /* light gray for student */
+.messageHeader {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.messageHeader .name {
+  font-weight: 600;
+  font-size: 12.5px;
+}
+.messageHeader .role {
+  font-size: 11px;
+  color: #6b7280;
+  padding: 2px 6px;
+  border-radius: 10px;
+  background: #eef2ff;
+}
+.messageHeader .time {
+  margin-left: auto;
+  font-size: 11px;
+  color: #6b7280;
+}
+.messageText {
+  font-size: 12.5px;
+  color: #111827;
+  margin-top: 6px;
+}
+
+.replyBox {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  border-top: 1px solid #e5e7eb;
+  padding-top: 10px;
+}
+.conversation {
+  display: flex;
+  flex-direction: column;
+}
+.replyBox input {
+  flex: 1;
+  height: 42px;
+  padding: 0 12px;
+  border-radius: 10px;
+  border: 1px solid #e5e7eb;
+  background: #fff;
+}
+.replyActions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+/* Right side */
+.infoList {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.infoRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-size: 12.5px;
+}
+.infoRow .label {
+  color: #6b7280;
+}
+.infoRow .value {
+  color: #111827;
+  font-weight: 500;
+}
+
+.timelineList {
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  overflow-y: auto;
+  flex: 1; /* fill timeline card */
+}
+.timelineItem {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.tlDot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+}
+.tlDot.green {
+  background: #22c55e;
+}
+.tlDot.blue {
+  background: #3b82f6;
+}
+.tlDot.yellow {
+  background: #f59e0b;
+}
+.tlDot.gray {
+  background: #9ca3af;
+}
+.tlText {
+  display: flex;
+  flex-direction: column;
+  font-size: 12px;
+}
+.tlText .label {
+  color: #111827;
+  font-weight: 500;
+}
+.tlText .time {
+  color: #6b7280;
+}
+
+.visuallyHidden {
+  position: absolute;
+  left: -9999px;
+}
+
+@media (max-width: 980px) {
+  .ticketLayout {
+    flex-direction: column;
+  }
+  .ticketRight {
+    flex: 1 1 auto;
+  }
+}

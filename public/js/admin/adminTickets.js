@@ -271,7 +271,9 @@ window.adminTicketsData = [];
         const meetingLabel = getMeetingLabel((t && t.meeting) || "");
 
         return `
-            <div class="ticket">
+      <div class="ticket" tabindex="0" role="link" aria-label="Open ticket ${esc(
+        t.title
+      )}" data-id="${esc(t.id)}" data-code="${esc(t.code)}">
                 <div class="ticketRow1">
                     <div class="ticketName">
                         <h2>${esc(t.title)}</h2>
@@ -312,6 +314,33 @@ window.adminTicketsData = [];
       .join("");
 
     container.innerHTML = html;
+
+    // Use event delegation so clicks on any child still navigate
+    function openTicket(el) {
+      const id = el.getAttribute("data-id");
+      const code = el.getAttribute("data-code");
+      if (id) {
+        window.location.assign(`/admin/ticket?id=${encodeURIComponent(id)}`);
+      } else if (code) {
+        window.location.assign(
+          `/admin/ticket?code=${encodeURIComponent(code)}`
+        );
+      }
+    }
+
+    container.addEventListener("click", (e) => {
+      const card = e.target.closest(".ticket");
+      if (card && container.contains(card)) openTicket(card);
+    });
+
+    container.addEventListener("keydown", (e) => {
+      const card = e.target.closest(".ticket");
+      if (!card) return;
+      if (e.key === "Enter" || e.key === " ") {
+        e.preventDefault();
+        openTicket(card);
+      }
+    });
   }
 
   function renderPagination() {
