@@ -1,3 +1,32 @@
+<?php
+// Helper to render relative "time ago" strings from a datetime value
+function time_ago_label($datetime)
+{
+  if (empty($datetime)) return 'recent';
+  $ts = strtotime($datetime);
+  if ($ts === false) return 'recent';
+  $diff = time() - $ts;
+  if ($diff < 5) return 'just now';
+  if ($diff < 60) return $diff . ' seconds ago';
+  if ($diff < 3600) {
+    $m = floor($diff / 60);
+    return $m . ' minute' . ($m > 1 ? 's' : '') . ' ago';
+  }
+  if ($diff < 86400) {
+    $h = floor($diff / 3600);
+    return $h . ' hour' . ($h > 1 ? 's' : '') . ' ago';
+  }
+  if ($diff < 604800) {
+    $d = floor($diff / 86400);
+    return $d . ' day' . ($d > 1 ? 's' : '') . ' ago';
+  }
+  // older than a week — show a short date
+  $format = date('Y', $ts) === date('Y') ? 'M j' : 'M j, Y';
+  return date($format, $ts);
+}
+
+?>
+
 <main>
   <div class="lostFoundContainer">
     <div class="lfHeader">
@@ -22,71 +51,42 @@
       </div>
     </div>
 
-    <div class="lfContent">
-      <aside class="lfSidebar">
-        <h4>Filters</h4>
-        <div class="sidebarDropdowns">
-          <div class="field">
-            <label class="label" for="lfDateSide">Date</label>
-            <select id="lfDateSide" name="dateSide">
-              <option value="any" selected>Any time</option>
-              <option value="24h">Past 24 hours</option>
-              <option value="7d">Past 7 days</option>
-              <option value="30d">Past 30 days</option>
-            </select>
-          </div>
-          <div class="field">
-            <label class="label" for="lfLocationSide">Location</label>
-            <select id="lfLocationSide" name="locationSide">
-              <option value="all" selected>All locations</option>
-              <option value="s104">S104</option>
-              <option value="cafeteria">UCSC Cafeteria</option>
-              <option value="w003">W003</option>
-            </select>
-          </div>
+      <section class="sectionCard">
+        <div class="lfList">
+        <?php if (!empty($items)): ?>
+          <?php foreach ($items as $it): ?>
+            <?php $isFound = strtolower($it['status'] ?? '') === 'found'; ?>
+            <article class="lfCard <?= $isFound ? 'found' : 'lost' ?>">
+              <h3><span class="state <?= $isFound ? 'found' : 'lost' ?>"><?= $isFound ? 'Found' : 'Lost' ?></span> <?= htmlspecialchars($it['item_title']) ?></h3>
+              <p><?= nl2br(htmlspecialchars($it['item_details'])) ?></p>
+              <ul class="meta">
+                <?php if (!empty($it['category'])): ?><li>Category: <?= htmlspecialchars(ucfirst($it['category'])) ?></li><?php endif; ?>
+                <?php if (!empty($it['priority'])): ?><li>Urgency: <?= htmlspecialchars(ucfirst($it['priority'])) ?></li><?php endif; ?>
+                <?php if (!empty($it['contact_mobile'])): ?><li>Contact: <?= htmlspecialchars($it['contact_mobile']) ?></li><?php endif; ?>
+                <?php if (!empty($it['contact_email'])): ?><li>Email: <?= htmlspecialchars($it['contact_email']) ?></li><?php endif; ?>
+              </ul>
+              <div class="lfFooter">
+                <span>#<?= (int)$it['q_id'] ?></span>
+                <span class="time"><?=
+                    isset($it['created_at']) ? htmlspecialchars(time_ago_label($it['created_at'])) : 'recent'
+                ?></span>
+              </div>
+            </article>
+          <?php endforeach; ?>
+        <?php else: ?>
+          <div style="color:#6b7280; font-size:14px;">No items yet.</div>
+        <?php endif; ?>
         </div>
-      </aside>
-
-      <section class="lfList">
-        <article class="lfCard found">
-          <h3><span class="state found">Found</span> Wallet with UCSC ID inside – Washroom Corridor</h3>
-          <p>Found a black wallet near the washroom corridor. It has a UCSC student ID (Kaweesha P) and a few cards inside. I submitted it to the Help Desk front desk.</p>
-          <ul class="meta">
-            <li>Location: S104</li>
-            <li>Found on: August 2, around 12 PM</li>
-            <li>Photo Attached</li>
-          </ul>
-          <div class="lfFooter">
-            <strong>4 Comments</strong>
-            <span>DM Finder</span>
-            <span class="time">7 hours ago</span>
-          </div>
-        </article>
-
-        <article class="lfCard lost">
-          <h3><span class="state lost">Lost</span> Blue Samsung Earbuds – Cafeteria Bench</h3>
-          <p>I lost a pair of blue Samsung Galaxy Buds (with a bit of a crack on the lid) this morning around 10:30 AM near the cafeteria benches. If anyone finds it, please let me know here or drop it at the Help Desk counter.</p>
-          <ul class="meta">
-            <li>Location: UCSC Cafeteria</li>
-            <li>Lost on: August 2, 10:30 AM</li>
-            <li>Contact: auto-linked to UCSC email</li>
-          </ul>
-          <div class="lfFooter">
-            <strong>2 Comments</strong>
-            <span>I’ve seen it</span>
-            <span class="time">19 hours ago</span>
-          </div>
-        </article>
       </section>
 
       <aside class="lfActions">
-        <a href="#" class="btnWSvg btnPrimaryText lfGreen" style="text-decoration:none;">
+  <a href="/student/newFoundItem" class="btnWSvg btnPrimaryText lfGreen" style="text-decoration:none;">
           <svg xmlns="http://www.w3.org/2000/svg" width="25" height="25" viewBox="0 0 30 30" fill="none">
             <path d="M13.75 16.25H6.25V13.75H13.75V6.25H16.25V13.75H23.75V16.25H16.25V23.75H13.75V16.25Z" fill="#FEF7FF"/>
           </svg>
           <span>Found Item</span>
         </a>
-  <a href="#" class="btnWSvg btnPrimaryText lfRed" style="text-decoration:none;">
+  <a href="/student/newLostItem" class="btnWSvg btnPrimaryText lfRed" style="text-decoration:none;">
           <svg xmlns="http://www.w3.org/2000/svg" width="25" height="25" viewBox="0 0 30 30" fill="none">
             <path d="M13.75 16.25H6.25V13.75H13.75V6.25H16.25V13.75H23.75V16.25H16.25V23.75H13.75V16.25Z" fill="#FEF7FF"/>
           </svg>
@@ -96,4 +96,25 @@
     </div>
   </div>
 </main>
-<script src="/js/student/lostFound.js"></script>
+<script src="/js/student/studentLostFound.js"></script>
+<?php if (!empty($flash) && ($flash['type'] ?? '') === 'success'): ?>
+<script>
+  // Minimal success popup. You can replace with your existing toast component if available.
+  (function(){
+    const msg = <?= json_encode($flash['message'] ?? 'Submitted successfully.') ?>;
+    const el = document.createElement('div');
+    el.textContent = msg;
+  el.style.position='fixed';
+  el.style.right='20px';
+  el.style.top='20px';
+    el.style.background='#10b981';
+    el.style.color='#fff';
+    el.style.padding='12px 16px';
+    el.style.borderRadius='10px';
+    el.style.boxShadow='0 8px 30px rgba(0,0,0,.12)';
+    el.style.zIndex='9999';
+    document.body.appendChild(el);
+    setTimeout(()=>{ el.style.transition='opacity .3s'; el.style.opacity='0'; setTimeout(()=>el.remove(), 300); }, 2200);
+  })();
+</script>
+<?php endif; ?>
