@@ -214,22 +214,7 @@ function wireActions() {
   if (deleteBtn) {
     deleteBtn.addEventListener("click", async () => {
       if (!ticketData || !ticketData.id) return;
-      if (!confirm("Delete this ticket permanently? This cannot be undone."))
-        return;
-      try {
-        const res = await fetch("/admin/ticketDelete", {
-          method: "POST",
-          headers: { "Content-Type": "application/x-www-form-urlencoded" },
-          body: `id=${encodeURIComponent(ticketData.id)}`,
-          credentials: "include",
-        });
-        if (!res.ok) throw new Error("Delete failed");
-        localStorage.removeItem(cacheKeyFor(ticketData.id));
-        window.location.href = "/admin/tickets";
-      } catch (e) {
-        console.error(e);
-        alert("Failed to delete the ticket.");
-      }
+      openDeleteModal();
     });
   }
 }
@@ -322,3 +307,53 @@ async function fetchTicket(id) {
   renderTimeline();
   wireActions();
 })();
+
+// Modal helpers
+function openDeleteModal() {
+  const overlay = document.getElementById("deleteModal");
+  if (!overlay) return;
+  overlay.classList.add("open");
+  document.body.classList.add("modal-open");
+
+  const cancelBtn = document.getElementById("cancelDeleteBtn");
+  const confirmBtn = document.getElementById("confirmDeleteBtn");
+  const backdropBtn = overlay.querySelector(".modalBackdropClose");
+
+  const close = () => {
+    overlay.classList.remove("open");
+    document.body.classList.remove("modal-open");
+    // Remove listeners after animation
+    cancelBtn && cancelBtn.removeEventListener("click", onCancel);
+    confirmBtn && confirmBtn.removeEventListener("click", onConfirm);
+    backdropBtn && backdropBtn.removeEventListener("click", onCancel);
+  };
+
+  const onCancel = (e) => {
+    e && e.preventDefault();
+    close();
+  };
+
+  const onConfirm = async (e) => {
+    e && e.preventDefault();
+    try {
+      const res = await fetch("/admin/ticketDelete", {
+        method: "POST",
+        headers: { "Content-Type": "application/x-www-form-urlencoded" },
+        body: `id=${encodeURIComponent(ticketData.id)}`,
+        credentials: "include",
+      });
+      if (!res.ok) throw new Error("Delete failed");
+      localStorage.removeItem(cacheKeyFor(ticketData.id));
+      window.location.href = "/admin/tickets";
+    } catch (e) {
+      console.error(e);
+      alert("Failed to delete the ticket.");
+    } finally {
+      close();
+    }
+  };
+
+  cancelBtn && cancelBtn.addEventListener("click", onCancel);
+  confirmBtn && confirmBtn.addEventListener("click", onConfirm);
+  backdropBtn && backdropBtn.addEventListener("click", onCancel);
+}
