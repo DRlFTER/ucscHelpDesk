@@ -40,9 +40,8 @@
 					<div class="replyBox">
 						<input id="replyInput" type="text" placeholder="Type your reply here" aria-label="Reply" />
 						<div class="replyActions">
-							<button id="attachBtn" class="btnAttach" type="button">
+							<button id="attachBtn" class="btnAttachRound" type="button">
 								<svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#374151" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21.44 11.05 12 20.5a6 6 0 0 1-8.49-8.49l10-10a4 4 0 0 1 5.66 5.66l-10 10a2 2 0 1 1-2.83-2.83l9-9"/></svg>
-								<span class="btnAttachText">Attach</span>
 							</button>
 							<button id="sendBtn" class="btnSvg" type="button" aria-label="Send">
 								<svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="2" x2="11" y2="13"></line><polygon points="22 2 15 22 11 13 2 9 22 2"></polygon></svg>
@@ -70,13 +69,32 @@
 						<button id="resolveBtn" class="btnPrimary" type="button"><span class="btnPrimaryText">Mark as resolved</span></button>
 					</div>
 					<div class="btnHolder">
-						<button id="deleteBtn" class="btnSecondary" type="button"><span class="btnSecondaryText">Delete ticket</span></button>
+						<button id="deleteBtn" class="btnSecondary" style="background-color: #ff7b7bff;" type="button"><span class="btnSecondaryText" style="color: white;">Delete ticket</span></button>
 					</div>
 				</div>
 			</aside>
 		</div>
 	</div>
 </main>
+
+<!-- Delete confirmation modal -->
+<div id="deleteModal" class="modalOverlay" aria-hidden="true">
+	<div class="msgHolder">
+		<div class="msgContainer" role="dialog" aria-modal="true" aria-labelledby="deleteModalTitle">
+			<div class="msgContent">
+				<h3 id="deleteModalTitle" class="msgTitle">Delete this ticket?</h3>
+				<p class="msgText">This action is permanent and cannot be undone.</p>
+				<div class="msgActions">
+					<button id="cancelDeleteBtn" type="button" class="btnSecondary"><span class="btnSecondaryText">Cancel</span></button>
+					<button id="confirmDeleteBtn" type="button" class="btnPrimary btnDanger"><span class="btnPrimaryText">Delete</span></button>
+				</div>
+			</div>
+		</div>
+	</div>
+	<!-- clicking outside container closes modal via JS -->
+	<button type="button" class="modalBackdropClose" aria-label="Close"></button>
+  
+</div>
 
 <script src="/js/admin/adminTicketFull.js"></script>
 
