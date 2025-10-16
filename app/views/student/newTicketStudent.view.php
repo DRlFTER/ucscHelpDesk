@@ -133,7 +133,7 @@ include_once(__DIR__ . "/../../views/common/navbar.php");
 	</div>
 </main>
 
-<script src="/js/student/ticket.js"></script>
+<script src="/js/student/student.ticket.js"></script>
 <?php if (!empty($flash) && ($flash['type'] ?? '') === 'success'): ?>
 	<div class="toast" role="status" aria-live="polite">
 		<svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M9 16.2 4.8 12l1.4-1.4L9 13.4 17.8 4.6l1.4 1.4z"/></svg>

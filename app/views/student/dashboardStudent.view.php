@@ -152,4 +152,4 @@
   </div>
 </main>
 
-<script src="/js/student/dashboard.js"></script>
+<script src="/js/student/studentDashboard.js"></script>

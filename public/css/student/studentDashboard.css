@@ -168,7 +168,6 @@ h3 {
 }
 
 .quickActions a:hover {
-  transform: translateY(-5px);
   box-shadow: 0 4px 10px rgba(0,0,0,0.2);
 }
 
@@ -256,7 +255,7 @@ h3 {
   justify-content: space-between;
   align-items: center;
   cursor: pointer;
-  transition: background 0.2s ease;
+  transition: all 0.2s ease-in-out;
 }
 
 .ticketDetails {
@@ -272,8 +271,12 @@ h3 {
   margin-top: 0;
 }
 
-.ticket:hover {
-  background: rgb(241, 243, 244);
+.ticket:hover,
+.ticket.isHover,
+.ticket:focus-visible {
+  background: rgba(255, 255, 255, 1);
+  border: 1px solid rgba(140, 140, 249, 0.7);
+  outline: none;
 }
 
 .ticketTitle {
