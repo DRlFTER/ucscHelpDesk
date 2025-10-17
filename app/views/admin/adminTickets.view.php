@@ -1,6 +1,6 @@
 <main>
-    <div class="ticketsContainer">
-        <div class="ticketsTitles">
+    <div class="fullPage">
+        <div class="pageHeader">
             <h2 class="pageTitle">All tickets</h2>
             <p class="pageSubtitle">Manage all issued tickets</p>
         </div>
@@ -18,10 +18,10 @@
             </div>
         </div>
         <div class="tickets"></div>
-        <div class="ticketsPagination">
+          <div class="ticketsPagination">
             <div class="ticketsPageHolder">
                 </div>
-            </div>
+          </div>
         </div>
     </div>
 </main>

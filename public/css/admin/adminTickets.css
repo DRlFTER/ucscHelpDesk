@@ -352,9 +352,10 @@ body {
   padding: 8px;
   justify-content: center;
   align-items: center;
-  margin-bottom: 30px;
   height: 60px;
-  min-width: 60px;
+  margin-bottom: 30px;
+  width: fit-content;
+  margin-left: auto;
   border-radius: 300px;
   backdrop-filter: blur(20px);
   border: 1px solid rgba(255, 255, 255, 0.1);
