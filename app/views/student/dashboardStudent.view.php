@@ -69,7 +69,7 @@
             <h3>Recent Tickets</h3>
             <?php if (!empty($recentTickets)): ?>
               <?php foreach ($recentTickets as $t): ?>
-                <a href="/student/details/<?= (int)$t['ticket_id'] ?>" class="ticket">
+                <a href="/student/ticketFull?id=<?= (int)$t['ticket_id'] ?>" class="ticket">
                   <div class="ticketDetails">
                     <p><span class="ticketTitle"><?= htmlspecialchars($t['title']) ?></span></p>
                     <div class="ticketMeta">

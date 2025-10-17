@@ -270,6 +270,272 @@ class Student extends Controller
         ]);
     }
 
+    // Student tickets list (same UI as admin tickets page)
+    public function tickets()
+    {
+        $this->requireLogin('student');
+        $headContent = '<link rel="stylesheet" href="/css/student/studentTickets.css" />';
+        $this->view('student/studentTickets', [
+            'title' => 'Tickets',
+            'head' => $headContent,
+        ]);
+    }
+
+    /**
+     * Return current student's tickets as JSON for the Tickets page.
+     * Mirrors admin shape but scoped to logged-in student.
+     */
+    public function ticketsData()
+    {
+        $this->requireLogin('student');
+        header('Content-Type: application/json');
+
+        $db = Database::getInstance();
+
+        $uId = (int)($_SESSION['user']['u_id'] ?? 0);
+        if ($uId <= 0) {
+            http_response_code(401);
+            echo json_encode(['error' => 'Unauthorized']);
+            exit;
+        }
+
+        $page    = isset($_GET['page']) ? max(1, (int)$_GET['page']) : 1;
+        $perPage = isset($_GET['perPage']) ? max(1, min(100, (int)$_GET['perPage'])) : 10;
+        $search  = isset($_GET['search']) ? trim((string)$_GET['search']) : '';
+        $category= isset($_GET['category']) ? trim((string)$_GET['category']) : '';
+        $status  = isset($_GET['status']) ? trim((string)$_GET['status']) : '';
+        $priority= isset($_GET['priority']) ? trim((string)$_GET['priority']) : '';
+
+        $where = [];
+        // Scope to current user
+        $where[] = "t.u_id = $uId";
+
+        if ($search !== '') {
+            $s = $db->real_escape_string($search);
+            $where[] = "(t.title LIKE '%$s%')"; // student can search by title only
+        }
+        if ($category !== '') {
+            $c = $db->real_escape_string($category);
+            $where[] = "t.category = '$c'";
+        }
+        if ($status !== '') {
+            $s = strtolower($status);
+            if ($s === 'open') {
+                $where[] = "t.status = 'pending'";
+            } elseif ($s === 'in-progress') {
+                $where[] = "t.status = 'agent assigned'";
+            } elseif ($s === 'resolved') {
+                $where[] = "t.status IN ('resolved','closed','agent-closed')";
+            } else {
+                $sEsc = $db->real_escape_string($status);
+                $where[] = "t.status = '$sEsc'";
+            }
+        }
+        if ($priority !== '') {
+            $p = $db->real_escape_string($priority);
+            $where[] = "LOWER(t.priority) = LOWER('$p')";
+        }
+
+        $whereSql = 'WHERE ' . implode(' AND ', $where);
+
+        $total = 0;
+        $countSql = "SELECT COUNT(*) AS c FROM tickets t $whereSql";
+        if ($res = $db->query($countSql)) {
+            $row = $res->fetch_assoc();
+            $total = (int)($row['c'] ?? 0);
+            $res->free();
+        }
+
+        $totalPages = $perPage > 0 ? (int)max(1, ceil($total / $perPage)) : 1;
+        if ($page > $totalPages) { $page = $totalPages; }
+        $offset = ($page - 1) * $perPage;
+
+        $sql = "SELECT t.ticket_id, t.created_at, t.title, t.category, t.status, t.priority, t.meeting_requested
+                FROM tickets t
+                $whereSql
+                ORDER BY t.created_at DESC
+                LIMIT $perPage OFFSET $offset";
+
+        $rows = [];
+        if ($res = $db->query($sql)) {
+            while ($row = $res->fetch_assoc()) {
+                $rows[] = $row;
+            }
+            $res->free();
+        }
+
+        $mapStatus = function ($s) {
+            $s = strtolower((string)$s);
+            switch ($s) {
+                case 'pending': return 'open';
+                case 'agent assigned': return 'in-progress';
+                case 'resolved':
+                case 'closed':
+                case 'agent-closed': return 'resolved';
+                default: return $s ?: '';
+            }
+        };
+        $mapMeeting = function ($m) {
+            $m = strtolower(trim((string)$m));
+            if ($m === 'requested') return 'requested';
+            if ($m === 'scheduled') return 'scheduled';
+            return 'none';
+        };
+        $mapDate = function ($dt) {
+            if (!$dt) return '';
+            $ts = strtotime($dt);
+            if ($ts === false) return '';
+            return date('Y-m-d', $ts);
+        };
+
+        $out = [];
+        foreach ($rows as $r) {
+            $out[] = [
+                'id' => isset($r['ticket_id']) ? (int)$r['ticket_id'] : null,
+                'code' => 'TKT-' . (string)($r['ticket_id'] ?? ''),
+                'createdAt' => $mapDate($r['created_at'] ?? null),
+                'title' => (string)($r['title'] ?? ''),
+                'student' => [ 'id' => $uId, 'name' => $_SESSION['user']['name'] ?? 'You' ],
+                'category' => (string)($r['category'] ?? ''),
+                'status' => $mapStatus($r['status'] ?? ''),
+                'meeting' => $mapMeeting($r['meeting_requested'] ?? ''),
+                'priority' => strtolower((string)($r['priority'] ?? '')),
+            ];
+        }
+
+        echo json_encode([
+            'data' => $out,
+            'meta' => [
+                'page' => $page,
+                'perPage' => $perPage,
+                'total' => $total,
+                'totalPages' => $totalPages,
+            ],
+        ]);
+        exit;
+    }
+
+    // Render full ticket view for a single student ticket
+    public function ticketFull()
+    {
+        $this->requireLogin('student');
+        $headContent = '<link rel="stylesheet" href="/css/student/studentTicketFull.css" />';
+        $this->view('student/studentTicketFull', [
+            'title' => 'Ticket Details',
+            'head' => $headContent,
+        ]);
+    }
+
+    // Return JSON data for a single ticket owned by the current student
+    public function ticketData()
+    {
+        $this->requireLogin('student');
+        header('Content-Type: application/json');
+
+        $db = Database::getInstance();
+        $studentId = (int)($_SESSION['user']['u_id'] ?? 0);
+        $id = isset($_GET['id']) ? (int)$_GET['id'] : 0;
+        if ($id <= 0) {
+            echo json_encode(['error' => 'missing id']);
+            return;
+        }
+
+        $idEsc = (int)$id;
+        $sql = "SELECT t.ticket_id, t.created_at, t.title, t.category, t.status, t.priority, t.description, t.u_id, u.name AS student_name
+                FROM tickets t
+                LEFT JOIN users u ON u.u_id = t.u_id
+                WHERE t.ticket_id = $idEsc AND t.u_id = $studentId
+                LIMIT 1";
+
+        $ticket = null;
+        if ($res = $db->query($sql)) {
+            $ticket = $res->fetch_assoc();
+            $res->free();
+        }
+        if (!$ticket) {
+            echo json_encode(['error' => 'not_found']);
+            return;
+        }
+
+        $statusRaw = strtolower((string)($ticket['status'] ?? ''));
+        $statusUi = ($statusRaw === 'pending' || $statusRaw === 'agent assigned')
+            ? 'Under Review'
+            : (in_array($statusRaw, ['resolved','closed','agent-closed']) ? 'Resolved' : ucfirst($statusRaw));
+
+        // attachments from supporting_documents
+        $attachments = [];
+        if ($res = $db->query("SELECT doc_name, location FROM supporting_documents WHERE ticket_id = $idEsc")) {
+            while ($r = $res->fetch_assoc()) {
+                $attachments[] = [
+                    'name' => (string)($r['doc_name'] ?? ''),
+                    'url' => '/' . ltrim((string)($r['location'] ?? ''), '/'),
+                ];
+            }
+            $res->free();
+        }
+
+        $createdAt = $ticket['created_at'] ?? null;
+        $createdPretty = '';
+        if ($createdAt) {
+            $ts = strtotime($createdAt);
+            if ($ts !== false) $createdPretty = date('M d, Y \\a\\t g:i A', $ts);
+        }
+
+        $payload = [
+            'id' => (int)$ticket['ticket_id'],
+            'code' => 'TKT-' . (int)$ticket['ticket_id'],
+            'title' => (string)($ticket['title'] ?? 'Ticket'),
+            'status' => $statusUi,
+            'createdOn' => $createdPretty,
+            'description' => (string)($ticket['description'] ?? ''),
+            'category' => (string)($ticket['category'] ?? ''),
+            'priority' => ucfirst((string)($ticket['priority'] ?? '')),
+            'assigned' => null,
+            'attachments' => $attachments,
+        ];
+
+        echo json_encode($payload);
+    }
+
+    // Delete a ticket owned by the current student
+    public function ticketDelete()
+    {
+        $this->requireLogin('student');
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+            http_response_code(405);
+            echo 'method_not_allowed';
+            return;
+        }
+
+        $studentId = (int)($_SESSION['user']['u_id'] ?? 0);
+        $id = isset($_POST['id']) ? (int)$_POST['id'] : 0;
+        if ($id <= 0) {
+            http_response_code(400);
+            echo 'bad_request';
+            return;
+        }
+
+        $db = Database::getInstance();
+        // Ensure ownership
+        $idEsc = (int)$id;
+        $ownRow = null;
+        if ($res = $db->query("SELECT ticket_id FROM tickets WHERE ticket_id = $idEsc AND u_id = $studentId")) {
+            $ownRow = $res->fetch_assoc();
+            $res->free();
+        }
+        if (!$ownRow) {
+            http_response_code(404);
+            echo 'not_found';
+            return;
+        }
+
+        // Optionally delete attachments first if FK constraints exist
+        $db->query("DELETE FROM supporting_documents WHERE ticket_id = $idEsc");
+        $db->query("DELETE FROM tickets WHERE ticket_id = $idEsc AND u_id = $studentId");
+
+        echo 'ok';
+    }
+
     public function lostfound_delete($id = null)
     {
         $this->requireLogin('student');
