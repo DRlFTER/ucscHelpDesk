@@ -5,13 +5,13 @@
 ?>
 
 <main>
-	<div class="ticketFullPage">
+	<div class="fullPage">
 		<div class="pageHeader">
 			<h1 class="pageTitle">Ticket status</h1>
 			<p class="pageSubtitle">Track the progress and responses for your submitted ticket</p>
 		</div>
 
-		<div class="ticketLayout">
+		<div class="pageLayout">
 			<!-- Left content -->
 			<section class="ticketLeft">
 				<div class="card ticketSummary">
