@@ -30,10 +30,15 @@ function time_ago_label($datetime)
 <main>
   <div class="lostFoundContainer">
     <div class="lfHeader">
-      <a class="backBtn" href="/student/dashboard" aria-label="Back">
-        <img src="/assets/arrow-left.svg" alt="Back" />
-      </a>
-      <h2>Lost &amp; Found</h2>
+      <div class="lfTitles">
+        <a class="backBtn" href="/student/dashboard" aria-label="Back">
+          <img src="/assets/arrow-left.svg" alt="Back" />
+        </a>
+        <div class="titlesText">
+          <h2>Lost &amp; Found</h2>
+          <p class="pageSubtitle">Browse reported lost and found items</p>
+        </div>
+      </div>
       <div class="spacer"></div>
     </div>
 
@@ -47,26 +52,40 @@ function time_ago_label($datetime)
           <label><input type="radio" name="type" value="all" checked /> All</label>
           <label><input type="radio" name="type" value="lost" /> Lost</label>
           <label><input type="radio" name="type" value="found" /> Found</label>
+          <label><input type="radio" name="type" value="my" /> My</label>
         </div>
       </div>
     </div>
 
       <section class="sectionCard">
-        <div class="lfList">
+        <div class="lfList" data-current-user="<?= (int)($_SESSION['user']['u_id'] ?? 0) ?>">
         <?php if (!empty($items)): ?>
           <?php foreach ($items as $it): ?>
             <?php $isFound = strtolower($it['status'] ?? '') === 'found'; ?>
-            <article class="lfCard <?= $isFound ? 'found' : 'lost' ?>">
+            <article class="lfCard <?= $isFound ? 'found' : 'lost' ?>" data-u-id="<?= (int)($it['u_id'] ?? 0) ?>">
               <h3><span class="state <?= $isFound ? 'found' : 'lost' ?>"><?= $isFound ? 'Found' : 'Lost' ?></span> <?= htmlspecialchars($it['item_title']) ?></h3>
               <p><?= nl2br(htmlspecialchars($it['item_details'])) ?></p>
               <ul class="meta">
                 <?php if (!empty($it['category'])): ?><li>Category: <?= htmlspecialchars(ucfirst($it['category'])) ?></li><?php endif; ?>
-                <?php if (!empty($it['priority'])): ?><li>Urgency: <?= htmlspecialchars(ucfirst($it['priority'])) ?></li><?php endif; ?>
+                <?php if (!empty($it['when'])):
+                    $whenTs = strtotime($it['when']);
+                    $whenDisplay = $whenTs ? date('Y-m-d H:i', $whenTs) : $it['when'];
+                ?>
+                  <li>Date &amp; Time: <?= htmlspecialchars($whenDisplay) ?></li>
+                <?php endif; ?>
                 <?php if (!empty($it['contact_mobile'])): ?><li>Contact: <?= htmlspecialchars($it['contact_mobile']) ?></li><?php endif; ?>
                 <?php if (!empty($it['contact_email'])): ?><li>Email: <?= htmlspecialchars($it['contact_email']) ?></li><?php endif; ?>
               </ul>
               <div class="lfFooter">
-                <span>#<?= (int)$it['q_id'] ?></span>
+                <span>Request No #<?= (int)$it['q_id'] ?></span>
+                <?php $currentUserId = (int)($_SESSION['user']['u_id'] ?? 0); ?>
+                <?php if ($currentUserId && $currentUserId === (int)($it['u_id'] ?? 0)): ?>
+                  <form method="POST" action="/student/lostfound_delete/<?= (int)$it['q_id'] ?>" onsubmit="return confirm('Delete this submission? This cannot be undone.');" style="margin-left:12px;">
+                    <button type="submit" class="btnWSvg btnDangerText" style="padding:6px 10px; border-radius:8px; background:#fee2e2; color:#b91c1c; border:1px solid #fecaca; cursor:pointer;">
+                      Delete
+                    </button>
+                  </form>
+                <?php endif; ?>
                 <span class="time"><?=
                     isset($it['created_at']) ? htmlspecialchars(time_ago_label($it['created_at'])) : 'recent'
                 ?></span>

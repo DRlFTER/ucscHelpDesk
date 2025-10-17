@@ -4,12 +4,12 @@ class StudentLostFound extends Model
 {
     /**
      * Create a new Lost & Found record.
-     * Expected keys in $data: u_id, item_title, category, priority, item_details, status, contact_mobile, contact_email
+     * Expected keys in $data: u_id, item_title, category, when, item_details, status, contact_mobile, contact_email
      * Returns inserted q_id
      */
     public function create(array $data): int
     {
-    $sql = "INSERT INTO lost_found (u_id, item_title, category, priority, item_details, created_at, status, contact_mobile, contact_email)
+    $sql = "INSERT INTO lost_found (u_id, item_title, category, `when`, item_details, created_at, status, contact_mobile, contact_email)
         VALUES (?, ?, ?, ?, ?, NOW(), ?, ?, ?)";
 
         $stmt = $this->db->prepare($sql);
@@ -20,7 +20,7 @@ class StudentLostFound extends Model
         $u_id = (int)($data['u_id'] ?? 0);
         $item_title = (string)($data['item_title'] ?? '');
         $category = (string)($data['category'] ?? null);
-        $priority = (string)($data['priority'] ?? null);
+        $when = (string)($data['when'] ?? null); // expected format YYYY-MM-DD
         $item_details = (string)($data['item_details'] ?? '');
         $status = (string)($data['status'] ?? 'lost');
         $contact_mobile = isset($data['contact_mobile']) && $data['contact_mobile'] !== '' ? (string)$data['contact_mobile'] : null;
@@ -31,7 +31,7 @@ class StudentLostFound extends Model
             $u_id,
             $item_title,
             $category,
-            $priority,
+            $when,
             $item_details,
             $status,
             $contact_mobile,
@@ -55,7 +55,7 @@ class StudentLostFound extends Model
      */
     public function getByStatus(string $status, int $limit = 20): array
     {
-    $sql = "SELECT q_id, u_id, item_title, category, priority, item_details, status, contact_mobile, contact_email, created_at
+    $sql = "SELECT q_id, u_id, item_title, category, `when`, item_details, status, contact_mobile, contact_email, created_at
         FROM lost_found
         WHERE status = ?
         ORDER BY created_at DESC
@@ -77,5 +77,27 @@ class StudentLostFound extends Model
         }
         $stmt->close();
         return $rows;
+    }
+
+    /**
+     * Delete a Lost & Found record owned by the given user.
+     * Returns true if a row was deleted.
+     */
+    public function deleteByIdForUser(int $q_id, int $u_id): bool
+    {
+        $sql = "DELETE FROM lost_found WHERE q_id = ? AND u_id = ? LIMIT 1";
+        $stmt = $this->db->prepare($sql);
+        if (!$stmt) {
+            throw new Exception('Prepare failed: ' . $this->db->error);
+        }
+        $stmt->bind_param('ii', $q_id, $u_id);
+        if (!$stmt->execute()) {
+            $err = $stmt->error;
+            $stmt->close();
+            throw new Exception('Execute failed: ' . $err);
+        }
+        $affected = $stmt->affected_rows;
+        $stmt->close();
+        return $affected > 0;
     }
 }

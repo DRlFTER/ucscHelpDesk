@@ -12,9 +12,10 @@ class Student extends Controller
         $lastActivity = null;
         try {
             $uId = (int)($_SESSION['user']['u_id'] ?? 0);
-            $recent = $ticketModel->getRecentByUser($uId, 5);
-            $openCount = $ticketModel->countOpenByUser($uId);
-            $lastActivity = $ticketModel->getLastActivityByUser($uId);
+            $dashboardData = $ticketModel->getDashboardData($uId, 5);
+            $recent = $dashboardData['recent'] ?? [];
+            $openCount = $dashboardData['openCount'] ?? 0;
+            $lastActivity = $dashboardData['lastActivity'] ?? null;
         } catch (Throwable $e) {
             $recent = [];
         }
@@ -38,7 +39,7 @@ class Student extends Controller
             // Basic validation and persistence
             $title = trim($_POST['title'] ?? '');
             $category = trim($_POST['category'] ?? '');
-            $priority = trim($_POST['priority'] ?? '');
+            $when = trim($_POST['when'] ?? '');
             $details = trim($_POST['details'] ?? '');
 
             $errors = [];
@@ -167,7 +168,8 @@ class Student extends Controller
         if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $title = trim($_POST['title'] ?? '');
             $category = trim($_POST['category'] ?? '');
-            $priority = trim($_POST['priority'] ?? '');
+            // when replaced priority: read datetime-local input
+            $when = trim($_POST['when'] ?? '');
             $details = trim($_POST['details'] ?? '');
             $contact_mobile = trim($_POST['contact_mobile'] ?? '');
             $contact_email = trim($_POST['contact_email'] ?? '');
@@ -175,7 +177,7 @@ class Student extends Controller
             $errors = [];
             if ($title === '') $errors[] = 'Item title is required';
             if ($category === '') $errors[] = 'Category is required';
-            if ($priority === '') $errors[] = 'Urgency is required';
+            if ($when === '') $errors[] = 'Date & time are required';
             if ($details === '') $errors[] = 'Details are required';
 
             if (empty($errors)) {
@@ -186,7 +188,7 @@ class Student extends Controller
                         'u_id' => (int)($_SESSION['user']['u_id'] ?? 0),
                         'item_title' => $title,
                         'category' => $category,
-                        'priority' => $priority,
+                        'when' => $when,
                         'item_details' => $details,
                         'status' => 'lost',
                         'contact_mobile' => $contact_mobile !== '' ? $contact_mobile : null,
@@ -221,7 +223,7 @@ class Student extends Controller
         if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $title = trim($_POST['title'] ?? '');
             $category = trim($_POST['category'] ?? '');
-            $priority = trim($_POST['priority'] ?? '');
+            $when = trim($_POST['when'] ?? '');
             $details = trim($_POST['details'] ?? '');
             $contact_mobile = trim($_POST['contact_mobile'] ?? '');
             $contact_email = trim($_POST['contact_email'] ?? '');
@@ -229,7 +231,7 @@ class Student extends Controller
             $errors = [];
             if ($title === '') $errors[] = 'Item title is required';
             if ($category === '') $errors[] = 'Category is required';
-            if ($priority === '') $errors[] = 'Urgency is required';
+            if ($when === '') $errors[] = 'Date & time are required';
             if ($details === '') $errors[] = 'Details are required';
 
             if (empty($errors)) {
@@ -240,7 +242,7 @@ class Student extends Controller
                         'u_id' => (int)($_SESSION['user']['u_id'] ?? 0),
                         'item_title' => $title,
                         'category' => $category,
-                        'priority' => $priority,
+                        'when' => $when,
                         'item_details' => $details,
                         'status' => 'found',
                         'contact_mobile' => $contact_mobile !== '' ? $contact_mobile : null,
@@ -266,5 +268,29 @@ class Student extends Controller
             'formAction' => '/student/newFoundItem',
             'flash' => $flash ?? null,
         ]);
+    }
+
+    public function lostfound_delete($id = null)
+    {
+        $this->requireLogin('student');
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST' || $id === null) {
+            header('Location: /student/lostfound');
+            exit;
+        }
+        $q_id = (int)$id;
+        $u_id = (int)($_SESSION['user']['u_id'] ?? 0);
+        try {
+            require_once __DIR__ . '/../../models/student/LostFound.php';
+            $model = new StudentLostFound();
+            $ok = $model->deleteByIdForUser($q_id, $u_id);
+            $_SESSION['lf_flash'] = [
+                'type' => $ok ? 'success' : 'error',
+                'message' => $ok ? 'Submission deleted.' : 'Delete failed or not allowed.'
+            ];
+        } catch (Throwable $e) {
+            $_SESSION['lf_flash'] = ['type' => 'error', 'message' => 'Delete failed: ' . $e->getMessage()];
+        }
+        header('Location: /student/lostfound');
+        exit;
     }
 }

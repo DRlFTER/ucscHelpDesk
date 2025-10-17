@@ -143,3 +143,5 @@ include_once(__DIR__ . "/../../views/common/navbar.php");
 		setTimeout(() => { window.location.href = '/student/dashboard'; }, 1500);
 	</script>
 <?php endif; ?>
+
+<script src="/js/student/studentNewTicket.js"></script>

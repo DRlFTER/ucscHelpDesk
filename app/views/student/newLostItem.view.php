@@ -34,15 +34,10 @@
 								<option value="other">Other</option>
 							</select>
 						</div>
-						<div class="field">
-							<label class="label" for="priority">Urgency</label>
-							<select id="priority" name="priority" required>
-								<option value="" disabled selected>Select urgency</option>
-								<option value="low">Low</option>
-								<option value="medium">Medium</option>
-								<option value="high">High</option>
-								<option value="urgent">Urgent</option>
-							</select>
+						<div class="field whenField">
+							<label class="label" for="when">Date &amp; Time</label>
+							<input id="when" name="when" type="datetime-local" required
+								   value="<?= htmlspecialchars($_POST['when'] ?? '') ?>" />
 						</div>
 					</div>
 

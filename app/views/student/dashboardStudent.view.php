@@ -13,7 +13,7 @@
         </div>
       </div>
       <div class="dashboardColumnOne">
-        <div class="welcomeCard">
+        <div class="sectioncard welcomeCard">
           <?php
             $fullName = trim($_SESSION['user']['name'] ?? '');
             $firstName = '';
@@ -53,9 +53,9 @@
               </div>Forums</a>
             <a href="#" class="quickActionItem"><div class="icon">
               <div class="quickActionSvg">
-                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 -960 960 960"><path d="M580-240q-42 0-71-29t-29-71q0-42 29-71t71-29q42 0 71 29t29 71q0 42-29 71t-71 29ZM200-80q-33 0-56.5-23.5T120-160v-560q0-33 23.5-56.5T200-880h40v-80h80v80h320v-80h80v80h40q33 0 56.5 23.5T840-720v560q0 33-23.5 56.5T760-80H200Zm0-80h560v-400H200v400Zm0-480h560v-80H200v80Zm0 0v-80 80Z"/></svg>
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 -960 960 960"><path d="M720-440v-80h160v80H720Zm48 280-128-96 48-64 128 96-48 64Zm-80-480-48-64 128-96 48 64-128 96ZM200-200v-160h-40q-33 0-56.5-23.5T80-440v-80q0-33 23.5-56.5T160-600h160l200-120v480L320-360h-40v160h-80Zm240-182v-196l-98 58H160v80h182l98 58Zm120 36v-268q27 24 43.5 58.5T620-480q0 41-16.5 75.5T560-346ZM300-480Z"/></svg>
               </div>
-            </div>Appointments</a>
+            </div>Announcements</a>
           </div>
         </div>
         <div class="knowledgeBase sectionCard">
