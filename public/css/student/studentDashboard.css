@@ -24,7 +24,10 @@ main {
   backdrop-filter: blur(20px);
   border: 1px solid rgba(255, 255, 255, 0.1);
   background: rgba(255, 255, 255, 0.5);
+  transition: all 0.18s ease-in-out;
+  background-clip: padding-box;
 }
+
 
 .dashboardContainer {
   width: 100%;
@@ -199,6 +202,7 @@ h3 {
   border-radius: 30px;
   padding: 10px 12px;
   background: #fff;
+  
 }
 
 .knowledgeBase .kbSearch input {
@@ -249,6 +253,7 @@ h3 {
   align-items: center;
   cursor: pointer;
   transition: all 0.2s ease-in-out;
+  
 }
 
 .ticketDetails {

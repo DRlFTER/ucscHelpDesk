@@ -21,7 +21,7 @@
 }
 
 .ticketCard input[type="tel"]::placeholder,
-.ticketCard input[type="email"]::placeholder,;
+.ticketCard input[type="email"]::placeholder,
 .ticketCard input[type="date"]::placeholder,
 .ticketCard input[type="datetime-local"]::placeholder {
 	color: #9ca3af;

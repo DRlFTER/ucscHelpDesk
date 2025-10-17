@@ -12,8 +12,7 @@
       ],
       'student' => [
         'dashboard' => '/student/dashboard',
-        // No dedicated tickets list route yet; fall back to dashboard
-        'tickets'   => '/student/dashboard',
+        'tickets'   => '/student/tickets',
         'newTicket' => '/student/ticket',
       ],
       'staff' => [
@@ -62,6 +61,12 @@
     if ($role === 'staff') {
       // Mark tickets active on ticket detail routes too
       if (!$ticketsActive && strpos($currentPath, '/staff/ticket') === 0) {
+        $ticketsActive = true;
+        $dashboardActive = false;
+      }
+    }
+    if ($role === 'student') {
+      if (!$ticketsActive && strpos($currentPath, '/student/ticket') === 0) {
         $ticketsActive = true;
         $dashboardActive = false;
       }
