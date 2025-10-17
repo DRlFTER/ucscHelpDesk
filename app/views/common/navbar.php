@@ -111,7 +111,7 @@
           </div>
          <a href="#">My Account</a>
          <a href="#">Help / FAQ</a>
-         <a href="#">Settings</a>
+         <a href="/settings">Settings</a>
 
         <div class="<?= $sessionUser ? 'logout' : 'login' ?>">
           <a href="<?= $sessionUser ? '/auth/logout' : '/auth/login' ?>">
