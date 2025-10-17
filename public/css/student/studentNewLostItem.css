@@ -1,9 +1,10 @@
 /* New Lost Item page styles based on student.newTicket.css */
 @import url('/css/student/studentNewTicket.css');
 
-/* Ensure contact inputs (tel/email) look the same as title text input */
 .ticketCard input[type="tel"],
-.ticketCard input[type="email"] {
+.ticketCard input[type="email"],
+.ticketCard input[type="date"],
+.ticketCard input[type="datetime-local"] {
 	-webkit-appearance: none;
 	appearance: none;
 	display: block;
@@ -20,12 +21,16 @@
 }
 
 .ticketCard input[type="tel"]::placeholder,
-.ticketCard input[type="email"]::placeholder {
+.ticketCard input[type="email"]::placeholder,;
+.ticketCard input[type="date"]::placeholder,
+.ticketCard input[type="datetime-local"]::placeholder {
 	color: #9ca3af;
 }
 
 .ticketCard input[type="tel"]:focus,
-.ticketCard input[type="email"]:focus {
+.ticketCard input[type="email"]:focus,
+.ticketCard input[type="date"]:focus,
+.ticketCard input[type="datetime-local"]:focus {
 	outline: none;
 	border-color: #8c8cf9;
 	box-shadow: 0 0 0 4px rgba(140, 140, 249, 0.15);
@@ -34,4 +39,13 @@
 /* Make sure fields in two-column rows occupy equal width */
 .ticketCard .row2 > .field {
 	width: 100%;
+}
+
+/* Reduce the visual height of the datetime-local 'when' input so it sits a bit tighter */
+.ticketCard #when {
+	box-sizing: border-box;
+	padding: 8px 10px; /* smaller vertical padding than other inputs */
+	height: 43px; /* fixed height for consistent alignment */
+	border-radius: 8px;
+	font-size: 14px;
 }

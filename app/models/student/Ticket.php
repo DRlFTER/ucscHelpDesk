@@ -159,4 +159,61 @@ class StudentTicket
         $conn->close();
         return $row && !empty($row['last']) ? $row['last'] : null;
     }
+
+    /**
+     * Fetch dashboard data in a single connection: recent tickets, open count and last activity.
+     * Returns ['recent' => array, 'openCount' => int, 'lastActivity' => ?string]
+     */
+    public function getDashboardData(int $u_id, int $limit = 5): array
+    {
+        $conn = self::getConnection();
+        $data = ['recent' => [], 'openCount' => 0, 'lastActivity' => null];
+
+        // Recent tickets
+        $sql1 = "SELECT ticket_id, created_at, title, category, status, priority
+                FROM tickets
+                WHERE u_id = ?
+                ORDER BY created_at DESC
+                LIMIT ?";
+        $stmt1 = $conn->prepare($sql1);
+        if ($stmt1) {
+            $stmt1->bind_param('ii', $u_id, $limit);
+            if ($stmt1->execute()) {
+                $res = $stmt1->get_result();
+                while ($row = $res->fetch_assoc()) {
+                    $data['recent'][] = $row;
+                }
+            }
+            $stmt1->close();
+        }
+
+        // Open count
+        $sql2 = "SELECT COUNT(*) AS c FROM tickets WHERE u_id = ? AND LOWER(status) <> 'resolved'";
+        $stmt2 = $conn->prepare($sql2);
+        if ($stmt2) {
+            $stmt2->bind_param('i', $u_id);
+            if ($stmt2->execute()) {
+                $res = $stmt2->get_result();
+                $row = $res->fetch_assoc();
+                $data['openCount'] = (int)($row['c'] ?? 0);
+            }
+            $stmt2->close();
+        }
+
+        // Last activity
+        $sql3 = "SELECT MAX(created_at) AS last FROM tickets WHERE u_id = ?";
+        $stmt3 = $conn->prepare($sql3);
+        if ($stmt3) {
+            $stmt3->bind_param('i', $u_id);
+            if ($stmt3->execute()) {
+                $res = $stmt3->get_result();
+                $row = $res->fetch_assoc();
+                $data['lastActivity'] = $row && !empty($row['last']) ? $row['last'] : null;
+            }
+            $stmt3->close();
+        }
+
+        $conn->close();
+        return $data;
+    }
 }

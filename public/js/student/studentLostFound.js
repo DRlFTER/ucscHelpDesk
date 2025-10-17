@@ -7,6 +7,8 @@ document.addEventListener('DOMContentLoaded', () => {
   const sideDate = document.getElementById('lfDateSide');
   const sideLoc = document.getElementById('lfLocationSide');
   const cards = Array.from(document.querySelectorAll('.lfList .lfCard'));
+  const searchInput = document.querySelector('.searchWrap input');
+  let searchTerm = '';
 
   // --- Custom select enhancer (from New Ticket) ---
   function enhanceSelect(select){
@@ -99,10 +101,24 @@ document.addEventListener('DOMContentLoaded', () => {
     const isFound = card.classList.contains('found');
     if (stateVal === 'lost') return isLost;
     if (stateVal === 'found') return isFound;
+    if (stateVal === 'my') {
+      const list = document.querySelector('.lfList');
+      const current = parseInt(list?.dataset?.currentUser || '0', 10);
+      const owner = parseInt(card.dataset.uId || '0', 10);
+      return current > 0 && owner === current;
+    }
     return true;
   }
 
   function passesAdvanced(card){
+    // Search term matching (tokenized, case-insensitive)
+    if (searchTerm) {
+      const tokens = searchTerm.split(/\s+/).filter(Boolean);
+      const text = card.textContent.toLowerCase();
+      const matches = tokens.every(t => text.includes(t));
+      if (!matches) return false;
+    }
+
     const locVal = (topLoc?.value || sideLoc?.value || 'all');
     // Location: text match for now (demo content)
     if (locVal !== 'all') {
@@ -139,4 +155,16 @@ document.addEventListener('DOMContentLoaded', () => {
 
   // Initial render
   render();
+
+  // --- Search input (debounced) ---
+  if (searchInput) {
+    let t = null;
+    searchInput.addEventListener('input', (e) => {
+      clearTimeout(t);
+      t = setTimeout(() => {
+        searchTerm = (searchInput.value || '').trim().toLowerCase();
+        render();
+      }, 180);
+    });
+  }
 });

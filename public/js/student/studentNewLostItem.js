@@ -33,5 +33,4 @@
   }
 
   enhanceSelect(document.getElementById('category'));
-  enhanceSelect(document.getElementById('priority'));
 })();
