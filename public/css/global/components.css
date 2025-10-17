@@ -60,6 +60,39 @@ body {
   font-family: "SF Pro";
 }
 
+.fullPage {
+  width: 90%;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  padding: 16px 0 40px;
+  min-height: calc(100dvh - var(--navbar-height, 64px));
+}
+
+.pageHeader {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.pageLayout {
+  display: flex;
+  align-items: stretch; /* columns match height */
+  gap: 16px;
+  flex: 1; /* occupy remaining height */
+  background: red;
+  padding: 10px;
+  backdrop-filter: blur(20px);
+  border-radius: 20px;
+  padding: 16px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: rgba(255, 255, 255, 0.5);
+  box-shadow: none;
+  color: #111827;
+  transition: all 0.18s ease-in-out;
+  background-clip: padding-box;
+}
+
 .pageTitle {
   font-size: 26px;
   font-weight: 600;

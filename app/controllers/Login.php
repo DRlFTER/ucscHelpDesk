@@ -5,6 +5,6 @@ class Login extends Controller
     {
        $headContent = '
         <link rel="stylesheet" href="/css/login/login.css"/>';
-        $this->view('login/login', ['title' => 'Log in', 'head' => $headContent]);
+        $this->view('login', ['title' => 'Log in', 'head' => $headContent]);
     }
 }
