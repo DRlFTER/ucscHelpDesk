@@ -1,8 +1,8 @@
 <main>
     <div class="ticketsContainer">
         <div class="ticketsTitles">
-            <h2 class="titleText">All tickets</h2>
-            <p class="titleSubText">Manage all issued tickets</p>
+            <h2 class="pageTitle">All tickets</h2>
+            <p class="pageSubtitle">Manage all issued tickets</p>
         </div>
         <div class="ticketsFilters">
             <div class="search">

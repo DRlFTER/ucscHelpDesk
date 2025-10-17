@@ -344,6 +344,10 @@ function openDeleteModal() {
       });
       if (!res.ok) throw new Error("Delete failed");
       localStorage.removeItem(cacheKeyFor(ticketData.id));
+      // Signal tickets page to bypass cache once
+      try {
+        localStorage.setItem("admin_tickets_bust", String(Date.now()));
+      } catch {}
       window.location.href = "/admin/tickets";
     } catch (e) {
       console.error(e);

@@ -109,9 +109,7 @@ body.modal-open main {
   flex-direction: column;
   gap: 16px;
   padding: 16px 0 40px;
-  min-height: calc(
-    100dvh - var(--navbar-height, 64px)
-  ); /* Fill the remaining viewport space after the navbar height */
+  min-height: calc(100dvh - var(--navbar-height, 64px));
 }
 
 .pageHeader {
@@ -133,6 +131,17 @@ body.modal-open main {
   align-items: stretch; /* columns match height */
   gap: 16px;
   flex: 1; /* occupy remaining height */
+  background: red;
+  padding: 10px;
+  backdrop-filter: blur(20px);
+  border-radius: 20px;
+  padding: 16px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: rgba(255, 255, 255, 0.5);
+  box-shadow: none;
+  color: #111827;
+  transition: all 0.18s ease-in-out;
+  background-clip: padding-box;
 }
 
 .ticketLeft {
@@ -155,13 +164,12 @@ body.modal-open main {
   display: flex;
   flex-direction: column;
   gap: 12px;
-  /* glassmorphism look similar to adminTickets */
   backdrop-filter: blur(20px);
   border-radius: 12px;
   padding: 16px;
   border: 1px solid rgba(255, 255, 255, 0.1);
   background: rgba(255, 255, 255, 0.5);
-  box-shadow: none; /* keep layout subtle */
+  box-shadow: none;
   color: #111827;
   transition: all 0.18s ease-in-out;
   background-clip: padding-box;
