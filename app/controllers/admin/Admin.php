@@ -186,6 +186,166 @@ class Admin extends Controller
     }
 
     /**
+     * Return dashboard datasets as JSON for client-side rendering/caching.
+     */
+    public function dashboardData()
+    {
+        $this->requireLogin('admin');
+        header('Content-Type: application/json');
+
+        $db = Database::getInstance();
+
+        // 1) Cards
+        $totalTickets = 0;
+        $openTickets = 0;
+        $avgRespMinutes = null;
+        $resolvedTickets = 0;
+
+        if ($res = $db->query("SELECT COUNT(*) AS c FROM tickets")) {
+            $row = $res->fetch_assoc();
+            $totalTickets = (int)($row['c'] ?? 0);
+            $res->free_result();
+        }
+
+        if ($res = $db->query("SELECT COUNT(*) AS c FROM tickets WHERE status IN ('pending','agent assigned')")) {
+            $row = $res->fetch_assoc();
+            $openTickets = (int)($row['c'] ?? 0);
+            $res->free_result();
+        }
+
+        $sqlAvg = "SELECT AVG(TIMESTAMPDIFF(MINUTE, t.created_at, tr.first_response)) AS avg_minutes
+                   FROM tickets t
+                   JOIN (
+                     SELECT ticket_id, MIN(date_time) AS first_response
+                     FROM ticket_response
+                     GROUP BY ticket_id
+                   ) tr ON tr.ticket_id = t.ticket_id";
+        if ($res = $db->query($sqlAvg)) {
+            $row = $res->fetch_assoc();
+            $avgRespMinutes = isset($row['avg_minutes']) ? (float)$row['avg_minutes'] : null;
+            $res->free_result();
+        }
+
+        if ($res = $db->query("SELECT COUNT(*) AS c FROM tickets WHERE status IN ('resolved','closed','agent-closed')")) {
+            $row = $res->fetch_assoc();
+            $resolvedTickets = (int)($row['c'] ?? 0);
+            $res->free_result();
+        }
+
+        $avgRespText = $avgRespMinutes !== null ? round($avgRespMinutes / 60, 1) . 'h' : '—';
+        $resolutionRate = $totalTickets > 0 ? round(($resolvedTickets / $totalTickets) * 100) . '%' : '0%';
+
+        $cardsData = [
+            [ 'title' => 'Total Tickets', 'value' => $totalTickets, 'change' => '' ],
+            [ 'title' => 'Open Tickets', 'value' => $openTickets, 'change' => '' ],
+            [ 'title' => 'Average Response Time', 'value' => $avgRespText, 'change' => '' ],
+            [ 'title' => 'Satisfaction Rate', 'value' => $resolutionRate, 'change' => '' ],
+        ];
+
+        // 2) Recent tickets
+        $recentTickets = [];
+        $sqlRecent = "SELECT t.ticket_id, t.title, u.name AS requester, t.created_at, t.priority
+                      FROM tickets t
+                      LEFT JOIN users u ON u.u_id = t.u_id
+                      ORDER BY t.created_at DESC
+                      LIMIT 6";
+        if ($res = $db->query($sqlRecent)) {
+            while ($row = $res->fetch_assoc()) {
+                $recentTickets[] = [
+                    'id' => (int)$row['ticket_id'],
+                    'title' => (string)$row['title'],
+                    'agent' => (string)($row['requester'] ?? 'Unknown'),
+                    'time' => self::relativeTime($row['created_at']),
+                    'priority' => strtoupper((string)$row['priority']),
+                ];
+            }
+            $res->free_result();
+        }
+
+        // 3) Top agents
+        $topAgents = [];
+        $sqlTopAgents = "SELECT u.name,
+                                COUNT(DISTINCT tr.ticket_id) AS resolved,
+                                AVG(TIMESTAMPDIFF(MINUTE, t.created_at, tr.first_response)) AS avg_minutes
+                         FROM users u
+                         JOIN (
+                           SELECT ticket_id, u_id, MIN(date_time) AS first_response
+                           FROM ticket_response
+                           GROUP BY ticket_id, u_id
+                         ) tr ON tr.u_id = u.u_id
+                         JOIN tickets t ON t.ticket_id = tr.ticket_id
+                         WHERE u.role IN ('staff','admin','counselor','lecturer')
+                         GROUP BY u.u_id, u.name
+                         ORDER BY resolved DESC
+                         LIMIT 5";
+        if ($res = $db->query($sqlTopAgents)) {
+            while ($row = $res->fetch_assoc()) {
+                $avgMin = isset($row['avg_minutes']) ? (float)$row['avg_minutes'] : null;
+                $topAgents[] = [
+                    'name' => (string)$row['name'],
+                    'resolved' => (int)$row['resolved'],
+                    'responseTime' => $avgMin !== null ? round($avgMin / 60, 1) . 'h' : '—',
+                ];
+            }
+            $res->free_result();
+        }
+
+        // 4) Trends (last 4 weeks)
+        $trends = [ 'labels' => [], 'new' => [], 'resolved' => [] ];
+        $now = new DateTime('now');
+        $weekStart = clone $now;
+        $weekStart->modify('monday this week')->setTime(0, 0, 0);
+        for ($i = 3; $i >= 0; $i--) {
+            $start = (clone $weekStart)->modify("-$i week");
+            $end = (clone $start)->modify('+1 week');
+
+            $label = 'Week ' . (4 - $i);
+            $trends['labels'][] = $label;
+
+            $startEsc = $db->real_escape_string($start->format('Y-m-d H:i:s'));
+            $endEsc = $db->real_escape_string($end->format('Y-m-d H:i:s'));
+
+            $qNew = "SELECT COUNT(*) AS c FROM tickets WHERE created_at >= '$startEsc' AND created_at < '$endEsc'";
+            $countNew = 0;
+            if ($res = $db->query($qNew)) { $r = $res->fetch_assoc(); $countNew = (int)($r['c'] ?? 0); $res->free_result(); }
+            $trends['new'][] = $countNew;
+
+            $qRes = "SELECT COUNT(*) AS c FROM tickets WHERE created_at >= '$startEsc' AND created_at < '$endEsc' AND status IN ('resolved','closed','agent-closed')";
+            $countRes = 0;
+            if ($res = $db->query($qRes)) { $r = $res->fetch_assoc(); $countRes = (int)($r['c'] ?? 0); $res->free_result(); }
+            $trends['resolved'][] = $countRes;
+        }
+
+        // 5) Tickets by category
+        $categories = [ 'labels' => [], 'data' => [] ];
+        if ($res = $db->query("SELECT COALESCE(category,'Other') AS category, COUNT(*) AS c FROM tickets GROUP BY category ORDER BY c DESC")) {
+            while ($row = $res->fetch_assoc()) {
+                $categories['labels'][] = (string)$row['category'];
+                $categories['data'][] = (int)$row['c'];
+            }
+            $res->free_result();
+        }
+
+        // 6) Platform status (static placeholders for now)
+        $platformStatus = [
+            [ 'name' => 'Student Portal', 'status' => 'Operational' ],
+            [ 'name' => 'Lecturer Portal', 'status' => 'Operational' ],
+            [ 'name' => 'Email Notifications', 'status' => 'Degraded' ],
+            [ 'name' => 'Ticketing System', 'status' => 'Operational' ],
+        ];
+
+        echo json_encode([
+            'cardsData' => $cardsData,
+            'recentTickets' => $recentTickets,
+            'topAgents' => $topAgents,
+            'trends' => $trends,
+            'categories' => $categories,
+            'platformStatus' => $platformStatus,
+        ]);
+        exit;
+    }
+
+    /**
      * Return a single ticket's details as JSON for the full ticket view.
      * Accepts id (preferred) or code like TKT-123.
      */

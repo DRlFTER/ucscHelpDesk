@@ -60,6 +60,15 @@ body {
   font-family: "SF Pro";
 }
 
+.pageTitle {
+  font-size: 26px;
+  font-weight: 600;
+}
+.pageSubtitle {
+  color: #394353;
+  font-size: 16px;
+}
+
 .titleText {
   color: #000;
   text-align: center;
