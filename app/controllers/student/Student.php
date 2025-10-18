@@ -38,14 +38,17 @@ class Student extends Controller
         if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             // Basic validation and persistence
             $title = trim($_POST['title'] ?? '');
+            // category is now provided via hidden input populated from subcategory selection
             $category = trim($_POST['category'] ?? '');
             $when = trim($_POST['when'] ?? '');
             $details = trim($_POST['details'] ?? '');
+            // Priority defaults to 'Medium' when not provided
+            $priority = trim($_POST['priority'] ?? 'Medium');
 
             $errors = [];
             if ($title === '') { $errors[] = 'Title is required.'; }
             if ($category === '') { $errors[] = 'Category is required.'; }
-            if ($priority === '') { $errors[] = 'Priority is required.'; }
+            // optional: priority defaults to 'Medium' if not provided
             if ($details === '') { $errors[] = 'Details are required.'; }
 
             if (empty($errors)) {

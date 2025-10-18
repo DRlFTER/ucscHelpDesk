@@ -13,7 +13,6 @@
   const dz = document.getElementById('dropzone');
   const fileInput = document.getElementById('fileInput');
   const fileList = document.getElementById('fileList');
-  if (!dz || !fileInput) return;
 
   // Buffer to hold selected files
   let buffer = new DataTransfer();
@@ -82,19 +81,21 @@
     });
   }
 
-  dz.addEventListener('click', () => fileInput.click());
-  dz.addEventListener('dragover', e => {
-    e.preventDefault();
-    dz.classList.add('drag');
-  });
-  dz.addEventListener('dragleave', () => dz.classList.remove('drag'));
-  dz.addEventListener('drop', e => {
-    e.preventDefault();
-    dz.classList.remove('drag');
-    const dt = e.dataTransfer;
-    if (dt && dt.files) addFiles(dt.files);
-  });
-  fileInput.addEventListener('change', e => addFiles(e.target.files));
+  if (dz && fileInput) {
+    dz.addEventListener('click', () => fileInput.click());
+    dz.addEventListener('dragover', e => {
+      e.preventDefault();
+      dz.classList.add('drag');
+    });
+    dz.addEventListener('dragleave', () => dz.classList.remove('drag'));
+    dz.addEventListener('drop', e => {
+      e.preventDefault();
+      dz.classList.remove('drag');
+      const dt = e.dataTransfer;
+      if (dt && dt.files) addFiles(dt.files);
+    });
+    fileInput.addEventListener('change', e => addFiles(e.target.files));
+  }
 
   // Custom select enhancement for #category and #priority
   function enhanceSelect(select){
@@ -190,6 +191,28 @@
     wrap.appendChild(list);
   }
 
-  enhanceSelect(document.getElementById('category'));
+  // Sync main category from subcategory selection
+  const subcat = document.getElementById('subcategory');
+  const mainCatInput = document.getElementById('mainCategory');
+  if (subcat && mainCatInput) {
+    const syncMain = () => {
+      const opt = subcat.options[subcat.selectedIndex];
+      const main = opt ? (opt.getAttribute('data-main') || '') : '';
+      mainCatInput.value = main;
+    };
+    subcat.addEventListener('change', syncMain);
+    // initialize on load
+    syncMain();
+
+    // also ensure value is synced on submit
+    const form = document.getElementById('ticketForm');
+    if (form) {
+      form.addEventListener('submit', () => {
+        syncMain();
+      });
+    }
+  }
+
+  enhanceSelect(document.getElementById('subcategory'));
   enhanceSelect(document.getElementById('priority'));
 })();
