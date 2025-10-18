@@ -26,7 +26,8 @@ class StudentTicket
 
         $title = $data['title'];
         $u_id = (int)$data['u_id'];
-        $category = ucfirst(strtolower(trim($data['category'])));
+    // Preserve the category string as provided (keep capitalization like "Examination and Registration")
+    $category = trim($data['category']);
         $status = $data['status'] ?? 'pending';
         $priority = $data['priority'];
         $description = $data['description'];
