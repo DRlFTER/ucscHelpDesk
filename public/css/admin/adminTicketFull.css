@@ -15,6 +15,13 @@ body {
   color: #111827;
 }
 
+/* View Transition tuning for destination page */
+::view-transition-old(root),
+::view-transition-new(root) {
+  animation-duration: 220ms;
+  animation-timing-function: cubic-bezier(0.2, 0, 0, 1);
+}
+
 /* Modal + blur styles */
 .modalOverlay {
   position: fixed;
@@ -116,14 +123,6 @@ body.modal-open main {
   display: flex;
   flex-direction: column;
   gap: 6px;
-}
-.pageTitle {
-  font-size: 26px;
-  font-weight: 600;
-}
-.pageSubtitle {
-  color: #394353;
-  font-size: 13px;
 }
 
 .ticketLayout {

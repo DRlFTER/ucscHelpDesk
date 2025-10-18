@@ -283,16 +283,7 @@ window.adminTicketsData = [];
     };
   }
 
-  // Navigate to ticket full view
-  function openTicket(el) {
-    const id = el.getAttribute("data-id");
-    const code = el.getAttribute("data-code");
-    if (id) {
-      window.location.assign(`/admin/ticket?id=${encodeURIComponent(id)}`);
-    } else if (code) {
-      window.location.assign(`/admin/ticket?code=${encodeURIComponent(code)}`);
-    }
-  }
+  // With anchor-based navigation, no custom JS navigation is required.
 
   function renderTickets(data) {
     const container = document.querySelector(".tickets");
@@ -303,10 +294,18 @@ window.adminTicketsData = [];
         const pr = getPriorityMeta((t && t.priority) || "");
         const meetingLabel = getMeetingLabel((t && t.meeting) || "");
 
+        const id = t.id != null ? String(t.id) : "";
+        const code = t.code != null ? String(t.code) : "";
+        const url = id
+          ? `/admin/ticket?id=${encodeURIComponent(id)}`
+          : code
+          ? `/admin/ticket?code=${encodeURIComponent(code)}`
+          : "#";
+        const vt = `ticket-${esc(id || code)}`;
         return `
-      <div class="ticket" tabindex="0" role="link" aria-label="Open ticket ${esc(
-        t.title
-      )}" data-id="${esc(t.id)}" data-code="${esc(t.code)}">
+      <a class="ticket" href="${url}" aria-label="Open ticket ${esc(
+          t.title
+        )}" style="view-transition-name: ${vt}; text-decoration: none; color: inherit;">
                 <div class="ticketRow1">
                     <div class="ticketName">
                         <h2>${esc(t.title)}</h2>
@@ -342,30 +341,13 @@ window.adminTicketsData = [];
                         </div>
                     </div>
                 </div>
-            </div>`;
+            </a>`;
       })
       .join("");
 
     container.innerHTML = html;
-
-    // Bind delegation listeners once
-    if (!listenersBound) {
-      container.addEventListener("click", (e) => {
-        const card = e.target.closest(".ticket");
-        if (card && container.contains(card)) openTicket(card);
-      });
-
-      container.addEventListener("keydown", (e) => {
-        const card = e.target.closest(".ticket");
-        if (!card) return;
-        if (e.key === "Enter" || e.key === " ") {
-          e.preventDefault();
-          openTicket(card);
-        }
-      });
-
-      listenersBound = true;
-    }
+    // No extra JS listeners needed when using anchor navigation
+    listenersBound = true;
   }
 
   function renderPagination() {

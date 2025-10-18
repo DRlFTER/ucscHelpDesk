@@ -1,0 +1,38 @@
+@import url("/css/admin/adminTickets.css");
+
+/* Role status pill color examples (reusing .status class from tickets markup) */
+.status.admin {
+  background: #e7f0ff;
+  color: #174ea6;
+  padding: 6px 10px;
+  border-radius: 17px;
+}
+.status.staff {
+  background: #eef7ff;
+  color: #0b57d0;
+  padding: 6px 10px;
+  border-radius: 17px;
+}
+.status.counselor {
+  background: #f3e8ff;
+  color: #6b21a8;
+  padding: 6px 10px;
+  border-radius: 17px;
+}
+.status.lecturer {
+  background: #e6fffa;
+  color: #0f766e;
+  padding: 6px 10px;
+  border-radius: 17px;
+}
+.status.student {
+  background: #fff7ed;
+  color: #9a3412;
+  padding: 6px 10px;
+  border-radius: 17px;
+}
+
+/* Adjust search placeholder text for users if needed */
+.search input::placeholder {
+  color: #808080;
+}
