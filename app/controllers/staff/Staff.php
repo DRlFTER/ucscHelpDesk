@@ -77,4 +77,48 @@ class Staff extends Controller
             'ticket' => $ticket,
         ]);
     }
+
+    /**
+     * Render announcements list for staff.
+     */
+    public function announcements()
+    {
+        $this->requireLogin('staff');
+
+        require_once __DIR__ . '/../../models/staff/Announcement.php';
+        $ann = new Announcement();
+        $announcements = [];
+        try {
+            $announcements = $ann->getAll();
+        } catch (Throwable $e) {
+            error_log('Announcement load failed: ' . $e->getMessage());
+            $announcements = [];
+        }
+
+        // Capture DB error (if any) for debug display
+        $dbError = method_exists($ann, 'getLastError') ? $ann->getLastError() : null;
+
+        
+        // Use the same stylesheet as staff tickets to reuse classes
+        $headContent = "<link rel=\"stylesheet\" href=\"/css/staff/staffTickets.css\" />\n";
+        // keep the small announcements tweaks after the main stylesheet
+        $headContent .= "<link rel=\"stylesheet\" href=\"/css/staff/announcements.css\" />\n";
+        $headContent .= "<script src=\"/js/staff/announcements.js\" defer></script>\n";
+
+        $this->view('staff/staffAnnoucements', [
+            'title' => 'Announcements',
+            'head' => $headContent,
+            'announcements' => $announcements,
+            'dbError' => $dbError,
+        ]);
+    }
+
+    /**
+     * Backwards compatible alias for legacy URL /staff/staffAnnoucements
+     */
+    public function staffAnnoucements()
+    {
+        // Delegate to the correct method
+        $this->announcements();
+    }
 }

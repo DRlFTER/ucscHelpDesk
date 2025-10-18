@@ -236,7 +236,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                 }
                 echo '<script> 
         alert("Announcement created successfully");
-        window.location.href = "./Staff_Annoucements.php"; // Redirect after alert is closed
+    window.location.href = "/staff/announcements"; // Redirect after alert is closed
       </script>';
                 $success = "Announcement created successfully!";
                 $topic = $content = $division_id = '';
