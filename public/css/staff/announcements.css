@@ -1,0 +1,11 @@
+
+/* Announcements page: minimal tweaks only. All layout and card styles come from staffTickets.css */
+.announcement-card .view-link {
+  display: inline-block;
+  padding: 6px 10px;
+  background: #8c8cf9;
+  color: #fff;
+  border-radius: 4px;
+  text-decoration: none;
+  margin-top: 8px;
+}
