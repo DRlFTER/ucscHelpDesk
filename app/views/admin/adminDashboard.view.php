@@ -11,6 +11,7 @@
           Error: Failed to load data.
         </div>
         <div class="dashboardContent">
+          <div class="dashboardToolbar" id="dashboardToolbar" style="display:none;"></div>
           <div class="cardContainer" id="cardContainer"></div>
           <div class="contentRow">
             <div class="ticketTrends chartBox">
