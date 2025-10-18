@@ -9,6 +9,8 @@
 
   const CACHE_KEY = "admin_dashboard_data";
   const CACHE_TTL_MS = 5 * 60 * 1000; // 5 minutes
+  let currentMode = "analytics"; // 'analytics' | 'tickets'
+  let dataRef = null; // cached last payload used for rendering
 
   function getCache() {
     try {
@@ -75,19 +77,19 @@
     const menuItems = [
       {
         id: "analytics",
-        name: "Analytics",
+        name: "General Analytics",
         link: "/admin/dashboard",
         icon: '<svg xmlns="http://www.w3.org/2000/svg" height="20px" viewBox="0 -960 960 960" width="20px" fill="#000000"><path d="M324.62-480q-12.77 0-21.39 8.62-8.61 8.61-8.61 21.38v130q0 12.77 8.61 21.38 8.62 8.62 21.39 8.62 12.76 0 21.38-8.62 8.61-8.61 8.61-21.38v-130q0-12.77-8.61-21.38-8.62-8.62-21.38-8.62Zm310.76-200q-12.76 0-21.38 8.62-8.61 8.61-8.61 21.38v330q0 12.77 8.61 21.38 8.62 8.62 21.38 8.62 12.77 0 21.39-8.62 8.61-8.61 8.61-21.38v-330q0-12.77-8.61-21.38-8.62-8.62-21.39-8.62ZM480-400q-12.77 0-21.38 8.62Q450-382.77 450-370v50q0 12.77 8.62 21.38Q467.23-290 480-290t21.38-8.62Q510-307.23 510-320v-50q0-12.77-8.62-21.38Q492.77-400 480-400ZM212.31-140Q182-140 161-161q-21-21-21-51.31v-535.38Q140-778 161-799q21-21 51.31-21h535.38Q778-820 799-799q21 21 21 51.31v535.38Q820-182 799-161q-21 21-51.31 21H212.31Zm0-60h535.38q4.62 0 8.46-3.85 3.85-3.84 3.85-8.46v-535.38q0-4.62-3.85-8.46-3.84-3.85-8.46-3.85H212.31q-4.62 0-8.46 3.85-3.85 3.84-3.85 8.46v535.38q0 4.62 3.85 8.46 3.84 3.85 8.46 3.85ZM200-760v560-560Zm280 270q12.77 0 21.38-8.62Q510-507.23 510-520t-8.62-21.38Q492.77-550 480-550t-21.38 8.62Q450-532.77 450-520t8.62 21.38Q467.23-490 480-490Z"/></svg>',
       },
       {
         id: "tickets",
-        name: "Tickets",
+        name: "Tickets Overview",
         link: "/admin/tickets",
         icon: '<svg xmlns="http://www.w3.org/2000/svg" height="20px" viewBox="0 -960 960 960" width="20px" fill="#000000"><path d="M180.31-212q-26.53 0-45.42-18.85T116-276.17v-95.87q0-8.73 5.08-15.73 5.09-7 13.65-9.61 24.35-11.62 38.81-33.21Q188-452.19 188-480.02t-14.46-49.4q-14.46-21.58-38.81-33.16-8.56-2.61-13.65-9.58-5.08-6.96-5.08-15.92v-95.8q0-26.45 18.89-45.28Q153.78-748 180.31-748h599.38q26.53 0 45.42 18.85T844-683.83v95.87q0 8.73-5.08 15.73-5.09 7-13.65 9.61-24.35 11.62-38.81 33.21Q772-507.81 772-479.98t14.46 49.4q14.46 21.58 38.81 33.16 8.56 2.61 13.65 9.58 5.08 6.96 5.08 15.92v95.8q0 26.45-18.89 45.28Q806.22-212 779.69-212H180.31Zm0-52h599.38q5.39 0 8.85-3.46t3.46-8.85V-355q-32-19-52-52t-20-73q0-40 20-73t52-52v-78.69q0-5.39-3.46-8.85t-8.85-3.46H180.31q-5.39 0-8.85 3.46t-3.46 8.85V-605q32 19 52 52t20 73q0 40-20 73t-52 52v78.69q0 5.39 3.46 8.85t8.85 3.46Zm299.49-61.85q10.97 0 18.58-7.42 7.62-7.41 7.62-18.38 0-10.97-7.42-18.58-7.42-7.62-18.38-7.62-10.97 0-18.58 7.42-7.62 7.42-7.62 18.39 0 10.96 7.42 18.58 7.42 7.61 18.38 7.61Zm0-128.15q10.97 0 18.58-7.42 7.62-7.42 7.62-18.38 0-10.97-7.42-18.58-7.42-7.62-18.38-7.62-10.97 0-18.58 7.42-7.62 7.42-7.62 18.38 0 10.97 7.42 18.58 7.42 7.61 18.38 7.61Zm0-128.15q10.97 0 18.58-7.42 7.62-7.42 7.62-18.39 0-10.96-7.42-18.58-7.42-7.61-18.38-7.61-10.97 0-18.58 7.42-7.62 7.41-7.62 18.38 0 10.97 7.42 18.58 7.42 7.61 18.38 7.61ZM480-480Z"/></svg>',
       },
       {
         id: "users",
-        name: "Users",
+        name: "User Management",
         link: "/admin/users",
         icon: '<svg xmlns="http://www.w3.org/2000/svg" height="20px" viewBox="0 -960 960 960" width="20px" fill="#000000"><path d="M127.93-288.62q0-22.7 10.96-40.08t30.63-28.87q49.02-28.89 103.17-45.51 54.16-16.61 123.23-16.61 69.08 0 123.23 16.61 54.16 16.62 103.18 45.51 19.67 11.49 30.63 28.87 10.96 17.38 10.96 40.08v16.16q0 20.85-15.39 36.81t-37.42 15.96h-430.7q-22.02 0-37.25-15.38-15.23-15.39-15.23-37.39v-16.16Zm651.38 68.93h-55.85q5.54-12.77 9-26 3.46-13.22 3.46-26.77v-13.08q0-37.38-14.28-68.57-14.29-31.18-37.72-50.73 28.23 8 55.89 19.57 27.65 11.58 54.5 27.73 17 9.54 27.38 29.16 10.38 19.62 10.38 42.84v13.08q0 22-15.38 37.39-15.38 15.38-37.38 15.38ZM395.92-492.31q-51.75 0-87.87-36.12-36.12-36.13-36.12-87.88 0-51.75 36.12-87.87 36.12-36.13 87.87-36.13 51.75 0 87.88 36.13 36.12 36.12 36.12 87.87 0 51.75-36.12 87.88-36.13 36.12-87.88 36.12Zm281.38-124q0 51.75-36.12 87.88-36.12 36.12-87.87 36.12-3.77 0-4.23.46-.47.46-4.23-.38 21.66-25.45 34.37-56.62 12.7-31.17 12.7-67.5 0-36.34-12.96-67.23-12.96-30.88-34.11-56.8 2.61-.08 4.23 0 1.61.07 4.23.07 51.75 0 87.87 36.13 36.12 36.12 36.12 87.87ZM179.92-271.69h432v-16.93q0-8-3.79-14.07-3.79-6.06-13.36-11.31-42.38-25.46-91.69-39.58-49.31-14.11-107.16-14.11-57.84 0-107.15 13.61-49.31 13.62-91.69 40.08-9.57 5.13-13.36 10.99-3.8 5.86-3.8 14.3v17.02Zm216.22-272.62q29.78 0 50.78-21.21t21-51q0-29.79-21.21-50.79t-51-21q-29.79 0-50.79 21.22-21 21.21-21 51 0 29.78 21.22 50.78 21.21 21 51 21Zm-.22 272.62Zm0-344.62Z"/></svg>',
       },
@@ -113,7 +115,7 @@
       )
       .join("");
 
-    // Optional: click handling for active state only (no navigation for now)
+    // Click handling: treat 'analytics' and 'tickets' as in-page tabs.
     container.addEventListener("click", (e) => {
       const btn = e.target.closest(".settingsNavBtn");
       if (!btn || !container.contains(btn)) return;
@@ -121,8 +123,11 @@
         .querySelectorAll(".settingsNavBtn")
         .forEach((b) => b.classList.remove("active"));
       btn.classList.add("active");
+      const target = btn.getAttribute("data-target");
       const targetLink = btn.dataset.link;
-      if (targetLink) {
+      if (target === "analytics" || target === "tickets") {
+        setMode(target);
+      } else if (targetLink) {
         window.location.href = targetLink;
       }
     });
@@ -295,6 +300,68 @@
     }
   }
 
+  function renderToolbar(mode) {
+    const tb = document.getElementById("dashboardToolbar");
+    if (!tb) return;
+    if (mode === "tickets") {
+      tb.style.display = "flex";
+      tb.innerHTML =
+        '<button id="manageTicketsBtn" class="manageTicketsBtn">Manage Tickets</button>';
+      const btn = document.getElementById("manageTicketsBtn");
+      if (btn && !btn._bound) {
+        btn.addEventListener("click", () => {
+          window.location.href = "/admin/tickets";
+        });
+        btn._bound = true;
+      }
+    } else {
+      tb.style.display = "none";
+      tb.innerHTML = "";
+    }
+  }
+
+  function setMode(mode) {
+    currentMode = mode === "tickets" ? "tickets" : "analytics";
+    renderToolbar(currentMode);
+    if (dataRef) {
+      if (currentMode === "tickets") {
+        renderTicketsOverview(dataRef);
+      } else {
+        renderAnalyticsOverview(dataRef);
+      }
+    }
+  }
+
+  function renderAnalyticsOverview(data) {
+    renderCards(data.cardsData);
+    renderPlatformStatus(data.platformStatus);
+    renderRecentTickets(data.recentTickets);
+    renderTopAgents(data.topAgents);
+    renderCharts(data.trends, data.categories);
+  }
+
+  function renderTicketsOverview(data) {
+    // Reorder and retitle cards to emphasize ticket KPIs
+    const cd = Array.isArray(data.cardsData) ? data.cardsData : [];
+    const ticketCards = [
+      { title: "Open Tickets", value: cd[1]?.value ?? 0, change: "" },
+      { title: "Resolution Rate", value: cd[3]?.value ?? "—", change: "" },
+      { title: "Avg Response Time", value: cd[2]?.value ?? "—", change: "" },
+      { title: "Total Tickets", value: cd[0]?.value ?? 0, change: "" },
+    ];
+    renderCards(ticketCards);
+
+    // Hide platform status in tickets overview
+    const ps = document.getElementById("platformStatus");
+    if (ps) ps.innerHTML = "";
+
+    // Keep recent tickets focused
+    renderRecentTickets(data.recentTickets);
+
+    // Charts remain the same (tickets trends/category)
+    renderCharts(data.trends, data.categories);
+  }
+
   async function init() {
     renderMenu();
 
@@ -334,10 +401,12 @@
 
   function hydrate(data, isRefresh = false) {
     if (!data || typeof data !== "object") return;
-    renderCards(data.cardsData);
-    renderPlatformStatus(data.platformStatus);
-    renderRecentTickets(data.recentTickets);
-    renderTopAgents(data.topAgents);
-    renderCharts(data.trends, data.categories);
+    dataRef = data;
+    // Default to analytics tab on load
+    if (currentMode === "tickets") {
+      renderTicketsOverview(data);
+    } else {
+      renderAnalyticsOverview(data);
+    }
   }
 })();
