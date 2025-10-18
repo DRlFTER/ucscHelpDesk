@@ -1,5 +1,4 @@
 <?php
-	// Page metadata and CSS include
 	$title = 'Settings';
 	$head = '<link rel="stylesheet" href="/css/settings/settings.css">';
 ?>
@@ -13,10 +12,8 @@
 
 		<div class="pageLayout">
 			<section class="settingsLeft" aria-label="Settings navigation">
-				<!-- Populated by settings.js -->
 			</section>
 			<aside class="settingsRight" aria-live="polite" aria-busy="false">
-				<!-- Populated by settings.js -->
 			</aside>
 		</div>
 	</div>
