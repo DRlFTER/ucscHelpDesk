@@ -24,3 +24,12 @@
     </div>
 <?php endif; ?>
 </main>
+
+<?php
+// Success flash check & unset (add this block)
+if (isset($_SESSION['success'])) {
+    $successMsg = $_SESSION['success'];
+    unset($_SESSION['success']);  // Clear it to avoid repeats
+    echo "<script>alert('$successMsg'); window.location.reload();</script>";  // Popup + reload to refresh list
+}
+?>

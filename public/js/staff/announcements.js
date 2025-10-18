@@ -32,7 +32,7 @@ document.addEventListener('DOMContentLoaded', function () {
             </div>
           </div>
           <div class="ticket-action">
-            <button class="ticket-action-btn" onclick="window.location.href='/staff/an_view?id=${encodeURIComponent(a.id)}'">
+            <button class="ticket-action-btn" onclick="window.location.href='/staff/anView?id=${encodeURIComponent(a.id)}'">
               <span>View Announcement</span>
             </button>
           </div>
