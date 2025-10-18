@@ -1,9 +1,12 @@
 <?php
-	// Page metadata and CSS include
-	$title = 'Ticket status';
-	$head = '<link rel="stylesheet" href="/css/admin/adminTicketFull.css">';
+	// Compute a stable shared element name before first paint so cross-document View Transitions can match
+	$__vt = '';
+	if (isset($_GET['id']) && $_GET['id'] !== '') {
+		$__vt = 'ticket-' . preg_replace('/[^A-Za-z0-9_-]/', '', (string)$_GET['id']);
+	} elseif (isset($_GET['code']) && $_GET['code'] !== '') {
+		$__vt = 'ticket-' . preg_replace('/[^A-Za-z0-9_-]/', '', (string)$_GET['code']);
+	}
 ?>
-
 <main>
 	<div class="fullPage">
 		<div class="pageHeader">
@@ -14,7 +17,7 @@
 		<div class="pageLayout">
 			<!-- Left content -->
 			<section class="ticketLeft">
-				<div class="card ticketSummary">
+				<div class="card ticketSummary" id="ticketSummaryCard" <?= $__vt ? ('style="view-transition-name: ' . htmlspecialchars($__vt) . '"') : '' ?> >
 					<div class="ticketHeader">
 						<h2 id="ticketTitle" class="ticketTitle"></h2>
 						<span id="ticketStatus" class="status"></span>

@@ -299,6 +299,18 @@ async function fetchTicket(id) {
       assigned: "",
     };
   }
+  // Set destination transition names to match the origin card
+  try {
+    const vtName = ticketData.id
+      ? `ticket-${ticketData.id}`
+      : ticketData.code
+      ? `ticket-${ticketData.code}`
+      : null;
+    if (vtName) {
+      const summary = document.getElementById("ticketSummaryCard");
+      if (summary) summary.style.viewTransitionName = vtName;
+    }
+  } catch {}
   renderHeader();
   renderDescription();
   renderAttachments();

@@ -178,11 +178,129 @@ class Admin extends Controller
         $this->view('adminTickets', ['title' => 'Tickets', 'head' => $headContent]);
     }
 
-     public function ticket() {
+    public function ticket() {
         $this->requireLogin('admin');
         $headContent = '
         <link rel="stylesheet" href="/css/admin/adminTicketFull.css"/>';
         $this->view('adminTicketFull', ['title' => 'Ticket Details', 'head' => $headContent]);
+    }
+    public function users() {
+        $this->requireLogin('admin');
+        $headContent = '
+        <link rel="stylesheet" href="/css/admin/adminUsers.css"/>';
+        $this->view('adminUsers', ['title' => 'User Management', 'head' => $headContent]);
+    }
+
+    /**
+     * Return users for admin as JSON for the Users page.
+     * Supports pagination, search, and filters (type/role and designation).
+     * Response shape:
+     * {
+     *   data: [
+     *     { id, name, email, role, designation, number, year }
+     *   ],
+     *   meta: { page, perPage, total, totalPages, designations: string[] }
+     * }
+     */
+    public function usersData()
+    {
+        $this->requireLogin('admin');
+        header('Content-Type: application/json');
+
+        $db = Database::getInstance();
+
+        // Query params
+        $page       = isset($_GET['page']) ? max(1, (int)$_GET['page']) : 1;
+        $perPage    = isset($_GET['perPage']) ? max(1, min(100, (int)$_GET['perPage'])) : 10;
+        $search     = isset($_GET['search']) ? trim((string)$_GET['search']) : '';
+        $type       = isset($_GET['type']) ? trim((string)$_GET['type']) : '';
+        $designation= isset($_GET['designation']) ? trim((string)$_GET['designation']) : '';
+
+        $where = [];
+
+        if ($search !== '') {
+            $s = $db->real_escape_string($search);
+            $where[] = "(u.name LIKE '%$s%' OR u.email LIKE '%$s%' OR u.number LIKE '%$s%' OR u.designation LIKE '%$s%')";
+        }
+
+        if ($type !== '') {
+            // Whitelist allowed roles
+            $role = strtolower($type);
+            $allowed = ['staff','student','lecturer','admin','counselor'];
+            if (in_array($role, $allowed, true)) {
+                $roleEsc = $db->real_escape_string($role);
+                $where[] = "u.role = '$roleEsc'";
+            }
+        }
+
+        if ($designation !== '') {
+            $d = $db->real_escape_string($designation);
+            $where[] = "COALESCE(u.designation,'') = '$d'";
+        }
+
+        $whereSql = count($where) ? ('WHERE ' . implode(' AND ', $where)) : '';
+
+        // Total count
+        $total = 0;
+        $countSql = "SELECT COUNT(*) AS c FROM users u $whereSql";
+        if ($res = $db->query($countSql)) {
+            $row = $res->fetch_assoc();
+            $total = (int)($row['c'] ?? 0);
+            $res->free();
+        }
+
+        $totalPages = $perPage > 0 ? (int)max(1, ceil($total / $perPage)) : 1;
+        if ($page > $totalPages) { $page = $totalPages; }
+        $offset = ($page - 1) * $perPage;
+
+        // Data query
+        $sql = "SELECT u.u_id, u.name, u.email, u.role, u.designation, u.number, u.year
+                FROM users u
+                $whereSql
+                ORDER BY u.name ASC
+                LIMIT $perPage OFFSET $offset";
+
+        $rows = [];
+        if ($res = $db->query($sql)) {
+            while ($r = $res->fetch_assoc()) { $rows[] = $r; }
+            $res->free();
+        }
+
+        // Distinct designations for filter options (entire table, not page-limited)
+        $designations = [];
+        $dsql = "SELECT DISTINCT designation FROM users WHERE designation IS NOT NULL AND designation <> '' ORDER BY designation ASC";
+        if ($res = $db->query($dsql)) {
+            while ($r = $res->fetch_assoc()) {
+                $val = (string)($r['designation'] ?? '');
+                if ($val !== '') $designations[] = $val;
+            }
+            $res->free();
+        }
+
+        $out = [];
+        foreach ($rows as $r) {
+            $out[] = [
+                'id' => isset($r['u_id']) ? (int)$r['u_id'] : null,
+                'name' => (string)($r['name'] ?? ''),
+                'email' => (string)($r['email'] ?? ''),
+                'role' => (string)($r['role'] ?? ''),
+                'designation' => isset($r['designation']) ? (string)$r['designation'] : null,
+                'number' => isset($r['number']) ? (string)$r['number'] : null,
+                'year' => isset($r['year']) ? (int)$r['year'] : null,
+            ];
+        }
+
+        echo json_encode([
+            'data' => $out,
+            'meta' => [
+                'page' => $page,
+                'perPage' => $perPage,
+                'total' => $total,
+                'totalPages' => $totalPages,
+                'designations' => $designations,
+            ],
+        ]);
+        exit;
     }
 
     /**
