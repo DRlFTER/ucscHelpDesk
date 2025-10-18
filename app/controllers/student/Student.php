@@ -270,6 +270,33 @@ class Student extends Controller
         ]);
     }
 
+    // Student announcements page
+    public function announcements()
+    {
+        $this->requireLogin('student');
+
+    // Load all announcements from student model (no dependency on staff files)
+    require_once __DIR__ . '/../../models/student/Announcement.php';
+    $annModel = new StudentAnnouncement();
+        $announcements = [];
+        try {
+            $announcements = $annModel->getAll();
+        } catch (Throwable $e) {
+            error_log('Student announcements load failed: ' . $e->getMessage());
+            $announcements = [];
+        }
+        $dbError = method_exists($annModel, 'getLastError') ? $annModel->getLastError() : null;
+
+    // Only use the student announcements stylesheet (self-contained)
+    $headContent = '<link rel="stylesheet" href="/css/student/studentAnnouncements.css" />';
+        $this->view('student/studentAnnouncements', [
+            'title' => 'Announcements',
+            'head' => $headContent,
+            'announcements' => $announcements,
+            'dbError' => $dbError,
+        ]);
+    }
+
     // Student tickets list (same UI as admin tickets page)
     public function tickets()
     {
