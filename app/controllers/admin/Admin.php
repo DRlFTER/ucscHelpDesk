@@ -220,7 +220,9 @@ class Admin extends Controller
 
         if ($search !== '') {
             $s = $db->real_escape_string($search);
-            $where[] = "(u.name LIKE '%$s%' OR u.email LIKE '%$s%' OR u.number LIKE '%$s%' OR u.designation LIKE '%$s%')";
+            // Escape LIKE wildcards
+            $s_escaped = str_replace(['\\', '%', '_'], ['\\\\', '\%', '\_'], $s);
+            $where[] = "(u.name LIKE '%$s_escaped%' ESCAPE '\\' OR u.email LIKE '%$s_escaped%' ESCAPE '\\' OR u.number LIKE '%$s_escaped%' ESCAPE '\\' OR u.designation LIKE '%$s_escaped%' ESCAPE '\\')";
         }
 
         if ($type !== '') {
