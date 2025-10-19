@@ -1,0 +1,20 @@
+main {
+  width: 100%;
+  /* Most styles moved to global/components.css for reuse across pages */
+}
+
+.settingControl input,
+.settingControl select,
+.settingControl textarea {
+  width: 100%;
+  padding: 10px;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  font-size: 14px;
+  background: #ffffff;
+}
+
+.mutedText {
+  color: #6b7280;
+  font-size: 12px;
+}

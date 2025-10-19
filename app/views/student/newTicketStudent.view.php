@@ -4,6 +4,12 @@ include_once(__DIR__ . "/../../views/common/navbar.php");
 
 <main>
 	<div class="ticketPage">
+		<?php if (!empty($flash) && ($flash['type'] ?? '') === 'error'): ?>
+			<div class="toast" role="status" aria-live="polite" style="background:#ef4444">
+				<svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M12 2a10 10 0 100 20 10 10 0 000-20zm1 14h-2v-2h2v2zm0-4h-2V6h2v6z"/></svg>
+				<span><?= htmlspecialchars($flash['message']) ?></span>
+			</div>
+		<?php endif; ?>
 		<div class="ticketHeader">
 			<h2 class="titleText">Raise a Ticket</h2>
 			<p class="subtitle">Submit your issue to the relevant department for resolution</p>
@@ -36,26 +42,34 @@ include_once(__DIR__ . "/../../views/common/navbar.php");
 						<input id="title" name="title" type="text" placeholder="Briefly describe your issue..." required>
 					</div>
 
-					<!-- Category + Priority -->
 					<div class="row2">
-						<div class="field">
-							<label class="label" for="category">Category</label>
-							<select id="category" name="category" required>
-								<option value="" disabled selected>Select category</option>
-								<option value="technical">Technical Support</option>
-								<option value="account">Account Access</option>
-								<option value="academic">Academic</option>
-								<option value="facilities">Facilities</option>
-							</select>
-						</div>
-						<div class="field">
-							<label class="label" for="priority">Priority Level</label>
-							<select id="priority" name="priority" required>
-								<option value="" disabled selected>Select priority</option>
-								<option value="low">Low</option>
-								<option value="medium">Medium</option>
-								<option value="high">High</option>
-								<option value="urgent">Urgent</option>
+						<div class="field full-width">
+							<label class="label" for="subcategory">Request Type</label>
+							<!-- hidden field that will contain the MAIN category sent to backend -->
+							<input type="hidden" name="category" id="mainCategory" value="">
+							<select id="subcategory" name="subcategory" required>
+								<option value="" disabled selected>Select type</option>
+								<!-- Administration -->
+								<option value="admin_suggestions" data-main="Administration">Suggestions / Feedback & General Complaints</option>
+								<!-- Academic Publication and Welfare -->
+								<option value="apw_welfare" data-main="Academic Publication and Welfare">Welfare and bursary</option>
+								<option value="apw_verification_docs" data-main="Academic Publication and Welfare">Request student verification documents for banks and internships</option>
+								<!-- Examination and Registration -->
+								<option value="exam_registrations" data-main="Examination and Registration">Registrations</option>
+								<option value="exam_results" data-main="Examination and Registration">Examinations & Results</option>
+								<option value="exam_student_id" data-main="Examination and Registration">Student ID</option>
+								<option value="exam_other_docs" data-main="Examination and Registration">Request other official documents</option>
+								<!-- Engineering -->
+								<option value="eng_facilities" data-main="Engineering">Student facilities</option>
+								<!-- Finance -->
+								<option value="fin_payments" data-main="Finance">Payments & Finance</option>
+								<!-- Library -->
+								<option value="lib_library" data-main="Library">Library</option>
+								<!-- Technical -->
+								<option value="tech_wifi_ugvle" data-main="Technical">Technical support for WIFI & UGVLE</option>
+								<option value="tech_lab_logins" data-main="Technical">Lab logins & bookings</option>
+								<!-- Other -->
+								<option value="other_other" data-main="Other">Other</option>
 							</select>
 						</div>
 					</div>
@@ -133,7 +147,7 @@ include_once(__DIR__ . "/../../views/common/navbar.php");
 	</div>
 </main>
 
-<script src="/js/student/ticket.js"></script>
+<script src="/js/student/student.ticket.js"></script>
 <?php if (!empty($flash) && ($flash['type'] ?? '') === 'success'): ?>
 	<div class="toast" role="status" aria-live="polite">
 		<svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M9 16.2 4.8 12l1.4-1.4L9 13.4 17.8 4.6l1.4 1.4z"/></svg>
@@ -143,3 +157,5 @@ include_once(__DIR__ . "/../../views/common/navbar.php");
 		setTimeout(() => { window.location.href = '/student/dashboard'; }, 1500);
 	</script>
 <?php endif; ?>
+
+<script src="/js/student/studentNewTicket.js"></script>

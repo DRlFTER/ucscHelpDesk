@@ -1,0 +1,434 @@
+main {
+  width: 100%;
+  display: flex;
+  justify-content: center;
+  min-height: calc(
+    100dvh - var(--navbar-height, 64px)
+  ); /* Fill the remaining viewport space after the navbar height */
+}
+
+/* Typography, base colors and page background to match adminTickets.css */
+body {
+  font-family: "SF Pro", sans-serif;
+  background: #f9fafb;
+  margin: 0;
+  color: #111827;
+}
+
+/* View Transition tuning for destination page */
+::view-transition-old(root),
+::view-transition-new(root) {
+  animation-duration: 220ms;
+  animation-timing-function: cubic-bezier(0.2, 0, 0, 1);
+}
+
+/* Modal + blur styles */
+.modalOverlay {
+  position: fixed;
+  inset: 0;
+  display: none; /* hidden by default */
+  align-items: center;
+  justify-content: center;
+  z-index: 10000;
+  /* Start transparent for fade-in */
+  background: rgba(17, 24, 39, 0.08);
+  opacity: 0;
+  transition: opacity 180ms ease-in-out, backdrop-filter 180ms ease-in-out;
+}
+.modalOverlay.open {
+  display: flex;
+  opacity: 1;
+  backdrop-filter: blur(2px);
+}
+.modalOverlay .msgHolder {
+  position: relative;
+  top: 0;
+  height: auto;
+}
+.modalOverlay .msgContainer {
+  backdrop-filter: blur(20px);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: rgba(255, 255, 255, 0.8);
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  padding: 16px 18px;
+  gap: 12px;
+  color: black;
+  font-family: "Poppins", "SF Pro", sans-serif;
+  z-index: 10;
+  box-shadow: 0 12px 30px rgba(17, 24, 39, 0.18);
+  transform: translateY(8px) scale(0.98);
+  opacity: 0;
+  transition: transform 180ms ease, opacity 180ms ease;
+}
+.modalOverlay.open .msgContainer {
+  transform: translateY(0) scale(1);
+  opacity: 1;
+}
+.msgIcon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.msgContent {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.msgTitle {
+  font-size: 16px;
+  font-weight: 600;
+  margin: 0;
+}
+.msgText {
+  font-size: 13px;
+  color: #374151;
+  margin: 0;
+}
+.msgActions {
+  margin-top: 6px;
+  display: flex;
+  gap: 8px;
+  justify-content: flex-end;
+}
+.btnDanger {
+  background-color: #ef4444 !important;
+}
+.modalBackdropClose {
+  position: absolute;
+  inset: 0;
+  background: transparent;
+  border: none;
+  cursor: default;
+}
+
+/* Optional page blur when modal open */
+body.modal-open main {
+  filter: blur(4px);
+  transition: filter 180ms ease-in-out;
+}
+
+.ticketFullPage {
+  width: 90%;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  padding: 16px 0 40px;
+  min-height: calc(100dvh - var(--navbar-height, 64px));
+}
+
+.pageHeader {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.ticketLayout {
+  display: flex;
+  align-items: stretch; /* columns match height */
+  gap: 16px;
+  flex: 1; /* occupy remaining height */
+  background: red;
+  padding: 10px;
+  backdrop-filter: blur(20px);
+  border-radius: 20px;
+  padding: 16px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: rgba(255, 255, 255, 0.5);
+  box-shadow: none;
+  color: #111827;
+  transition: all 0.18s ease-in-out;
+  background-clip: padding-box;
+}
+
+.ticketLeft {
+  flex: 1 1 68%;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  min-height: 0; /* allow flex children to size/scroll */
+}
+
+.ticketRight {
+  flex: 0 0 340px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  min-height: 0;
+}
+
+.card {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  backdrop-filter: blur(20px);
+  border-radius: 12px;
+  padding: 16px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: rgba(255, 255, 255, 0.5);
+  box-shadow: none;
+  color: #111827;
+  transition: all 0.18s ease-in-out;
+  background-clip: padding-box;
+}
+
+.card:hover {
+  background: rgba(255, 255, 255, 1);
+  border: 1px solid rgba(140, 140, 249, 0.7);
+  box-shadow: 0 6px 18px rgba(17, 24, 39, 0.06);
+}
+
+/* make conversation and timeline take available space */
+.conversation {
+  flex: 1;
+  min-height: 0;
+}
+.ticketTimeline {
+  flex: 1;
+  min-height: 0;
+}
+
+.ticketHeader {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.ticketTitle {
+  flex: 1;
+  font-size: 18px; /* match ticket list title size */
+  font-weight: 600;
+  font-family: "SF Pro";
+}
+.ticketMeta {
+  font-size: 11.5px;
+  color: #6b7280;
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+/* Summary body inside the header card */
+.summaryBody {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+.summarySection {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.sectionTitleRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+.sectionTitle {
+  font-size: 15px;
+  font-weight: 600;
+}
+.descriptionText {
+  color: #374151;
+  font-size: 13px;
+  line-height: 1.5;
+}
+
+.attachmentsList {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+.attachmentItem {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 10px;
+  border-radius: 8px;
+  /* make small pill-like holders consistent with ticket list */
+  background: #ececec;
+  color: #454545;
+  font-family: "SF Pro";
+  font-size: 11px;
+}
+.attachmentItem button {
+  border: none;
+  background: transparent;
+  color: #6b7280;
+  cursor: pointer;
+}
+
+.messages {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  flex: 1; /* grow to fill card */
+  min-height: 0; /* enable scrolling within flex parent */
+  overflow-y: auto; /* scroll when long */
+}
+.message {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+}
+.messageBubble {
+  flex: 1;
+  background: #f9fafb;
+  border-radius: 10px;
+  padding: 10px 12px;
+  font-family: "SF Pro";
+}
+/* color coding for author types */
+.messageBubble.staff {
+  background: #e7f1ff;
+} /* light blue for lecturer */
+.messageBubble.student {
+  background: #f3f4f6;
+} /* light gray for student */
+.messageHeader {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.messageHeader .name {
+  font-weight: 600;
+  font-size: 12.5px;
+}
+.messageHeader .role {
+  font-size: 11px;
+  color: #6b7280;
+  padding: 2px 6px;
+  border-radius: 10px;
+  background: #eef2ff;
+}
+.messageHeader .time {
+  margin-left: auto;
+  font-size: 11px;
+  color: #6b7280;
+}
+.messageText {
+  font-size: 12.5px;
+  color: #111827;
+  margin-top: 6px;
+}
+
+.replyBox {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  border-top: 1px solid #e5e7eb;
+  padding-top: 10px;
+}
+.conversation {
+  display: flex;
+  flex-direction: column;
+}
+.replyBox input {
+  flex: 1;
+  height: 42px;
+  padding: 0 12px;
+  outline: none;
+  border-radius: 50px;
+  border: 1px solid #e5e7eb;
+  background: #fff;
+}
+
+.replyBox input:focus {
+  background: #edededff;
+}
+.replyActions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.btnAttachRound {
+  width: 42px;
+  height: 42px;
+  border-radius: 100%;
+  border: 1px solid #e5e7eb;
+  background: #f9fafb;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+}
+
+/* Right side */
+.infoList {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.infoRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-size: 12.5px;
+}
+.infoRow .label {
+  color: #6b7280;
+}
+.infoRow .value {
+  color: #111827;
+  font-weight: 500;
+}
+
+.timelineList {
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  overflow-y: auto;
+  flex: 1; /* fill timeline card */
+}
+.timelineItem {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.tlDot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+}
+.tlDot.green {
+  background: #22c55e;
+}
+.tlDot.blue {
+  background: #3b82f6;
+}
+.tlDot.yellow {
+  background: #f59e0b;
+}
+.tlDot.gray {
+  background: #9ca3af;
+}
+.tlText {
+  display: flex;
+  flex-direction: column;
+  font-size: 12px;
+}
+.tlText .label {
+  color: #111827;
+  font-weight: 500;
+}
+.tlText .time {
+  color: #6b7280;
+}
+
+.visuallyHidden {
+  position: absolute;
+  left: -9999px;
+}
+
+@media (max-width: 980px) {
+  .ticketLayout {
+    flex-direction: column;
+  }
+  .ticketRight {
+    flex: 1 1 auto;
+  }
+}
