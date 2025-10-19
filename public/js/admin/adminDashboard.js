@@ -306,7 +306,7 @@
     if (mode === "tickets") {
       tb.style.display = "flex";
       tb.innerHTML =
-        '<button id="manageTicketsBtn" class="manageTicketsBtn">Manage Tickets</button>';
+        '<div class="manageTicketsBtnContainer"><button id="manageTicketsBtn" class="btnPrimary btnPrimaryText">Manage Tickets</button></div>';
       const btn = document.getElementById("manageTicketsBtn");
       if (btn && !btn._bound) {
         btn.addEventListener("click", () => {
