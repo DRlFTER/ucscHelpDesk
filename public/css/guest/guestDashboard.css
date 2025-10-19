@@ -1,36 +1,12 @@
+/* Guest dashboard styles reusing global components look */
 body {
   height: 100vh;
   display: flex;
   flex-direction: column;
 }
 
-header {
-  flex-shrink: 0;
-}
-
 main {
   flex: 1;
-}
-
-body {
-  font-family: "SF Pro", sans-serif;
-  background: #f9fafb;
-  margin: 0;
-  color: #111827;
-}
-
-h3 {
-  font-weight: 600;
-  margin-bottom: 0.5rem;
-}
-
-.adminRight {
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  gap: 16px;
-  min-height: 0; /* allow children to size for overflow */
-  overflow: hidden;
 }
 
 .dashboardContent {
@@ -43,7 +19,6 @@ h3 {
   scrollbar-width: none;
   -ms-overflow-style: none;
 }
-
 .dashboardContent::-webkit-scrollbar {
   display: none;
 }
@@ -52,33 +27,24 @@ h3 {
   display: flex;
   gap: 1rem;
 }
-
 .infoCard {
   flex: 1;
-  padding: 1rem;
   backdrop-filter: blur(20px);
   border-radius: 12px;
   padding: 16px;
   border: 1px solid rgba(255, 255, 255, 0.1);
   background: rgba(255, 255, 255, 0.5);
-  box-shadow: none;
-  font-size: 15px;
-  font-weight: 600;
   transition: all 0.18s ease-in-out;
-  background-clip: padding-box;
 }
-
 .infoCard:hover {
-  background: rgba(255, 255, 255, 1);
+  background: #fff;
   border: 1px solid rgba(140, 140, 249, 0.7);
   box-shadow: 0 6px 18px rgba(17, 24, 39, 0.06);
 }
-
 .infoCard .value {
   font-size: 1.5rem;
   font-weight: 600;
 }
-
 .infoCard .change {
   font-size: 0.9rem;
   color: #6b7280;
@@ -88,57 +54,45 @@ h3 {
   display: flex;
   gap: 1rem;
 }
-
-.chartHolder {
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  height: 100%;
-  width: 100%;
-}
-
-.cardBox,
-.chartBox {
+.cardBox {
   flex: 1;
-  height: 400px;
+  min-height: 280px;
   backdrop-filter: blur(20px);
   border-radius: 12px;
   padding: 16px;
   border: 1px solid rgba(255, 255, 255, 0.1);
   background: rgba(255, 255, 255, 0.5);
-  box-shadow: none;
-  font-size: 15px;
-  font-weight: 600;
   transition: all 0.18s ease-in-out;
-  background-clip: padding-box;
 }
-
-.cardBox:hover,
-.chartBox:hover {
-  background: rgba(255, 255, 255, 1);
+.cardBox:hover {
+  background: #fff;
   border: 1px solid rgba(140, 140, 249, 0.7);
   box-shadow: 0 6px 18px rgba(17, 24, 39, 0.06);
 }
 
-.platformStatus li,
+.annList {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+.annItem,
 .recentTickets li {
   display: flex;
-  justify-content: space-between;
   align-items: center;
-  padding: 8px 0;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 10px 0;
   border-bottom: 1px solid #f3f4f6;
+  cursor: pointer;
+}
+.annItem:focus,
+.recentTickets li:focus {
+  outline: 2px solid rgba(140, 140, 249, 0.5);
+  outline-offset: 2px;
+  border-radius: 8px;
 }
 
-.ticketItem .status {
-  margin-left: auto;
-}
-
-/* Error bar */
-#dashError {
-  font-size: 14px;
-}
-
-/* Simple skeleton look for info cards when aria-busy */
+/* Simple skeleton effect */
 .infoCard[aria-busy="true"] {
   color: transparent;
   background-image: linear-gradient(
@@ -150,14 +104,6 @@ h3 {
   background-size: 400% 100%;
   animation: shimmer 1.2s ease-in-out infinite;
 }
-
-.manageTicketsBtnContainer {
-  position: absolute;
-  bottom: 25px;
-  left: 25px;
-  z-index: 10;
-}
-
 @keyframes shimmer {
   0% {
     background-position: 100% 0;

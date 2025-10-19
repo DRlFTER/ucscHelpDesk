@@ -223,43 +223,69 @@ window.adminUsersData = [];
         const year = u.year != null ? String(u.year) : "—";
         const phone = u.number || "—";
         const email = u.email || "";
-        // If a user details page exists later, turn this into an anchor
+        const href = id ? `/admin/user?id=${encodeURIComponent(id)}` : "#";
+        // Wrap in anchor for navigation similar to tickets list
         return `
-				<div class="ticket" style="view-transition-name: ${vt};">
-					<div class="ticketRow1">
-						<div class="ticketName">
-							<h2>${esc(u.name)}</h2>
-							<div class="ticketInfo">
-								<p>${esc(email)}</p>
-								<p>${esc(roleCap)}</p>
-								<p>${esc(designation)}</p>
-							</div>
-						</div>
-						<div class="status ${esc(role)}">${esc(roleCap)}</div>
-					</div>
-					<div class="ticketRow2">
-						<div class="ticketDetails">
-							<div class="ticketDetail">
-								<h2>Phone:</h2>
-								<div class="ticketDetailHolder">${esc(phone)}</div>
-							</div>
-							<div class="ticketDetail">
-								<h2>Year:</h2>
-								<div class="ticketDetailHolder">${esc(year)}</div>
-							</div>
-						</div>
-						<div class="ticketData">
-							<div class="ticketDetail">
-								<h2>ID:</h2>
-								<div class="ticketDataHolder">${esc(id)}</div>
-							</div>
-						</div>
-					</div>
-				</div>`;
+        <a class="ticket" href="${href}" aria-label="Open user ${esc(
+          u.name
+        )}" style="view-transition-name: ${vt}; text-decoration: none; color: inherit;">
+          <div class="ticketRow1">
+            <div class="ticketName">
+              <h2>${esc(u.name)}</h2>
+              <div class="ticketInfo">
+                <p>${esc(email)}</p>
+                <p>${esc(roleCap)}</p>
+                <p>${esc(designation)}</p>
+              </div>
+            </div>
+            <div class="status ${esc(role)}">${esc(roleCap)}</div>
+          </div>
+          <div class="ticketRow2">
+            <div class="ticketDetails">
+              <div class="ticketDetail">
+                <h2>Phone:</h2>
+                <div class="ticketDetailHolder">${esc(phone)}</div>
+              </div>
+              <div class="ticketDetail">
+                <h2>Year:</h2>
+                <div class="ticketDetailHolder">${esc(year)}</div>
+              </div>
+            </div>
+            <div class="ticketData">
+              <div class="ticketDetail">
+                <h2>ID:</h2>
+                <div class="ticketDataHolder">${esc(id)}</div>
+              </div>
+            </div>
+          </div>
+        </a>`;
       })
       .join("");
 
     container.innerHTML = html;
+    // Robust navigation fallback: delegate click to handle full-card navigation
+    // This ensures navigation works even if default anchor behavior is interfered with.
+    container.addEventListener(
+      "click",
+      (e) => {
+        const a = e.target && e.target.closest && e.target.closest("a.ticket");
+        if (!a || !container.contains(a)) return;
+        // Only handle simple left-clicks without modifier keys
+        if (e.button !== 0 || e.metaKey || e.ctrlKey || e.shiftKey || e.altKey)
+          return;
+        const href = a.getAttribute("href");
+        if (!href || href === "#") return;
+        e.preventDefault();
+        if (document.startViewTransition) {
+          document.startViewTransition(() => {
+            window.location.href = href;
+          });
+        } else {
+          window.location.href = href;
+        }
+      },
+      { once: true }
+    );
   }
 
   function renderPagination() {

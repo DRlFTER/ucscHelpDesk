@@ -37,6 +37,135 @@ class Admin extends Controller
         $this->view('adminUsers', ['title' => 'User Management', 'head' => $headContent]);
     }
 
+    public function user() {
+        $this->requireLogin('admin');
+        $headContent = '
+        <link rel="stylesheet" href="/css/admin/adminUserFull.css"/>';
+        $this->view('adminUserFull', ['title' => 'User Details', 'head' => $headContent]);
+    }
+
+    /**
+     * Fetch a single user's details for the admin user page.
+     * Returns JSON shape: { id, name, email, role, designation, number, year }
+     */
+    public function userData()
+    {
+        $this->requireLogin('admin');
+        header('Content-Type: application/json');
+        $db = Database::getInstance();
+
+        $id = isset($_GET['id']) ? (int)$_GET['id'] : 0;
+        if (!$id) {
+            http_response_code(400);
+            echo json_encode(['error' => 'Missing user id']);
+            exit;
+        }
+
+        $idEsc = (int)$id;
+        $sql = "SELECT u_id, name, email, role, designation, number, year FROM users WHERE u_id = $idEsc LIMIT 1";
+        $row = null;
+        if ($res = $db->query($sql)) {
+            $row = $res->fetch_assoc();
+            $res->free();
+        }
+        if (!$row) {
+            http_response_code(404);
+            echo json_encode(['error' => 'User not found']);
+            exit;
+        }
+
+        echo json_encode([
+            'id' => (int)$row['u_id'],
+            'name' => (string)($row['name'] ?? ''),
+            'email' => (string)($row['email'] ?? ''),
+            'role' => (string)($row['role'] ?? ''),
+            'designation' => isset($row['designation']) ? (string)$row['designation'] : null,
+            'number' => isset($row['number']) ? (string)$row['number'] : null,
+            'year' => isset($row['year']) ? (int)$row['year'] : null,
+        ]);
+        exit;
+    }
+
+    /** Update user basic fields. Admin only. */
+    public function userUpdate()
+    {
+        $this->requireLogin('admin');
+        header('Content-Type: application/json');
+        $db = Database::getInstance();
+
+        $id = isset($_POST['id']) ? (int)$_POST['id'] : 0;
+        if (!$id) {
+            http_response_code(400);
+            echo json_encode(['error' => 'Missing id']);
+            exit;
+        }
+
+        $name = isset($_POST['name']) ? trim((string)$_POST['name']) : '';
+        $email = isset($_POST['email']) ? trim((string)$_POST['email']) : '';
+        $number = isset($_POST['number']) ? trim((string)$_POST['number']) : null;
+        $role = isset($_POST['role']) ? trim((string)$_POST['role']) : '';
+        $designation = isset($_POST['designation']) ? trim((string)$_POST['designation']) : null;
+        $year = isset($_POST['year']) && $_POST['year'] !== '' ? (int)$_POST['year'] : null;
+
+        if ($name === '' || $email === '' || $role === '') {
+            http_response_code(400);
+            echo json_encode(['error' => 'Name, email and role are required']);
+            exit;
+        }
+
+        // Whitelist roles
+        $allowed = ['staff','student','lecturer','admin','counselor'];
+        if (!in_array(strtolower($role), $allowed, true)) {
+            http_response_code(400);
+            echo json_encode(['error' => 'Invalid role']);
+            exit;
+        }
+
+        // Escape inputs
+        $nameEsc = $db->real_escape_string($name);
+        $emailEsc = $db->real_escape_string($email);
+        $roleEsc = $db->real_escape_string(strtolower($role));
+        $numberEsc = $number !== null ? "'" . $db->real_escape_string($number) . "'" : 'NULL';
+        $designationEsc = $designation !== null ? "'" . $db->real_escape_string($designation) . "'" : 'NULL';
+        $yearVal = $year !== null ? (int)$year : 'NULL';
+
+        $sql = "UPDATE users SET name='$nameEsc', email='$emailEsc', role='$roleEsc', number=$numberEsc, designation=$designationEsc, year=$yearVal WHERE u_id = " . (int)$id;
+        $ok = $db->query($sql);
+        if (!$ok) {
+            http_response_code(500);
+            echo json_encode(['error' => 'Update failed']);
+            exit;
+        }
+
+        // Return updated record
+        $_GET['id'] = (string)$id;
+        $this->userData();
+    }
+
+    /** Delete a user. Note: will cascade per FK constraints in DB. */
+    public function userDelete()
+    {
+        $this->requireLogin('admin');
+        header('Content-Type: application/json');
+        $db = Database::getInstance();
+
+        $id = isset($_POST['id']) ? (int)$_POST['id'] : (isset($_GET['id']) ? (int)$_GET['id'] : 0);
+        if (!$id) {
+            http_response_code(400);
+            echo json_encode(['error' => 'Missing id']);
+            exit;
+        }
+        $idEsc = (int)$id;
+        $ok = $db->query("DELETE FROM users WHERE u_id = $idEsc");
+        if (!$ok) {
+            http_response_code(500);
+            echo json_encode(['error' => 'Delete failed']);
+            exit;
+        }
+        echo json_encode(['success' => true]);
+        exit;
+    }
+
     /**
      * Return users for admin as JSON for the Users page.
      * Supports pagination, search, and filters (type/role and designation).
