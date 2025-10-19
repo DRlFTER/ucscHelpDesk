@@ -185,6 +185,77 @@
         background-color: #d32f2f;
     }
 
+    /* New Styles for Assignment, Response, and Forwarding */
+    .assignment-section, .response-section, .forward-section {
+        margin-top: 20px;
+        padding: 15px;
+        background-color: #f5f5f5;
+        border-radius: 10px;
+    }
+
+    .assignment-section h3 {
+        font-size: 18px;
+        margin-bottom: 10px;
+    }
+
+    .assign-btn {
+        background-color: #2196F3;
+        color: white;
+        padding: 10px 20px;
+        border: none;
+        border-radius: 5px;
+        cursor: pointer;
+    }
+
+    .assign-btn:hover {
+        background-color: #1976D2;
+    }
+
+    .response-textarea {
+        width: 100%;
+        min-height: 100px;
+        padding: 10px;
+        border: 1px solid #ccc;
+        border-radius: 5px;
+        resize: vertical;
+        font-size: 14px;
+    }
+
+    .submit-response-btn {
+        background-color: #4CAF50;
+        color: white;
+        padding: 10px 20px;
+        border: none;
+        border-radius: 5px;
+        cursor: pointer;
+        margin-top: 10px;
+    }
+
+    .submit-response-btn:hover {
+        background-color: #45a049;
+    }
+
+    .forward-section select {
+        width: 100%;
+        padding: 10px;
+        border: 1px solid #ccc;
+        border-radius: 5px;
+        margin-bottom: 10px;
+    }
+
+    .forward-btn {
+        background-color: #FF9800;
+        color: white;
+        padding: 10px 20px;
+        border: none;
+        border-radius: 5px;
+        cursor: pointer;
+    }
+
+    .forward-btn:hover {
+        background-color: #F57C00;
+    }
+
     @media (max-width: 992px) {
         .main-content {
             padding: 30px 20px;
@@ -209,7 +280,7 @@
         .details-group { flex-direction: column; gap: 15px; }
         .actions-bar { flex-direction: column; }
     }
-  </style>
+</style>
 
 <main id="main-content" class="main-content">
     <div class="page-header">
@@ -259,16 +330,55 @@
         </div>
       </div>
 
-      <!-- Placeholder for additional details like description -->
-      <!-- If your DB has a 'description' field, add it to the SQL query and display here -->
       <div class="ticket-description">
         <h3>Description</h3>
         <p>
-          <!-- Replace with actual description if available in DB -->
-          <?php echo htmlspecialchars($ticket['description']); ?>
-
+          <?php echo htmlspecialchars($ticket['description'] ?? 'No description provided.'); ?>
         </p>
       </div>
+
+      <!-- Assignment Section (Only for Pending Status) -->
+      <?php if ($ticket['status'] === 'pending'): ?>
+        <div class="assignment-section">
+          <h3>Assign to Yourself</h3>
+          <p>This ticket is pending. Click to assign it to your account.</p>
+          <form method="POST" action="">
+            <input type="hidden" name="action" value="assign">
+            <button type="submit" class="assign-btn">Get Assigned</button>
+          </form>
+        </div>
+      <?php endif; ?>
+
+      <!-- Response Section (Always Visible, but Only for Assigned Staff) -->
+      <div class="response-section">
+        <h3>Add Response</h3>
+        <p>Add a comment or update to this ticket.</p>
+        <form method="POST" action="">
+          <input type="hidden" name="action" value="respond">
+          <textarea name="response" class="response-textarea" placeholder="Enter your response here..." required></textarea>
+          <button type="submit" class="submit-response-btn">Submit Response</button>
+        </form>
+      </div>
+
+      <!-- Forward Section (Only if Assigned to Current Staff) -->
+      <?php if (isset($ticket['assigned_to']) && $ticket['assigned_to'] == $_SESSION['user']['u_id']): ?>
+        <div class="forward-section">
+          <h3>Forward Ticket</h3>
+          <p>Forward this ticket to another staff member.</p>
+          <form method="POST" action="">
+            <input type="hidden" name="action" value="forward">
+            <select name="forward_to" required>
+              <option value="">Select staff member</option>
+              <?php foreach ($staff_members as $member): ?>  <!-- Passed from controller -->
+                <option value="<?php echo $member['u_id']; ?>">
+                  <?php echo htmlspecialchars($member['name']); ?>
+                </option>
+              <?php endforeach; ?>
+            </select>
+            <button type="submit" class="forward-btn">Forward Ticket</button>
+          </form>
+        </div>
+      <?php endif; ?>
 
       <!-- Actions bar for managing the ticket -->
       <div class="actions-bar">
@@ -277,3 +387,14 @@
       </div>
     </div>
   </main>
+
+<script>
+  // Basic validation for response
+  document.querySelector('.submit-response-btn').addEventListener('click', function(e) {
+    const response = document.querySelector('.response-textarea').value.trim();
+    if (!response) {
+      e.preventDefault();
+      alert('Response cannot be empty.');
+    }
+  });
+</script>
