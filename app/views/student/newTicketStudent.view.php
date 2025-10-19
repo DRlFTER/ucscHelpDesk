@@ -50,15 +50,15 @@ include_once(__DIR__ . "/../../views/common/navbar.php");
 							<select id="subcategory" name="subcategory" required>
 								<option value="" disabled selected>Select type</option>
 								<!-- Administration -->
-								<option value="admin_suggestions" data-main="Administration">Suggestions / Feedback & General Complaints</option>
+								<option value="admin_suggestions" data-main="General Administration">Suggestions / Feedback & General Complaints</option>
 								<!-- Academic Publication and Welfare -->
 								<option value="apw_welfare" data-main="Academic Publication and Welfare">Welfare and bursary</option>
 								<option value="apw_verification_docs" data-main="Academic Publication and Welfare">Request student verification documents for banks and internships</option>
 								<!-- Examination and Registration -->
-								<option value="exam_registrations" data-main="Examination and Registration">Registrations</option>
-								<option value="exam_results" data-main="Examination and Registration">Examinations & Results</option>
-								<option value="exam_student_id" data-main="Examination and Registration">Student ID</option>
-								<option value="exam_other_docs" data-main="Examination and Registration">Request other official documents</option>
+								<option value="exam_registrations" data-main="Examinations and Registration">Registrations</option>
+								<option value="exam_results" data-main="Examinations and Registration">Examinations & Results</option>
+								<option value="exam_student_id" data-main="Examinations and Registration">Student ID</option>
+								<option value="exam_other_docs" data-main="Examinations and Registration">Request other official documents</option>
 								<!-- Engineering -->
 								<option value="eng_facilities" data-main="Engineering">Student facilities</option>
 								<!-- Finance -->
@@ -66,8 +66,8 @@ include_once(__DIR__ . "/../../views/common/navbar.php");
 								<!-- Library -->
 								<option value="lib_library" data-main="Library">Library</option>
 								<!-- Technical -->
-								<option value="tech_wifi_ugvle" data-main="Technical">Technical support for WIFI & UGVLE</option>
-								<option value="tech_lab_logins" data-main="Technical">Lab logins & bookings</option>
+								<option value="tech_wifi_ugvle" data-main="CSC and NOC">Technical support for WIFI & UGVLE</option>
+								<option value="tech_lab_logins" data-main="CSC and NOC">Lab logins & bookings</option>
 								<!-- Other -->
 								<option value="other_other" data-main="Other">Other</option>
 							</select>
