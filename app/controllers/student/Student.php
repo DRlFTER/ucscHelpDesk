@@ -300,6 +300,17 @@ class Student extends Controller
         ]);
     }
 
+    // Student FAQ page
+    public function faq()
+    {
+        $this->requireLogin('student');
+        $headContent = '<link rel="stylesheet" href="/css/student/studentFAQ.css" />';
+        $this->view('student/studentFAQ', [
+            'title' => 'FAQs',
+            'head' => $headContent,
+        ]);
+    }
+
     // Student tickets list (same UI as admin tickets page)
     public function tickets()
     {
