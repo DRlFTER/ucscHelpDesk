@@ -427,9 +427,13 @@ class Admin extends Controller
             $trends['resolved'][] = $countRes;
         }
 
-        // 5) Tickets by category
+        // 5) Tickets by category (now derived from division table)
         $categories = [ 'labels' => [], 'data' => [] ];
-        if ($res = $db->query("SELECT COALESCE(category,'Other') AS category, COUNT(*) AS c FROM tickets GROUP BY category ORDER BY c DESC")) {
+        if ($res = $db->query("SELECT COALESCE(d.name,'Other') AS category, COUNT(*) AS c
+                                 FROM tickets t
+                                 LEFT JOIN division d ON d.did = t.division
+                                 GROUP BY COALESCE(d.name,'Other')
+                                 ORDER BY c DESC")) {
             while ($row = $res->fetch_assoc()) {
                 $categories['labels'][] = (string)$row['category'];
                 $categories['data'][] = (int)$row['c'];
@@ -496,11 +500,12 @@ class Admin extends Controller
         }
 
         $idEsc = (int)$id;
-        $sql = "SELECT t.ticket_id, t.created_at, t.title, t.category, t.status, t.priority, t.description, t.u_id, u.name AS student_name
-                FROM tickets t
-                LEFT JOIN users u ON u.u_id = t.u_id
-                WHERE t.ticket_id = $idEsc
-                LIMIT 1";
+    $sql = "SELECT t.ticket_id, t.created_at, t.title, d.name AS category, t.status, t.priority, t.description, t.u_id, u.name AS student_name
+        FROM tickets t
+        LEFT JOIN users u ON u.u_id = t.u_id
+        LEFT JOIN division d ON d.did = t.division
+        WHERE t.ticket_id = $idEsc
+        LIMIT 1";
 
         $row = null;
         if ($res = $db->query($sql)) {
@@ -608,6 +613,7 @@ class Admin extends Controller
         $priority= isset($_GET['priority']) ? trim((string)$_GET['priority']) : '';
 
         $where = [];
+        $joins = "LEFT JOIN users u ON u.u_id = t.u_id LEFT JOIN division d ON d.did = t.division";
         // Search by ticket title or student name
         if ($search !== '') {
             $s = $db->real_escape_string($search);
@@ -616,7 +622,8 @@ class Admin extends Controller
         // Filter by category
         if ($category !== '') {
             $c = $db->real_escape_string($category);
-            $where[] = "t.category = '$c'";
+            // Match by division name (UI category label)
+            $where[] = "COALESCE(d.name,'') = '$c'";
         }
         // Map UI status to DB statuses
         if ($status !== '') {
@@ -643,7 +650,7 @@ class Admin extends Controller
 
         // Total count for pagination
         $total = 0;
-        $countSql = "SELECT COUNT(*) AS c FROM tickets t LEFT JOIN users u ON u.u_id = t.u_id $whereSql";
+        $countSql = "SELECT COUNT(*) AS c FROM tickets t $joins $whereSql";
         if ($res = $db->query($countSql)) {
             $row = $res->fetch_assoc();
             $total = (int)($row['c'] ?? 0);
@@ -655,12 +662,12 @@ class Admin extends Controller
         $offset = ($page - 1) * $perPage;
 
         // Data query with pagination
-        $sql = "SELECT t.ticket_id, t.created_at, t.title, t.category, t.status, t.priority, t.meeting_requested, t.u_id, u.name AS student_name
-                FROM tickets t
-                LEFT JOIN users u ON u.u_id = t.u_id
-                $whereSql
-                ORDER BY t.created_at DESC
-                LIMIT $perPage OFFSET $offset";
+    $sql = "SELECT t.ticket_id, t.created_at, t.title, d.name AS category, t.status, t.priority, t.meeting_requested, t.u_id, u.name AS student_name
+        FROM tickets t
+        $joins
+        $whereSql
+        ORDER BY t.created_at DESC
+        LIMIT $perPage OFFSET $offset";
 
         $rows = [];
         if ($res = $db->query($sql)) {

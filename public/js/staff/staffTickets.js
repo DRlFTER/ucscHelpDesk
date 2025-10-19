@@ -1,6 +1,16 @@
 document.addEventListener("DOMContentLoaded", () => {
   const container = document.querySelector(".tickets-container");
 
+  if (pageError) {
+    container.innerHTML = `<div style="padding:12px 14px; border:1px solid #f59e0b; background:#fffbeb; color:#92400e; border-radius:8px;">${pageError}</div>`;
+    return;
+  }
+
+  if (!Array.isArray(tickets) || tickets.length === 0) {
+    container.innerHTML = `<p style="color:#6b7280;">No tickets found for your division(s).</p>`;
+    return;
+  }
+
   // Map over tickets and create HTML for each
   container.innerHTML = tickets.map(ticket => {
     // Default status to "Pending" if null or undefined, and ensure it's a string

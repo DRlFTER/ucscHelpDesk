@@ -32,8 +32,11 @@ class Guest extends Controller
 
         // Recent tickets (anonymized): show last 6 by created_at with only title/category/priority/time
         $db = Database::getInstance();
-        $recentTickets = [];
-        $sqlRecent = "SELECT t.ticket_id, t.title, t.created_at, t.priority, t.category FROM tickets t ORDER BY t.created_at DESC LIMIT 6";
+    $recentTickets = [];
+    $sqlRecent = "SELECT t.ticket_id, t.title, t.created_at, t.priority, d.name AS category
+               FROM tickets t
+               LEFT JOIN division d ON d.did = t.division
+               ORDER BY t.created_at DESC LIMIT 6";
         if ($res = $db->query($sqlRecent)) {
             while ($row = $res->fetch_assoc()) {
                 $recentTickets[] = [

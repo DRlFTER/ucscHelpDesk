@@ -91,11 +91,13 @@ class Staff extends Controller {
         // Load staff ticket model and fetch tickets
         require_once __DIR__ . '/../../models/staff/Ticket.php';
         $tickets = [];
+        $errorMsg = null;
         try {
             $model = new StaffTicket();
             $tickets = $model->getAllTickets();  // No param—handles filtering internally
         } catch (Throwable $e) {
             $tickets = [];
+            $errorMsg = $e->getMessage();
         }
 
         $headContent = '<link rel="stylesheet" href="/css/staff/staffTickets.css"/>';
@@ -103,6 +105,7 @@ class Staff extends Controller {
             'title' => 'Tickets',
             'head' => $headContent,
             'tickets' => $tickets,
+            'error' => $errorMsg,
         ]);
     }
 

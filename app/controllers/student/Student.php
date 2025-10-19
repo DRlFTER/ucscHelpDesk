@@ -433,7 +433,7 @@ class Student extends Controller
             $topicValue = $topicMap[$key] ?? $category; // allow direct match
         }
 
-        $where = [];
+    $where = [];
         // Visibility: default show public or own. If 'my', only own posts.
         if (strtolower($type) === 'my') {
             $where[] = "f.u_id = $uId";
@@ -765,7 +765,7 @@ class Student extends Controller
         $whereSql = 'WHERE ' . implode(' AND ', $where);
 
         $total = 0;
-        $countSql = "SELECT COUNT(*) AS c FROM tickets t $whereSql";
+    $countSql = "SELECT COUNT(*) AS c FROM tickets t $whereSql";
         if ($res = $db->query($countSql)) {
             $row = $res->fetch_assoc();
             $total = (int)($row['c'] ?? 0);
@@ -776,8 +776,9 @@ class Student extends Controller
         if ($page > $totalPages) { $page = $totalPages; }
         $offset = ($page - 1) * $perPage;
 
-        $sql = "SELECT t.ticket_id, t.created_at, t.title, t.category, t.status, t.priority, t.meeting_requested
-                FROM tickets t
+    $sql = "SELECT t.ticket_id, t.created_at, t.title, d.name AS division_name, t.status, t.priority, t.meeting_requested
+        FROM tickets t
+        LEFT JOIN division d ON d.did = t.division
                 $whereSql
                 ORDER BY t.created_at DESC
                 LIMIT $perPage OFFSET $offset";
@@ -822,7 +823,7 @@ class Student extends Controller
                 'createdAt' => $mapDate($r['created_at'] ?? null),
                 'title' => (string)($r['title'] ?? ''),
                 'student' => [ 'id' => $uId, 'name' => $_SESSION['user']['name'] ?? 'You' ],
-                'category' => (string)($r['category'] ?? ''),
+                'category' => (string)($r['division_name'] ?? ''),
                 'status' => $mapStatus($r['status'] ?? ''),
                 'meeting' => $mapMeeting($r['meeting_requested'] ?? ''),
                 'priority' => strtolower((string)($r['priority'] ?? '')),
@@ -867,9 +868,10 @@ class Student extends Controller
         }
 
         $idEsc = (int)$id;
-        $sql = "SELECT t.ticket_id, t.created_at, t.title, t.category, t.status, t.priority, t.description, t.u_id, u.name AS student_name
-                FROM tickets t
-                LEFT JOIN users u ON u.u_id = t.u_id
+    $sql = "SELECT t.ticket_id, t.created_at, t.title, d.name AS division_name, t.status, t.priority, t.description, t.u_id, u.name AS student_name
+        FROM tickets t
+        LEFT JOIN users u ON u.u_id = t.u_id
+        LEFT JOIN division d ON d.did = t.division
                 WHERE t.ticket_id = $idEsc AND t.u_id = $studentId
                 LIMIT 1";
 
@@ -914,7 +916,7 @@ class Student extends Controller
             'status' => $statusUi,
             'createdOn' => $createdPretty,
             'description' => (string)($ticket['description'] ?? ''),
-            'category' => (string)($ticket['category'] ?? ''),
+            'category' => (string)($ticket['division_name'] ?? ''),
             'priority' => ucfirst((string)($ticket['priority'] ?? '')),
             'assigned' => null,
             'attachments' => $attachments,

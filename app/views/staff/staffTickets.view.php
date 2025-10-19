@@ -4,6 +4,12 @@
       <p class="page-subtitle">Manage and respond to your assigned student issues</p>
     </div>
 
+    <?php if (!empty($error)): ?>
+      <div style="margin:10px 0 20px; padding:12px 14px; border:1px solid #ef4444; background:#fee2e2; color:#991b1b; border-radius:8px;">
+        <strong>Error:</strong> <?= htmlspecialchars($error) ?>
+      </div>
+    <?php endif; ?>
+
     <div class="controls-bar">
       <div class="search-bar">
         <img src="images/173_2471.svg" alt="Search Icon">
@@ -33,5 +39,6 @@
   <script>
     // Inject tickets fetched by controller as a global variable
     var tickets = <?= json_encode($tickets ?? []) ?>;
+    var pageError = <?= json_encode($error ?? null) ?>;
   </script>
   <script src="/js/staff/staffTickets.js?v=<?= time() ?>"></script>

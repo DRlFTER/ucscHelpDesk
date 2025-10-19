@@ -13,10 +13,11 @@ if ($conn->connect_error) {
 session_start();
 $staff_id = isset($_SESSION['u_id']) ? (int)$_SESSION['u_id'] : 0; // Assuming staff is logged in with u_id
 
-$sql = "SELECT t.ticket_id, t.created_at, t.title, u.name AS student_name, t.category, t.status, t.priority, t.meeting_requested
-        FROM tickets t
-        INNER JOIN users u ON t.u_id = u.u_id
-        ORDER BY t.created_at DESC";
+$sql = "SELECT t.ticket_id, t.created_at, t.title, u.name AS student_name, d.name AS category, t.status, t.priority, t.meeting_requested
+  FROM tickets t
+  INNER JOIN users u ON t.u_id = u.u_id
+  LEFT JOIN division d ON d.did = t.division
+  ORDER BY t.created_at DESC";
 
 $result = $conn->query($sql);
 

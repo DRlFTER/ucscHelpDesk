@@ -42,6 +42,26 @@ class Auth extends Controller
 			$_SESSION['role'] = $user['role'];
 			$_SESSION['name'] = $user['name'];
 
+			// If staff, load division ids into session for routing
+			if ($user['role'] === 'staff') {
+				try {
+					$db = Database::getInstance();
+					$uid = (int)$user['u_id'];
+					$divs = [];
+					if ($stmt = $db->prepare('SELECT did FROM staff_division WHERE u_id = ?')) {
+						$stmt->bind_param('i', $uid);
+						if ($stmt->execute()) {
+							$res = $stmt->get_result();
+							while ($row = $res->fetch_assoc()) { $divs[] = (int)$row['did']; }
+						}
+						$stmt->close();
+					}
+					$_SESSION['user']['division_ids'] = $divs;
+				} catch (Throwable $e) {
+					$_SESSION['user']['division_ids'] = [];
+				}
+			}
+
 			// route by role (placeholder dashboards)
 				switch ($user['role']) {
 					case 'student':
