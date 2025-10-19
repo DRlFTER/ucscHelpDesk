@@ -311,6 +311,17 @@ class Student extends Controller
         ]);
     }
 
+    // Student Knowledge Base page
+    public function knowledgebase()
+    {
+        $this->requireLogin('student');
+        $headContent = '<link rel="stylesheet" href="/css/student/studentKnowledgeBase.css" />';
+        $this->view('student/studentKnowledgeBase', [
+            'title' => 'Knowledge Base',
+            'head' => $headContent,
+        ]);
+    }
+
     // Student forum page (UI identical to Tickets for now)
     public function forum()
     {
