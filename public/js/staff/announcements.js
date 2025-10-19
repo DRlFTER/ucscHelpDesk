@@ -47,10 +47,6 @@ document.addEventListener('DOMContentLoaded', function () {
               <span class="detail-label">Division:</span>
               <span class="detail-value-box">${esc(a.division_name)}</span>
             </div>
-            <div class="detail-item">
-              <span class="detail-label">Content:</span>
-              <span class="detail-value-box">${esc(a.content)}</span>
-            </div>
           </div>
         </div>
       </article>

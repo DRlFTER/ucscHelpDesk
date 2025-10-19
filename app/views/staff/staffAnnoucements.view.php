@@ -9,10 +9,12 @@
 	</div>
 
 	<div class="ticket-action" style="width:250px;justify-content: center;align-items: center;display: flex;margin-left: auto;margin-right: auto;margin-top: 20px;margin-bottom: 20px;">
-		<button class="ticket-action-btn" onclick="window.location.href='/staff/create_announcements'">
-			<span>Create New Announcement</span>
-		</button>
+<button class="ticket-action-btn" onclick="console.log('Clicked!'); window.location.href='http://kaviv1/index.php?url=staff/staffAnnCreate';">
+    <span>Create New Announcement</span>
+</button>
 	</div>
+
+   
 
 	<div class="tickets-container" id="announcements-root" data-announcements='<?php echo json_encode($announcements ?? []); ?>'>
 		<!-- announcements.js will render announcements here -->
@@ -26,10 +28,17 @@
 </main>
 
 <?php
-// Success flash check & unset (add this block)
 if (isset($_SESSION['success'])) {
     $successMsg = $_SESSION['success'];
-    unset($_SESSION['success']);  // Clear it to avoid repeats
-    echo "<script>alert('$successMsg'); window.location.reload();</script>";  // Popup + reload to refresh list
+    unset($_SESSION['success']);
+    echo "<div id='success-toast' style='position:fixed;top:20px;right:20px;background:#4c4;color:white;padding:10px;border-radius:5px;z-index:9999;'>
+            $successMsg
+          </div>
+          <script>
+            setTimeout(function() {
+                document.getElementById('success-toast').style.display = 'none';
+                window.location.reload();
+            }, 2000);  // Auto-hide & reload after 2s
+          </script>";
 }
 ?>
