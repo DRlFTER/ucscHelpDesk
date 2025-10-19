@@ -1,0 +1,43 @@
+/* Copied from studentTicketFull.css for forum full view */
+@import url('/css/student/studentTicketFull.css');
+
+/* Forum thread specific tweaks (keeps existing components/hover states) */
+.ticketFullPage { display: flex; flex-direction: column; min-height: 0; }
+.ticketLayout { align-items: stretch; }
+.ticketLeft, .ticketRight { align-self: stretch; }
+.ticketHeader {
+	display: flex;
+	align-items: center;
+	gap: 12px;
+}
+.ticketHeader .titleBlock {
+	display: flex;
+	align-items: center;
+	gap: 10px;
+}
+.ticketHeader .voteBox {
+	display: flex;
+	align-items: center;
+	gap: 8px;
+}
+.voteCount {
+	min-width: 1.5rem;
+	text-align: center;
+	font-weight: 600;
+	color: #374151;
+}
+.voteBtn.isActive {
+	background: #eef2ff;
+	border-color: #c7d2fe;
+}
+.voteBtnDown.isActive {
+	background: #fef2f2;
+	border-color: #fecaca;
+}
+.messageActions {
+	display: flex;
+	gap: 6px;
+	margin-top: 6px;
+}
+
+/* Respect global status styles from components.css: .status.underReview, .status.inProgress, .status.resolved, .status.rejected */

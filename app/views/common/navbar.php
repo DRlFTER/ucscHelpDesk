@@ -13,6 +13,7 @@
       'student' => [
         'dashboard' => '/student/dashboard',
         'tickets'   => '/student/tickets',
+        'forum'     => '/student/forum',
         'newTicket' => '/student/ticket',
       ],
       'staff' => [
@@ -38,8 +39,9 @@
       ],
     ];
 
-    $dashboardHref = $routes[$role]['dashboard'] ?? '#';
-    $ticketsHref   = $routes[$role]['tickets']   ?? '#';
+  $dashboardHref = $routes[$role]['dashboard'] ?? '#';
+  $ticketsHref   = $routes[$role]['tickets']   ?? '#';
+  $forumHref     = $routes[$role]['forum']     ?? '#';
     $newTicketHref = $routes[$role]['newTicket'] ?? null;
     $hasNewTicket  = !empty($newTicketHref);
 
@@ -49,8 +51,9 @@
       if (!$href || $href === '#') return false;
       return strpos($currentPath, $href) === 0;
     };
-    $dashboardActive = $isActive($dashboardHref);
-    $ticketsActive   = $isActive($ticketsHref);
+  $dashboardActive = $isActive($dashboardHref);
+  $ticketsActive   = $isActive($ticketsHref);
+  $forumActive     = $isActive($forumHref);
 
     // Avoid both active if both hrefs are the same (e.g., student)
     if (($routes[$role]['tickets'] ?? null) === ($routes[$role]['dashboard'] ?? null)) {
@@ -70,6 +73,10 @@
         $ticketsActive = true;
         $dashboardActive = false;
       }
+      if (!$forumActive && strpos($currentPath, '/student/forum') === 0) {
+        $forumActive = true;
+        $dashboardActive = false;
+      }
     }
   ?>
     <div class="navbarLeft">
@@ -79,9 +86,9 @@
     <div class="navbarCenter">
       <div class="navbarMenuContainer">
   <a href="<?= htmlspecialchars($dashboardHref) ?>" class="navbarLink <?= $dashboardActive ? 'active' : '' ?>">Dashboard</a>
-        <a href="#" class="navbarLink">Calendar</a>
-    <a href="<?= $ticketsHref ? htmlspecialchars($ticketsHref) : '#' ?>" class="navbarLink <?= $ticketsActive ? 'active' : '' ?>" style="<?= $ticketsHref ? '' : 'pointer-events:none; opacity:0.5;' ?>">Tickets</a>
-        <a href="#" class="navbarLink">Forum</a>
+    <a href="#" class="navbarLink">Calendar</a>
+  <a href="<?= $ticketsHref ? htmlspecialchars($ticketsHref) : '#' ?>" class="navbarLink <?= $ticketsActive ? 'active' : '' ?>" style="<?= $ticketsHref ? '' : 'pointer-events:none; opacity:0.5;' ?>">Tickets</a>
+    <a href="<?= htmlspecialchars($forumHref) ?>" class="navbarLink <?= $forumActive ? 'active' : '' ?>">Forum</a>
         <div class="btnHolder">
           <a href="<?= $hasNewTicket ? htmlspecialchars($newTicketHref) : '#' ?>" class="navbarNewTicket btnWSvg btnPrimaryText" style="text-decoration:none; display:inline-flex; align-items:center; gap:6px; <?= $hasNewTicket ? '' : 'pointer-events:none; opacity:0.5;' ?>">
             <svg xmlns="http://www.w3.org/2000/svg" width="25" height="25" viewBox="0 0 30 30" fill="none">

@@ -4,9 +4,9 @@
       <div class="navMenu">
         <div class="sideNav">
           <a href="#">Dashboard</a>
-          <a href="#">My Tickets</a>
+          <a href="/student/tickets">My Tickets</a>
           <a href="/student/faq">FAQs</a>
-          <a href="#">Forums</a>
+          <a href="/student/forum">Forums</a>
           <a href="#">Calendar</a>
             <a href="/student/lostfound">Lost &amp; Found</a>
           <a href="#">Settings</a>
@@ -46,11 +46,11 @@
                 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 -960 960 960"><path d="M478-240q21 0 35.5-14.5T528-290q0-21-14.5-35.5T478-340q-21 0-35.5 14.5T428-290q0 21 14.5 35.5T478-240Zm-36-154h74q0-33 7.5-52t42.5-52q26-26 41-49.5t15-56.5q0-56-41-86t-97-30q-57 0-92.5 30T342-618l66 26q5-18 22.5-39t53.5-21q32 0 48 17.5t16 38.5q0 20-12 37.5T506-526q-44 39-54 59t-10 73Zm38 314q-83 0-156-31.5T197-197q-54-54-85.5-127T80-480q0-83 31.5-156T197-763q54-54 127-85.5T480-880q83 0 156 31.5T763-763q54 54 85.5 127T880-480q0 83-31.5 156T763-197q-54 54-127 85.5T480-80Zm0-320Z"/></svg>
               </div>
               </div>View FAQs</a>
-            <a href="/student/announcements" class="quickActionItem"><div class="icon">
+            <a href="/student/forum" class="quickActionItem"><div class="icon">
               <div class="quickActionSvg">
                 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 -960 960 960"><path d="M880-80 720-240H320q-33 0-56.5-23.5T240-320v-40h440q33 0 56.5-23.5T760-440v-280h40q33 0 56.5 23.5T880-640v560ZM160-473l47-47h393v-280H160v327ZM80-280v-520q0-33 23.5-56.5T160-880h440q33 0 56.5 23.5T680-800v280q0 33-23.5 56.5T600-440H240L80-280Zm80-240v-280 280Z"/></svg>
               </div>
-              </div>Forums</a>
+              </div>Forum</a>
             <a href="/student/announcements" class="quickActionItem"><div class="icon">
               <div class="quickActionSvg">
                 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 -960 960 960"><path d="M720-440v-80h160v80H720Zm48 280-128-96 48-64 128 96-48 64Zm-80-480-48-64 128-96 48 64-128 96ZM200-200v-160h-40q-33 0-56.5-23.5T80-440v-80q0-33 23.5-56.5T160-600h160l200-120v480L320-360h-40v160h-80Zm240-182v-196l-98 58H160v80h182l98 58Zm120 36v-268q27 24 43.5 58.5T620-480q0 41-16.5 75.5T560-346ZM300-480Z"/></svg>
