@@ -16,8 +16,8 @@ class StudentTicket
     public function create(array $data): int
     {
         $conn = self::getConnection();
-        $sql = "INSERT INTO tickets (created_at, title, u_id, category, status, priority, description, meeting_requested)
-                VALUES (NOW(), ?, ?, ?, ?, ?, ?, ?)";
+    $sql = "INSERT INTO tickets (created_at, title, u_id, status, priority, description, meeting_requested, division)
+        VALUES (NOW(), ?, ?, ?, ?, ?, ?, ?)";
 
         $stmt = $conn->prepare($sql);
         if (!$stmt) {
@@ -26,14 +26,46 @@ class StudentTicket
 
         $title = $data['title'];
         $u_id = (int)$data['u_id'];
-    // Preserve the category string as provided (keep capitalization like "Examination and Registration")
-    $category = trim($data['category']);
+        // Category string from UI (used only for mapping to division)
+        $category = trim($data['category']);
         $status = $data['status'] ?? 'pending';
         $priority = $data['priority'];
         $description = $data['description'];
         $meetingRequested = $data['meeting_requested'] ?? null;
 
-        $stmt->bind_param('sisssss', $title, $u_id, $category, $status, $priority, $description, $meetingRequested);
+        // Map category to division id via canonical map first (handles minor name differences)
+        $canonMap = [
+            'general administration' => ['id' => 1, 'label' => 'General Administration'],
+            'establishment' => ['id' => 2, 'label' => 'Establishment'],
+            'academic publication and welfare' => ['id' => 3, 'label' => 'Academic Publication and Welfare'],
+            'postgraduate research and project' => ['id' => 4, 'label' => 'Postgraduate Research and Project'],
+            'examination and registration' => ['id' => 5, 'label' => 'Examination and Registration'],
+            'examinations and registration' => ['id' => 5, 'label' => 'Examination and Registration'],
+            'engineering' => ['id' => 6, 'label' => 'Engineering'],
+            'finance' => ['id' => 7, 'label' => 'Finance'],
+            'library' => ['id' => 8, 'label' => 'Library'],
+            'csc and noc' => ['id' => 9, 'label' => 'CSC and NOC'],
+        ];
+        $key = strtolower(trim($category));
+        $divisionId = 0;
+        if (isset($canonMap[$key])) {
+            $divisionId = (int)$canonMap[$key]['id'];
+            // normalize category label to canonical
+            $category = $canonMap[$key]['label'];
+        } else {
+            // Fallback: attempt DB lookup by name
+            $q = $conn->prepare('SELECT did, name FROM division WHERE LOWER(name) = LOWER(?) LIMIT 1');
+            if ($q) {
+                $q->bind_param('s', $category);
+                if ($q->execute()) {
+                    $r = $q->get_result()->fetch_assoc();
+                    if ($r && isset($r['did'])) { $divisionId = (int)$r['did']; $category = $r['name']; }
+                }
+                $q->close();
+            }
+        }
+
+    $stmt->bind_param('sissssi', $title, $u_id, $status, $priority, $description, $meetingRequested, $divisionId);
         if (!$stmt->execute()) {
             throw new Exception('Execute failed: ' . $stmt->error);
         }
@@ -47,10 +79,11 @@ class StudentTicket
     public function getRecentByUser(int $u_id, int $limit = 5): array
     {
         $conn = self::getConnection();
-        $sql = "SELECT ticket_id, created_at, title, category, status, priority
-                FROM tickets
-                WHERE u_id = ?
-                ORDER BY created_at DESC
+        $sql = "SELECT t.ticket_id, t.created_at, t.title, d.name AS division_name, t.status, t.priority
+                FROM tickets t
+                LEFT JOIN division d ON d.did = t.division
+                WHERE t.u_id = ?
+                ORDER BY t.created_at DESC
                 LIMIT ?";
         $stmt = $conn->prepare($sql);
         if (!$stmt) {
@@ -63,6 +96,9 @@ class StudentTicket
         $result = $stmt->get_result();
         $rows = [];
         while ($row = $result->fetch_assoc()) {
+            // keep shape: map division_name -> category for UI compatibility
+            $row['category'] = $row['division_name'] ?? '';
+            unset($row['division_name']);
             $rows[] = $row;
         }
         $stmt->close();
@@ -73,10 +109,11 @@ class StudentTicket
     public function getByIdForUser(int $ticket_id, int $u_id): ?array
     {
         $conn = self::getConnection();
-        $sql = "SELECT ticket_id, created_at, title, category, status, priority, description, meeting_requested
-                FROM tickets
-                WHERE ticket_id = ? AND u_id = ?
-                LIMIT 1";
+    $sql = "SELECT t.ticket_id, t.created_at, t.title, d.name AS category, t.status, t.priority, t.description, t.meeting_requested
+        FROM tickets t
+        LEFT JOIN division d ON d.did = t.division
+        WHERE t.ticket_id = ? AND t.u_id = ?
+        LIMIT 1";
         $stmt = $conn->prepare($sql);
         if (!$stmt) {
             throw new Exception('Prepare failed: ' . $conn->error);
@@ -170,11 +207,12 @@ class StudentTicket
         $conn = self::getConnection();
         $data = ['recent' => [], 'openCount' => 0, 'lastActivity' => null];
 
-        // Recent tickets
-        $sql1 = "SELECT ticket_id, created_at, title, category, status, priority
-                FROM tickets
-                WHERE u_id = ?
-                ORDER BY created_at DESC
+        // Recent tickets (category removed from schema; show division name as category)
+        $sql1 = "SELECT t.ticket_id, t.created_at, t.title, d.name AS category, t.status, t.priority
+                FROM tickets t
+                LEFT JOIN division d ON d.did = t.division
+                WHERE t.u_id = ?
+                ORDER BY t.created_at DESC
                 LIMIT ?";
         $stmt1 = $conn->prepare($sql1);
         if ($stmt1) {

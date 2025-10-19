@@ -19,7 +19,7 @@ class StaffTicket
     private function getStaffDivisions(int $staff_id): array
     {
         $conn = self::getConnection();
-        $sql = "SELECT d.name 
+        $sql = "SELECT d.did, d.name 
                 FROM division d
                 INNER JOIN staff_division sd ON d.did = sd.did
                 WHERE sd.u_id = ?";
@@ -34,9 +34,39 @@ class StaffTicket
         $result = $stmt->get_result();
         $divisions = [];
         while ($row = $result->fetch_assoc()) {
-            $divisions[] = $row['name'];
+            $divisions[] = [ 'did' => (int)$row['did'], 'name' => $row['name'] ];
         }
         $stmt->close();
+
+        // Fallback: if no explicit mapping, try users.designation
+        if (empty($divisions)) {
+            $stmt2 = $conn->prepare("SELECT designation FROM users WHERE u_id = ? AND role = 'staff' LIMIT 1");
+            if ($stmt2) {
+                $stmt2->bind_param('i', $staff_id);
+                if ($stmt2->execute()) {
+                    $res2 = $stmt2->get_result();
+                    $row2 = $res2->fetch_assoc();
+                    if ($row2 && !empty($row2['designation'])) {
+                        $did = (int)$row2['designation'];
+                        if ($did > 0) {
+                            // Optionally resolve name
+                            $name = null;
+                            if ($stmt3 = $conn->prepare('SELECT name FROM division WHERE did = ? LIMIT 1')) {
+                                $stmt3->bind_param('i', $did);
+                                if ($stmt3->execute()) {
+                                    $r3 = $stmt3->get_result()->fetch_assoc();
+                                    $name = $r3['name'] ?? null;
+                                }
+                                $stmt3->close();
+                            }
+                            $divisions[] = [ 'did' => $did, 'name' => $name ?? ('Division #' . $did) ];
+                        }
+                    }
+                }
+                $stmt2->close();
+            }
+        }
+
         $conn->close();
         return $divisions;
     }
@@ -47,19 +77,20 @@ class StaffTicket
      */
     public function getAllTickets(): array
     {
-        $staff_id = (int)($_SESSION['user']['u_id'] ?? 0);
-        $division_names = $this->getStaffDivisions($staff_id);
-        if (empty($division_names)) {
-            return [];  // No divisions, no tickets
+    $staff_id = (int)($_SESSION['user']['u_id'] ?? 0);
+    $divisions = $this->getStaffDivisions($staff_id);
+        if (empty($divisions)) {
+            throw new Exception('No division mapping found for your staff account. Please contact admin to assign your division.');
         }
 
         $conn = self::getConnection();
-        $placeholders = implode(',', array_fill(0, count($division_names), '?'));
-        $sql = "SELECT t.ticket_id, t.created_at, t.title, u.name AS student_name, t.category, t.status, t.priority, t.meeting_requested
-                FROM tickets t
-                INNER JOIN users u ON t.u_id = u.u_id
-                WHERE t.category IN ($placeholders)
-                ORDER BY t.created_at DESC";
+    $placeholders = implode(',', array_fill(0, count($divisions), '?'));
+    $sql = "SELECT t.ticket_id, t.created_at, t.title, u.name AS student_name, d.name AS category, t.status, t.priority, t.meeting_requested
+        FROM tickets t
+        INNER JOIN users u ON t.u_id = u.u_id
+        LEFT JOIN division d ON d.did = t.division
+        WHERE t.division IN ($placeholders)
+        ORDER BY t.created_at DESC";
 
         $stmt = $conn->prepare($sql);
         if (!$stmt) {
@@ -67,7 +98,9 @@ class StaffTicket
             $conn->close();
             throw new Exception('Prepare failed: ' . $err);
         }
-        $stmt->bind_param(str_repeat('s', count($division_names)), ...$division_names);
+    $didParams = array_map(fn($d) => (int)$d['did'], $divisions);
+    $types = str_repeat('i', count($didParams));
+    $stmt->bind_param($types, ...$didParams);
         $stmt->execute();
         $result = $stmt->get_result();
         $tickets = [];
@@ -82,18 +115,21 @@ class StaffTicket
     public function getTicketById(int $ticket_id): ?array
     {
         $conn = self::getConnection();
-        $sql = "SELECT t.ticket_id, t.created_at, t.title, u.name AS student_name, t.category, t.status, t.priority, t.meeting_requested, t.description, t.assigned_to
-                FROM tickets t
-                INNER JOIN users u ON t.u_id = u.u_id
-                WHERE t.ticket_id = ?
-                LIMIT 1";
+        $current_staff = (int)($_SESSION['user']['u_id'] ?? 0);
+                        $sql = "SELECT t.ticket_id, t.created_at, t.title, u.name AS student_name, d.name AS category, t.status, t.priority, t.meeting_requested, t.description, t.assigned_to
+                                FROM tickets t
+                                INNER JOIN users u ON t.u_id = u.u_id
+                                LEFT JOIN division d ON d.did = t.division
+                                WHERE t.ticket_id = ?
+                                    AND t.division IN (SELECT did FROM staff_division WHERE u_id = ?)
+                                LIMIT 1";
         $stmt = $conn->prepare($sql);
         if (!$stmt) {
             $err = $conn->error;
             $conn->close();
             throw new Exception('Prepare failed: ' . $err);
         }
-        $stmt->bind_param('i', $ticket_id);
+        $stmt->bind_param('ii', $ticket_id, $current_staff);
         $stmt->execute();
         $result = $stmt->get_result();
         $ticket = $result->fetch_assoc() ?: null;
@@ -114,14 +150,17 @@ class StaffTicket
     public function assignToStaff(int $ticket_id, int $staff_id): bool
     {
         $conn = self::getConnection();
-        $sql = "UPDATE tickets SET status = 'assigned', assigned_to = ? WHERE ticket_id = ? AND status = 'pending'";
+        $sql = "UPDATE tickets SET status = 'assigned', assigned_to = ?
+                WHERE ticket_id = ?
+                  AND status = 'pending'
+                  AND division IN (SELECT did FROM staff_division WHERE u_id = ?)";
         $stmt = $conn->prepare($sql);
         if (!$stmt) {
             $err = $conn->error;
             $conn->close();
             throw new Exception('Prepare failed: ' . $err);
         }
-        $stmt->bind_param('ii', $staff_id, $ticket_id);
+        $stmt->bind_param('iii', $staff_id, $ticket_id, $staff_id);
         $ok = $stmt->execute() && $stmt->affected_rows > 0;
         $stmt->close();
         $conn->close();
@@ -217,8 +256,25 @@ class StaffTicket
     public function getStaffMembers(): array
     {
         $conn = self::getConnection();
-        $sql = "SELECT u_id, name FROM users WHERE role = 'staff' ORDER BY name";
-        $result = $conn->query($sql);
+        // Limit to staff within the same divisions as current staff
+        $current = (int)($_SESSION['user']['u_id'] ?? 0);
+        $sql = "SELECT DISTINCT u.u_id, u.name
+                FROM users u
+                INNER JOIN staff_division sd ON sd.u_id = u.u_id
+                WHERE u.role = 'staff' AND sd.did IN (SELECT did FROM staff_division WHERE u_id = ?)
+                ORDER BY u.name";
+        $stmt = $conn->prepare($sql);
+        if (!$stmt) {
+            $err = $conn->error;
+            $conn->close();
+            throw new Exception('Prepare failed: ' . $err);
+        }
+        $stmt->bind_param('i', $current);
+        if (!$stmt->execute()) {
+            $err = $stmt->error; $stmt->close(); $conn->close();
+            throw new Exception('Execute failed: ' . $err);
+        }
+        $result = $stmt->get_result();
         if ($result === false) {
             $err = $conn->error;
             $conn->close();
@@ -228,7 +284,7 @@ class StaffTicket
         while ($row = $result->fetch_assoc()) {
             $staff[] = $row;
         }
-        $conn->close();
+        $stmt->close(); $conn->close();
         return $staff;
     }
 }
