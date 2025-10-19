@@ -5,14 +5,15 @@
         <div class="sideNav">
           <a href="#">Dashboard</a>
           <a href="#">My Tickets</a>
-          <a href="#">FAQs</a>
+          <a href="/student/faq">FAQs</a>
           <a href="#">Forums</a>
           <a href="#">Calendar</a>
+            <a href="/student/lostfound">Lost &amp; Found</a>
           <a href="#">Settings</a>
         </div>
       </div>
       <div class="dashboardColumnOne">
-        <div class="welcomeCard">
+        <div class="sectioncard welcomeCard">
           <?php
             $fullName = trim($_SESSION['user']['name'] ?? '');
             $firstName = '';
@@ -25,8 +26,12 @@
           <h2>Welcome Back, <?= htmlspecialchars($firstName) ?>!</h2>
           <p>Here’s what’s happening with your support requests</p>
           <div class="ticket-info">
-            <span>2 Open Tickets</span>
-            <span>Last Activity: 2 hours ago</span>
+            <?php
+              $openCount = isset($openCount) ? (int)$openCount : 0;
+              $lastActivity = $lastActivity ?? null;
+            ?>
+            <span><?= $openCount ?> Open Ticket<?= $openCount === 1 ? '' : 's' ?></span>
+            <span>Last Activity: <?= $lastActivity ? htmlspecialchars(time_ago($lastActivity)) : '—' ?></span>
           </div>
           </div>
           <div class="sectionCard">
@@ -36,21 +41,21 @@
               <div class="quickActionSvg">
                 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 -960 960 960"><path d="M440-440H200v-80h240v-240h80v240h240v80H520v240h-80v-240Z"/></svg></div>
             </div>New Ticket</a>
-            <a href="#" class="quickActionItem"><div class="icon">
+            <a href="/student/faq" class="quickActionItem"><div class="icon">
               <div class="quickActionSvg">
-                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 -960 960 960"><path d="M478-240q21 0 35.5-14.5T528-290q0-21-14.5-35.5T478-340q-21 0-35.5 14.5T428-290q0 21 14.5 35.5T478-240Zm-36-154h74q0-33 7.5-52t42.5-52q26-26 41-49.5t15-56.5q0-56-41-86t-97-30q-57 0-92.5 30T342-618l66 26q5-18 22.5-39t53.5-21q32 0 48 17.5t16 38.5q0 20-12 37.5T506-526q-44 39-54 59t-10 73Zm38 314q-83 0-156-31.5T197-197q-54-54-85.5-127T80-480q0-83 31.5-156T197-763q54-54 127-85.5T480-880q83 0 156 31.5T763-763q54 54 85.5 127T880-480q0 83-31.5 156T763-197q-54 54-127 85.5T480-80Zm0-80q134 0 227-93t93-227q0-134-93-227t-227-93q-134 0-227 93t-93 227q0 134 93 227t227 93Zm0-320Z"/></svg>
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 -960 960 960"><path d="M478-240q21 0 35.5-14.5T528-290q0-21-14.5-35.5T478-340q-21 0-35.5 14.5T428-290q0 21 14.5 35.5T478-240Zm-36-154h74q0-33 7.5-52t42.5-52q26-26 41-49.5t15-56.5q0-56-41-86t-97-30q-57 0-92.5 30T342-618l66 26q5-18 22.5-39t53.5-21q32 0 48 17.5t16 38.5q0 20-12 37.5T506-526q-44 39-54 59t-10 73Zm38 314q-83 0-156-31.5T197-197q-54-54-85.5-127T80-480q0-83 31.5-156T197-763q54-54 127-85.5T480-880q83 0 156 31.5T763-763q54 54 85.5 127T880-480q0 83-31.5 156T763-197q-54 54-127 85.5T480-80Zm0-320Z"/></svg>
               </div>
               </div>View FAQs</a>
-            <a href="#" class="quickActionItem"><div class="icon">
+            <a href="/student/announcements" class="quickActionItem"><div class="icon">
               <div class="quickActionSvg">
                 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 -960 960 960"><path d="M880-80 720-240H320q-33 0-56.5-23.5T240-320v-40h440q33 0 56.5-23.5T760-440v-280h40q33 0 56.5 23.5T880-640v560ZM160-473l47-47h393v-280H160v327ZM80-280v-520q0-33 23.5-56.5T160-880h440q33 0 56.5 23.5T680-800v280q0 33-23.5 56.5T600-440H240L80-280Zm80-240v-280 280Z"/></svg>
               </div>
               </div>Forums</a>
-            <a href="#" class="quickActionItem"><div class="icon">
+            <a href="/student/announcements" class="quickActionItem"><div class="icon">
               <div class="quickActionSvg">
-                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 -960 960 960"><path d="M580-240q-42 0-71-29t-29-71q0-42 29-71t71-29q42 0 71 29t29 71q0 42-29 71t-71 29ZM200-80q-33 0-56.5-23.5T120-160v-560q0-33 23.5-56.5T200-880h40v-80h80v80h320v-80h80v80h40q33 0 56.5 23.5T840-720v560q0 33-23.5 56.5T760-80H200Zm0-80h560v-400H200v400Zm0-480h560v-80H200v80Zm0 0v-80 80Z"/></svg>
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 -960 960 960"><path d="M720-440v-80h160v80H720Zm48 280-128-96 48-64 128 96-48 64Zm-80-480-48-64 128-96 48 64-128 96ZM200-200v-160h-40q-33 0-56.5-23.5T80-440v-80q0-33 23.5-56.5T160-600h160l200-120v480L320-360h-40v160h-80Zm240-182v-196l-98 58H160v80h182l98 58Zm120 36v-268q27 24 43.5 58.5T620-480q0 41-16.5 75.5T560-346ZM300-480Z"/></svg>
               </div>
-            </div>Appointments</a>
+            </div>Announcements</a>
           </div>
         </div>
         <div class="knowledgeBase sectionCard">
@@ -64,7 +69,7 @@
             <h3>Recent Tickets</h3>
             <?php if (!empty($recentTickets)): ?>
               <?php foreach ($recentTickets as $t): ?>
-                <a href="/student/details/<?= (int)$t['ticket_id'] ?>" class="ticket">
+                <a href="/student/ticketFull?id=<?= (int)$t['ticket_id'] ?>" class="ticket">
                   <div class="ticketDetails">
                     <p><span class="ticketTitle"><?= htmlspecialchars($t['title']) ?></span></p>
                     <div class="ticketMeta">
@@ -147,4 +152,4 @@
   </div>
 </main>
 
-<script src="/js/student/dashboard.js"></script>
+<script src="/js/student/studentDashboard.js"></script>

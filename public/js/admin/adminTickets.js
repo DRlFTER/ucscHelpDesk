@@ -1,6 +1,27 @@
 window.adminTicketsData = [];
 
 (function () {
+  // Caching config for tickets list
+  const CACHE_TTL_MS = 5 * 60 * 1000; // 5 minutes
+
+  function getCache(key) {
+    try {
+      const raw = localStorage.getItem(key);
+      if (!raw) return null;
+      const obj = JSON.parse(raw);
+      if (!obj || !obj._ts || Date.now() - obj._ts > CACHE_TTL_MS) return null;
+      return obj.data || null;
+    } catch {
+      return null;
+    }
+  }
+
+  function setCache(key, data) {
+    try {
+      localStorage.setItem(key, JSON.stringify({ _ts: Date.now(), data }));
+    } catch {}
+  }
+
   const categories = [
     "All categories",
     "Academic",
@@ -166,6 +187,7 @@ window.adminTicketsData = [];
   page = initial.page;
   const perPage = 10;
   let meta = { total: 0, totalPages: 1 };
+  let listenersBound = false; // avoid duplicate event handlers on re-renders
 
   function debounce(fn, wait) {
     let t;
@@ -261,6 +283,8 @@ window.adminTicketsData = [];
     };
   }
 
+  // With anchor-based navigation, no custom JS navigation is required.
+
   function renderTickets(data) {
     const container = document.querySelector(".tickets");
     if (!container) return;
@@ -270,8 +294,18 @@ window.adminTicketsData = [];
         const pr = getPriorityMeta((t && t.priority) || "");
         const meetingLabel = getMeetingLabel((t && t.meeting) || "");
 
+        const id = t.id != null ? String(t.id) : "";
+        const code = t.code != null ? String(t.code) : "";
+        const url = id
+          ? `/admin/ticket?id=${encodeURIComponent(id)}`
+          : code
+          ? `/admin/ticket?code=${encodeURIComponent(code)}`
+          : "#";
+        const vt = `ticket-${esc(id || code)}`;
         return `
-            <div class="ticket">
+      <a class="ticket" href="${url}" aria-label="Open ticket ${esc(
+          t.title
+        )}" style="view-transition-name: ${vt}; text-decoration: none; color: inherit;">
                 <div class="ticketRow1">
                     <div class="ticketName">
                         <h2>${esc(t.title)}</h2>
@@ -307,11 +341,13 @@ window.adminTicketsData = [];
                         </div>
                     </div>
                 </div>
-            </div>`;
+            </a>`;
       })
       .join("");
 
     container.innerHTML = html;
+    // No extra JS listeners needed when using anchor navigation
+    listenersBound = true;
   }
 
   function renderPagination() {
@@ -372,7 +408,7 @@ window.adminTicketsData = [];
     }
   }
 
-  // Fetch tickets from backend API and render
+  // Fetch tickets from backend API and render, with localStorage TTL + SWR caching
   async function loadTickets(nextPage) {
     if (typeof nextPage === "number") page = nextPage;
     // Keep URL in sync with current UI state and page
@@ -392,11 +428,55 @@ window.adminTicketsData = [];
         status: p.status,
         priority: p.priority,
       });
+
+      // Cache key per filter/page combo
+      const CACHE_KEY = `admin_tickets_${qs.toString()}`;
+
+      // One-time cache bust (e.g., after delete)
+      let forceBypass = false;
+      try {
+        if (localStorage.getItem("admin_tickets_bust")) {
+          forceBypass = true;
+          localStorage.removeItem("admin_tickets_bust");
+        }
+      } catch {}
+
+      // Serve from cache immediately if present
+      const cached = forceBypass ? null : getCache(CACHE_KEY);
+      if (cached) {
+        const data = Array.isArray(cached?.data) ? cached.data : [];
+        meta = cached?.meta || { total: data.length, totalPages: 1 };
+        window.adminTicketsData = data;
+        renderTickets(window.adminTicketsData);
+        renderPagination();
+
+        // SWR: refresh in background without blocking UI
+        fetch(`/admin/ticketsData?${qs.toString()}`, { credentials: "include" })
+          .then((res) =>
+            res.ok ? res.json() : Promise.reject(new Error("Bad response"))
+          )
+          .then((fresh) => {
+            setCache(CACHE_KEY, fresh);
+            const newData = Array.isArray(fresh?.data) ? fresh.data : [];
+            meta = fresh?.meta || { total: newData.length, totalPages: 1 };
+            window.adminTicketsData = newData;
+            renderTickets(window.adminTicketsData);
+            renderPagination();
+          })
+          .catch((e) => {
+            // eslint-disable-next-line no-console
+            console.warn("Tickets background refresh failed", e);
+          });
+        return; // already rendered from cache
+      }
+
+      // No cache, fetch now
       const res = await fetch(`/admin/ticketsData?${qs.toString()}`, {
         credentials: "include",
       });
       if (!res.ok) throw new Error("Failed to load tickets");
       const payload = await res.json();
+      setCache(CACHE_KEY, payload);
       const data = Array.isArray(payload?.data) ? payload.data : [];
       meta = payload?.meta || { total: data.length, totalPages: 1 };
       window.adminTicketsData = data;

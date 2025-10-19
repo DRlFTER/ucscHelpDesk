@@ -43,7 +43,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['update_ticket'])) {
         $stmt->close();
 
         // Redirect to refresh the page with updated data
-        header("Location: ./Staff_Annoucements.php?ticket_id=$ticket_id");
+  header("Location: /staff/announcements?ticket_id=$ticket_id");
         exit;
     }
 }
@@ -57,7 +57,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['delete_ticket'])) {
     $stmt->close();
 
     // Redirect to a list page or home page after deletion
-    header("Location: ./Staff_Annoucements.php"); // Adjust to your list page URL
+  header("Location: /staff/announcements"); // Adjust to your list page URL
     exit;
 }
 

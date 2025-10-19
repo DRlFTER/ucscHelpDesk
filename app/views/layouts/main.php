@@ -5,6 +5,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title><?= $title ?? 'UCSC Help Desk' ?></title>
+  <!-- Opt-in to same-origin View Transitions for cross-document animations -->
+  <meta name="view-transition" content="same-origin">
 
     <!-- Favicon -->
     <link rel="icon" type="image/png" sizes="32x32" href="/assets/images/logo-min.svg">

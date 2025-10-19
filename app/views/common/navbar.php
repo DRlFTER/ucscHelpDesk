@@ -12,8 +12,7 @@
       ],
       'student' => [
         'dashboard' => '/student/dashboard',
-        // No dedicated tickets list route yet; fall back to dashboard
-        'tickets'   => '/student/dashboard',
+        'tickets'   => '/student/tickets',
         'newTicket' => '/student/ticket',
       ],
       'staff' => [
@@ -66,6 +65,12 @@
         $dashboardActive = false;
       }
     }
+    if ($role === 'student') {
+      if (!$ticketsActive && strpos($currentPath, '/student/ticket') === 0) {
+        $ticketsActive = true;
+        $dashboardActive = false;
+      }
+    }
   ?>
     <div class="navbarLeft">
       <img src="/assets/logo.svg" alt="UCSC Logo" class="logo" />
@@ -111,7 +116,7 @@
           </div>
          <a href="#">My Account</a>
          <a href="#">Help / FAQ</a>
-         <a href="#">Settings</a>
+         <a href="/settings">Settings</a>
 
         <div class="<?= $sessionUser ? 'logout' : 'login' ?>">
           <a href="<?= $sessionUser ? '/auth/logout' : '/auth/login' ?>">
