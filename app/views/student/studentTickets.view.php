@@ -1,16 +1,9 @@
 <main>
-    <div class="ticketsContainer">
-                <div class="ticketsTitles">
-                        <div class="ticketsHeader">
-                            <a class="backBtn" href="/student/dashboard" aria-label="Back">
-                                <img src="/assets/arrow-left.svg" alt="Back" />
-                            </a>
-                            <div class="titlesText">
-                                <h2 class="pageTitle">All Tickets</h2>
-                                <p class="pageSubtitle">Manage all issued tickets</p>
-                            </div>
-                        </div>
-                </div>
+    <div class="fullPage">
+        <div class="pageHeader">
+            <h2 class="pageTitle">All tickets</h2>
+            <p class="pageSubtitle">Manage all issued tickets</p>
+        </div>
         <div class="ticketsFilters">
             <div class="search">
                 <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 22 21" fill="none">
@@ -25,10 +18,10 @@
             </div>
         </div>
         <div class="tickets"></div>
-        <div class="ticketsPagination">
+          <div class="ticketsPagination">
             <div class="ticketsPageHolder">
                 </div>
-            </div>
+          </div>
         </div>
     </div>
 </main>

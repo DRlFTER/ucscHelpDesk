@@ -38,13 +38,13 @@ include_once(__DIR__ . "/../../views/common/navbar.php");
 
 					<!-- Title -->
 					<div class="field">
-						<label class="label" for="title">Title/Subject</label>
+						<label class="label" for="title">Title/Subject <span style="color:#ef4444; margin-left:2px">*</span></label>
 						<input id="title" name="title" type="text" placeholder="Briefly describe your issue..." required>
 					</div>
 
 					<div class="row2">
 						<div class="field full-width">
-							<label class="label" for="subcategory">Request Type</label>
+							<label class="label" for="subcategory">Request Type <span style="color:#ef4444; margin-left:2px">*</span></label>
 							<!-- hidden field that will contain the MAIN category sent to backend -->
 							<input type="hidden" name="category" id="mainCategory" value="">
 							<select id="subcategory" name="subcategory" required>
@@ -68,6 +68,8 @@ include_once(__DIR__ . "/../../views/common/navbar.php");
 								<!-- Technical -->
 								<option value="tech_wifi_ugvle" data-main="CSC and NOC">Technical support for WIFI & UGVLE</option>
 								<option value="tech_lab_logins" data-main="CSC and NOC">Lab logins & bookings</option>
+								<!-- Counselling -->
+								<option value="counselling" data-main="Counselling">Counselling</option>
 								<!-- Other -->
 								<option value="other_other" data-main="Other">Other</option>
 							</select>
@@ -76,7 +78,7 @@ include_once(__DIR__ . "/../../views/common/navbar.php");
 
 					<!-- Issue details -->
 					<div class="field">
-						<label class="label" for="details">Issue Details</label>
+						<label class="label" for="details">Issue Details <span style="color:#ef4444; margin-left:2px">*</span></label>
 						<textarea id="details" name="details" rows="6" placeholder="Describe your issue in detail. Include any error messages, steps to reproduce, or relevant information." required></textarea>
 					</div>
 

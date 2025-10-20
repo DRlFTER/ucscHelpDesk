@@ -37,6 +37,141 @@ class Admin extends Controller
         $this->view('adminUsers', ['title' => 'User Management', 'head' => $headContent]);
     }
 
+    public function user() {
+        $this->requireLogin('admin');
+        $headContent = '
+        <link rel="stylesheet" href="/css/admin/adminUserFull.css"/>';
+        $this->view('adminUserFull', ['title' => 'User Details', 'head' => $headContent]);
+    }
+    public function calender() {
+        $this->requireLogin('admin');
+        $headContent = '
+        <link rel="stylesheet" href="/css/admin/adminCalender.css"/>';
+        $this->view('adminCalender', ['title' => 'Calender', 'head' => $headContent]);
+    }
+
+    /**
+     * Fetch a single user's details for the admin user page.
+     * Returns JSON shape: { id, name, email, role, designation, number, year }
+     */
+    public function userData()
+    {
+        $this->requireLogin('admin');
+        header('Content-Type: application/json');
+        $db = Database::getInstance();
+
+        $id = isset($_GET['id']) ? (int)$_GET['id'] : 0;
+        if (!$id) {
+            http_response_code(400);
+            echo json_encode(['error' => 'Missing user id']);
+            exit;
+        }
+
+        $idEsc = (int)$id;
+        $sql = "SELECT u_id, name, email, role, designation, number, year FROM users WHERE u_id = $idEsc LIMIT 1";
+        $row = null;
+        if ($res = $db->query($sql)) {
+            $row = $res->fetch_assoc();
+            $res->free();
+        }
+        if (!$row) {
+            http_response_code(404);
+            echo json_encode(['error' => 'User not found']);
+            exit;
+        }
+
+        echo json_encode([
+            'id' => (int)$row['u_id'],
+            'name' => (string)($row['name'] ?? ''),
+            'email' => (string)($row['email'] ?? ''),
+            'role' => (string)($row['role'] ?? ''),
+            'designation' => isset($row['designation']) ? (string)$row['designation'] : null,
+            'number' => isset($row['number']) ? (string)$row['number'] : null,
+            'year' => isset($row['year']) ? (int)$row['year'] : null,
+        ]);
+        exit;
+    }
+
+    /** Update user basic fields. Admin only. */
+    public function userUpdate()
+    {
+        $this->requireLogin('admin');
+        header('Content-Type: application/json');
+        $db = Database::getInstance();
+
+        $id = isset($_POST['id']) ? (int)$_POST['id'] : 0;
+        if (!$id) {
+            http_response_code(400);
+            echo json_encode(['error' => 'Missing id']);
+            exit;
+        }
+
+        $name = isset($_POST['name']) ? trim((string)$_POST['name']) : '';
+        $email = isset($_POST['email']) ? trim((string)$_POST['email']) : '';
+        $number = isset($_POST['number']) ? trim((string)$_POST['number']) : null;
+        $role = isset($_POST['role']) ? trim((string)$_POST['role']) : '';
+        $designation = isset($_POST['designation']) ? trim((string)$_POST['designation']) : null;
+        $year = isset($_POST['year']) && $_POST['year'] !== '' ? (int)$_POST['year'] : null;
+
+        if ($name === '' || $email === '' || $role === '') {
+            http_response_code(400);
+            echo json_encode(['error' => 'Name, email and role are required']);
+            exit;
+        }
+
+        // Whitelist roles
+        $allowed = ['staff','student','lecturer','admin','counselor'];
+        if (!in_array(strtolower($role), $allowed, true)) {
+            http_response_code(400);
+            echo json_encode(['error' => 'Invalid role']);
+            exit;
+        }
+
+        // Escape inputs
+        $nameEsc = $db->real_escape_string($name);
+        $emailEsc = $db->real_escape_string($email);
+        $roleEsc = $db->real_escape_string(strtolower($role));
+        $numberEsc = $number !== null ? "'" . $db->real_escape_string($number) . "'" : 'NULL';
+        $designationEsc = $designation !== null ? "'" . $db->real_escape_string($designation) . "'" : 'NULL';
+        $yearVal = $year !== null ? (int)$year : 'NULL';
+
+        $sql = "UPDATE users SET name='$nameEsc', email='$emailEsc', role='$roleEsc', number=$numberEsc, designation=$designationEsc, year=$yearVal WHERE u_id = " . (int)$id;
+        $ok = $db->query($sql);
+        if (!$ok) {
+            http_response_code(500);
+            echo json_encode(['error' => 'Update failed']);
+            exit;
+        }
+
+        // Return updated record
+        $_GET['id'] = (string)$id;
+        $this->userData();
+    }
+
+    /** Delete a user. Note: will cascade per FK constraints in DB. */
+    public function userDelete()
+    {
+        $this->requireLogin('admin');
+        header('Content-Type: application/json');
+        $db = Database::getInstance();
+
+        $id = isset($_POST['id']) ? (int)$_POST['id'] : (isset($_GET['id']) ? (int)$_GET['id'] : 0);
+        if (!$id) {
+            http_response_code(400);
+            echo json_encode(['error' => 'Missing id']);
+            exit;
+        }
+        $idEsc = (int)$id;
+        $ok = $db->query("DELETE FROM users WHERE u_id = $idEsc");
+        if (!$ok) {
+            http_response_code(500);
+            echo json_encode(['error' => 'Delete failed']);
+            exit;
+        }
+        echo json_encode(['success' => true]);
+        exit;
+    }
+
     /**
      * Return users for admin as JSON for the Users page.
      * Supports pagination, search, and filters (type/role and designation).
@@ -298,9 +433,13 @@ class Admin extends Controller
             $trends['resolved'][] = $countRes;
         }
 
-        // 5) Tickets by category
+        // 5) Tickets by category (now derived from division table)
         $categories = [ 'labels' => [], 'data' => [] ];
-        if ($res = $db->query("SELECT COALESCE(category,'Other') AS category, COUNT(*) AS c FROM tickets GROUP BY category ORDER BY c DESC")) {
+        if ($res = $db->query("SELECT COALESCE(d.name,'Other') AS category, COUNT(*) AS c
+                                 FROM tickets t
+                                 LEFT JOIN division d ON d.did = t.division
+                                 GROUP BY COALESCE(d.name,'Other')
+                                 ORDER BY c DESC")) {
             while ($row = $res->fetch_assoc()) {
                 $categories['labels'][] = (string)$row['category'];
                 $categories['data'][] = (int)$row['c'];
@@ -367,11 +506,12 @@ class Admin extends Controller
         }
 
         $idEsc = (int)$id;
-        $sql = "SELECT t.ticket_id, t.created_at, t.title, t.category, t.status, t.priority, t.description, t.u_id, u.name AS student_name
-                FROM tickets t
-                LEFT JOIN users u ON u.u_id = t.u_id
-                WHERE t.ticket_id = $idEsc
-                LIMIT 1";
+    $sql = "SELECT t.ticket_id, t.created_at, t.title, d.name AS category, t.status, t.priority, t.description, t.u_id, u.name AS student_name
+        FROM tickets t
+        LEFT JOIN users u ON u.u_id = t.u_id
+        LEFT JOIN division d ON d.did = t.division
+        WHERE t.ticket_id = $idEsc
+        LIMIT 1";
 
         $row = null;
         if ($res = $db->query($sql)) {
@@ -479,6 +619,7 @@ class Admin extends Controller
         $priority= isset($_GET['priority']) ? trim((string)$_GET['priority']) : '';
 
         $where = [];
+        $joins = "LEFT JOIN users u ON u.u_id = t.u_id LEFT JOIN division d ON d.did = t.division";
         // Search by ticket title or student name
         if ($search !== '') {
             $s = $db->real_escape_string($search);
@@ -487,7 +628,8 @@ class Admin extends Controller
         // Filter by category
         if ($category !== '') {
             $c = $db->real_escape_string($category);
-            $where[] = "t.category = '$c'";
+            // Match by division name (UI category label)
+            $where[] = "COALESCE(d.name,'') = '$c'";
         }
         // Map UI status to DB statuses
         if ($status !== '') {
@@ -514,7 +656,7 @@ class Admin extends Controller
 
         // Total count for pagination
         $total = 0;
-        $countSql = "SELECT COUNT(*) AS c FROM tickets t LEFT JOIN users u ON u.u_id = t.u_id $whereSql";
+        $countSql = "SELECT COUNT(*) AS c FROM tickets t $joins $whereSql";
         if ($res = $db->query($countSql)) {
             $row = $res->fetch_assoc();
             $total = (int)($row['c'] ?? 0);
@@ -526,12 +668,12 @@ class Admin extends Controller
         $offset = ($page - 1) * $perPage;
 
         // Data query with pagination
-        $sql = "SELECT t.ticket_id, t.created_at, t.title, t.category, t.status, t.priority, t.meeting_requested, t.u_id, u.name AS student_name
-                FROM tickets t
-                LEFT JOIN users u ON u.u_id = t.u_id
-                $whereSql
-                ORDER BY t.created_at DESC
-                LIMIT $perPage OFFSET $offset";
+    $sql = "SELECT t.ticket_id, t.created_at, t.title, d.name AS category, t.status, t.priority, t.meeting_requested, t.u_id, u.name AS student_name
+        FROM tickets t
+        $joins
+        $whereSql
+        ORDER BY t.created_at DESC
+        LIMIT $perPage OFFSET $offset";
 
         $rows = [];
         if ($res = $db->query($sql)) {

@@ -1,12 +1,25 @@
 document.addEventListener("DOMContentLoaded", () => {
   const container = document.querySelector(".tickets-container");
 
+  if (pageError) {
+    container.innerHTML = `<div style="padding:12px 14px; border:1px solid #f59e0b; background:#fffbeb; color:#92400e; border-radius:8px;">${pageError}</div>`;
+    return;
+  }
+
+  if (!Array.isArray(tickets) || tickets.length === 0) {
+    container.innerHTML = `<p style="color:#6b7280;">No tickets found for your division(s).</p>`;
+    return;
+  }
+
   // Map over tickets and create HTML for each
   container.innerHTML = tickets.map(ticket => {
-    // Default status to "Pending" if null or undefined, and ensure it's a string
+    // Default status to "pending" if null or undefined, and ensure it's a string
     const status = ticket.status || "pending";
     const displayStatus = typeof status === "string" ? status.charAt(0).toUpperCase() + status.slice(1) : "Pending";
     const priority = ticket.priority || "medium"; // Default priority if null
+
+    // Normalize status for CSS class (replace spaces with hyphens, lowercase)
+    const statusClass = status.toLowerCase().replace(/\s+/g, '-');
 
     return `
       <article class="ticket-card">
@@ -18,7 +31,7 @@ document.addEventListener("DOMContentLoaded", () => {
               <span>${ticket.created_at ? new Date(ticket.created_at).toLocaleString() : "N/A"}</span>
             </div>
           </div>
-          <span class="status-badge status-${status.toLowerCase()}">
+          <span class="status-badge status-${statusClass}">
             ${displayStatus}
           </span>
           <div class="ticket-action">

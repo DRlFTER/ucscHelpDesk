@@ -24,7 +24,14 @@ class Register extends Controller
                 } elseif ($role === 'lecturer') {
                     $designation = $_POST['department'] ?? null;
                 } elseif ($role === 'staff') {
-                    $designation = $_POST['staffId'] ?? null;
+                    // Expect integer code 1-9 from dropdown
+                    $designation = $_POST['designation'] ?? null;
+                    if ($designation !== null) {
+                        $designation = trim($designation);
+                        if (!preg_match('/^[1-9]$/', $designation)) {
+                            throw new Exception('Please select a valid department.');
+                        }
+                    }
                 }
 
                 if (!$role || !$fullName || !$email || !$password) {
@@ -40,6 +47,18 @@ class Register extends Controller
                 }
 
                 $userId = $userModel->createUser($role, $fullName, $email, $password, $number, $year, $designation);
+
+                // If staff, also create staff_division mapping (u_id, did)
+                if ($role === 'staff' && $designation !== null && preg_match('/^[1-9]$/', $designation)) {
+                    $db = Database::getInstance();
+                    $stmt = $db->prepare('INSERT INTO staff_division (u_id, did) VALUES (?, ?)');
+                    if ($stmt) {
+                        $uid = (int)$userId; $did = (int)$designation;
+                        $stmt->bind_param('ii', $uid, $did);
+                        $stmt->execute();
+                        $stmt->close();
+                    }
+                }
 
                 $flash = ['type' => 'success', 'message' => 'Registration successful. You can now sign in.'];
             } catch (Throwable $e) {

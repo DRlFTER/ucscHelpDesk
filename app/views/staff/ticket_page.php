@@ -17,9 +17,11 @@ if ($ticket_id === 0) {
 }
 
 // Fetch ticket details
-$sql = "SELECT t.ticket_id, created_at, title, u.name AS student_name, category, status, priority, meeting_requested,t.description
-        FROM tickets t, users u
-        WHERE t.ticket_id = ? AND t.u_id = u.u_id";
+$sql = "SELECT t.ticket_id, t.created_at, t.title, u.name AS student_name, d.name AS category, t.status, t.priority, t.meeting_requested, t.description
+  FROM tickets t
+  INNER JOIN users u ON t.u_id = u.u_id
+  LEFT JOIN division d ON d.did = t.division
+  WHERE t.ticket_id = ?";
 $stmt = $conn->prepare($sql);
 $stmt->bind_param("i", $ticket_id);
 $stmt->execute();
