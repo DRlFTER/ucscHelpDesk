@@ -227,7 +227,8 @@ class Staff extends Controller {
         $staff_members = $model->getStaffMembers();
 
         $headContent = '<link rel="stylesheet" href="/css/staff/staffTickets.css" />' . "\n" .
-                       '<link rel="stylesheet" href="/css/staff/global.css" />';
+                       '<link rel="stylesheet" href="/css/staff/global.css" />'."\n".
+                       '<link rel="stylesheet" href="/css/global/components.css" />';
 
         $this->view('staff/ticketDetails', [
             'title' => 'Ticket Details',

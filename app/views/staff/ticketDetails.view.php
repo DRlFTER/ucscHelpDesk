@@ -70,7 +70,8 @@
         letter-spacing: 0.32px;
     }
 
-    .status-badge {
+    /* Status badge using global.css status classes */
+    .status {
         padding: 8px 16px;
         border-radius: 20px;
         font-size: 14px;
@@ -78,10 +79,6 @@
         letter-spacing: 0.28px;
         white-space: nowrap;
     }
-
-    .status-review { background-color: var(--status-review-bg); color: var(--status-review-text); }
-    .status-resolved { background-color: var(--status-resolved-bg); color: var(--status-resolved-text); }
-    .status-rejected { background-color: var(--status-rejected-bg); color: var(--status-rejected-text); }
 
     .ticket-body {
         display: flex;
@@ -280,6 +277,13 @@
         .details-group { flex-direction: column; gap: 15px; }
         .actions-bar { flex-direction: column; }
     }
+
+    /* Status Colors for All Enum Values */
+    .status.pending { background: #fef9c3; color: #92400e; }
+    .status.agent-assigned { background: #badbff; color: #3300ff; }  /* Blue for agent assigned */
+    .status.agent-closed { background: #dcfce7; color: #155724; }  /* Green for agent-closed */
+    .status.closed { background: #dcfce7; color: #155724; }  /* Green for closed */
+    .status.resolved { background: #dcfce7; color: #155724; }  /* Green for resolved */
 </style>
 
 <main id="main-content" class="main-content">
@@ -298,7 +302,7 @@
           </div>
         </div>
         <div class="ticket-header-right">
-          <span class="status-badge status-<?php echo htmlspecialchars($ticket['status']); ?>">
+          <span class="status <?php echo str_replace(' ', '-', strtolower($ticket['status'])); ?>">
             <?php echo ucfirst(htmlspecialchars($ticket['status'])); ?>
           </span>
         </div>
@@ -349,8 +353,7 @@
         </div>
       <?php endif; ?>
 
-      <!-- Response Section (Always Visible) -->
-      <?php if (isset($ticket['assigned_to']) && $ticket['assigned_to'] == $_SESSION['user']['u_id']): ?>
+      <!-- Response Section -->
       <div class="response-section">
         <h3>Add Response</h3>
         <p>Add a comment or update to this ticket.</p>
@@ -360,7 +363,6 @@
           <button type="submit" class="submit-response-btn">Submit Response</button>
         </form>
       </div>
-      <?php endif; ?>
 
       <!-- Forward Section (Only if Assigned to Current Staff) -->
       <?php if (isset($ticket['assigned_to']) && $ticket['assigned_to'] == $_SESSION['user']['u_id']): ?>

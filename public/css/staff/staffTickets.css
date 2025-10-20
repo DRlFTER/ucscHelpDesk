@@ -162,10 +162,12 @@
     white-space: nowrap;
 }
 
-.status-review { background-color: var(--status-review-bg); color: var(--status-review-text); }
+.status-pending { background-color: var(--status-pending-bg); color: var(--status-pending-text); }
 .status-resolved { background-color: var(--status-resolved-bg); color: var(--status-resolved-text); }
 .status-rejected { background-color: var(--status-rejected-bg); color: var(--status-rejected-text); }
-
+.status-agent-assigned { background-color: #badbff; color: #3300ff; }  /* Blue for agent assigned */
+.status-agent-closed { background-color: #dcfce7; color: #155724; }  /* Green for agent-closed */
+.status-closed { background-color: #dcfce7; color: #155724; }  /* Green for closed */
 .ticket-body {
     display: flex;
     gap: 25px;
@@ -224,8 +226,8 @@
     --color-border-card: #d7d7d7;
     --color-border-separator: #c5c5c5;
 
-    --status-review-bg: #fff68f;
-    --status-review-text: #844d0f;
+    --status-pending-bg: #fff68f;
+    --status-pending-text: #844d0f;
     --status-resolved-bg: #9effbc;
     --status-resolved-text: #166434;
     --status-rejected-bg: #ffd8d8;
