@@ -171,7 +171,7 @@ class Staff extends Controller {
                         $errors[] = "Ticket is not pending.";
                     }
                     break;
-
+            
                 case 'respond':
                     $response_text = trim($_POST['response'] ?? '');
                     if (!empty($response_text)) {
@@ -185,7 +185,7 @@ class Staff extends Controller {
                         $errors[] = "Response cannot be empty.";
                     }
                     break;
-
+            
                 case 'forward':
                     $forward_to = (int)($_POST['forward_to'] ?? 0);
                     if ($forward_to > 0 && $forward_to != $current_staff_id) {
@@ -200,7 +200,7 @@ class Staff extends Controller {
                         $errors[] = "Select a different staff member.";
                     }
                     break;
-
+            
                 case 'resolve':
                     $ok = $model->resolveTicket($ticket_id);
                     if ($ok) {
@@ -210,14 +210,14 @@ class Staff extends Controller {
                         $errors[] = "Failed to resolve ticket. Are you assigned?";
                     }
                     break;
-
+            
                 case 'reject':
                     $ok = $model->rejectTicket($ticket_id);
                     if ($ok) {
-                        $success = 'Ticket rejected!';
+                        $success = 'Ticket closed!';
                         $ticket = $model->getTicketById($ticket_id);  // Refresh
                     } else {
-                        $errors[] = "Failed to reject ticket. Are you assigned?";
+                        $errors[] = "Failed to close ticket. Are you assigned?";
                     }
                     break;
             }

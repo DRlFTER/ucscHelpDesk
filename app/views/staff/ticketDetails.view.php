@@ -349,7 +349,8 @@
         </div>
       <?php endif; ?>
 
-      <!-- Response Section (Always Visible, but Only for Assigned Staff) -->
+      <!-- Response Section (Always Visible) -->
+      <?php if (isset($ticket['assigned_to']) && $ticket['assigned_to'] == $_SESSION['user']['u_id']): ?>
       <div class="response-section">
         <h3>Add Response</h3>
         <p>Add a comment or update to this ticket.</p>
@@ -359,6 +360,7 @@
           <button type="submit" class="submit-response-btn">Submit Response</button>
         </form>
       </div>
+      <?php endif; ?>
 
       <!-- Forward Section (Only if Assigned to Current Staff) -->
       <?php if (isset($ticket['assigned_to']) && $ticket['assigned_to'] == $_SESSION['user']['u_id']): ?>
@@ -369,7 +371,7 @@
             <input type="hidden" name="action" value="forward">
             <select name="forward_to" required>
               <option value="">Select staff member</option>
-              <?php foreach ($staff_members as $member): ?>  <!-- Passed from controller -->
+              <?php foreach ($staff_members as $member): ?>
                 <option value="<?php echo $member['u_id']; ?>">
                   <?php echo htmlspecialchars($member['name']); ?>
                 </option>
@@ -380,11 +382,19 @@
         </div>
       <?php endif; ?>
 
-      <!-- Actions bar for managing the ticket -->
-      <div class="actions-bar">
-        <button class="action-btn resolve-btn">Resolve Ticket</button>
-        <button class="action-btn reject-btn">Reject Ticket</button>
-      </div>
+      <!-- Actions bar for managing the ticket (Resolve/Reject only if assigned) -->
+      <?php if (isset($ticket['assigned_to']) && $ticket['assigned_to'] == $_SESSION['user']['u_id']): ?>
+        <div class="actions-bar">
+          <form method="POST" action="" style="display: inline;">
+            <input type="hidden" name="action" value="resolve">
+            <button type="submit" class="action-btn resolve-btn">Resolve Ticket</button>
+          </form>
+          <form method="POST" action="" style="display: inline;">
+            <input type="hidden" name="action" value="reject">
+            <button type="submit" class="action-btn reject-btn">Close Ticket</button>
+          </form>
+        </div>
+      <?php endif; ?>
     </div>
   </main>
 
