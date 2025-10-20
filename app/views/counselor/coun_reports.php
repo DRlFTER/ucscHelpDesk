@@ -137,6 +137,7 @@ function getStudentName($student_id, $students) {
     <title>Counseling Reports - UCSC Help Desk</title>
     <link rel="stylesheet" href="../common/css/components.css">
     <link rel="stylesheet" href="coun.css">
+    <link rel="stylesheet" href="counselor_dashboard.css">
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
         .reports-container {
@@ -411,7 +412,7 @@ function getStudentName($student_id, $students) {
     <?php include 'coun_navbar.html'; ?>
 
     <header>
-        <h2>Counseling Reports & Analytics</h2>
+        <h2>📊 Counseling Reports & Analytics</h2>
         <p>Track performance, analyze trends, and generate insights</p>
     </header>
 

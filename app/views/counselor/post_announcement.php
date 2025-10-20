@@ -60,6 +60,7 @@ try {
     <title>Post Announcement - UCSC Help Desk</title>
     <link rel="stylesheet" href="../common/css/components.css">
     <link rel="stylesheet" href="coun.css">
+    <link rel="stylesheet" href="counselor_dashboard.css">
     <style>
         .announcement-container {
             max-width: 1200px;
@@ -242,7 +243,7 @@ try {
     <?php include 'coun_navbar.html'; ?>
 
     <header>
-        <h2>Post Announcement</h2>
+        <h2>📢 Post Announcement</h2>
         <p>Share important information with students and staff</p>
     </header>
 
