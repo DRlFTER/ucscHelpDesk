@@ -89,7 +89,7 @@ class StaffTicket
         FROM tickets t
         INNER JOIN users u ON t.u_id = u.u_id
         LEFT JOIN division d ON d.did = t.division
-        WHERE t.division IN ($placeholders)
+        WHERE t.division IN ($placeholders) 
         ORDER BY t.created_at DESC";
 
         $stmt = $conn->prepare($sql);
