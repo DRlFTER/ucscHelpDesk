@@ -144,137 +144,122 @@ class StaffTicket
         return $this->getTicketById($ticket_id);
     }
 
-    /**
-     * Assign ticket to staff (update status and assigned_to).
-     */
-    public function assignToStaff(int $ticket_id, int $staff_id): bool
-    {
-        $conn = self::getConnection();
-        $sql = "UPDATE tickets SET status = 'assigned', assigned_to = ?
-                WHERE ticket_id = ?
-                  AND status = 'pending'
-                  AND division IN (SELECT did FROM staff_division WHERE u_id = ?)";
-        $stmt = $conn->prepare($sql);
-        if (!$stmt) {
-            $err = $conn->error;
-            $conn->close();
-            throw new Exception('Prepare failed: ' . $err);
-        }
-        $stmt->bind_param('iii', $staff_id, $ticket_id, $staff_id);
-        $ok = $stmt->execute() && $stmt->affected_rows > 0;
-        $stmt->close();
+   /**
+ * Assign ticket to staff (update status to 'agent assigned' and assigned_to).
+ */
+public function assignToStaff(int $ticket_id, int $staff_id): bool
+{
+    $conn = self::getConnection();
+    $sql = "UPDATE tickets SET status = 'agent assigned', assigned_to = ?
+            WHERE ticket_id = ?
+              AND status = 'pending'
+              AND division IN (SELECT did FROM staff_division WHERE u_id = ?)";
+    $stmt = $conn->prepare($sql);
+    if (!$stmt) {
+        $err = $conn->error;
         $conn->close();
-        return $ok;
+        throw new Exception('Prepare failed: ' . $err);
     }
+    $stmt->bind_param('iii', $staff_id, $ticket_id, $staff_id);
+    $ok = $stmt->execute() && $stmt->affected_rows > 0;
+    $stmt->close();
+    $conn->close();
+    return $ok;
+}
 
-    /**
-     * Add response to ticket (insert into ticket_response).
-     */
-    public function addResponse(int $ticket_id, int $staff_id, string $response_text): bool
-    {
-        $conn = self::getConnection();
-        $sql = "INSERT INTO ticket_response (ticket_id, u_id, response, date_time) VALUES (?, ?, ?, NOW())";
-        $stmt = $conn->prepare($sql);
-        if (!$stmt) {
-            $err = $conn->error;
-            $conn->close();
-            throw new Exception('Prepare failed: ' . $err);
-        }
-        $stmt->bind_param('iss', $ticket_id, $staff_id, $response_text);
-        $ok = $stmt->execute();
-        $stmt->close();
+/**
+ * Add response to ticket (insert into ticket_response).
+ */
+public function addResponse(int $ticket_id, int $staff_id, string $response_text): bool
+{
+    $conn = self::getConnection();
+    $sql = "INSERT INTO ticket_response (ticket_id, u_id, response, date_time) VALUES (?, ?, ?, NOW())";
+    $stmt = $conn->prepare($sql);
+    if (!$stmt) {
+        $err = $conn->error;
         $conn->close();
-        return $ok;
+        throw new Exception('Prepare failed: ' . $err);
     }
+    $stmt->bind_param('iss', $ticket_id, $staff_id, $response_text);
+    $ok = $stmt->execute();
+    $stmt->close();
+    $conn->close();
+    return $ok;
+}
 
-    /**
-     * Forward ticket to another staff (update assigned_to).
-     */
-    public function forwardTicket(int $ticket_id, int $new_staff_id): bool
-    {
-        $conn = self::getConnection();
-        $sql = "UPDATE tickets SET assigned_to = ? WHERE ticket_id = ? AND assigned_to = ?";  // Only if current
-        $current_staff_id = (int)($_SESSION['user']['u_id'] ?? 0);
-        $stmt = $conn->prepare($sql);
-        if (!$stmt) {
-            $err = $conn->error;
-            $conn->close();
-            throw new Exception('Prepare failed: ' . $err);
-        }
-        $stmt->bind_param('iii', $new_staff_id, $ticket_id, $current_staff_id);
-        $ok = $stmt->execute() && $stmt->affected_rows > 0;
-        $stmt->close();
+/**
+ * Forward ticket to another staff (update assigned_to).
+ */
+public function forwardTicket(int $ticket_id, int $new_staff_id): bool
+{
+    $conn = self::getConnection();
+    $sql = "UPDATE tickets SET assigned_to = ? WHERE ticket_id = ? AND assigned_to = ?";  // Only if current
+    $current_staff_id = (int)($_SESSION['user']['u_id'] ?? 0);
+    $stmt = $conn->prepare($sql);
+    if (!$stmt) {
+        $err = $conn->error;
         $conn->close();
-        return $ok;
+        throw new Exception('Prepare failed: ' . $err);
     }
+    $stmt->bind_param('iii', $new_staff_id, $ticket_id, $current_staff_id);
+    $ok = $stmt->execute() && $stmt->affected_rows > 0;
+    $stmt->close();
+    $conn->close();
+    return $ok;
+}
 
-    /**
-     * Resolve ticket (update status to 'resolved').
-     */
-    public function resolveTicket(int $ticket_id): bool
-    {
-        $conn = self::getConnection();
-        $sql = "UPDATE tickets SET status = 'resolved' WHERE ticket_id = ? AND assigned_to = ?";
-        $staff_id = (int)($_SESSION['user']['u_id'] ?? 0);
-        $stmt = $conn->prepare($sql);
-        if (!$stmt) {
-            $err = $conn->error;
-            $conn->close();
-            throw new Exception('Prepare failed: ' . $err);
-        }
-        $stmt->bind_param('ii', $ticket_id, $staff_id);
-        $ok = $stmt->execute() && $stmt->affected_rows > 0;
-        $stmt->close();
+/**
+ * Resolve ticket (update status to 'agent-closed').
+ */
+/**
+ * Resolve ticket (update status to 'agent-closed').
+ */
+public function resolveTicket(int $ticket_id): bool
+{
+    $conn = self::getConnection();
+    $sql = "UPDATE tickets SET status = 'resolved' WHERE ticket_id = ? AND assigned_to = ?";
+    $staff_id = (int)($_SESSION['user']['u_id'] ?? 0);
+    $stmt = $conn->prepare($sql);
+    if (!$stmt) {
+        $err = $conn->error;
         $conn->close();
-        return $ok;
+        throw new Exception('Prepare failed: ' . $err);
     }
+    $stmt->bind_param('ii', $ticket_id, $staff_id);
+    $ok = $stmt->execute() && $stmt->affected_rows > 0;
+    $stmt->close();
+    $conn->close();
+    return $ok;
+}
 
-    /**
-     * Reject ticket (update status to 'rejected').
-     */
-    public function rejectTicket(int $ticket_id): bool
-    {
-        $conn = self::getConnection();
-        $sql = "UPDATE tickets SET status = 'rejected' WHERE ticket_id = ? AND assigned_to = ?";
-        $staff_id = (int)($_SESSION['user']['u_id'] ?? 0);
-        $stmt = $conn->prepare($sql);
-        if (!$stmt) {
-            $err = $conn->error;
-            $conn->close();
-            throw new Exception('Prepare failed: ' . $err);
-        }
-        $stmt->bind_param('ii', $ticket_id, $staff_id);
-        $ok = $stmt->execute() && $stmt->affected_rows > 0;
-        $stmt->close();
+/**
+ * Reject/Close ticket (update status to 'agent-closed' or 'closed').
+ */
+public function rejectTicket(int $ticket_id): bool
+{
+    $conn = self::getConnection();
+    $sql = "UPDATE tickets SET status = 'agent-closed' WHERE ticket_id = ? AND assigned_to = ?";  // Change to 'closed' if preferred
+    $staff_id = (int)($_SESSION['user']['u_id'] ?? 0);
+    $stmt = $conn->prepare($sql);
+    if (!$stmt) {
+        $err = $conn->error;
         $conn->close();
-        return $ok;
+        throw new Exception('Prepare failed: ' . $err);
     }
-
+    $stmt->bind_param('ii', $ticket_id, $staff_id);
+    $ok = $stmt->execute() && $stmt->affected_rows > 0;
+    $stmt->close();
+    $conn->close();
+    return $ok;
+}
     /**
      * Get all staff members for forward dropdown (from users where role = 'staff').
      */
     public function getStaffMembers(): array
     {
         $conn = self::getConnection();
-        // Limit to staff within the same divisions as current staff
-        $current = (int)($_SESSION['user']['u_id'] ?? 0);
-        $sql = "SELECT DISTINCT u.u_id, u.name
-                FROM users u
-                INNER JOIN staff_division sd ON sd.u_id = u.u_id
-                WHERE u.role = 'staff' AND sd.did IN (SELECT did FROM staff_division WHERE u_id = ?)
-                ORDER BY u.name";
-        $stmt = $conn->prepare($sql);
-        if (!$stmt) {
-            $err = $conn->error;
-            $conn->close();
-            throw new Exception('Prepare failed: ' . $err);
-        }
-        $stmt->bind_param('i', $current);
-        if (!$stmt->execute()) {
-            $err = $stmt->error; $stmt->close(); $conn->close();
-            throw new Exception('Execute failed: ' . $err);
-        }
-        $result = $stmt->get_result();
+        $sql = "SELECT u_id, name FROM users WHERE role = 'staff' ORDER BY name";
+        $result = $conn->query($sql);
         if ($result === false) {
             $err = $conn->error;
             $conn->close();
@@ -284,7 +269,7 @@ class StaffTicket
         while ($row = $result->fetch_assoc()) {
             $staff[] = $row;
         }
-        $stmt->close(); $conn->close();
+        $conn->close();
         return $staff;
     }
 }
