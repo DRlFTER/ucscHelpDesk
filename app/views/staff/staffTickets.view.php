@@ -36,6 +36,23 @@
 
     <div class="tickets-container"></div>
   </main>
+  <style>
+    /* Inline Status Colors for List Badges (overrides conflicts) */
+    .status-badge {
+        padding: 5px 10px;
+        border-radius: 17px;
+        font-size: 12px;  /* Keep small font */
+        font-weight: 500;
+        letter-spacing: 0.24px;
+        white-space: nowrap;
+    }
+
+    .status-badge.status-pending { background-color: #fff68f; color: #844d0f; }
+    .status-badge.status-resolved { background-color: #9effbc; color: #166434; }
+    .status-badge.status-closed { background-color: #9effbc; color: #166434; }
+    .status-badge.status-agent-assigned { background-color: #badbff; color: #3300ff; }
+    .status-badge.status-agent-closed { background-color: #9effbc; color: #166434; }
+  </style>
   <script>
     // Inject tickets fetched by controller as a global variable
     var tickets = <?= json_encode($tickets ?? []) ?>;

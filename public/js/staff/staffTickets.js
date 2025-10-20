@@ -13,10 +13,13 @@ document.addEventListener("DOMContentLoaded", () => {
 
   // Map over tickets and create HTML for each
   container.innerHTML = tickets.map(ticket => {
-    // Default status to "Pending" if null or undefined, and ensure it's a string
+    // Default status to "pending" if null or undefined, and ensure it's a string
     const status = ticket.status || "pending";
     const displayStatus = typeof status === "string" ? status.charAt(0).toUpperCase() + status.slice(1) : "Pending";
     const priority = ticket.priority || "medium"; // Default priority if null
+
+    // Normalize status for CSS class (replace spaces with hyphens, lowercase)
+    const statusClass = status.toLowerCase().replace(/\s+/g, '-');
 
     return `
       <article class="ticket-card">
@@ -28,7 +31,7 @@ document.addEventListener("DOMContentLoaded", () => {
               <span>${ticket.created_at ? new Date(ticket.created_at).toLocaleString() : "N/A"}</span>
             </div>
           </div>
-          <span class="status-badge status-${status.toLowerCase()}">
+          <span class="status-badge status-${statusClass}">
             ${displayStatus}
           </span>
           <div class="ticket-action">
