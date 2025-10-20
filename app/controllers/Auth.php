@@ -71,7 +71,7 @@ class Auth extends Controller
 					header('Location: ' . ROOT . 'lecturer/dashboard');
 					break;
 				case 'staff':
-					header('Location: ' . ROOT . 'staff/dashboard');
+					header('Location: ' . ROOT . 'staff/staffDashboard');
 					break;
 				case 'counselor':
 					header('Location: ' . ROOT . 'counselor/dashboard');
