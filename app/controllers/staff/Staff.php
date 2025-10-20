@@ -1,6 +1,55 @@
 <?php
 
 class Staff extends Controller {
+    public function staffDashboard()
+{
+    $this->requireLogin('staff');
+
+    require_once __DIR__ . '/../../models/staff/Ticket.php';
+    require_once __DIR__ . '/../../models/staff/Announcement.php';
+    $modelTicket = new StaffTicket();
+    $modelAnn = new Announcement();
+
+    // Fetch tickets for stats and list
+    $tickets = [];
+    try {
+        $tickets = $modelTicket->getAllTickets();
+    } catch (Throwable $e) {
+        error_log('Failed to load tickets for dashboard: ' . $e->getMessage());
+    }
+
+    // Calculate stats
+    $pending = array_filter($tickets, fn($t) => $t['status'] === 'pending');
+    $assigned = array_filter($tickets, fn($t) => $t['status'] === 'agent assigned');
+    $resolved = array_filter($tickets, fn($t) => in_array($t['status'], ['agent-closed', 'closed']));
+    $total = count($tickets);
+
+    // Recent tickets (last 5)
+    $recentTickets = array_slice($tickets, 0, 5);
+
+    // Recent announcements (last 5)
+    $announcements = [];
+    try {
+        $allAnn = $modelAnn->getAll();
+        $announcements = array_slice($allAnn, 0, 5);
+    } catch (Throwable $e) {
+        error_log('Failed to load announcements for dashboard: ' . $e->getMessage());
+    }
+
+    $headContent = '<link rel="stylesheet" href="/css/staff/staffTickets.css"/>';
+    $this->view('staff/staffDashboard', [
+        'title' => 'Staff Dashboard',
+        'head' => $headContent,
+        'stats' => [
+            'pending' => count($pending),
+            'assigned' => count($assigned),
+            'resolved' => count($resolved),
+            'total' => $total
+        ],
+        'recentTickets' => $recentTickets,
+        'announcements' => $announcements,
+    ]);
+}
 
     /**
      * Show, update, or delete a single announcement (detail view)
@@ -379,5 +428,140 @@ class Staff extends Controller {
         ]);
     }
 
+    
+// Add this method to your existing Staff.php controller class
+
+/**
+ * Show form and handle creation of new template.
+ */
+public function createTemplate()
+{
+    $this->requireLogin('staff');
+    $staff_id = (int)($_SESSION['user']['u_id'] ?? 0);
+    if (!$staff_id) {
+        header("Location: /staff/dashboard");  // Redirect if no valid staff ID
+        exit;
+    }
+
+    require_once __DIR__ . '/../../models/staff/Template.php';
+    $model = new Template();
+    $errors = [];
+    $success = "";
+    $field_count = isset($_POST['field_count']) ? (int)$_POST['field_count'] : 1;
+    $post_data = $_POST ?? [];  // For repopulating form on error
+
+    if ($_SERVER["REQUEST_METHOD"] == "POST") {
+        $name = trim($_POST['name'] ?? '');
+        $category = trim($_POST['category'] ?? '');
+        $process = trim($_POST['process'] ?? '');
+        $outcome = trim($_POST['outcome'] ?? '');
+        $letter_required = isset($_POST['letter_required']) ? 1 : 0;
+        $fields = [];
+
+        // Collect dynamic fields
+        for ($i = 1; $i <= $field_count; $i++) {
+            $field_name = trim($_POST['field_' . $i] ?? '');
+            if (!empty($field_name)) {
+                $fields[] = $field_name;
+            }
+        }
+
+        // Validate
+        if (empty($name)) {
+            $errors[] = "Template name is required.";
+        } elseif (strlen($name) > 100) {
+            $errors[] = "Template name must be 100 characters or less.";
+        }
+
+        if (empty($category)) {
+            $errors[] = "Category is required.";
+        } elseif (strlen($category) > 50) {
+            $errors[] = "Category must be 50 characters or less.";
+        }
+
+        if (empty($process)) {
+            $errors[] = "Process is required.";
+        } elseif (strlen($process) > 1000) {
+            $errors[] = "Process must be 1000 characters or less.";
+        }
+
+        if (empty($outcome)) {
+            $errors[] = "Outcome is required.";
+        } elseif (strlen($outcome) > 1000) {
+            $errors[] = "Outcome must be 1000 characters or less.";
+        }
+
+        if (empty($fields)) {
+            $errors[] = "At least one field is required.";
+        }
+
+        if (empty($errors)) {
+            try {
+                $data = [
+                    'name' => $name,
+                    'category' => $category,
+                    'fields' => $fields,
+                    'process' => $process,
+                    'outcome' => $outcome,
+                    'letter_required' => $letter_required,
+                    'created_by' => $staff_id
+                ];
+                $ok = $model->create($data);
+                if ($ok) {
+                    $success = "Template created successfully!";
+                    $name = $category = $process = $outcome = '';
+                    $fields = [];
+                    $field_count = 1;
+                    $post_data = [];  // Reset form
+                } else {
+                    $errors[] = "Failed to create template. Please try again.";
+                }
+            } catch (Throwable $e) {
+                error_log('Failed to create template: ' . $e->getMessage());
+                $errors[] = "Database error occurred. Please try again.";
+            }
+        }
+    }
+
+    $headContent = '<link rel="preconnect" href="https://fonts.googleapis.com">
+                    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+                    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Poppins:wght@400;500&display=swap" rel="stylesheet">
+                    <link rel="stylesheet" href="./global.css">
+                    <style>
+                        .main-content { padding: 20px; max-width: 1200px; margin: 0 auto; }
+                        .page-header { text-align: center; margin-bottom: 20px; }
+                        .page-title { font-size: 24px; color: #333; margin-bottom: 10px; }
+                        .page-subtitle { font-size: 16px; color: #666; }
+                        .ticket-card { border: 1px solid #e0e0e0; border-radius: 8px; padding: 15px; margin-bottom: 20px; background: #fff; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
+                        .ticket-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; }
+                        .ticket-title-group { flex-grow: 1; }
+                        .ticket-title { font-size: 18px; color: #333; margin: 0; }
+                        .ticket-meta { font-size: 12px; color: #666; }
+                        .ticket-body { padding: 10px 0; }
+                        .details-group { display: flex; flex-direction: column; gap: 10px; }
+                        .detail-item { display: flex; align-items: flex-start; }
+                        .detail-label { font-weight: bold; color: #444; width: 120px; margin-top: 8px; }
+                        .detail-value-box { flex-grow: 1; padding: 8px; border: 1px solid #e0e0e0; border-radius: 4px; background: #f9f9f9; }
+                        .detail-value-box input, .detail-value-box textarea, .detail-value-box select { width: 100%; padding: 8px; border: 1px solid #ccc; border-radius: 4px; font-size: 14px; box-sizing: border-box; background: transparent; border: none; }
+                        .detail-value-box textarea { resize: vertical; min-height: 100px; }
+                        .add-field-btn { background: #4a90e2; color: white; border: none; padding: 5px 10px; border-radius: 4px; cursor: pointer; font-size: 12px; margin-top: 5px; }
+                        .add-field-btn:hover { background: #357abd; }
+                        .error { color: red; font-size: 12px; margin-top: 5px; display: block; }
+                        .success { color: green; font-size: 14px; margin-bottom: 15px; text-align: center; }
+                        .ticket-action { text-align: right; margin-top: 15px; }
+                        .ticket-action-btn { background: #4a90e2; color: white; border: none; padding: 8px 16px; border-radius: 4px; cursor: pointer; font-size: 14px; }
+                        .ticket-action-btn:hover { background: #357abd; }
+                    </style>';
+
+    $this->view('staff/createTemplate', [
+        'title' => 'UCSC Help Desk - Create Template',
+        'head' => $headContent,
+        'errors' => $errors,
+        'success' => $success,
+        'field_count' => $field_count,
+        'post_data' => $post_data,
+        'staff_id' => $staff_id,
+    ]);
+}
 }
 ?>
