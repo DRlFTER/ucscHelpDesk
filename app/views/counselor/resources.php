@@ -140,6 +140,7 @@ function getCategoryColor($category) {
     <title>View Resources - UCSC Help Desk</title>
     <link rel="stylesheet" href="../common/css/components.css">
     <link rel="stylesheet" href="coun.css">
+    <link rel="stylesheet" href="counselor_dashboard.css">
     <style>
         .resources-container {
             max-width: 1200px;
@@ -409,7 +410,7 @@ function getCategoryColor($category) {
     <?php include 'coun_navbar.html'; ?>
 
     <header>
-        <h2>Counseling Resources</h2>
+        <h2>📚 Counseling Resources</h2>
         <p>Access and manage counseling materials and resources</p>
     </header>
 

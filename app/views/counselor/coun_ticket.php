@@ -93,6 +93,7 @@ $selectedStudent = isset($_GET['student_id']) ? intval($_GET['student_id']) : nu
   <title>Counselor Assigned Tickets</title>
   <link rel="stylesheet" href="../common/css/components.css">
   <link rel="stylesheet" href="coun.css">
+  <link rel="stylesheet" href="counselor_dashboard.css">
 
 </head>
 <body>

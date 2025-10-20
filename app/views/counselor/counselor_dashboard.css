@@ -7,7 +7,7 @@
 
 body {
     font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-    background-color: #f5f7fa;
+    background-color: #c6cfdc;
     color: #333;
 }
 
@@ -296,6 +296,7 @@ body {
 .status-progress { background: #cce5ff; color: #0056b3; }
 .status-resolved { background: #d4edda; color: #155724; }
 .status-review { background: #f8d7da; color: #721c24; }
+
 
 .ticket-actions {
     display: flex;
