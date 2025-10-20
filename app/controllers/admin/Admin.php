@@ -49,6 +49,152 @@ class Admin extends Controller
         <link rel="stylesheet" href="/css/admin/adminCalender.css"/>';
         $this->view('adminCalender', ['title' => 'Calender', 'head' => $headContent]);
     }
+    public function forum() {
+        $this->requireLogin('admin');
+        $headContent = '
+        <link rel="stylesheet" href="/css/student/studentForum.css"/>';
+        $this->view('adminForum', ['title' => 'Forum', 'head' => $headContent]);
+    }
+
+    /**
+     * Forum posts data (JSON) for admin, sourced from forum_q.
+     * Mirrors Student::forumData response shape but admin can view all posts.
+     * Supports query params: page, perPage, search, category, status, sort, type
+     */
+    public function forumData()
+    {
+        $this->requireLogin('admin');
+        header('Content-Type: application/json');
+
+        $db = Database::getInstance();
+        $uId = (int)($_SESSION['user']['u_id'] ?? 0);
+        if ($uId <= 0) {
+            http_response_code(401);
+            echo json_encode(['error' => 'Unauthorized']);
+            exit;
+        }
+
+        $page    = isset($_GET['page']) ? max(1, (int)$_GET['page']) : 1;
+        $perPage = isset($_GET['perPage']) ? max(1, min(100, (int)$_GET['perPage'])) : 10;
+        $search  = isset($_GET['search']) ? trim((string)$_GET['search']) : '';
+        $category= isset($_GET['category']) ? trim((string)$_GET['category']) : '';
+        $status  = isset($_GET['status']) ? trim((string)$_GET['status']) : '';
+        $sort    = isset($_GET['sort']) ? trim((string)$_GET['sort']) : 'latest';
+        $type    = isset($_GET['type']) ? trim((string)$_GET['type']) : '';
+
+        // Map category slug to topic label used in DB
+        $topicMap = [
+            'general' => 'General',
+            'it-support' => 'IT Support',
+            'finance' => 'Finance',
+            'examinations' => 'Examinations',
+            'counselling' => 'Counselling',
+            'other' => 'Other',
+        ];
+        $topicValue = '';
+        if ($category !== '') {
+            $key = strtolower($category);
+            $topicValue = $topicMap[$key] ?? $category; // allow direct match
+        }
+
+        $where = [];
+        // Visibility: admin sees all; if 'my', only own posts
+        if (strtolower($type) === 'my') {
+            $where[] = "f.u_id = $uId";
+        } else {
+            $where[] = '1=1';
+        }
+
+        if ($search !== '') {
+            $s = $db->real_escape_string($search);
+            $where[] = "(f.title LIKE '%$s%' OR f.description LIKE '%$s%')";
+        }
+        if ($topicValue !== '') {
+            $t = $db->real_escape_string($topicValue);
+            $where[] = "f.topic = '$t'";
+        }
+        if ($status !== '') {
+            $s = strtolower($status);
+            if ($s === 'open' || $s === 'answered') {
+                $where[] = "LOWER(f.status) = '$s'";
+            } else {
+                $sEsc = $db->real_escape_string($status);
+                $where[] = "f.status = '$sEsc'";
+            }
+        }
+
+        $whereSql = 'WHERE ' . implode(' AND ', $where);
+
+        $total = 0;
+        $countSql = "SELECT COUNT(*) AS c FROM forum_q f $whereSql";
+        if ($res = $db->query($countSql)) {
+            $row = $res->fetch_assoc();
+            $total = (int)($row['c'] ?? 0);
+            $res->free();
+        }
+
+        $totalPages = $perPage > 0 ? (int)max(1, ceil($total / $perPage)) : 1;
+        if ($page > $totalPages) { $page = $totalPages; }
+        $offset = ($page - 1) * $perPage;
+
+        // Sorting
+        $orderSql = 'ORDER BY f.created_at DESC';
+        $srt = strtolower($sort);
+        if ($srt === 'oldest') {
+            $orderSql = 'ORDER BY f.created_at ASC';
+        }
+        // 'votes' and 'comments' default to created_at for now
+
+        $sql = "SELECT f.q_id, f.created_at, f.title, f.topic, f.status, f.u_id, f.is_Public, u.name AS student_name
+                FROM forum_q f
+                LEFT JOIN users u ON u.u_id = f.u_id
+                $whereSql
+                $orderSql
+                LIMIT $perPage OFFSET $offset";
+
+        $rows = [];
+        if ($res = $db->query($sql)) {
+            while ($row = $res->fetch_assoc()) {
+                $rows[] = $row;
+            }
+            $res->free();
+        }
+
+        $mapDate = function ($dt) {
+            if (!$dt) return '';
+            $ts = strtotime($dt);
+            if ($ts === false) return '';
+            return date('Y-m-d H:i:s', $ts);
+        };
+
+        $out = [];
+        foreach ($rows as $r) {
+            $out[] = [
+                'id' => isset($r['q_id']) ? (int)$r['q_id'] : null,
+                'code' => 'FRM-' . (string)($r['q_id'] ?? ''),
+                'createdAt' => $mapDate($r['created_at'] ?? null),
+                'title' => (string)($r['title'] ?? ''),
+                'student' => [ 'id' => (int)($r['u_id'] ?? 0), 'name' => (string)($r['student_name'] ?? 'Student') ],
+                'topic' => (string)($r['topic'] ?? ''),
+                'status' => strtolower((string)($r['status'] ?? 'open')),
+                'is_Public' => isset($r['is_Public']) ? (int)$r['is_Public'] : 0,
+                'votesUp' => 0,
+                'votesDown' => 0,
+                'comments' => 0,
+            ];
+        }
+
+        echo json_encode([
+            'data' => $out,
+            'meta' => [
+                'page' => $page,
+                'perPage' => $perPage,
+                'total' => $total,
+                'totalPages' => $totalPages,
+            ],
+        ]);
+        exit;
+    }
 
     /**
      * Fetch a single user's details for the admin user page.
