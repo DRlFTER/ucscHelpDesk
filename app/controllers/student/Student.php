@@ -300,6 +300,42 @@ class Student extends Controller
         ]);
     }
 
+    // Student full announcement view
+    public function announcement($id = null)
+    {
+        $this->requireLogin('student');
+        $announcement_id = $id !== null ? (int)$id : (isset($_GET['id']) ? (int)$_GET['id'] : 0);
+        if ($announcement_id <= 0) {
+            header('Location: /404');
+            exit;
+        }
+
+        // Reuse staff announcement model for single fetch and files
+        require_once __DIR__ . '/../../models/staff/Announcement.php';
+        $model = new Announcement();
+        $announcement = null;
+        $files = [];
+        try {
+            $announcement = $model->getById($announcement_id);
+        } catch (Throwable $e) {
+            $announcement = null;
+        }
+        if (!$announcement) {
+            header('Location: /404');
+            exit;
+        }
+        try { $files = $model->getFiles($announcement_id); } catch (Throwable $e) { $files = []; }
+
+    $headContent = '<link rel="stylesheet" href="/css/student/studentAnnouncements.css" />' . "\n" .
+               '<link rel="stylesheet" href="/css/student/studentAnnouncementFull.css" />';
+        $this->view('student/studentAnnouncementFull', [
+            'title' => 'Announcement Details',
+            'head' => $headContent,
+            'announcement' => $announcement,
+            'files' => $files,
+        ]);
+    }
+
     // Student FAQ page
     public function faq()
     {
