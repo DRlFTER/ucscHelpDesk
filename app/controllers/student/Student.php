@@ -12,7 +12,7 @@ class Student extends Controller
         $lastActivity = null;
         try {
             $uId = (int)($_SESSION['user']['u_id'] ?? 0);
-            $dashboardData = $ticketModel->getDashboardData($uId, 5);
+            $dashboardData = $ticketModel->getDashboardData($uId, 3);
             $recent = $dashboardData['recent'] ?? [];
             $openCount = $dashboardData['openCount'] ?? 0;
             $lastActivity = $dashboardData['lastActivity'] ?? null;
@@ -136,18 +136,21 @@ class Student extends Controller
         $this->requireLogin('student');
         $lost = [];
         $found = [];
+        $claimed = [];
         try {
             require_once __DIR__ . '/../../models/student/LostFound.php';
             $lf = new StudentLostFound();
             $lost = $lf->getByStatus('lost', 20);
             $found = $lf->getByStatus('found', 20);
+            $claimed = $lf->getByStatus('claimed', 20);
         } catch (Throwable $e) {
             $lost = [];
             $found = [];
+            $claimed = [];
         }
 
         // Merge and sort all items by newest (q_id desc) for a single unified list
-        $items = array_merge($found, $lost);
+        $items = array_merge($found, $lost, $claimed);
         usort($items, function($a, $b){
             return (int)($b['q_id'] ?? 0) <=> (int)($a['q_id'] ?? 0);
         });
@@ -159,6 +162,7 @@ class Student extends Controller
             'items' => $items,
             'lostItems' => $lost, // kept for compatibility if needed elsewhere in the view
             'foundItems' => $found,
+            'claimedItems' => $claimed,
             'flash' => $_SESSION['lf_flash'] ?? null,
         ]);
         unset($_SESSION['lf_flash']);
@@ -271,6 +275,64 @@ class Student extends Controller
             'formAction' => '/student/newFoundItem',
             'flash' => $flash ?? null,
         ]);
+    }
+
+    // Mark a Lost & Found entry as found (owner only)
+    public function lostfound_markfound($id = null)
+    {
+        $this->requireLogin('student');
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+            header('Location: /student/lostfound');
+            exit;
+        }
+        $qId = $id !== null ? (int)$id : (isset($_POST['q_id']) ? (int)$_POST['q_id'] : 0);
+        $uId = (int)($_SESSION['user']['u_id'] ?? 0);
+        if ($qId <= 0 || $uId <= 0) {
+            $_SESSION['lf_flash'] = ['type' => 'error', 'message' => 'Invalid request.'];
+            header('Location: /student/lostfound');
+            exit;
+        }
+        try {
+            require_once __DIR__ . '/../../models/student/LostFound.php';
+            $model = new StudentLostFound();
+            $ok = $model->markFoundByIdForUser($qId, $uId);
+            if ($ok) {
+                $_SESSION['lf_flash'] = ['type' => 'success', 'message' => 'Marked as claimed.'];
+            } else {
+                $_SESSION['lf_flash'] = ['type' => 'info', 'message' => 'No change applied.'];
+            }
+        } catch (Throwable $e) {
+            $_SESSION['lf_flash'] = ['type' => 'error', 'message' => 'Failed to update: ' . $e->getMessage()];
+        }
+        header('Location: /student/lostfound');
+        exit;
+    }
+
+    // Claim a found item by any logged-in user
+    public function lostfound_claim($id = null)
+    {
+        $this->requireLogin('student');
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+            header('Location: /student/lostfound');
+            exit;
+        }
+        $qId = $id !== null ? (int)$id : (isset($_POST['q_id']) ? (int)$_POST['q_id'] : 0);
+        $uId = (int)($_SESSION['user']['u_id'] ?? 0);
+        if ($qId <= 0 || $uId <= 0) {
+            $_SESSION['lf_flash'] = ['type' => 'error', 'message' => 'Invalid request.'];
+            header('Location: /student/lostfound');
+            exit;
+        }
+        try {
+            require_once __DIR__ . '/../../models/student/LostFound.php';
+            $model = new StudentLostFound();
+            $ok = $model->markClaimedById($qId);
+            $_SESSION['lf_flash'] = ['type' => $ok ? 'success' : 'info', 'message' => $ok ? 'Item claimed.' : 'No change applied.'];
+        } catch (Throwable $e) {
+            $_SESSION['lf_flash'] = ['type' => 'error', 'message' => 'Failed to update: ' . $e->getMessage()];
+        }
+        header('Location: /student/lostfound');
+        exit;
     }
 
     // Student announcements page
