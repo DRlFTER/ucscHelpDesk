@@ -100,4 +100,47 @@ class StudentLostFound extends Model
         $stmt->close();
         return $affected > 0;
     }
+
+    /**
+     * Mark a Lost & Found record as 'found' for the owning user.
+     * Returns true if a row was updated.
+     */
+    public function markFoundByIdForUser(int $q_id, int $u_id): bool
+    {
+        $sql = "UPDATE lost_found SET status = 'claimed' WHERE q_id = ? AND u_id = ? AND status <> 'claimed' LIMIT 1";
+        $stmt = $this->db->prepare($sql);
+        if (!$stmt) {
+            throw new Exception('Prepare failed: ' . $this->db->error);
+        }
+        $stmt->bind_param('ii', $q_id, $u_id);
+        if (!$stmt->execute()) {
+            $err = $stmt->error;
+            $stmt->close();
+            throw new Exception('Execute failed: ' . $err);
+        }
+        $affected = $stmt->affected_rows;
+        $stmt->close();
+        return $affected > 0;
+    }
+
+    /**
+     * Mark a Lost & Found record as 'claimed' by q_id without ownership restriction.
+     */
+    public function markClaimedById(int $q_id): bool
+    {
+        $sql = "UPDATE lost_found SET status = 'claimed' WHERE q_id = ? AND status <> 'claimed' LIMIT 1";
+        $stmt = $this->db->prepare($sql);
+        if (!$stmt) {
+            throw new Exception('Prepare failed: ' . $this->db->error);
+        }
+        $stmt->bind_param('i', $q_id);
+        if (!$stmt->execute()) {
+            $err = $stmt->error;
+            $stmt->close();
+            throw new Exception('Execute failed: ' . $err);
+        }
+        $affected = $stmt->affected_rows;
+        $stmt->close();
+        return $affected > 0;
+    }
 }

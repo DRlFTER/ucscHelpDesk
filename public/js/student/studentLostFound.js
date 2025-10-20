@@ -167,4 +167,68 @@ document.addEventListener('DOMContentLoaded', () => {
       }, 180);
     });
   }
+
+  // Progressive enhancement: AJAX-mark as found to avoid full reload
+  document.querySelectorAll('form[action^="/student/lostfound_markfound/"]').forEach(form => {
+    form.addEventListener('submit', async (e) => {
+      // Allow normal POST if fetch fails
+      e.preventDefault();
+      const btn = form.querySelector('[data-mark-found-btn]');
+      if (btn) { btn.disabled = true; btn.textContent = 'Marking…'; }
+      try {
+        const resp = await fetch(form.action, { method: 'POST', credentials: 'same-origin' });
+        if (!resp.ok) throw new Error('Request failed');
+        // Swap button to disabled 'Item found' and update card state visually
+        if (btn) {
+          btn.textContent = 'Item claimed';
+          btn.disabled = true;
+          btn.style.background = '#e5e7eb';
+          btn.style.color = '#374151';
+          btn.style.borderColor = '#d1d5db';
+          // Update badge
+          const card = form.closest('.lfCard');
+          if (card) {
+            card.classList.remove('lost');
+            card.classList.add('found');
+            const badge = card.querySelector('.state');
+            if (badge) { badge.classList.remove('lost'); badge.classList.remove('found'); badge.classList.add('claimed'); badge.textContent = 'Claimed'; }
+          }
+        }
+      } catch (err) {
+        if (btn) { btn.disabled = false; btn.textContent = 'Mark as claimed'; }
+        // fall back to default navigation on error
+        form.submit();
+      }
+    });
+  });
+
+  // AJAX-claim for non-owners on found items
+  document.querySelectorAll('form[action^="/student/lostfound_claim/"]').forEach(form => {
+    form.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const btn = form.querySelector('[data-claim-btn]');
+      if (btn) { btn.disabled = true; btn.textContent = 'Claiming…'; }
+      try {
+        const resp = await fetch(form.action, { method: 'POST', credentials: 'same-origin' });
+        if (!resp.ok) throw new Error('Request failed');
+        if (btn) {
+          btn.textContent = 'Item claimed';
+          btn.disabled = true;
+          btn.style.background = '#e5e7eb';
+          btn.style.color = '#374151';
+          btn.style.borderColor = '#d1d5db';
+          const card = form.closest('.lfCard');
+          if (card) {
+            card.classList.remove('lost');
+            card.classList.add('found');
+            const badge = card.querySelector('.state');
+            if (badge) { badge.classList.remove('lost'); badge.classList.remove('found'); badge.classList.add('claimed'); badge.textContent = 'Claimed'; }
+          }
+        }
+      } catch (err) {
+        if (btn) { btn.disabled = false; btn.textContent = 'Mark as claimed'; }
+        form.submit();
+      }
+    });
+  });
 });

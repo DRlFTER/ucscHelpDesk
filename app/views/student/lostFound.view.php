@@ -61,9 +61,9 @@ function time_ago_label($datetime)
         <div class="lfList" data-current-user="<?= (int)($_SESSION['user']['u_id'] ?? 0) ?>">
         <?php if (!empty($items)): ?>
           <?php foreach ($items as $it): ?>
-            <?php $isFound = strtolower($it['status'] ?? '') === 'found'; ?>
-            <article class="lfCard <?= $isFound ? 'found' : 'lost' ?>" data-u-id="<?= (int)($it['u_id'] ?? 0) ?>">
-              <h3><span class="state <?= $isFound ? 'found' : 'lost' ?>"><?= $isFound ? 'Found' : 'Lost' ?></span> <?= htmlspecialchars($it['item_title']) ?></h3>
+            <?php $statusLower = strtolower($it['status'] ?? ''); $isResolved = ($statusLower === 'found' || $statusLower === 'claimed'); ?>
+            <article class="lfCard <?= $isResolved ? 'found' : 'lost' ?>" data-u-id="<?= (int)($it['u_id'] ?? 0) ?>">
+              <h3><span class="state <?= $statusLower === 'claimed' ? 'claimed' : ($isResolved ? 'found' : 'lost') ?>"><?= $isResolved ? ($statusLower === 'claimed' ? 'Claimed' : 'Found') : 'Lost' ?></span> <?= htmlspecialchars($it['item_title']) ?></h3>
               <p><?= nl2br(htmlspecialchars($it['item_details'])) ?></p>
               <ul class="meta">
                 <?php if (!empty($it['category'])): ?><li>Category: <?= htmlspecialchars(ucfirst($it['category'])) ?></li><?php endif; ?>
@@ -80,11 +80,36 @@ function time_ago_label($datetime)
                 <span>Request No #<?= (int)$it['q_id'] ?></span>
                 <?php $currentUserId = (int)($_SESSION['user']['u_id'] ?? 0); ?>
                 <?php if ($currentUserId && $currentUserId === (int)($it['u_id'] ?? 0)): ?>
+                  <?php if (!$isResolved): ?>
+                  <form method="POST" action="/student/lostfound_markfound/<?= (int)$it['q_id'] ?>" style="margin-left:12px;">
+                    <button type="submit" class="btnWSvg" data-mark-found-btn style="padding:6px 10px; border-radius:8px; background:#dcfce7; color:#166534; border:1px solid #bbf7d0; cursor:pointer;">
+                      Mark as claimed
+                    </button>
+                  </form>
+                  <?php elseif ($statusLower === 'found'): ?>
+                  <form method="POST" action="/student/lostfound_claim/<?= (int)$it['q_id'] ?>" style="margin-left:12px;">
+                    <button type="submit" class="btnWSvg" data-claim-btn style="padding:6px 10px; border-radius:8px; background:#dcfce7; color:#166534; border:1px solid #bbf7d0; cursor:pointer;">
+                      Mark as claimed
+                    </button>
+                  </form>
+                  <?php else: ?>
+                    <button type="button" class="btnWSvg" disabled style="margin-left:12px; padding:6px 10px; border-radius:8px; background:#e5e7eb; color:#374151; border:1px solid #d1d5db; cursor:not-allowed;">
+                      Item claimed
+                    </button>
+                  <?php endif; ?>
                   <form method="POST" action="/student/lostfound_delete/<?= (int)$it['q_id'] ?>" onsubmit="return confirm('Delete this submission? This cannot be undone.');" style="margin-left:12px;">
                     <button type="submit" class="btnWSvg btnDangerText" style="padding:6px 10px; border-radius:8px; background:#fee2e2; color:#b91c1c; border:1px solid #fecaca; cursor:pointer;">
                       Delete
                     </button>
                   </form>
+                <?php elseif ($currentUserId): ?>
+                  <?php if ($statusLower === 'found'): ?>
+                    <form method="POST" action="/student/lostfound_claim/<?= (int)$it['q_id'] ?>" style="margin-left:12px;">
+                      <button type="submit" class="btnWSvg" data-claim-btn style="padding:6px 10px; border-radius:8px; background:#dcfce7; color:#166534; border:1px solid #bbf7d0; cursor:pointer;">
+                        Mark as claimed
+                      </button>
+                    </form>
+                  <?php endif; ?>
                 <?php endif; ?>
                 <span class="time"><?=
                     isset($it['created_at']) ? htmlspecialchars(time_ago_label($it['created_at'])) : 'recent'

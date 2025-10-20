@@ -188,6 +188,11 @@
 	color: #ef4444;
 }
 
+/* Claimed status shown in yellow */
+.lfCard .state.claimed {
+	color: #f59e0b;
+}
+
 .lfCard p {
 	margin: 0 0 8px;
 	color: #374151;
