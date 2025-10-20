@@ -43,6 +43,12 @@ class Admin extends Controller
         <link rel="stylesheet" href="/css/admin/adminUserFull.css"/>';
         $this->view('adminUserFull', ['title' => 'User Details', 'head' => $headContent]);
     }
+    public function calender() {
+        $this->requireLogin('admin');
+        $headContent = '
+        <link rel="stylesheet" href="/css/admin/adminCalender.css"/>';
+        $this->view('adminCalender', ['title' => 'Calender', 'head' => $headContent]);
+    }
 
     /**
      * Fetch a single user's details for the admin user page.
