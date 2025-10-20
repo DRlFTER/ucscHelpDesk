@@ -9,6 +9,7 @@
         'dashboard' => '/admin/dashboard',
         'tickets'   => '/admin/tickets',
         'calender'  => '/admin/calender',
+        'forum'     => '/admin/forum',
         'newTicket' => null,
       ],
       'student' => [
@@ -95,8 +96,8 @@
       <div class="navbarMenuContainer">
   <a href="<?= htmlspecialchars($dashboardHref) ?>" class="navbarLink <?= $dashboardActive ? 'active pointer-events:none' : 'pointer-events:none; opacity:0.5;' ?>">Dashboard</a>
   <a href="<?= $ticketsHref ? htmlspecialchars($ticketsHref) : '#' ?>" class="navbarLink <?= $ticketsActive ? 'active' : '' ?>" style="<?= $ticketsHref ? '' : 'pointer-events:none; opacity:0.5;' ?>">Tickets</a>
-  <a href="<?= $calenderHref ? htmlspecialchars($calenderHref) : '#' ?>" class="navbarLink <?= $calenderActive ? 'active' : '' ?>" style="<?= $calenderHref ? '' : 'pointer-events:none; opacity:0.5;' ?>">Calendar</a>
-    <a href="<?= htmlspecialchars($forumHref) ?>" class="navbarLink <?= $forumActive ? 'active' : '' ?>">Forum</a>
+  <!-- <a href="<?= $calenderHref ? htmlspecialchars($calenderHref) : '#' ?>" class="navbarLink <?= $calenderActive ? 'active' : '' ?>" style="<?= $calenderHref ? '' : 'pointer-events:none; opacity:0.5;' ?>">Calendar</a> -->
+  <a href="<?= $forumHref ? htmlspecialchars($forumHref) : '#' ?>" class="navbarLink <?= $forumActive ? 'active' : '' ?>" style="<?= $forumHref ? '' : 'pointer-events:none; opacity:0.5;' ?>">Forum</a>
         <div class="btnHolder">
           <a href="<?= $hasNewTicket ? htmlspecialchars($newTicketHref) : '#' ?>" class="navbarNewTicket btnWSvg btnPrimaryText" style="text-decoration:none; display:inline-flex; align-items:center; gap:6px; <?= $hasNewTicket ? '' : 'pointer-events:none; opacity:0.5;' ?>">
             <svg xmlns="http://www.w3.org/2000/svg" width="25" height="25" viewBox="0 0 30 30" fill="none">
