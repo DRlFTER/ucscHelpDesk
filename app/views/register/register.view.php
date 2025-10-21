@@ -49,7 +49,18 @@
                     <input type="hidden" name="role" value="staff">
             <input type="text" name="fullName" placeholder="Full Name" required>
             <input type="email" name="email" placeholder="Staff Email" required>
-            <input type="text" name="staffId" placeholder="Staff ID / Designation" required>
+            <select id="staffDesignation" name="designation" required>
+                <option value="" disabled selected>Select Department</option>
+                <option value="1">General Administration</option>
+                <option value="2">Establishment</option>
+                <option value="3">Academic Publication and Welfare</option>
+                <option value="4">Postgraduate Research and Project</option>
+                <option value="5">Examination and Registration</option>
+                <option value="6">Engineering</option>
+                <option value="7">Finance</option>
+                <option value="8">Library</option>
+                <option value="9">CSC and NOC</option>
+            </select>
             <input type="text" name="number" placeholder="Phone Number (optional)">
             <input type="password" name="password" placeholder="Password" required>
             <input type="password" name="confirmPassword" placeholder="Confirm Password" required>

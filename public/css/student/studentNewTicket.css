@@ -38,10 +38,18 @@
 }
 
 .ticketCard {
-  background: #fff;
-  border: 1px solid #e5e7eb;
   border-radius: 12px;
   padding: 20px;
+  backdrop-filter: blur(20px);
+  border: 1px solid rgba(255, 255, 255, 0.5);
+  background: rgba(255, 255, 255, 0.5);
+  transition: all 0.2s ease-in-out;
+  cursor: pointer;
+}
+
+.ticketCard:hover {
+  background: rgba(255, 255, 255, 1);
+  border: 1px solid rgba(140, 140, 249, 0.7);
 }
 
 .label {
@@ -60,30 +68,33 @@
   font-weight: 400;
   margin-bottom: 10px;
 }
+
 .ticketCard .field {
   margin-bottom: 20px;
 }
+
 .ticketCard .row2 {
   gap: 18px;
 }
+
 .ticketCard .btnHolder { margin-top: 12px; }
 
 .ticketToggle {
   display: inline-flex;
   gap: 8px;
 }
+
 .ticketToggle .btnAttach {
   background: #f3f4f6;
   color: #1f2937;
   padding: 8px 12px;
   font-size: 13px;
   gap: 8px;
-  /* Keep hover smooth but avoid transform animations that cause jiggle */
-  transition: background-color 0.25s ease, box-shadow 0.25s ease;
+  background: rgba(255, 255, 255, 1);
 }
+
 .ticketToggle .btnAttach:hover {
   background-color: #e5e7eb;
-  /* Override global .btnAttach:hover translateY */
   transform: none;
 }
 .ticketToggle .btnAttach.active {
@@ -239,6 +250,11 @@ select::-ms-expand { display: none; }
   gap: 16px;
 }
 
+/* helper: make a field inside row2 span both columns */
+.row2 .field.full-width {
+  grid-column: 1 / -1;
+}
+
 textarea#details {
   resize: vertical;
 }
@@ -328,10 +344,18 @@ textarea#details {
 .tipsList { display: grid; gap: 8px; }
 .tipLine { display: flex; align-items: center; gap: 8px; color: #374151; }
 .tipIcon { color: #22c55e; fill: currentColor; stroke: currentColor; }
-  background: #fff;
-  border: 1px solid #e5e7eb;
   border-radius: 12px;
   padding: 20px;
+  backdrop-filter: blur(20px);
+  border: 1px solid rgba(255, 255, 255, 0.5);
+  background: rgba(255, 255, 255, 0.5);
+  transition: all 0.2s ease-in-out;
+  cursor: pointer;
+}
+
+.sideCard:hover {
+  background: rgba(255, 255, 255, 1);
+  border: 1px solid rgba(140, 140, 249, 0.7);
 }
 
 .sideCard h3 {
@@ -343,7 +367,7 @@ textarea#details {
   align-items: center;
   gap: 8px;
   border: 1px solid #e5e7eb;
-  border-radius: 8px;
+  border-radius: 30px;
   padding: 10px 12px;
 }
 
@@ -352,6 +376,7 @@ textarea#details {
   font-size: 14px;
   outline: none;
   flex: 1;
+  background: transparent;
 }
 
 @media (max-width: 1200px) {

@@ -120,4 +120,4 @@
 	</div>
 </main>
 
-<script src="/js/student/ticket.js"></script>
+<script src="/js/student/studentTicket.js"></script>

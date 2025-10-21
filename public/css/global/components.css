@@ -60,6 +60,50 @@ body {
   font-family: "SF Pro";
 }
 
+.fullPage {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  padding: 30px;
+  height: calc(100dvh - var(--navbar-height, 64px)); /* fixed to viewport */
+  min-height: 0; /* allow inner flex items to shrink */
+}
+
+.pageHeader {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 0 10px;
+}
+
+.pageLayout {
+  display: flex;
+  align-items: stretch; /* columns match height */
+  gap: 16px;
+  height: 100%;
+  padding: 10px;
+  backdrop-filter: blur(20px);
+  border-radius: 20px;
+  padding: 16px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: rgba(255, 255, 255, 0.5);
+  box-shadow: none;
+  color: #111827;
+  transition: all 0.18s ease-in-out;
+  background-clip: padding-box;
+  overflow: hidden; /* prevent page scroll; allow inner panes to manage scrolling */
+}
+
+.pageTitle {
+  font-size: 26px;
+  font-weight: 600;
+}
+.pageSubtitle {
+  color: #394353;
+  font-size: 16px;
+}
+
 .titleText {
   color: #000;
   text-align: center;
@@ -184,7 +228,6 @@ body {
   display: flex;
   width: 46px;
   height: 46px;
-  padding-left: 5px;
   justify-content: center;
   align-items: center;
   gap: 10px;
@@ -199,7 +242,6 @@ body {
 
 .btnSvg:hover {
   background-color: #6a6af5;
-  transform: translateY(-2px);
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
 }
 
@@ -352,7 +394,6 @@ body {
   justify-content: space-between;
   align-items: center;
   padding: 8px 20px;
-  background-color: #fff;
   z-index: 1000;
 }
 
@@ -610,3 +651,143 @@ body {
 }
 
 /* ----- ICON STATUS ----- */
+
+/* ----- SHARED SETTINGS-LIKE SIDE MENU ----- */
+
+.settingsLeft {
+  display: flex;
+  width: 20%;
+  height: 100%;
+  flex-direction: column;
+  gap: 10px;
+  backdrop-filter: blur(20px);
+  border-radius: 12px;
+  padding: 16px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: rgba(255, 255, 255, 0.5);
+  box-shadow: none;
+  color: #111827;
+  transition: all 0.18s ease-in-out;
+  background-clip: padding-box;
+  overflow: auto; /* if menu grows, scroll inside instead of page */
+}
+
+/* Side menu buttons */
+/* Exclude specialized buttons from generic settings-left styles */
+.settingsLeft
+  button:not(.btnSvg):not(.btnPrimary):not(.btnSecondary):not(.btnWSvg),
+.settingsNavBtn {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  padding: 12px 14px;
+  border-radius: 12px;
+  border: none;
+  background: #ffffff;
+  color: #111827;
+  font-size: 14px;
+  cursor: pointer;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease,
+    background-color 0.2s ease, transform 0.12s ease;
+}
+
+.settingsLeft
+  button:not(.btnSvg):not(.btnPrimary):not(.btnSecondary):not(.btnWSvg):hover,
+.settingsNavBtn:hover {
+  background-color: #f5f5f5;
+}
+
+.settingsLeft
+  button:not(.btnSvg):not(.btnPrimary):not(.btnSecondary):not(.btnWSvg):active,
+.settingsNavBtn:active {
+  transform: translateY(1px);
+}
+
+.settingsLeft
+  button:not(.btnSvg):not(.btnPrimary):not(.btnSecondary):not(.btnWSvg).active,
+.settingsNavBtn.active {
+  border-color: var(--CTA, #8c8cf9);
+  box-shadow: 0 0 0 4px rgba(140, 140, 249, 0.15);
+  background: #ffffff;
+}
+
+.settingsRight,
+.adminRight {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  min-height: 0; /* allow child to shrink for overflow */
+  overflow: hidden; /* contain scroll within inner content */
+}
+
+.settingsHeader {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.settingsHeader h2 {
+  font-size: 20px;
+  font-weight: 600;
+  margin: 0;
+}
+
+.settingsHeader p {
+  margin: 0;
+  color: #6b7280;
+}
+
+.settingsCard {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  /* height: auto by default; remove invalid 'fill' */
+  backdrop-filter: blur(20px);
+  border-radius: 12px;
+  padding: 16px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: rgba(255, 255, 255, 0.5);
+  transition: all 0.18s ease-in-out;
+  background-clip: padding-box;
+}
+
+.settingGroup {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.settingGroupTitle {
+  font-weight: 600;
+  font-size: 14px;
+}
+
+.settingRow {
+  display: grid;
+  grid-template-columns: 220px 1fr;
+  align-items: center;
+  gap: 10px;
+}
+
+.settingLabel {
+  color: #374151;
+  font-size: 14px;
+}
+
+.settingControl input,
+.settingControl select,
+.settingControl textarea {
+  width: 100%;
+  padding: 10px;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  font-size: 14px;
+  background: #ffffff;
+}
+
+.mutedText {
+  color: #6b7280;
+  font-size: 12px;
+}

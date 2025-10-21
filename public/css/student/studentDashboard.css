@@ -13,15 +13,21 @@ main {
 }
 
 .sectionCard {
-  background: white;
-  border-radius: 8px;
+  border-radius: 15px;
   padding: 15px;
+  padding-bottom: 18px;
   box-shadow: 0 3px 8px rgba(0, 0, 0, 0.08);
   display: flex;
   flex-direction: column;
-  gap: 10px;
+  gap: 12px;
   width: 100%;
+  backdrop-filter: blur(20px);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: rgba(255, 255, 255, 0.5);
+  transition: all 0.18s ease-in-out;
+  background-clip: padding-box;
 }
+
 
 .dashboardContainer {
   width: 100%;
@@ -96,7 +102,7 @@ main {
   background: linear-gradient(135deg, #6a6af5 0%, #babaff 100%);
   color: white;
   padding: 20px;
-  border-radius: 8px;
+  border-radius: 15px;
   display: flex;
   flex-direction: column;
   gap: 10px;
@@ -137,7 +143,7 @@ h3 {
 
 .quickActions {
   display: flex;
-  gap: 10px;
+  gap: 17px;
   width: 100%;
 }
 
@@ -151,8 +157,8 @@ h3 {
 .quickActions a {
   flex:1;
   padding: 12px;
-  height: 80px;
-  border-radius: 6px;
+  height: 90px;
+  border-radius: 10px;
   font-weight: 500;
   text-align: center;
   cursor: pointer;
@@ -168,7 +174,6 @@ h3 {
 }
 
 .quickActions a:hover {
-  transform: translateY(-5px);
   box-shadow: 0 4px 10px rgba(0,0,0,0.2);
 }
 
@@ -176,8 +181,6 @@ h3 {
     width: 30px; 
     height: 30px;
     fill: white;      
-    opacity: 0.85;    
-    transition: fill 0.3s ease, transform 0.2s ease;
 }
 
 .quickActions a:nth-child(1) { background: #8C8CF9; }
@@ -188,15 +191,20 @@ h3 {
 .quickActions a:nth-child(3):hover { background: #aa50ff; }
 .quickActions a:nth-child(4) { background: #FF6262; }
 .quickActions a:nth-child(4):hover { background: #ff3636; }
+.quickActions a:nth-child(5) { background: #FF6262; }
+.quickActions a:nth-child(5):hover { background: #ff3636; }
+.quickActions a:nth-child(6) { background: #FF6262; }
+.quickActions a:nth-child(6):hover { background: #ff3636; }
 
 .knowledgeBase .kbSearch {
   display: flex;
   align-items: center;
   gap: 8px;
   border: 1px solid #e5e7eb;
-  border-radius: 8px;
+  border-radius: 30px;
   padding: 10px 12px;
   background: #fff;
+  
 }
 
 .knowledgeBase .kbSearch input {
@@ -206,29 +214,48 @@ h3 {
   flex: 1;
 }
 
-.recentTickets {
-  width: 100%;
+/* Account section button-like items */
+.account .accountItems {
   display: flex;
   flex-direction: column;
-  gap: 10px;
-  background: white;
-  border-radius: 8px;
-  padding: 15px;
+  gap: 12px;
 }
+
+.account .accountItem {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 12px;
+  border-radius: 8px;
+  background: transparent;
+  color: #111827;
+  text-decoration: none;
+  transition: background-color .2s ease, box-shadow .2s ease, transform .1s ease;
+  cursor: pointer;
+  width: 100%;
+}
+
+.account .accountItem svg {
+  flex-shrink: 0;
+}
+
+/* Hide manual line breaks inside account buttons for cleaner layout */
+.account .accountItem br { display: none; }
 
 .ticket {
   background: #f9f9f9;
   color: black;
   text-decoration: none;
   border: 1px solid #ddd;
-  border-radius: 6px;
+  border-radius: 10px;
   padding: 10px;
   display: flex;
   flex-direction: row;
   justify-content: space-between;
   align-items: center;
   cursor: pointer;
-  transition: background 0.2s ease;
+  transition: all 0.2s ease-in-out;
+  
 }
 
 .ticketDetails {
@@ -244,8 +271,12 @@ h3 {
   margin-top: 0;
 }
 
-.ticket:hover {
-  background: rgb(241, 243, 244);
+.ticket:hover,
+.ticket.isHover,
+.ticket:focus-visible {
+  background: rgba(255, 255, 255, 1);
+  border: 1px solid rgba(140, 140, 249, 0.7);
+  outline: none;
 }
 
 .ticketTitle {
@@ -286,97 +317,67 @@ h3 {
   margin-bottom: 0;
 }
 
-.priority,
-.announcements,
-.calendar,
-.account {
-  background: white;
-  border-radius: 8px;
-  padding: 15px;
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-  width: 100%;
-  box-shadow: 0 3px 8px rgba(0, 0, 0, 0.08);
-  
-}
-
-.priorityItem{
-  text-decoration: none;
-  background: #ffd7d3;
-  color: #FA6060;
-  padding: 3%;
-  padding-top: 5%;
-  padding-bottom: 5%;
-  border-radius: 10px;
-  border: 1px solid #FA6060;
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  width: 100%;
-  box-sizing: border-box;
-}
-
 .priorityTitle,
 .announcementTitle {
   font-size: 15px;
   font-weight: 500;
 }
 
-.priorityDescription{
-  font-size: 13px;
-  font-weight: 400;
+.priorityItem {
+  background: #fa606043;
+  color: #FA6060;
+  border: 1px solid #fa60605f;
 }
 
 .announcement.warning {
-  font-size: 13px;
   background: #FEF9C3;
   color: #9D5226;
-  padding: 3%;
-  padding-top: 5%;
-  padding-bottom: 5%;
-  border-radius: 10px;
   border: 1px solid #9D5226;
-  text-decoration: none;
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  width: 100%;
-  box-sizing: border-box;
 }
-.announcement.info {
+
+.announcement.info{
+  background: #6a6af51f;
+  color: #6a6af5;
+  border: 1px solid #6a6af544;
+}
+
+.announcement.info,
+.priorityItem,
+.announcement.warning {
   font-size: 13px;
-  background: #d1ecf1;
-  color: #2786FF;
   padding: 3%;
   padding-top: 5%;
   padding-bottom: 5%;
   border-radius: 10px;
-  border: 1px solid #2786FF;
   text-decoration: none;
   display: flex;
   align-items: center;
   gap: 8px;
   width: 100%;
   box-sizing: border-box;
+  text-decoration: none;
+  cursor: pointer;
+  transition: all 0.2s ease-in-out;
 }
 
 .calendar .event {
-  display: flex;
-  font-size: 14px;
   background: #d4edda;
   color: #00AB36;
+  border: 1px solid #00ab3655;
+  display: flex;
+  justify-content: space-between;
+  font-size: 15px;
   padding: 3%;
   padding-top: 5%;
   padding-bottom: 5%;
   border-radius: 10px;
-  border: 1px solid #00AB36;
   text-decoration: none;
   width: 100%;
   box-sizing: border-box;
   flex-direction: row;
   align-items: center;
   gap: 15px;
+  transition: all 0.2s ease-in-out;
 }
 
 .accountItem {
@@ -395,4 +396,46 @@ h3 {
 
 .accountItem svg{
   color: #394353;
+}
+
+.mutedText {
+  color: #6b7280;
+}
+
+.clickable {
+  cursor: pointer;
+}
+
+.announcements .announcement svg.announcementIcon {
+  width: 28px;
+  height: 28px;
+  min-width: 28px;
+  min-height: 28px;
+  display: inline-block;
+  flex-shrink: 0;
+  fill: currentColor;
+}
+
+.announcement:hover,
+.announcement.isHover,
+.announcement:focus-visible {
+  background: rgba(255, 255, 255, 1);
+  border: 1px solid rgba(140, 140, 249, 0.7);
+  outline: none;
+}
+
+.priorityItem:hover,
+.priorityItem.isHover,
+.priorityItem:focus-visible {
+  background: rgba(255, 255, 255, 1);
+  border: 1px solid #fa6060;
+  outline: none;
+}
+
+.calendar .event:hover,
+.calendar .event.isHover,
+.calendar .event:focus-visible {
+  background: rgba(255, 255, 255, 1);
+  border: 1px solid #00AB36;
+  outline: none;
 }
