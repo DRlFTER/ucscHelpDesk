@@ -11,13 +11,12 @@
         <!-- Sidebar Navigation -->
         <nav class="navMenu">
             <div class="sideNav">
-                <a href="/staff/dashboard" class="nav-link">Dashboard</a>
-                <a href="/staff/tickets" class="nav-link">My Tickets</a>
+                <a href="/staff/staffDashboard" class="nav-link">Dashboard</a>
+                <a href="/staff/staffTickets" class="nav-link">My Tickets</a>
                 <a href="/staff/staffAnnoucements" class="nav-link active">Announcements</a>
                 <a href="/staff/createTemplate" class="nav-link">Templates</a>
                 <a href="/staff/forum" class="nav-link">Forums</a>
                 <a href="/staff/calendar" class="nav-link">Calendar</a>
-                <a href="/staff/lostfound" class="nav-link">Lost &amp; Found</a>
                 <a href="/staff/settings" class="nav-link">Settings</a>
             </div>
         </nav>

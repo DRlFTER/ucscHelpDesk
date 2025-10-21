@@ -354,6 +354,8 @@
       <?php endif; ?>
 
       <!-- Response Section -->
+       <?php if ($ticket['status'] !== 'Agent-closed'): ?>
+        <?php if (isset($ticket['assigned_to']) && $ticket['assigned_to'] == $_SESSION['user']['u_id']): ?>
       <div class="response-section">
         <h3>Add Response</h3>
         <p>Add a comment or update to this ticket.</p>
@@ -363,6 +365,8 @@
           <button type="submit" class="submit-response-btn">Submit Response</button>
         </form>
       </div>
+      <?php endif; ?>
+<?php endif; ?>
 
       <!-- Forward Section (Only if Assigned to Current Staff) -->
       <?php if (isset($ticket['assigned_to']) && $ticket['assigned_to'] == $_SESSION['user']['u_id']): ?>
