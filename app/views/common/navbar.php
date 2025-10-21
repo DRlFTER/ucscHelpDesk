@@ -15,7 +15,7 @@
       'student' => [
         'dashboard' => '/student/dashboard',
         'tickets'   => '/student/tickets',
-        'calender'  => '/admin/calender',
+        'calender'  => '/student/calender',
         'forum'     => '/student/forum',
         'newTicket' => '/student/ticket',
       ],

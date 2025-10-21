@@ -431,6 +431,17 @@ class Student extends Controller
         ]);
     }
 
+    // Student Calendar page
+    public function calender()
+    {
+        $this->requireLogin('student');
+        $headContent = '<link rel="stylesheet" href="/css/student/studentCalender.css" />';
+        $this->view('student/studentCalender', [
+            'title' => 'Calendar',
+            'head' => $headContent,
+        ]);
+    }
+
     // Student forum page (UI identical to Tickets for now)
     public function forum()
     {
