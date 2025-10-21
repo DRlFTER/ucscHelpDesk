@@ -319,16 +319,21 @@ h3 {
   text-decoration: none;
   background: #ffd7d3;
   color: #FA6060;
+  border: 1px solid #FA6060;
+  font-size: 13px;
   padding: 3%;
   padding-top: 5%;
   padding-bottom: 5%;
   border-radius: 10px;
-  border: 1px solid #FA6060;
+  text-decoration: none;
   display: flex;
   align-items: center;
   gap: 8px;
   width: 100%;
   box-sizing: border-box;
+  text-decoration: none;
+  cursor: pointer;
+  transition: all 0.2s ease-in-out;
 }
 
 .priorityTitle,
@@ -358,21 +363,25 @@ h3 {
   width: 100%;
   box-sizing: border-box;
 }
+
 .announcement.info {
   font-size: 13px;
-  background: #d1ecf1;
-  color: #2786FF;
+  background: #6a6af51f;
   padding: 3%;
   padding-top: 5%;
   padding-bottom: 5%;
   border-radius: 10px;
-  border: 1px solid #2786FF;
   text-decoration: none;
   display: flex;
   align-items: center;
   gap: 8px;
   width: 100%;
   box-sizing: border-box;
+  color: #6a6af5;
+  text-decoration: none;
+  border: 1px solid #6a6af544;
+  cursor: pointer;
+  transition: all 0.2s ease-in-out;
 }
 
 .calendar .event {
@@ -409,4 +418,32 @@ h3 {
 
 .accountItem svg{
   color: #394353;
+}
+
+/* Utilities */
+.mutedText {
+  color: #6b7280;
+}
+
+.clickable {
+  cursor: pointer;
+}
+
+/* Announcements */
+.announcements .announcement svg.announcementIcon {
+  width: 28px;
+  height: 28px;
+  min-width: 28px;
+  min-height: 28px;
+  display: inline-block;
+  flex-shrink: 0;
+  fill: currentColor;
+}
+
+.announcement:hover,
+.announcement.isHover,
+.announcement:focus-visible {
+  background: rgba(255, 255, 255, 1);
+  border: 1px solid rgba(140, 140, 249, 0.7);
+  outline: none;
 }
