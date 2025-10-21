@@ -3,7 +3,7 @@
 session_start();
 require '../app/core/init.php';
 
-$timeout = 900;
+$timeout = 3600;
 $currentPath = $_SERVER['REQUEST_URI'];
 
 if (!empty($_SESSION['user'])) {

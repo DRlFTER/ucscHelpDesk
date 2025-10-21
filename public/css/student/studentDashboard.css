@@ -157,7 +157,7 @@ h3 {
 .quickActions a {
   flex:1;
   padding: 12px;
-  height: 80px;
+  height: 90px;
   border-radius: 10px;
   font-weight: 500;
   text-align: center;
@@ -181,8 +181,6 @@ h3 {
     width: 30px; 
     height: 30px;
     fill: white;      
-    opacity: 0.85;    
-    transition: fill 0.3s ease, transform 0.2s ease;
 }
 
 .quickActions a:nth-child(1) { background: #8C8CF9; }
@@ -193,6 +191,10 @@ h3 {
 .quickActions a:nth-child(3):hover { background: #aa50ff; }
 .quickActions a:nth-child(4) { background: #FF6262; }
 .quickActions a:nth-child(4):hover { background: #ff3636; }
+.quickActions a:nth-child(5) { background: #FF6262; }
+.quickActions a:nth-child(5):hover { background: #ff3636; }
+.quickActions a:nth-child(6) { background: #FF6262; }
+.quickActions a:nth-child(6):hover { background: #ff3636; }
 
 .knowledgeBase .kbSearch {
   display: flex;
@@ -315,58 +317,34 @@ h3 {
   margin-bottom: 0;
 }
 
-.priorityItem{
-  text-decoration: none;
-  background: #ffd7d3;
-  color: #FA6060;
-  border: 1px solid #FA6060;
-  font-size: 13px;
-  padding: 3%;
-  padding-top: 5%;
-  padding-bottom: 5%;
-  border-radius: 10px;
-  text-decoration: none;
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  width: 100%;
-  box-sizing: border-box;
-  text-decoration: none;
-  cursor: pointer;
-  transition: all 0.2s ease-in-out;
-}
-
 .priorityTitle,
 .announcementTitle {
   font-size: 15px;
   font-weight: 500;
 }
 
-.priorityDescription{
-  font-size: 13px;
-  font-weight: 400;
+.priorityItem {
+  background: #fa606043;
+  color: #FA6060;
+  border: 1px solid #fa60605f;
 }
 
 .announcement.warning {
-  font-size: 13px;
   background: #FEF9C3;
   color: #9D5226;
-  padding: 3%;
-  padding-top: 5%;
-  padding-bottom: 5%;
-  border-radius: 10px;
   border: 1px solid #9D5226;
-  text-decoration: none;
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  width: 100%;
-  box-sizing: border-box;
 }
 
-.announcement.info {
-  font-size: 13px;
+.announcement.info{
   background: #6a6af51f;
+  color: #6a6af5;
+  border: 1px solid #6a6af544;
+}
+
+.announcement.info,
+.priorityItem,
+.announcement.warning {
+  font-size: 13px;
   padding: 3%;
   padding-top: 5%;
   padding-bottom: 5%;
@@ -377,29 +355,29 @@ h3 {
   gap: 8px;
   width: 100%;
   box-sizing: border-box;
-  color: #6a6af5;
   text-decoration: none;
-  border: 1px solid #6a6af544;
   cursor: pointer;
   transition: all 0.2s ease-in-out;
 }
 
 .calendar .event {
-  display: flex;
-  font-size: 14px;
   background: #d4edda;
   color: #00AB36;
+  border: 1px solid #00ab3655;
+  display: flex;
+  justify-content: space-between;
+  font-size: 15px;
   padding: 3%;
   padding-top: 5%;
   padding-bottom: 5%;
   border-radius: 10px;
-  border: 1px solid #00AB36;
   text-decoration: none;
   width: 100%;
   box-sizing: border-box;
   flex-direction: row;
   align-items: center;
   gap: 15px;
+  transition: all 0.2s ease-in-out;
 }
 
 .accountItem {
@@ -420,7 +398,6 @@ h3 {
   color: #394353;
 }
 
-/* Utilities */
 .mutedText {
   color: #6b7280;
 }
@@ -429,7 +406,6 @@ h3 {
   cursor: pointer;
 }
 
-/* Announcements */
 .announcements .announcement svg.announcementIcon {
   width: 28px;
   height: 28px;
@@ -445,5 +421,21 @@ h3 {
 .announcement:focus-visible {
   background: rgba(255, 255, 255, 1);
   border: 1px solid rgba(140, 140, 249, 0.7);
+  outline: none;
+}
+
+.priorityItem:hover,
+.priorityItem.isHover,
+.priorityItem:focus-visible {
+  background: rgba(255, 255, 255, 1);
+  border: 1px solid #fa6060;
+  outline: none;
+}
+
+.calendar .event:hover,
+.calendar .event.isHover,
+.calendar .event:focus-visible {
+  background: rgba(255, 255, 255, 1);
+  border: 1px solid #00AB36;
   outline: none;
 }
