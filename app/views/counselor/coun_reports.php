@@ -1,7 +1,12 @@
 <?php
 // coun_reports.php
 session_start();
-include 'db_connect.php';
+require_once('../../core/config.php');
+$conn = new mysqli(DBHOST, DBUSER, DBPASSWORD, DBNAME, DBPORT);
+
+if ($conn->connect_error) {
+    die("DB Connection failed: " . $conn->connect_error);
+}
 
 $counselor_name = "Mrs. Nalani Perera"; // Replace with session data
 

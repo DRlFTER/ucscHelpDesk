@@ -18,7 +18,6 @@
           <a href="/staff/createTemplate" class="nav-link">Template</a>
           <a href="/staff/forum" class="nav-link">Forums</a>
           <a href="/staff/calendar" class="nav-link">Calendar</a>
-          <a href="/staff/lostfound" class="nav-link">Lost &amp; Found</a>
           <a href="/staff/settings" class="nav-link">Settings</a>
         </div>
       </nav>
