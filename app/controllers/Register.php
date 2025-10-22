@@ -7,7 +7,9 @@ class Register extends Controller
         // If POST, attempt registration into consolidated users table
         if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             try {
-                $role = $_POST['role'] ?? '';
+                $role = strtolower(trim($_POST['role'] ?? ''));
+                // Normalize possible typo
+                if ($role === 'cunsellor') { $role = 'counselor'; }
                 $fullName = trim($_POST['fullName'] ?? '');
                 $email = trim($_POST['email'] ?? '');
                 $password = $_POST['password'] ?? '';
@@ -32,6 +34,9 @@ class Register extends Controller
                             throw new Exception('Please select a valid department.');
                         }
                     }
+                } elseif ($role === 'counselor') {
+                    // Counselors belong to division id 10
+                    $designation = '10';
                 }
 
                 if (!$role || !$fullName || !$email || !$password) {
@@ -48,12 +53,15 @@ class Register extends Controller
 
                 $userId = $userModel->createUser($role, $fullName, $email, $password, $number, $year, $designation);
 
-                // If staff, also create staff_division mapping (u_id, did)
-                if ($role === 'staff' && $designation !== null && preg_match('/^[1-9]$/', $designation)) {
+                // If staff or counselor, also create staff_division mapping (u_id, did)
+                if ((
+                        $role === 'staff' && $designation !== null && preg_match('/^[1-9]$/', $designation)
+                    ) || $role === 'counselor') {
                     $db = Database::getInstance();
                     $stmt = $db->prepare('INSERT INTO staff_division (u_id, did) VALUES (?, ?)');
                     if ($stmt) {
-                        $uid = (int)$userId; $did = (int)$designation;
+                        $uid = (int)$userId;
+                        $did = ($role === 'counselor') ? 10 : (int)$designation;
                         $stmt->bind_param('ii', $uid, $did);
                         $stmt->execute();
                         $stmt->close();

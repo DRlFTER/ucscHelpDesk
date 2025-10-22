@@ -10,17 +10,40 @@ class CounselorDashboard
         $this->db = Database::getInstance();
     }
 
-    private function getDivisionId(string $name = 'Counseling'): ?int
+    /**
+     * Resolve all division IDs that the counselor belongs to using staff_division mapping.
+     * Falls back to users.designation if mapping is missing.
+     */
+    private function getDivisionIdsForCounselor(int $counselorId): array
     {
-        $sql = "SELECT did FROM division WHERE LOWER(name) = LOWER(?) LIMIT 1";
-        $stmt = $this->db->prepare($sql);
-        if (!$stmt) return null;
-        $stmt->bind_param('s', $name);
-        $stmt->execute();
-        $res = $stmt->get_result();
-        $row = $res->fetch_assoc();
-        $stmt->close();
-        return $row ? (int)$row['did'] : null;
+        $ids = [];
+        // Primary: staff_division mapping
+        if ($stmt = $this->db->prepare('SELECT did FROM staff_division WHERE u_id = ?')) {
+            $stmt->bind_param('i', $counselorId);
+            if ($stmt->execute()) {
+                $res = $stmt->get_result();
+                while ($row = $res->fetch_assoc()) {
+                    $ids[] = (int)$row['did'];
+                }
+            }
+            $stmt->close();
+        }
+        if (!empty($ids)) return $ids;
+
+        // Fallback: users.designation
+        if ($stmt = $this->db->prepare("SELECT designation FROM users WHERE u_id = ? LIMIT 1")) {
+            $stmt->bind_param('i', $counselorId);
+            if ($stmt->execute()) {
+                $res = $stmt->get_result();
+                $row = $res->fetch_assoc();
+                if ($row && !empty($row['designation'])) {
+                    $did = (int)$row['designation'];
+                    if ($did > 0) { $ids[] = $did; }
+                }
+            }
+            $stmt->close();
+        }
+        return $ids;
     }
 
     private function statusOpenClause(): string
@@ -35,41 +58,48 @@ class CounselorDashboard
 
     public function getCardsData(int $counselorId): array
     {
-        $did = $this->getDivisionId('Counseling');
-        if (!$did) { return [ 'open' => 0, 'assigned' => 0, 'meetings' => 0, 'resolvedByYou' => 0 ]; }
+        $dids = $this->getDivisionIdsForCounselor($counselorId);
+        if (empty($dids)) { return [ 'open' => 0, 'assigned' => 0, 'meetings' => 0, 'resolvedByYou' => 0 ]; }
 
-        // Open in Counseling
+        $placeholders = implode(',', array_fill(0, count($dids), '?'));
+        $types = str_repeat('i', count($dids));
+
+        // Open in counselor's divisions
         $open = 0;
-        $sqlOpen = "SELECT COUNT(*) AS c FROM tickets t WHERE t.division = ? AND " . $this->statusOpenClause();
+        $sqlOpen = "SELECT COUNT(*) AS c FROM tickets t WHERE t.division IN ($placeholders) AND " . $this->statusOpenClause();
         if ($stmt = $this->db->prepare($sqlOpen)) {
-            $stmt->bind_param('i', $did);
+            $stmt->bind_param($types, ...$dids);
             if ($stmt->execute()) { $open = (int)($stmt->get_result()->fetch_assoc()['c'] ?? 0); }
             $stmt->close();
         }
 
         // Assigned to you (open)
         $assigned = 0;
-        $sqlAssigned = "SELECT COUNT(*) AS c FROM tickets t WHERE t.division = ? AND t.assigned_to = ? AND " . $this->statusOpenClause();
+        $sqlAssigned = "SELECT COUNT(*) AS c FROM tickets t WHERE t.division IN ($placeholders) AND t.assigned_to = ? AND " . $this->statusOpenClause();
         if ($stmt = $this->db->prepare($sqlAssigned)) {
-            $stmt->bind_param('ii', $did, $counselorId);
+            $bindTypes = $types . 'i';
+            $params = array_merge($dids, [$counselorId]);
+            $stmt->bind_param($bindTypes, ...$params);
             if ($stmt->execute()) { $assigned = (int)($stmt->get_result()->fetch_assoc()['c'] ?? 0); }
             $stmt->close();
         }
 
         // Meeting requests (requested or scheduled)
         $meetings = 0;
-        $sqlMeet = "SELECT COUNT(*) AS c FROM tickets t WHERE t.division = ? AND LOWER(COALESCE(t.meeting_requested,'')) IN ('requested','scheduled')";
+        $sqlMeet = "SELECT COUNT(*) AS c FROM tickets t WHERE t.division IN ($placeholders) AND LOWER(COALESCE(t.meeting_requested,'')) IN ('requested','scheduled')";
         if ($stmt = $this->db->prepare($sqlMeet)) {
-            $stmt->bind_param('i', $did);
+            $stmt->bind_param($types, ...$dids);
             if ($stmt->execute()) { $meetings = (int)($stmt->get_result()->fetch_assoc()['c'] ?? 0); }
             $stmt->close();
         }
 
         // Resolved by you (all time)
         $resolvedByYou = 0;
-        $sqlRes = "SELECT COUNT(*) AS c FROM tickets t WHERE t.division = ? AND t.assigned_to = ? AND " . $this->statusResolvedClause();
+        $sqlRes = "SELECT COUNT(*) AS c FROM tickets t WHERE t.division IN ($placeholders) AND t.assigned_to = ? AND " . $this->statusResolvedClause();
         if ($stmt = $this->db->prepare($sqlRes)) {
-            $stmt->bind_param('ii', $did, $counselorId);
+            $bindTypes = $types . 'i';
+            $params = array_merge($dids, [$counselorId]);
+            $stmt->bind_param($bindTypes, ...$params);
             if ($stmt->execute()) { $resolvedByYou = (int)($stmt->get_result()->fetch_assoc()['c'] ?? 0); }
             $stmt->close();
         }
@@ -84,17 +114,20 @@ class CounselorDashboard
 
     public function getRecentAssigned(int $counselorId, int $limit = 6): array
     {
-        $did = $this->getDivisionId('Counseling');
-        if (!$did) return [];
+        $dids = $this->getDivisionIdsForCounselor($counselorId);
+        if (empty($dids)) return [];
+        $placeholders = implode(',', array_fill(0, count($dids), '?'));
+        $types = str_repeat('i', count($dids)) . 'ii';
         $sql = "SELECT t.ticket_id, t.created_at, t.title, u.name AS student_name, t.status, t.priority
                 FROM tickets t
                 LEFT JOIN users u ON u.u_id = t.u_id
-                WHERE t.division = ? AND t.assigned_to = ?
+                WHERE t.division IN ($placeholders) AND t.assigned_to = ?
                 ORDER BY t.created_at DESC
                 LIMIT ?";
         $stmt = $this->db->prepare($sql);
         if (!$stmt) return [];
-        $stmt->bind_param('iii', $did, $counselorId, $limit);
+        $params = array_merge($dids, [$counselorId, $limit]);
+        $stmt->bind_param($types, ...$params);
         $stmt->execute();
         $res = $stmt->get_result();
         $rows = [];
@@ -105,18 +138,22 @@ class CounselorDashboard
 
     public function getNewPending(int $limit = 6): array
     {
-        $did = $this->getDivisionId('Counseling');
-        if (!$did) return [];
+        $userId = (int)($_SESSION['user']['u_id'] ?? 0);
+        $dids = $this->getDivisionIdsForCounselor($userId);
+        if (empty($dids)) return [];
+        $placeholders = implode(',', array_fill(0, count($dids), '?'));
+        $types = str_repeat('i', count($dids)) . 'i';
         $sql = "SELECT t.ticket_id, t.created_at, t.title, u.name AS student_name, t.status, t.priority,
                        CASE WHEN COALESCE(t.assigned_to, 0) = 0 THEN 0 ELSE 1 END AS is_assigned
                 FROM tickets t
                 LEFT JOIN users u ON u.u_id = t.u_id
-                WHERE t.division = ? AND t.status = 'pending'
+                WHERE t.division IN ($placeholders) AND t.status = 'pending'
                 ORDER BY t.created_at DESC
                 LIMIT ?";
         $stmt = $this->db->prepare($sql);
         if (!$stmt) return [];
-        $stmt->bind_param('ii', $did, $limit);
+        $params = array_merge($dids, [$limit]);
+        $stmt->bind_param($types, ...$params);
         $stmt->execute();
         $res = $stmt->get_result();
         $rows = [];
@@ -127,17 +164,21 @@ class CounselorDashboard
 
     public function getMeetingTickets(int $limit = 6): array
     {
-        $did = $this->getDivisionId('Counseling');
-        if (!$did) return [];
+        $userId = (int)($_SESSION['user']['u_id'] ?? 0);
+        $dids = $this->getDivisionIdsForCounselor($userId);
+        if (empty($dids)) return [];
+        $placeholders = implode(',', array_fill(0, count($dids), '?'));
+        $types = str_repeat('i', count($dids)) . 'i';
         $sql = "SELECT t.ticket_id, t.created_at, t.title, u.name AS student_name, t.meeting_requested, t.assigned_to
                 FROM tickets t
                 LEFT JOIN users u ON u.u_id = t.u_id
-                WHERE t.division = ? AND LOWER(COALESCE(t.meeting_requested,'')) IN ('requested','scheduled')
+                WHERE t.division IN ($placeholders) AND LOWER(COALESCE(t.meeting_requested,'')) IN ('requested','scheduled')
                 ORDER BY t.created_at DESC
                 LIMIT ?";
         $stmt = $this->db->prepare($sql);
         if (!$stmt) return [];
-        $stmt->bind_param('ii', $did, $limit);
+        $params = array_merge($dids, [$limit]);
+        $stmt->bind_param($types, ...$params);
         $stmt->execute();
         $res = $stmt->get_result();
         $rows = [];
