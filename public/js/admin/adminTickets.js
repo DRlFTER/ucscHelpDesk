@@ -385,7 +385,7 @@ window.adminTicketsData = [];
     // anchors navigate with a cross-document transition.
     if (!listenersBound) {
       container.addEventListener("click", (e) => {
-        const a = e.target && e.target.closest && e.target.closest("a.ticket");
+        const a = e.target?.closest("a.ticket");
         if (!a || !container.contains(a)) return;
         // Only handle simple primary-button clicks without modifier keys
         if (e.button !== 0 || e.metaKey || e.ctrlKey || e.shiftKey || e.altKey)
