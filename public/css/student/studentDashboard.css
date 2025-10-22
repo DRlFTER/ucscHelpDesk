@@ -15,7 +15,6 @@ main {
 .sectionCard {
   border-radius: 15px;
   padding: 15px;
-  padding-bottom: 18px;
   box-shadow: 0 3px 8px rgba(0, 0, 0, 0.08);
   display: flex;
   flex-direction: column;
@@ -63,8 +62,10 @@ main {
 }
 
 .sideNav a:hover {
-  background: #f0f0f0;
-  color: #1f40b0;
+  background: #6a6af5;
+  color: white;
+  transform: translateX(2px);
+  transition: background 0.2s ease, color 0.2s ease, transform 0.4s ease;
 }
 
 .dashboardContent {
@@ -162,15 +163,16 @@ h3 {
   font-weight: 500;
   text-align: center;
   cursor: pointer;
-  color: white;
   text-decoration: none;
-  transition: all 0.2s ease;
-  box-shadow: 0 2px 6px rgba(0,0,0,0.15);
+  transition: all 0.2s ease-in-out;
   display: flex;
   align-items: center;
   justify-content: center;
   flex-direction: column;
   gap: 6px;
+  background: #6a6af51f;
+  color: #6a6af5;
+  border: 1px solid #6a6af544;
 }
 
 .quickActions a:hover {
@@ -180,21 +182,20 @@ h3 {
 .quickActionSvg svg {
     width: 30px; 
     height: 30px;
-    fill: white;      
+    fill: #6a6af5;      
 }
 
-.quickActions a:nth-child(1) { background: #8C8CF9; }
-.quickActions a:nth-child(1):hover { background: #6a6af5; }
-.quickActions a:nth-child(2) { background: #5BE38C; }
-.quickActions a:nth-child(2):hover { background: #2acc65; }
-.quickActions a:nth-child(3) { background: #C185FB; }
-.quickActions a:nth-child(3):hover { background: #aa50ff; }
-.quickActions a:nth-child(4) { background: #FF6262; }
-.quickActions a:nth-child(4):hover { background: #ff3636; }
-.quickActions a:nth-child(5) { background: #FF6262; }
-.quickActions a:nth-child(5):hover { background: #ff3636; }
-.quickActions a:nth-child(6) { background: #FF6262; }
-.quickActions a:nth-child(6):hover { background: #ff3636; }
+.quickActions a:hover,
+.quickActions a:focus-visible {
+  background: #8C8CF9;
+  color: #ffffff;
+  border-color: #8C8CF9;
+}
+
+.quickActions a:hover .quickActionSvg svg,
+.quickActions a:focus-visible .quickActionSvg svg {
+  fill: #ffffff;
+}
 
 .knowledgeBase .kbSearch {
   display: flex;
@@ -323,19 +324,15 @@ h3 {
   font-weight: 500;
 }
 
-.priorityItem {
-  background: #fa606043;
-  color: #FA6060;
-  border: 1px solid #fa60605f;
-}
-
 .announcement.warning {
   background: #FEF9C3;
   color: #9D5226;
   border: 1px solid #9D5226;
 }
 
-.announcement.info{
+.priorityItem,
+.announcement.info,
+.calendar .event {
   background: #6a6af51f;
   color: #6a6af5;
   border: 1px solid #6a6af544;
@@ -361,9 +358,6 @@ h3 {
 }
 
 .calendar .event {
-  background: #d4edda;
-  color: #00AB36;
-  border: 1px solid #00ab3655;
   display: flex;
   justify-content: space-between;
   font-size: 15px;
@@ -416,26 +410,16 @@ h3 {
   fill: currentColor;
 }
 
+.calendar .event:hover,
+.calendar .event.isHover,
+.calendar .event:focus-visible,
+.priorityItem:hover,
+.priorityItem.isHover,
+.priorityItem:focus-visible,
 .announcement:hover,
 .announcement.isHover,
 .announcement:focus-visible {
   background: rgba(255, 255, 255, 1);
   border: 1px solid rgba(140, 140, 249, 0.7);
-  outline: none;
-}
-
-.priorityItem:hover,
-.priorityItem.isHover,
-.priorityItem:focus-visible {
-  background: rgba(255, 255, 255, 1);
-  border: 1px solid #fa6060;
-  outline: none;
-}
-
-.calendar .event:hover,
-.calendar .event.isHover,
-.calendar .event:focus-visible {
-  background: rgba(255, 255, 255, 1);
-  border: 1px solid #00AB36;
   outline: none;
 }
