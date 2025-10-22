@@ -45,6 +45,7 @@ class StudentTicket
             'finance' => ['id' => 7, 'label' => 'Finance'],
             'library' => ['id' => 8, 'label' => 'Library'],
             'csc and noc' => ['id' => 9, 'label' => 'CSC and NOC'],
+            'counselling' => ['id' => 10, 'label' => 'Counsellor']
         ];
         $key = strtolower(trim($category));
         $divisionId = 0;
