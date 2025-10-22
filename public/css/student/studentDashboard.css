@@ -15,7 +15,6 @@ main {
 .sectionCard {
   border-radius: 15px;
   padding: 15px;
-  padding-bottom: 18px;
   box-shadow: 0 3px 8px rgba(0, 0, 0, 0.08);
   display: flex;
   flex-direction: column;
@@ -63,8 +62,10 @@ main {
 }
 
 .sideNav a:hover {
-  background: #f0f0f0;
-  color: #1f40b0;
+  background: #6a6af5;
+  color: white;
+  transform: translateX(2px);
+  transition: background 0.2s ease, color 0.2s ease, transform 0.4s ease;
 }
 
 .dashboardContent {
@@ -157,20 +158,21 @@ h3 {
 .quickActions a {
   flex:1;
   padding: 12px;
-  height: 80px;
+  height: 90px;
   border-radius: 10px;
   font-weight: 500;
   text-align: center;
   cursor: pointer;
-  color: white;
   text-decoration: none;
-  transition: all 0.2s ease;
-  box-shadow: 0 2px 6px rgba(0,0,0,0.15);
+  transition: all 0.2s ease-in-out;
   display: flex;
   align-items: center;
   justify-content: center;
   flex-direction: column;
   gap: 6px;
+  background: #6a6af51f;
+  color: #6a6af5;
+  border: 1px solid #6a6af544;
 }
 
 .quickActions a:hover {
@@ -180,19 +182,20 @@ h3 {
 .quickActionSvg svg {
     width: 30px; 
     height: 30px;
-    fill: white;      
-    opacity: 0.85;    
-    transition: fill 0.3s ease, transform 0.2s ease;
+    fill: #6a6af5;      
 }
 
-.quickActions a:nth-child(1) { background: #8C8CF9; }
-.quickActions a:nth-child(1):hover { background: #6a6af5; }
-.quickActions a:nth-child(2) { background: #5BE38C; }
-.quickActions a:nth-child(2):hover { background: #2acc65; }
-.quickActions a:nth-child(3) { background: #C185FB; }
-.quickActions a:nth-child(3):hover { background: #aa50ff; }
-.quickActions a:nth-child(4) { background: #FF6262; }
-.quickActions a:nth-child(4):hover { background: #ff3636; }
+.quickActions a:hover,
+.quickActions a:focus-visible {
+  background: #8C8CF9;
+  color: #ffffff;
+  border-color: #8C8CF9;
+}
+
+.quickActions a:hover .quickActionSvg svg,
+.quickActions a:focus-visible .quickActionSvg svg {
+  fill: #ffffff;
+}
 
 .knowledgeBase .kbSearch {
   display: flex;
@@ -315,82 +318,60 @@ h3 {
   margin-bottom: 0;
 }
 
-.priorityItem{
-  text-decoration: none;
-  background: #ffd7d3;
-  color: #FA6060;
-  padding: 3%;
-  padding-top: 5%;
-  padding-bottom: 5%;
-  border-radius: 10px;
-  border: 1px solid #FA6060;
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  width: 100%;
-  box-sizing: border-box;
-}
-
 .priorityTitle,
 .announcementTitle {
   font-size: 15px;
   font-weight: 500;
 }
 
-.priorityDescription{
-  font-size: 13px;
-  font-weight: 400;
-}
-
 .announcement.warning {
-  font-size: 13px;
   background: #FEF9C3;
   color: #9D5226;
-  padding: 3%;
-  padding-top: 5%;
-  padding-bottom: 5%;
-  border-radius: 10px;
   border: 1px solid #9D5226;
-  text-decoration: none;
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  width: 100%;
-  box-sizing: border-box;
 }
-.announcement.info {
+
+.priorityItem,
+.announcement.info,
+.calendar .event {
+  background: #6a6af51f;
+  color: #6a6af5;
+  border: 1px solid #6a6af544;
+}
+
+.announcement.info,
+.priorityItem,
+.announcement.warning {
   font-size: 13px;
-  background: #d1ecf1;
-  color: #2786FF;
   padding: 3%;
   padding-top: 5%;
   padding-bottom: 5%;
   border-radius: 10px;
-  border: 1px solid #2786FF;
   text-decoration: none;
   display: flex;
   align-items: center;
   gap: 8px;
   width: 100%;
   box-sizing: border-box;
+  text-decoration: none;
+  cursor: pointer;
+  transition: all 0.2s ease-in-out;
 }
 
 .calendar .event {
   display: flex;
-  font-size: 14px;
-  background: #d4edda;
-  color: #00AB36;
+  justify-content: space-between;
+  font-size: 15px;
   padding: 3%;
   padding-top: 5%;
   padding-bottom: 5%;
   border-radius: 10px;
-  border: 1px solid #00AB36;
   text-decoration: none;
   width: 100%;
   box-sizing: border-box;
   flex-direction: row;
   align-items: center;
   gap: 15px;
+  transition: all 0.2s ease-in-out;
 }
 
 .accountItem {
@@ -409,4 +390,36 @@ h3 {
 
 .accountItem svg{
   color: #394353;
+}
+
+.mutedText {
+  color: #6b7280;
+}
+
+.clickable {
+  cursor: pointer;
+}
+
+.announcements .announcement svg.announcementIcon {
+  width: 28px;
+  height: 28px;
+  min-width: 28px;
+  min-height: 28px;
+  display: inline-block;
+  flex-shrink: 0;
+  fill: currentColor;
+}
+
+.calendar .event:hover,
+.calendar .event.isHover,
+.calendar .event:focus-visible,
+.priorityItem:hover,
+.priorityItem.isHover,
+.priorityItem:focus-visible,
+.announcement:hover,
+.announcement.isHover,
+.announcement:focus-visible {
+  background: rgba(255, 255, 255, 1);
+  border: 1px solid rgba(140, 140, 249, 0.7);
+  outline: none;
 }

@@ -10,6 +10,7 @@ class Student extends Controller
         $recent = [];
         $openCount = 0;
         $lastActivity = null;
+        $recentAnnouncements = [];
         try {
             $uId = (int)($_SESSION['user']['u_id'] ?? 0);
             $dashboardData = $ticketModel->getDashboardData($uId, 3);
@@ -20,6 +21,15 @@ class Student extends Controller
             $recent = [];
         }
 
+        // Load latest announcements (limit 2) for dashboard sidebar
+        try {
+            require_once __DIR__ . '/../../models/student/Announcement.php';
+            $annModel = new StudentAnnouncement();
+            $recentAnnouncements = $annModel->getRecent(2);
+        } catch (Throwable $e) {
+            $recentAnnouncements = [];
+        }
+
     $headContent = '
     <link rel="stylesheet" href="/css/student/studentDashboard.css"/>';
          $this->view('dashboardStudent', [
@@ -28,6 +38,7 @@ class Student extends Controller
             'recentTickets' => $recent,
                 'openCount' => $openCount,
                 'lastActivity' => $lastActivity,
+                'recentAnnouncements' => $recentAnnouncements,
         ]);
     }
 
@@ -416,6 +427,17 @@ class Student extends Controller
         $headContent = '<link rel="stylesheet" href="/css/student/studentKnowledgeBase.css" />';
         $this->view('student/studentKnowledgeBase', [
             'title' => 'Knowledge Base',
+            'head' => $headContent,
+        ]);
+    }
+
+    // Student Calendar page
+    public function calender()
+    {
+        $this->requireLogin('student');
+        $headContent = '<link rel="stylesheet" href="/css/student/studentCalender.css" />';
+        $this->view('student/studentCalender', [
+            'title' => 'Calendar',
             'head' => $headContent,
         ]);
     }

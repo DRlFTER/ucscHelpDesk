@@ -52,4 +52,4 @@
 	</div>
 </main>
 
-<script src="/js/admin/adminCalender.js"></script>
+<script src="/js/student/studentCalender.js"></script>
