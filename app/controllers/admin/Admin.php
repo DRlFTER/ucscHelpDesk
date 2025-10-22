@@ -771,11 +771,40 @@ class Admin extends Controller
             $s = $db->real_escape_string($search);
             $where[] = "(t.title LIKE '%$s%' OR u.name LIKE '%$s%')";
         }
-        // Filter by category
+        // Filter by category (supports grouped slugs and exact division names)
         if ($category !== '') {
-            $c = $db->real_escape_string($category);
-            // Match by division name (UI category label)
-            $where[] = "COALESCE(d.name,'') = '$c'";
+            $catKey = strtolower($category);
+            // Map grouped slugs to division name keyword matches
+            $groupMap = [
+                'it-access' => [
+                    'it','tech','technical','account','login','password','email','network','wifi','wi-fi','internet','software','hardware','device','computer','system','server','bug','error','website','portal','moodle','lms','printer','printing','access'
+                ],
+                'facilities-equipment' => [
+                    'facility','facilities','maintenance','repair','clean','electric','electrical','power','water','plumb','leak','aircon','air conditioning','ac','furniture','equipment','lab','laboratory','room','classroom','projector','door','building','lighting','light','security'
+                ],
+                'academic-services' => [
+                    'academic','course','courses','class','classes','lecture','lecturer','timetable','schedule','exam','exams','grade','grades','registration','enrollment','admission','advis','library','scholarship','student id','id card','transcript','certificate','attendance'
+                ],
+                'administrative-other' => [
+                    'finance','payment','payments','fee','fees','billing','hr','human resources','leave','policy','procurement','procure','purchase','general','other','misc','miscellaneous','event','events','parking','transport','bus','lost','found','complaint','complaints','canteen','food','cafeteria','hostel','residence','housing','staff','admin','administration'
+                ],
+            ];
+
+            $col = "LOWER(COALESCE(d.name,''))";
+            if (isset($groupMap[$catKey])) {
+                $likes = [];
+                foreach ($groupMap[$catKey] as $kw) {
+                    $kwEsc = $db->real_escape_string(strtolower($kw));
+                    $likes[] = "$col LIKE '%$kwEsc%'";
+                }
+                if (!empty($likes)) {
+                    $where[] = '(' . implode(' OR ', $likes) . ')';
+                }
+            } else {
+                // Fallback: treat as exact division name value
+                $c = $db->real_escape_string($category);
+                $where[] = "COALESCE(d.name,'') = '$c'";
+            }
         }
         // Map UI status to DB statuses
         if ($status !== '') {

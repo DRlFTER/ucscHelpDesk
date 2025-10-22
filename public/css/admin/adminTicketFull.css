@@ -176,12 +176,6 @@ body.modal-open main {
   background-clip: padding-box;
 }
 
-.card:hover {
-  background: rgba(255, 255, 255, 1);
-  border: 1px solid rgba(140, 140, 249, 0.7);
-  box-shadow: 0 6px 18px rgba(17, 24, 39, 0.06);
-}
-
 /* make conversation and timeline take available space */
 .conversation {
   flex: 1;
@@ -340,6 +334,7 @@ body.modal-open main {
 .replyBox input:focus {
   background: #edededff;
 }
+
 .replyActions {
   display: flex;
   align-items: center;
