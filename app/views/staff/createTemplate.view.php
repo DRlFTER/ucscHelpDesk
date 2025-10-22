@@ -6,21 +6,6 @@
         <h2 class="page-title">Create Template</h2>
         <p class="page-subtitle">Define a new FAQ template for student issues</p>
     </div>
-
-    <div class="layout-container">
-        <!-- Sidebar Navigation -->
-        <nav class="navMenu">
-            <div class="sideNav">
-                <a href="/staff/staffDashboard" class="nav-link">Dashboard</a>
-                <a href="/staff/staffTickets" class="nav-link">My Tickets</a>
-                <a href="/staff/staffAnnoucements" class="nav-link">Announcements</a>
-                <a href="/staff/createTemplate" class="nav-link active">Templates</a>
-                <a href="/staff/forum" class="nav-link">Forums</a>
-                <a href="/staff/calendar" class="nav-link">Calendar</a>
-                <a href="/staff/settings" class="nav-link">Settings</a>
-            </div>
-        </nav>
-
         <!-- Main Content Area -->
         <div class="content-area">
             <div class="tickets-container">
