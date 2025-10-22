@@ -1,6 +1,19 @@
 <?php
 
 class Staff extends Controller {
+    public function settings()
+    {
+            $this->requireLogin('staff');
+            $headContent = '\n        <link rel="stylesheet" href="/css/settings/settings.css"/>';
+            $this->view('settings', [
+                    'title' => 'Settings',
+                    'head' => $headContent,
+                    'role' => 'staff',
+                    'roleLabel' => 'Staff',
+                    'roleMessage' => 'Staff settings: update your profile and work preferences (dummy content).',
+            ]);
+    }
+
   public function staffDashboard()
 {
     $this->requireLogin('staff');
@@ -1002,11 +1015,21 @@ public function createTemplate()
         echo json_encode($payload);
     }
 
-   public function staffCalender() {
+   public function calender() {
         $this->requireLogin('staff');
-        $headContent = '
-        <link rel="stylesheet" href="/css/staff/staffCalender.css"/>';
-        $this->view('staffCalender', ['title' => 'Calender', 'head' => $headContent]);
+        $headContent = '\n        <link rel="stylesheet" href="/css/calender/calender.css"/>';
+        $this->view('calender', [
+            'title' => 'Calendar',
+            'head' => $headContent,
+            'role' => 'staff',
+            'roleLabel' => 'Staff',
+            'roleMessage' => 'Staff calendar: plan your tasks and events (dummy content).',
+        ]);
+    }
+
+   public function staffCalender() {
+        // Backward-compatible route: delegate to unified method
+        $this->calender();
     }
 
      public function staffKB()

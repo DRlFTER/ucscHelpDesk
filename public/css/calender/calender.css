@@ -1,0 +1,267 @@
+main {
+  width: 100%;
+  display: flex;
+  justify-content: center;
+  min-height: calc(
+    100dvh - var(--navbar-height, 64px)
+  ); /* Fill the remaining viewport space after the navbar height */
+}
+body {
+  font-family: "SF Pro", sans-serif;
+  background: #f9fafb;
+  margin: 0;
+  color: #111827;
+}
+
+/* View Transition tuning for destination page */
+::view-transition-old(root),
+::view-transition-new(root) {
+  animation-duration: 220ms;
+  animation-timing-function: cubic-bezier(0.2, 0, 0, 1);
+}
+
+.todayDate {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  width: 100%;
+  padding: 12px 14px;
+  border-radius: 12px;
+}
+
+.todayDate h2 {
+  margin: 0;
+  font-weight: 600;
+}
+
+.todayDate h2:first-child {
+  /* Day number */
+  font-size: 40px;
+  line-height: 1;
+  font-weight: 700;
+}
+
+.todayDate h2:last-child {
+  /* Weekday */
+  font-size: 16px;
+  color: #6b7280;
+}
+
+.todayEvents {
+  display: flex;
+  flex-direction: column;
+  justify-content: start;
+  gap: 6px;
+  align-items: start;
+  width: 100%;
+  height: 100%;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: rgba(255, 255, 255, 0.5);
+  box-shadow: none;
+  color: #111827;
+  transition: all 0.18s ease-in-out;
+  background-clip: padding-box;
+}
+
+.todayEvents .sectionTitle {
+  font-size: 14px;
+  font-weight: 600;
+  color: #374151;
+  margin-bottom: 8px;
+  margin-left: 8px;
+}
+
+.noEvents {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 12px;
+  border-radius: 12px;
+  background: #f9fafb;
+  color: #6b7280;
+  font-size: 13px;
+}
+
+.todayEvents .event {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 12px;
+  border-radius: 12px;
+  border: 1px solid #e5e7eb;
+  background: #ffffff;
+  transition: border-color 0.18s ease, box-shadow 0.18s ease,
+    background-color 0.18s ease;
+  cursor: pointer;
+}
+
+.todayEvents .event:hover {
+  box-shadow: 0 6px 18px rgba(17, 24, 39, 0.06);
+}
+
+.todayEvents .event h2 {
+  margin: 0;
+  font-size: 15px;
+  font-weight: 600;
+}
+
+.todayEvents .event p {
+  margin: 0 0 0 auto;
+  padding: 6px 10px;
+  border-radius: 999px;
+  background: #ececec;
+  color: #374151;
+  font-size: 12px;
+}
+
+.addEvent {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+  padding: 12px;
+  border-radius: 12px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: rgba(255, 255, 255, 0.7);
+  backdrop-filter: blur(20px);
+  /* Keep the add bar visible when scrolling long lists */
+  position: sticky;
+  bottom: 0;
+  z-index: 1;
+}
+
+.inputEvent {
+  flex: 1;
+  height: 42px;
+  padding: 0 12px;
+  outline: none;
+  border-radius: 50px;
+  border: 1px solid #e5e7eb;
+  background: #edededff;
+}
+
+.inputEvent:focus {
+  background: #e5e5e5ff;
+}
+
+.inputEvent::placeholder {
+  color: #9ca3af;
+}
+
+/* Make the left column scrollable while keeping overall layout consistent */
+.settingsLeft {
+  gap: 12px;
+  overflow: auto;
+}
+
+/* Calendar pane styles keep the right side consistent with admin cards */
+.calendarContainer {
+  flex: 1;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  flex-direction: column;
+  gap: 12px;
+  height: 100%;
+}
+
+.calendarHeader {
+  display: flex;
+  width: fit-content;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+}
+
+.calendarHeader h2#monthYear {
+  margin: 0;
+  font-size: 18px;
+  font-weight: 600;
+}
+
+.calendarGrid {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.calendarWeekdays {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 6px;
+  color: #6b7280;
+  font-size: 12px;
+}
+
+.calendarDays {
+  display: flex;
+  height: 100%;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.dayCell {
+  flex: 0 0 calc((100% - (6 * 6px)) / 7);
+  height: full;
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 6px;
+  border-radius: 12px;
+  border: 1px solid #e5e7eb;
+  background: #ffffff;
+  padding: 10px;
+  cursor: pointer;
+  transition: border-color 0.18s ease, box-shadow 0.18s ease,
+    background-color 0.18s ease;
+}
+
+.dayCell:hover {
+  border-color: rgba(140, 140, 249, 0.7);
+  box-shadow: 0 6px 18px rgba(17, 24, 39, 0.06);
+}
+
+.dayCell.inactive {
+  background: #f2f2f2ff;
+  color: #9ca3af;
+  border-style: dashed;
+}
+
+.dayNum {
+  font-size: 14px;
+  font-weight: 600;
+  color: #111827;
+}
+
+.dayCell.inactive .dayNum {
+  color: #9ca3af;
+}
+
+.eventsList {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  overflow: hidden;
+}
+
+.eventTitle {
+  display: block;
+  width: 100%;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  font-size: 12px;
+  color: #374151;
+  padding: 4px 8px;
+  border-radius: 8px;
+  background: #f3f4f6;
+}
+
+.dayCell.today {
+  outline: 2px solid rgba(140, 140, 249, 0.6);
+  outline-offset: 2px;
+}
