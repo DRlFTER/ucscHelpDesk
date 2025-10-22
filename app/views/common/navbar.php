@@ -21,9 +21,11 @@
       ],
       'staff' => [
         // No separate dashboard; use tickets view for landing
-        'dashboard' => '/staff/staffTickets',
+        'dashboard' => '/staff/staffDashboard',
         'tickets'   => '/staff/staffTickets',
-        'calender'  => '/admin/calender',
+        'calender'  => '/staff/staffCalender',
+        'forum'     => '/staff/staffForum',
+        'FAQ'       => '/staff/staffFAQ',
         'newTicket' => null,
       ],
       'counselor' => [
