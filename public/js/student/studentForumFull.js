@@ -403,7 +403,17 @@ function openDeleteModal() {
   const onConfirm = async (e) => {
     e && e.preventDefault();
     try {
-      // Placeholder action for forum post delete
+      if (!ticketData || !ticketData.id) throw new Error("missing_id");
+      const res = await fetch("/student/forumDelete", {
+        method: "POST",
+        headers: { "Content-Type": "application/x-www-form-urlencoded" },
+        body: `id=${encodeURIComponent(ticketData.id)}`,
+        credentials: "include",
+      });
+      if (!res.ok) throw new Error("delete_failed");
+      // Clear cached post and bust list cache once
+      try { localStorage.removeItem(cacheKeyFor(ticketData.id)); } catch {}
+      try { localStorage.setItem("student_tickets_bust", String(Date.now())); } catch {}
       window.location.href = "/student/forum";
     } catch (e) {
       console.error(e);

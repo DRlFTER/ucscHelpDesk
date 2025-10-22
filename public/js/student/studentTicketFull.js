@@ -20,16 +20,35 @@
 
 let ticketData = null;
 
-const conversation = [
-  // same placeholders as admin; can be replaced with real data later
-];
+const conversation = [];
 
-const timeline = [
-  { label: "Ticket created", time: "", color: "green", pending: false },
-  { label: "Assigned to staff", time: "", color: "blue", pending: false },
-  { label: "Under review", time: "", color: "yellow", pending: false },
-  { label: "Resolved", time: "Pending", color: "gray", pending: true },
-];
+function buildTimeline(data) {
+  const createdOn = data.createdOn || "";
+  const raw = (data.status || "").toLowerCase();
+  // Map backend statuses to a progress index
+  // 0: created, 1: assigned, 2: review, 3: resolved
+  let progress = 0;
+  if (raw === "pending") progress = 0; // only created is completed
+  else if (raw === "agent assigned" || raw === "agentassigned") progress = 1;
+  else if (raw === "resolved") progress = 3;
+  else if (raw === "closed" || raw === "agent-closed" || raw === "agentclosed") progress = 3;
+  else progress = 0;
+
+  const stages = [
+    { key: "created", label: "Ticket created", color: "green", time: createdOn },
+    { key: "assigned", label: "Assigned to staff", color: "blue", time: "" },
+    { key: "review", label: "Under review", color: "yellow", time: "" },
+    { key: "resolved", label: "Resolved", color: "green", time: "" },
+  ];
+
+  // Mark completed stages up to progress; note that for resolved progress=3 covers review too
+  return stages.map((s, idx) => ({
+    label: s.label,
+    time: s.time,
+    color: idx <= progress ? s.color : "gray",
+    pending: !(idx <= progress),
+  }));
+}
 
 function statusClass(status) {
   const normalized = (status || "").toLowerCase().replace(/\s+/g, "");
@@ -92,14 +111,18 @@ function renderMessages() {
   const m = document.getElementById("messages");
   m.innerHTML = conversation
     .map((msg) => {
-      const typeClass = msg.authorType === "staff" ? "staff" : "student";
+      const isStaff = msg.authorType === "staff";
+      const typeClass = isStaff ? "staff" : "student";
+      const division = (msg.role || "").trim();
+        const headerTitle = isStaff
+          ? `<span class="name"><span class="staffLabel">Staff</span>${division ? ` <span class="role">(${division})</span>` : ""}</span>`
+        : `<span class="name">${msg.name || "You"}</span>`;
       return `
       <div class="message">
         <div class="messageBubble ${typeClass}">
           <div class="messageHeader">
-            <span class="name">${msg.name}</span>
-            ${msg.role ? `<span class="role">${msg.role}</span>` : ""}
-            <span class="time">${msg.time}</span>
+            ${headerTitle}
+            <span class="time">${msg.time || ""}</span>
           </div>
           <div class="messageText">${msg.text}</div>
         </div>
@@ -128,14 +151,15 @@ function renderInfo() {
 }
 
 function renderTimeline() {
-  document.getElementById("timelineList").innerHTML = timeline
+  const items = buildTimeline(ticketData || {});
+  document.getElementById("timelineList").innerHTML = items
     .map(
       (t) => `
-      <li class="timelineItem">
+      <li class="timelineItem ${t.pending ? "pending" : "completed"}">
         <span class="tlDot ${t.color}"></span>
         <div class="tlText">
           <span class="label">${t.label}</span>
-          <span class="time">${t.time}</span>
+          <span class="time">${t.time || ""}</span>
         </div>
       </li>`
     )
@@ -160,6 +184,31 @@ function wireActions() {
     deleteBtn.addEventListener("click", () => {
       if (!ticketData || !ticketData.id) return;
       openDeleteModal();
+    });
+  }
+
+  const resolveBtn = document.getElementById("resolveBtn");
+  if (resolveBtn) {
+    resolveBtn.addEventListener("click", async () => {
+      if (!ticketData || !ticketData.id) return;
+      try {
+        const res = await fetch("/student/ticketResolve", {
+          method: "POST",
+          headers: { "Content-Type": "application/x-www-form-urlencoded" },
+          body: `id=${encodeURIComponent(ticketData.id)}`,
+          credentials: "include",
+        });
+        if (!res.ok) throw new Error("Resolve failed");
+        // Update local state and cache
+        ticketData.status = "Resolved";
+        try { saveToCache(ticketData.id, ticketData); } catch {}
+        // Re-render status and timeline
+        renderHeader();
+        renderTimeline();
+      } catch (e) {
+        console.error(e);
+        alert("Failed to mark as resolved.");
+      }
     });
   }
 }
@@ -209,6 +258,13 @@ async function fetchTicket(id) {
   if (!ticketData) {
     ticketData = { id: 0, code: "", title: "Ticket", status: "Under Review", createdOn: "", attachments: [], description: "", category: "", priority: "", assigned: "" };
   }
+  // Load conversation from payload if available
+  try {
+    if (ticketData && Array.isArray(ticketData.messages)) {
+      conversation.length = 0;
+      for (const m of ticketData.messages) conversation.push(m);
+    }
+  } catch {}
   renderHeader();
   renderDescription();
   renderAttachments();
@@ -216,6 +272,12 @@ async function fetchTicket(id) {
   renderInfo();
   renderTimeline();
   wireActions();
+
+  // Hide reply UI if replying is disabled for students
+  if (!ticketData.allowReply) {
+    const rb = document.querySelector(".replyBox");
+    if (rb) rb.style.display = "none";
+  }
 })();
 
 function openDeleteModal() {
