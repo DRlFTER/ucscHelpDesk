@@ -22,12 +22,13 @@ window.adminTicketsData = [];
     } catch {}
   }
 
+  // Use the same four grouped categories as the dashboard pie chart
   const categories = [
-    "All categories",
-    "Academic",
-    "Administrative",
-    "Financial",
-    "IT Support",
+    { label: "All categories", value: "" },
+    { label: "IT & Access", value: "it-access" },
+    { label: "Facilities & Equipment", value: "facilities-equipment" },
+    { label: "Academic Services", value: "academic-services" },
+    { label: "Administrative & Other", value: "administrative-other" },
   ];
 
   const statuses = [
@@ -42,15 +43,27 @@ window.adminTicketsData = [];
 
   function toValue(label, isFirst) {
     if (isFirst) return "";
-    return label.toLowerCase().replace(/\s+/g, "-");
+    // Robust slug: replace & with 'and', non-alnum to hyphen, trim hyphens
+    return label
+      .toLowerCase()
+      .replace(/&/g, "and")
+      .replace(/[^a-z0-9]+/g, "-")
+      .replace(/^-+|-+$/g, "");
   }
 
   function populateSelect(select, list) {
     if (!select) return;
     select.innerHTML = "";
-    list.forEach((label, idx) => {
+    list.forEach((item, idx) => {
+      const isObj = typeof item === "object" && item !== null;
+      const label = isObj ? item.label : item;
+      const val = isObj
+        ? idx === 0
+          ? ""
+          : item.value
+        : toValue(label, idx === 0);
       const opt = document.createElement("option");
-      opt.value = toValue(label, idx === 0);
+      opt.value = val;
       opt.textContent = label;
       if (idx === 0) opt.selected = true;
       select.appendChild(opt);
@@ -71,9 +84,30 @@ window.adminTicketsData = [];
 
   // Read initial state from URL before building custom selects
   const urlParams = new URLSearchParams(window.location.search);
+
+  // Map older category filter values to the new grouped slugs for continuity
+  function normalizeLegacyCategory(value) {
+    const v = (value || "").toLowerCase();
+    switch (v) {
+      case "administrative":
+      case "financial":
+        return "administrative-other";
+      case "it":
+      case "it-support":
+      case "tech":
+        return "it-access";
+      case "academic":
+        return "academic-services";
+      case "facilities":
+      case "facility":
+        return "facilities-equipment";
+      default:
+        return v; // assume it's already a valid new slug or empty
+    }
+  }
   const initial = {
     search: (urlParams.get("search") || "").trim(),
-    category: urlParams.get("category") || "",
+    category: normalizeLegacyCategory(urlParams.get("category") || ""),
     status: urlParams.get("status") || "",
     priority: urlParams.get("priority") || "",
     page: (() => {
@@ -346,8 +380,29 @@ window.adminTicketsData = [];
       .join("");
 
     container.innerHTML = html;
-    // No extra JS listeners needed when using anchor navigation
-    listenersBound = true;
+    // Enhance navigation with the View Transitions API when available.
+    // Delegate clicks on the tickets container so dynamically rendered
+    // anchors navigate with a cross-document transition.
+    if (!listenersBound) {
+      container.addEventListener("click", (e) => {
+        const a = e.target?.closest("a.ticket");
+        if (!a || !container.contains(a)) return;
+        // Only handle simple primary-button clicks without modifier keys
+        if (e.button !== 0 || e.metaKey || e.ctrlKey || e.shiftKey || e.altKey)
+          return;
+        const href = a.getAttribute("href");
+        if (!href || href === "#") return;
+        e.preventDefault();
+        if (document.startViewTransition) {
+          document.startViewTransition(() => {
+            window.location.href = href;
+          });
+        } else {
+          window.location.href = href;
+        }
+      });
+      listenersBound = true;
+    }
   }
 
   function renderPagination() {
