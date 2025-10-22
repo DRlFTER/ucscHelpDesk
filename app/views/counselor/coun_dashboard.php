@@ -1,7 +1,12 @@
 <?php
 // counselor_dashboard.php
 // Include database connection
-include 'db_connect.php';
+require_once('../../core/config.php');
+$conn = new mysqli(DBHOST, DBUSER, DBPASSWORD, DBNAME, DBPORT);
+
+if ($conn->connect_error) {
+    die("DB Connection failed: " . $conn->connect_error);
+}
 
 // --- Counselor Information ---
 $counselor_name = "Mrs. Nalani Perera"; // Replace with actual counselor name from session
