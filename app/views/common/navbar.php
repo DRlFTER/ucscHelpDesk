@@ -20,18 +20,17 @@
         'newTicket' => '/student/ticket',
       ],
       'staff' => [
-        // No separate dashboard; use tickets view for landing
         'dashboard' => '/staff/staffDashboard',
         'tickets'   => '/staff/staffTickets',
-        'calender'  => '/staff/staffCalender',
+        'calender'  => '/staff/calender',
         'forum'     => '/staff/staffForum',
         'FAQ'       => '/staff/staffFAQ',
         'newTicket' => null,
       ],
       'counselor' => [
         'dashboard' => '/counselor/dashboard',
-        'tickets'   => null,
-        'calender'  => '/admin/calender',
+        'tickets'   => '/counselor/tickets',
+        'calender'  => '/counselor/calender',
         'newTicket' => null,
       ],
       'lecturer' => [

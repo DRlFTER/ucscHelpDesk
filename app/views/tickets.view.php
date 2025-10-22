@@ -26,4 +26,13 @@
     </div>
 </main>
 
-<script src="/js/admin/adminTickets.js"></script>
+<script>
+window.TICKETS_CONFIG = {
+  role: '<?= htmlspecialchars($role ?? (strtolower($_SESSION['user']['role'] ?? 'guest'))) ?>',
+  apiBase: '/<?= htmlspecialchars($role ?? (strtolower($_SESSION['user']['role'] ?? 'guest'))) ?>/ticketsData',
+  ticketUrlBase: '/<?= htmlspecialchars($role ?? (strtolower($_SESSION['user']['role'] ?? 'guest'))) ?>/ticket',
+  // Enable links for admin and counselor (others can be added later)
+  showLinks: <?php $r = strtolower($role ?? ($_SESSION['user']['role'] ?? 'guest')); echo ($r === 'admin' || $r === 'counselor') ? 'true' : 'false'; ?>
+};
+</script>
+<script src="/js/tickets/tickets.js"></script>

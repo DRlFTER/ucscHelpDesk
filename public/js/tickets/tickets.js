@@ -1,6 +1,10 @@
-window.adminTicketsData = [];
-
 (function () {
+  const cfg = window.TICKETS_CONFIG || {};
+  const ROLE = (cfg.role || "guest").toLowerCase();
+  const API_BASE = cfg.apiBase || "/admin/ticketsData";
+  const TICKET_URL_BASE = cfg.ticketUrlBase || "/admin/ticket";
+  const SHOW_LINKS = !!cfg.showLinks;
+
   // Caching config for tickets list
   const CACHE_TTL_MS = 5 * 60 * 1000; // 5 minutes
 
@@ -22,14 +26,22 @@ window.adminTicketsData = [];
     } catch {}
   }
 
-  // Use the same four grouped categories as the dashboard pie chart
-  const categories = [
+  // Categories per role
+  const groupedCategories = [
     { label: "All categories", value: "" },
     { label: "IT & Access", value: "it-access" },
     { label: "Facilities & Equipment", value: "facilities-equipment" },
     { label: "Academic Services", value: "academic-services" },
     { label: "Administrative & Other", value: "administrative-other" },
   ];
+
+  const counselorCategories = [
+    { label: "All categories", value: "" },
+    { label: "Counselling", value: "counselling" },
+  ];
+
+  const categories =
+    ROLE === "counselor" ? counselorCategories : groupedCategories;
 
   const statuses = [
     "All statuses",
@@ -38,12 +50,10 @@ window.adminTicketsData = [];
     "Resolved",
     "Rejected",
   ];
-
   const priorities = ["All priorities", "Low", "Medium", "High", "Urgent"];
 
   function toValue(label, isFirst) {
     if (isFirst) return "";
-    // Robust slug: replace & with 'and', non-alnum to hyphen, trim hyphens
     return label
       .toLowerCase()
       .replace(/&/g, "and")
@@ -82,12 +92,13 @@ window.adminTicketsData = [];
   populateSelect(statusSelect, statuses);
   populateSelect(prioritySelect, priorities);
 
-  // Read initial state from URL before building custom selects
   const urlParams = new URLSearchParams(window.location.search);
 
-  // Map older category filter values to the new grouped slugs for continuity
   function normalizeLegacyCategory(value) {
     const v = (value || "").toLowerCase();
+    if (ROLE === "counselor") {
+      return v === "counselling" ? "counselling" : "";
+    }
     switch (v) {
       case "administrative":
       case "financial":
@@ -102,9 +113,10 @@ window.adminTicketsData = [];
       case "facility":
         return "facilities-equipment";
       default:
-        return v; // assume it's already a valid new slug or empty
+        return v;
     }
   }
+
   const initial = {
     search: (urlParams.get("search") || "").trim(),
     category: normalizeLegacyCategory(urlParams.get("category") || ""),
@@ -117,10 +129,9 @@ window.adminTicketsData = [];
   };
 
   if (searchInput) searchInput.value = initial.search;
-  // Safe set for selects only if the value exists in options
   function setIfOptionExists(select, value) {
     if (!select) return;
-    if (!value) return; // default already selected
+    if (!value) return;
     const has = Array.from(select.options).some((o) => o.value === value);
     if (has) select.value = value;
   }
@@ -128,11 +139,9 @@ window.adminTicketsData = [];
   setIfOptionExists(statusSelect, initial.status);
   setIfOptionExists(prioritySelect, initial.priority);
 
-  // Build custom selects for better option UI consistency
   function buildCustomSelect(nativeSelect) {
     if (!nativeSelect) return;
 
-    // Create wrapper and button
     const wrap = document.createElement("div");
     wrap.className = "selectWrap";
 
@@ -154,7 +163,6 @@ window.adminTicketsData = [];
     list.className = "selectList";
     list.setAttribute("role", "listbox");
 
-    // Build list options
     Array.from(nativeSelect.options).forEach((opt) => {
       const li = document.createElement("li");
       li.className = "selectOption" + (opt.selected ? " isSelected" : "");
@@ -178,7 +186,6 @@ window.adminTicketsData = [];
       list.appendChild(li);
     });
 
-    // Toggle open/close
     button.addEventListener("click", (e) => {
       e.stopPropagation();
       const isOpen = wrap.classList.contains("isOpen");
@@ -187,20 +194,16 @@ window.adminTicketsData = [];
         .forEach((w) => w.classList.remove("isOpen"));
       if (!isOpen) wrap.classList.add("isOpen");
     });
-
-    // Close on outside click / Escape
     document.addEventListener("click", () => wrap.classList.remove("isOpen"));
     document.addEventListener("keydown", (e) => {
       if (e.key === "Escape") wrap.classList.remove("isOpen");
     });
 
-    // Keep native select in DOM for accessibility/forms
     nativeSelect.classList.add("selectHidden");
     nativeSelect.parentNode.insertBefore(wrap, nativeSelect);
     wrap.appendChild(button);
     wrap.appendChild(list);
 
-    // Sync if native select changes externally
     nativeSelect.addEventListener("change", () => {
       const o = nativeSelect.options[nativeSelect.selectedIndex];
       labelSpan.textContent = o?.text || "";
@@ -212,16 +215,12 @@ window.adminTicketsData = [];
     });
   }
 
-  // Initialize custom selects
   [categorySelect, statusSelect, prioritySelect].forEach(buildCustomSelect);
 
-  // Pagination & state
-  let page = 1;
-  // Apply initial page from URL
-  page = initial.page;
+  let page = initial.page;
   const perPage = 10;
   let meta = { total: 0, totalPages: 1 };
-  let listenersBound = false; // avoid duplicate event handlers on re-renders
+  let listenersBound = false;
 
   function debounce(fn, wait) {
     let t;
@@ -247,7 +246,6 @@ window.adminTicketsData = [];
   function syncUrlState() {
     const p = buildQueryParams();
     const params = new URLSearchParams();
-    // Only include non-empty filters to keep URL clean
     if (p.search) params.set("search", p.search);
     if (p.category) params.set("category", p.category);
     if (p.status) params.set("status", p.status);
@@ -258,7 +256,6 @@ window.adminTicketsData = [];
     window.history.replaceState(null, "", newUrl);
   }
 
-  // --- Tickets rendering using map() ---
   function esc(s) {
     return String(s == null ? "" : s)
       .replace(/&/g, "&amp;")
@@ -269,7 +266,6 @@ window.adminTicketsData = [];
   }
 
   function formatDate(iso) {
-    // Expect YYYY-MM-DD; fallback to raw
     try {
       const d = new Date(iso);
       if (isNaN(d.getTime())) return esc(iso || "");
@@ -317,8 +313,6 @@ window.adminTicketsData = [];
     };
   }
 
-  // With anchor-based navigation, no custom JS navigation is required.
-
   function renderTickets(data) {
     const container = document.querySelector(".tickets");
     if (!container) return;
@@ -331,63 +325,59 @@ window.adminTicketsData = [];
         const id = t.id != null ? String(t.id) : "";
         const code = t.code != null ? String(t.code) : "";
         const url = id
-          ? `/admin/ticket?id=${encodeURIComponent(id)}`
+          ? `${TICKET_URL_BASE}?id=${encodeURIComponent(id)}`
           : code
-          ? `/admin/ticket?code=${encodeURIComponent(code)}`
+          ? `${TICKET_URL_BASE}?code=${encodeURIComponent(code)}`
           : "#";
         const vt = `ticket-${esc(id || code)}`;
-        return `
-      <a class="ticket" href="${url}" aria-label="Open ticket ${esc(
-          t.title
-        )}" style="view-transition-name: ${vt}; text-decoration: none; color: inherit;">
-                <div class="ticketRow1">
-                    <div class="ticketName">
-                        <h2>${esc(t.title)}</h2>
-                        <div class="ticketInfo">
-                            <p>${esc(t.code)}</p>
-                            <p>${formatDate(t.createdAt)}</p>
-                            <p>${esc(t.student?.name || "")}</p>
-                        </div>
-                    </div>
-                    <div class="status ${status.cls}">${esc(status.label)}</div>
-                </div>
-                <div class="ticketRow2">
-                    <div class="ticketDetails">
-                        <div class="ticketDetail">
-                            <h2>Category:</h2>
-                            <div class="ticketDetailHolder">${esc(
-                              t.category
-                            )}</div>
-                        </div>
-                    </div>
-                    <div class="ticketData">
-                        <div class="ticketDetail">
-                            <h2>Meeting:</h2>
-                            <div class="ticketDataHolder">${esc(
-                              meetingLabel
-                            )}</div>
-                        </div>
-                        <div class="ticketDetail">
-                            <h2>Priority:</h2>
-                            <div class="ticketDataHolder" style="${
-                              pr.style
-                            }">${esc(pr.label)}</div>
-                        </div>
-                    </div>
-                </div>
-            </a>`;
+        const inner = `
+        <div class="ticketRow1">
+          <div class="ticketName">
+            <h2>${esc(t.title)}</h2>
+            <div class="ticketInfo">
+              <p>${esc(t.code)}</p>
+              <p>${formatDate(t.createdAt)}</p>
+              <p>${esc(t.student?.name || "")}</p>
+            </div>
+          </div>
+          <div class="status ${status.cls}">${esc(status.label)}</div>
+        </div>
+        <div class="ticketRow2">
+          <div class="ticketDetails">
+            <div class="ticketDetail">
+              <h2>Category:</h2>
+              <div class="ticketDetailHolder">${esc(t.category)}</div>
+            </div>
+          </div>
+          <div class="ticketData">
+            <div class="ticketDetail">
+              <h2>Meeting:</h2>
+              <div class="ticketDataHolder">${esc(meetingLabel)}</div>
+            </div>
+            <div class="ticketDetail">
+              <h2>Priority:</h2>
+              <div class="ticketDataHolder" style="${pr.style}">${esc(
+          pr.label
+        )}</div>
+            </div>
+          </div>
+        </div>`;
+
+        if (SHOW_LINKS && url && url !== "#") {
+          return `<a class="ticket" href="${url}" aria-label="Open ticket ${esc(
+            t.title
+          )}" style="view-transition-name: ${vt}; text-decoration: none; color: inherit;">${inner}</a>`;
+        }
+        return `<div class="ticket" style="view-transition-name: ${vt};">${inner}</div>`;
       })
       .join("");
 
     container.innerHTML = html;
-    // Enhance navigation with the View Transitions API when available.
-    // Delegate clicks on the tickets container so dynamically rendered
-    // anchors navigate with a cross-document transition.
-    if (!listenersBound) {
+
+    if (SHOW_LINKS && !listenersBound) {
       container.addEventListener("click", (e) => {
         const a = e.target?.closest("a.ticket");
         if (!a || !container.contains(a)) return;
-        // Only handle simple primary-button clicks without modifier keys
         if (e.button !== 0 || e.metaKey || e.ctrlKey || e.shiftKey || e.altKey)
           return;
         const href = a.getAttribute("href");
@@ -410,7 +400,6 @@ window.adminTicketsData = [];
     paginationHolder.innerHTML = "";
     const totalPages = Math.max(1, parseInt(meta.totalPages || 1, 10));
 
-    // Helper to create a page button; can render text or raw HTML content (e.g., SVG)
     const makeBtn = (
       num,
       active = false,
@@ -435,7 +424,6 @@ window.adminTicketsData = [];
       return d;
     };
 
-    // Previous
     if (page > 1) {
       const leftSvg =
         '<svg xmlns="http://www.w3.org/2000/svg" height="15px" viewBox="0 -960 960 960" width="15px" fill="#000000"><path d="m121.38-480 289.31 289.31q10.92 10.92 11.12 27.07.19 16.16-10.73 27.08-10.93 10.92-27.08 10.92t-27.08-10.92L59.08-434.77q-9.85-9.85-14.08-21.31-4.23-11.46-4.23-23.92T45-503.92q4.23-11.46 14.08-21.31l297.84-297.85q10.93-10.92 26.89-11.11 15.96-.19 26.88 10.73 10.92 10.92 10.92 27.08 0 16.15-10.92 27.07L121.38-480Z"/></svg>';
@@ -444,7 +432,6 @@ window.adminTicketsData = [];
       );
     }
 
-    // Windowed pages (max 5)
     const maxButtons = 5;
     let start = Math.max(1, page - Math.floor(maxButtons / 2));
     let end = Math.min(totalPages, start + maxButtons - 1);
@@ -453,7 +440,6 @@ window.adminTicketsData = [];
       paginationHolder.appendChild(makeBtn(p, p === page));
     }
 
-    // Next
     if (page < totalPages) {
       const rightSvg =
         '<svg xmlns="http://www.w3.org/2000/svg" height="15px" viewBox="0 -960 960 960" width="15px" fill="#000000"><path d="M550.23-480 260.92-769.31q-10.92-10.92-11.11-26.88-.19-15.96 10.73-26.89Q271.46-834 287.42-834q15.96 0 26.89 10.92l298.23 297.85q9.84 9.85 14.07 21.31 4.24 11.46 4.24 23.92t-4.24 23.92q-4.23 11.46-14.07 21.31L314.69-136.92q-10.92 10.92-27.07 11.11-16.16.19-27.08-10.73-10.92-10.92-10.92-26.88 0-15.96 10.92-26.89L550.23-480Z"/></svg>';
@@ -463,16 +449,13 @@ window.adminTicketsData = [];
     }
   }
 
-  // Fetch tickets from backend API and render, with localStorage TTL + SWR caching
   async function loadTickets(nextPage) {
     if (typeof nextPage === "number") page = nextPage;
-    // Keep URL in sync with current UI state and page
     syncUrlState();
     const container = document.querySelector(".tickets");
-    if (container) {
+    if (container)
       container.innerHTML =
         '<div class="ticketsLoading">Loading tickets…</div>';
-    }
     try {
       const p = buildQueryParams();
       const qs = new URLSearchParams({
@@ -484,29 +467,24 @@ window.adminTicketsData = [];
         priority: p.priority,
       });
 
-      // Cache key per filter/page combo
-      const CACHE_KEY = `admin_tickets_${qs.toString()}`;
+      const CACHE_KEY = `${ROLE}_tickets_${qs.toString()}`;
 
-      // One-time cache bust (e.g., after delete)
       let forceBypass = false;
       try {
-        if (localStorage.getItem("admin_tickets_bust")) {
+        if (localStorage.getItem(`${ROLE}_tickets_bust`)) {
           forceBypass = true;
-          localStorage.removeItem("admin_tickets_bust");
+          localStorage.removeItem(`${ROLE}_tickets_bust`);
         }
       } catch {}
 
-      // Serve from cache immediately if present
       const cached = forceBypass ? null : getCache(CACHE_KEY);
       if (cached) {
         const data = Array.isArray(cached?.data) ? cached.data : [];
         meta = cached?.meta || { total: data.length, totalPages: 1 };
-        window.adminTicketsData = data;
-        renderTickets(window.adminTicketsData);
+        renderTickets(data);
         renderPagination();
 
-        // SWR: refresh in background without blocking UI
-        fetch(`/admin/ticketsData?${qs.toString()}`, { credentials: "include" })
+        fetch(`${API_BASE}?${qs.toString()}`, { credentials: "include" })
           .then((res) =>
             res.ok ? res.json() : Promise.reject(new Error("Bad response"))
           )
@@ -514,19 +492,14 @@ window.adminTicketsData = [];
             setCache(CACHE_KEY, fresh);
             const newData = Array.isArray(fresh?.data) ? fresh.data : [];
             meta = fresh?.meta || { total: newData.length, totalPages: 1 };
-            window.adminTicketsData = newData;
-            renderTickets(window.adminTicketsData);
+            renderTickets(newData);
             renderPagination();
           })
-          .catch((e) => {
-            // eslint-disable-next-line no-console
-            console.warn("Tickets background refresh failed", e);
-          });
-        return; // already rendered from cache
+          .catch(() => {});
+        return;
       }
 
-      // No cache, fetch now
-      const res = await fetch(`/admin/ticketsData?${qs.toString()}`, {
+      const res = await fetch(`${API_BASE}?${qs.toString()}`, {
         credentials: "include",
       });
       if (!res.ok) throw new Error("Failed to load tickets");
@@ -534,20 +507,16 @@ window.adminTicketsData = [];
       setCache(CACHE_KEY, payload);
       const data = Array.isArray(payload?.data) ? payload.data : [];
       meta = payload?.meta || { total: data.length, totalPages: 1 };
-      window.adminTicketsData = data;
-      renderTickets(window.adminTicketsData);
+      renderTickets(data);
       renderPagination();
     } catch (err) {
-      if (container) {
+      if (container)
         container.innerHTML =
           '<div class="ticketsError">Unable to load tickets. Please try again.</div>';
-      }
-      // eslint-disable-next-line no-console
       console.error("Tickets load error:", err);
     }
   }
 
-  // Wire up filters/search
   if (searchInput) {
     searchInput.addEventListener(
       "input",

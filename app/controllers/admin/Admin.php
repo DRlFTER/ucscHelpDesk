@@ -2,6 +2,19 @@
 
 class Admin extends Controller
 {
+    public function settings()
+    {
+        $this->requireLogin('admin');
+        $headContent = '\n        <link rel="stylesheet" href="/css/settings/settings.css"/>';
+        $this->view('settings', [
+            'title' => 'Settings',
+            'head' => $headContent,
+            'role' => 'admin',
+            'roleLabel' => 'Admin',
+            'roleMessage' => 'Admin settings: manage system-wide preferences (dummy content).',
+        ]);
+    }
+
     public function dashboard()
     {
         $this->requireLogin('admin');
@@ -20,15 +33,23 @@ class Admin extends Controller
     public function tickets() {
         $this->requireLogin('admin');
         $headContent = '
-        <link rel="stylesheet" href="/css/admin/adminTickets.css"/>';
-        $this->view('adminTickets', ['title' => 'Tickets', 'head' => $headContent]);
+        <link rel="stylesheet" href="/css/tickets/tickets.css"/>';
+        $this->view('tickets', [
+            'title' => 'Tickets',
+            'head' => $headContent,
+            'role' => 'admin',
+        ]);
     }
 
     public function ticket() {
         $this->requireLogin('admin');
         $headContent = '
-        <link rel="stylesheet" href="/css/admin/adminTicketFull.css"/>';
-        $this->view('adminTicketFull', ['title' => 'Ticket Details', 'head' => $headContent]);
+        <link rel="stylesheet" href="/css/ticketFull/ticketFull.css"/>';
+        $this->view('ticketFull', [
+            'title' => 'Ticket Details',
+            'head' => $headContent,
+            'role' => 'admin',
+        ]);
     }
     public function users() {
         $this->requireLogin('admin');
@@ -45,9 +66,14 @@ class Admin extends Controller
     }
     public function calender() {
         $this->requireLogin('admin');
-        $headContent = '
-        <link rel="stylesheet" href="/css/admin/adminCalender.css"/>';
-        $this->view('adminCalender', ['title' => 'Calender', 'head' => $headContent]);
+        $headContent = '\n        <link rel="stylesheet" href="/css/calender/calender.css"/>';
+        $this->view('calender', [
+            'title' => 'Calendar',
+            'head' => $headContent,
+            'role' => 'admin',
+            'roleLabel' => 'Admin',
+            'roleMessage' => 'Admin calendar: manage organization events (dummy content).',
+        ]);
     }
     public function forum() {
         $this->requireLogin('admin');
@@ -692,6 +718,18 @@ class Admin extends Controller
             if ($ts !== false) $createdPretty = date('M d, Y \\a\\t g:i A', $ts);
         }
 
+        // Map meeting flag to UI value
+        $meeting = 'none';
+        // Try to read meeting flag from tickets table
+        if ($res2 = $db->query("SELECT meeting_requested FROM tickets WHERE ticket_id = $idEsc LIMIT 1")) {
+            if ($r2 = $res2->fetch_assoc()) {
+                $mr = strtolower(trim((string)($r2['meeting_requested'] ?? '')));
+                if ($mr === 'requested') $meeting = 'requested';
+                elseif ($mr === 'scheduled') $meeting = 'scheduled';
+            }
+            $res2->free();
+        }
+
         echo json_encode([
             'id' => (int)$row['ticket_id'],
             'code' => 'TKT-' . (int)$row['ticket_id'],
@@ -701,6 +739,7 @@ class Admin extends Controller
             'priority' => ucfirst((string)($row['priority'] ?? '')),
             'status' => $statusUi,
             'createdOn' => $createdPretty,
+            'meeting' => $meeting,
             'student' => [
                 'id' => isset($row['u_id']) ? (int)$row['u_id'] : null,
                 'name' => (string)($row['student_name'] ?? ''),

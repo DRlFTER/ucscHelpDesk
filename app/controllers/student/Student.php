@@ -2,6 +2,19 @@
 
 class Student extends Controller
 {
+    public function settings()
+    {
+        $this->requireLogin('student');
+        $headContent = '\n        <link rel="stylesheet" href="/css/settings/settings.css"/>';
+        $this->view('settings', [
+            'title' => 'Settings',
+            'head' => $headContent,
+            'role' => 'student',
+            'roleLabel' => 'Student',
+            'roleMessage' => 'Student settings: personalize your account and preferences (dummy content).',
+        ]);
+    }
+
     public function dashboard()
     {
         $this->requireLogin('student');
@@ -435,10 +448,13 @@ class Student extends Controller
     public function calender()
     {
         $this->requireLogin('student');
-        $headContent = '<link rel="stylesheet" href="/css/student/studentCalender.css" />';
-        $this->view('student/studentCalender', [
+        $headContent = '<link rel="stylesheet" href="/css/calender/calender.css" />';
+        $this->view('calender', [
             'title' => 'Calendar',
             'head' => $headContent,
+            'role' => 'student',
+            'roleLabel' => 'Student',
+            'roleMessage' => 'Student calendar: keep track of your schedule (dummy content).',
         ]);
     }
 
