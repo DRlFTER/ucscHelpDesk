@@ -8,21 +8,6 @@
     </div>
     
     <!-- Layout Container for Sidebar and Content -->
-    <div class="layout-container">
-      <!-- Sidebar Navigation -->
-      <nav class="navMenu">
-        <div class="sideNav">
-          <a href="/staff/staffDashboard" class="nav-link">Dashboard</a>
-          <a href="/staff/staffTickets" class="nav-link active">My Tickets</a>
-          <a href="/staff/staffAnnoucements" class="nav-link">Announcement</a>
-          <a href="/staff/createTemplate" class="nav-link">Template</a>
-          <a href="/staff/forum" class="nav-link">Forums</a>
-          <a href="/staff/calendar" class="nav-link">Calendar</a>
-          <a href="/staff/lostfound" class="nav-link">Lost &amp; Found</a>
-          <a href="/staff/settings" class="nav-link">Settings</a>
-        </div>
-      </nav>
-      
       <!-- Main Content Area -->
       <div class="content-area">
         <?php if (!empty($error)): ?>
@@ -33,8 +18,8 @@
 
         <div class="controls-bar">
           <div class="search-bar">
-            <img src="/images/173_2471.svg" alt="Search Icon"> <!-- Fixed path assuming public/images -->
-            <input type="text" placeholder="Search tickets, students...">
+               <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#6b7280" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+                        <input id="faq-search" type="text" placeholder="Search FAQs..." autocomplete="off"/>
           </div>
           <div class="filters">
             <select id="status-filter" class="filter-btn">

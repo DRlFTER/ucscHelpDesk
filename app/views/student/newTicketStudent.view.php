@@ -82,8 +82,8 @@ include_once(__DIR__ . "/../../views/common/navbar.php");
 						<textarea id="details" name="details" rows="6" placeholder="Describe your issue in detail. Include any error messages, steps to reproduce, or relevant information." required></textarea>
 					</div>
 
-					<!-- Request Exam toggle -->
-					<div class="field">
+					<!-- Request Meeting (only for Counselling) -->
+					<div class="field" id="meetingField" style="display:none;">
 						<label class="label">Request Meeting</label>
 						<label style="display:flex; align-items:center; gap:10px; cursor:pointer; user-select:none;">
 							<input type="checkbox" name="meeting_requested" value="1" style="width:16px; height:16px; accent-color: var(--CTA,#8c8cf9);">
@@ -137,11 +137,21 @@ include_once(__DIR__ . "/../../views/common/navbar.php");
 					</div>
 				</section>
 
-				<section class="sideCard">
+				<section class="sideCard" role="button" tabindex="0" aria-label="Open Knowledge Base"
+					onclick="window.location.href='/student/knowledgebase'"
+					onkeydown="if(event.key==='Enter'||event.key===' '){window.location.href='/student/knowledgebase'}"
+					style="cursor:pointer;">
 					<h3>Knowledge Base</h3>
 					<div class="kbSearch">
 						<svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#6b7280" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
-            <input type="text" placeholder="Search FAQs, forums, and help articles..." />
+            <input type="text" placeholder="Search FAQs, forums, and help articles..." onclick="event.stopPropagation();" onfocus="event.stopPropagation();" />
+					</div>
+				</section>
+
+				<section class="sideCard">
+					<h3>For Common Issues</h3>
+					<div class="btnHolder">
+						<a href="/student/templates" class="btnPrimary btnPrimaryText" style="text-decoration:none;">Create Ticket</a>
 					</div>
 				</section>
 			</aside>
@@ -161,3 +171,24 @@ include_once(__DIR__ . "/../../views/common/navbar.php");
 <?php endif; ?>
 
 <script src="/js/student/studentNewTicket.js"></script>
+
+<script>
+// Show meeting request only when 'Counselling' is selected
+document.addEventListener('DOMContentLoaded', function () {
+	const select = document.getElementById('subcategory');
+	const meetingField = document.getElementById('meetingField');
+	if (!select || !meetingField) return;
+
+	const updateMeetingVisibility = () => {
+		const show = select.value === 'counselling';
+		meetingField.style.display = show ? '' : 'none';
+		if (!show) {
+			const cb = meetingField.querySelector('input[type="checkbox"]');
+			if (cb) cb.checked = false;
+		}
+	};
+
+	select.addEventListener('change', updateMeetingVisibility);
+	updateMeetingVisibility();
+});
+</script>

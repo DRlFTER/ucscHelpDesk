@@ -39,6 +39,7 @@ body {
 }
 
 .modalOverlay .msgContainer {
+  position: relative; /* enable z-index stacking above backdrop */
   backdrop-filter: blur(20px);
   border: 1px solid rgba(255, 255, 255, 0.1);
   background: rgba(255, 255, 255, 0.8);
@@ -50,7 +51,7 @@ body {
   gap: 12px;
   color: black;
   font-family: "Poppins", "SF Pro", sans-serif;
-  z-index: 10;
+  z-index: 2; /* above the backdrop close button */
   box-shadow: 0 12px 30px rgba(17, 24, 39, 0.18);
   transform: translateY(8px) scale(0.98);
   opacity: 0;
@@ -103,6 +104,7 @@ body {
   background: transparent;
   border: none;
   cursor: default;
+  z-index: 1; /* keep behind the dialog so inner buttons remain clickable */
 }
 
 body.modal-open main {
@@ -306,11 +308,16 @@ body.modal-open main {
   display: flex;
   align-items: center;
   gap: 8px;
+  padding-bottom: 5px;
 }
 
 .messageHeader .name {
   font-weight: 600;
   font-size: 12.5px;
+}
+
+.messageHeader .name .staffLabel {
+  font-weight: 600;
 }
 
 .messageHeader .role {
@@ -364,9 +371,20 @@ body.modal-open main {
   gap: 10px;
 }
 
+/* Remove global highlight backgrounds applied by .pending/.completed utility classes */
+.timelineItem.pending,
+.timelineItem.completed {
+  background: transparent !important;
+}
+
+.timelineItem.pending .label,
+.timelineItem.pending .time {
+  color: #9ca3af;
+}
+
 .tlDot {
-  width: 10px;
-  height: 10px;
+  width: 14px;
+  height: 14px;
   border-radius: 50%;
 }
 
@@ -385,6 +403,23 @@ body.modal-open main {
 .tlDot.gray {
   background: #9ca3af;
 }
+
+/* Timeline text stack (label + time) */
+.tlText {
+  display: flex;
+  flex-direction: column;
+  line-height: 1.2;
+}
+.tlText .label {
+  font-weight: 400;
+  font-size: 15px;
+}
+.tlText .time {
+  font-size: 12.5px;
+  color: #9ca3af;
+  margin-top: 2px;
+}
+.tlText .time:empty { display: none; }
 
 .btnHolder {
   display: flex;

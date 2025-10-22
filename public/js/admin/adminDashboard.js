@@ -221,6 +221,173 @@
       .join("")}\n    </table>\n  `;
   }
 
+  // Group many raw categories into 4 clear buckets for the pie chart
+  function groupCategories(categories) {
+    // Define the four buckets with keyword hints
+    const buckets = [
+      {
+        name: "IT & Access",
+        keys: [
+          "it",
+          "tech",
+          "technical",
+          "account",
+          "login",
+          "password",
+          "email",
+          "network",
+          "wifi",
+          "wi-fi",
+          "internet",
+          "software",
+          "hardware",
+          "device",
+          "computer",
+          "system",
+          "server",
+          "bug",
+          "error",
+          "website",
+          "portal",
+          "moodle",
+          "lms",
+          "printer",
+          "printing",
+          "access",
+        ],
+      },
+      {
+        name: "Facilities & Equipment",
+        keys: [
+          "facility",
+          "facilities",
+          "maintenance",
+          "repair",
+          "cleaning",
+          "electric",
+          "electrical",
+          "power",
+          "water",
+          "plumbing",
+          "leak",
+          "aircon",
+          "air conditioning",
+          "ac",
+          "furniture",
+          "equipment",
+          "lab",
+          "laboratory",
+          "room",
+          "classroom",
+          "projector",
+          "door",
+          "building",
+          "lighting",
+          "light",
+          "security camera",
+        ],
+      },
+      {
+        name: "Academic Services",
+        keys: [
+          "academic",
+          "course",
+          "courses",
+          "class",
+          "classes",
+          "lecture",
+          "lecturer",
+          "timetable",
+          "schedule",
+          "exam",
+          "exams",
+          "grade",
+          "grades",
+          "registration",
+          "enrollment",
+          "admission",
+          "advising",
+          "advisor",
+          "library",
+          "scholarship",
+          "student id",
+          "id card",
+          "transcript",
+          "certificate",
+          "attendance",
+        ],
+      },
+      {
+        name: "Administrative & Other",
+        keys: [
+          "finance",
+          "payment",
+          "payments",
+          "fee",
+          "fees",
+          "billing",
+          "hr",
+          "human resources",
+          "leave",
+          "policy",
+          "procurement",
+          "purchase",
+          "general",
+          "other",
+          "misc",
+          "miscellaneous",
+          "event",
+          "events",
+          "parking",
+          "transport",
+          "bus",
+          "lost",
+          "found",
+          "lost & found",
+          "complaint",
+          "complaints",
+          "canteen",
+          "food",
+          "cafeteria",
+          "hostel",
+          "residence",
+          "housing",
+          "staff",
+          "admin",
+          "administration",
+        ],
+      },
+    ];
+
+    const totals = Object.create(null);
+    buckets.forEach((b) => (totals[b.name] = 0));
+
+    const labels = (categories && categories.labels) || [];
+    const data = (categories && categories.data) || [];
+
+    const chooseBucket = (label) => {
+      const l = String(label || "").toLowerCase();
+      for (const b of buckets) {
+        if (b.keys.some((k) => l.includes(k))) return b.name;
+      }
+      // Default to the last bucket (Other)
+      return buckets[buckets.length - 1].name;
+    };
+
+    for (let i = 0; i < labels.length; i++) {
+      const label = labels[i];
+      const rawVal = Array.isArray(data) ? data[i] : 0;
+      const val = Number(rawVal) || 0;
+      const bucketName = chooseBucket(label);
+      totals[bucketName] += val;
+    }
+
+    return {
+      labels: buckets.map((b) => b.name),
+      data: buckets.map((b) => totals[b.name] || 0),
+    };
+  }
+
   // Keep chart instances to update without recreating
   let charts = { line: null, pie: null };
 
@@ -253,11 +420,13 @@
         plugins: { legend: { position: "bottom" } },
       };
 
+      // Group raw categories into 4 buckets for clarity
+      const grouped = groupCategories(categories);
       const pieData = {
-        labels: (categories && categories.labels) || [],
+        labels: grouped.labels,
         datasets: [
           {
-            data: (categories && categories.data) || [],
+            data: grouped.data,
             backgroundColor: ["#3b82f6", "#f59e0b", "#10b981", "#6b7280"],
           },
         ],

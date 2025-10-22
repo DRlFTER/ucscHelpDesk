@@ -2,6 +2,19 @@
 
 class Student extends Controller
 {
+    public function settings()
+    {
+        $this->requireLogin('student');
+        $headContent = '\n        <link rel="stylesheet" href="/css/settings/settings.css"/>';
+        $this->view('settings', [
+            'title' => 'Settings',
+            'head' => $headContent,
+            'role' => 'student',
+            'roleLabel' => 'Student',
+            'roleMessage' => 'Student settings: personalize your account and preferences (dummy content).',
+        ]);
+    }
+
     public function dashboard()
     {
         $this->requireLogin('student');
@@ -120,6 +133,38 @@ class Student extends Controller
             'title' => 'Ticket Details',
             'head' => $headContent,
             'ticket' => $ticket,
+        ]);
+    }
+
+    public function templates()
+    {
+        $this->requireLogin('student');
+
+        // Load available templates created by staff
+        $templates = [];
+        try {
+            require_once __DIR__ . '/../../models/staff/Template.php';
+            $tplModel = new Template();
+            $templates = $tplModel->getAll();
+            // Decode fields JSON for view consumption if needed
+            foreach ($templates as &$tpl) {
+                if (isset($tpl['fields']) && is_string($tpl['fields'])) {
+                    $decoded = json_decode($tpl['fields'], true);
+                    $tpl['fields'] = is_array($decoded) ? $decoded : [];
+                }
+            }
+            unset($tpl);
+        } catch (Throwable $e) {
+            $templates = [];
+        }
+
+        $headContent = '<link rel="stylesheet" href="/css/student/studentTemplate.view.css" />';
+
+        $this->view('studentTemplate', [
+            'title' => 'Use Template',
+            'head' => $headContent,
+            'templates' => $templates,
+            // success/errors/generation handled by future POST flow
         ]);
     }
 
@@ -428,6 +473,20 @@ class Student extends Controller
         $this->view('student/studentKnowledgeBase', [
             'title' => 'Knowledge Base',
             'head' => $headContent,
+        ]);
+    }
+
+    // Student Calendar page
+    public function calender()
+    {
+        $this->requireLogin('student');
+        $headContent = '<link rel="stylesheet" href="/css/calender/calender.css" />';
+        $this->view('calender', [
+            'title' => 'Calendar',
+            'head' => $headContent,
+            'role' => 'student',
+            'roleLabel' => 'Student',
+            'roleMessage' => 'Student calendar: keep track of your schedule (dummy content).',
         ]);
     }
 
@@ -805,6 +864,49 @@ class Student extends Controller
 
         echo json_encode($payload);
     }
+
+    // Delete a forum post owned by the current student
+    public function forumDelete()
+    {
+        $this->requireLogin('student');
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+            http_response_code(405);
+            echo 'method_not_allowed';
+            return;
+        }
+
+        $uId = (int)($_SESSION['user']['u_id'] ?? 0);
+        $id = isset($_POST['id']) ? (int)$_POST['id'] : 0;
+        if ($id <= 0 || $uId <= 0) {
+            http_response_code(400);
+            echo 'bad_request';
+            return;
+        }
+
+        $db = Database::getInstance();
+        $idEsc = (int)$id;
+        // Ensure ownership
+        $ownRow = null;
+        if ($res = $db->query("SELECT q_id FROM forum_q WHERE q_id = $idEsc AND u_id = $uId")) {
+            $ownRow = $res->fetch_assoc();
+            $res->free();
+        }
+        if (!$ownRow) {
+            http_response_code(404);
+            echo 'not_found';
+            return;
+        }
+
+        // Delete post; replies are ON DELETE CASCADE (see schema)
+        $ok = $db->query("DELETE FROM forum_q WHERE q_id = $idEsc AND u_id = $uId");
+        if (!$ok) {
+            http_response_code(500);
+            echo 'delete_failed';
+            return;
+        }
+
+        echo 'ok';
+    }
     // Student tickets list (same UI as admin tickets page)
     public function tickets()
     {
@@ -1018,6 +1120,33 @@ class Student extends Controller
             if ($ts !== false) $createdPretty = date('M d, Y \\a\\t g:i A', $ts);
         }
 
+        // Fetch staff responses for conversation
+        $messages = [];
+        if ($res = $db->query("SELECT tr.response, tr.date_time, u.name AS staff_name, (
+                SELECT d.name FROM staff_division sd
+                JOIN division d ON d.did = sd.did
+                WHERE sd.u_id = u.u_id
+                LIMIT 1
+            ) AS division_name
+            FROM ticket_response tr
+            JOIN users u ON u.u_id = tr.u_id
+            WHERE tr.ticket_id = $idEsc
+            ORDER BY tr.date_time ASC")) {
+            while ($r = $res->fetch_assoc()) {
+                $dt = (string)($r['date_time'] ?? '');
+                $pretty = '';
+                if ($dt) { $ts = strtotime($dt); if ($ts !== false) { $pretty = date('M d, Y \\a\\t g:i A', $ts); } }
+                $messages[] = [
+                    'name' => (string)($r['staff_name'] ?: 'Staff'),
+                    'role' => (string)($r['division_name'] ?: 'Staff'),
+                    'time' => $pretty,
+                    'text' => (string)($r['response'] ?? ''),
+                    'authorType' => 'staff',
+                ];
+            }
+            $res->free();
+        }
+
         $payload = [
             'id' => (int)$ticket['ticket_id'],
             'code' => 'TKT-' . (int)$ticket['ticket_id'],
@@ -1029,6 +1158,8 @@ class Student extends Controller
             'priority' => ucfirst((string)($ticket['priority'] ?? '')),
             'assigned' => null,
             'attachments' => $attachments,
+            'messages' => $messages,
+            'allowReply' => true,
         ];
 
         echo json_encode($payload);
@@ -1069,6 +1200,49 @@ class Student extends Controller
         // Optionally delete attachments first if FK constraints exist
         $db->query("DELETE FROM supporting_documents WHERE ticket_id = $idEsc");
         $db->query("DELETE FROM tickets WHERE ticket_id = $idEsc AND u_id = $studentId");
+
+        echo 'ok';
+    }
+
+    // Mark a ticket owned by the current student as resolved
+    public function ticketResolve()
+    {
+        $this->requireLogin('student');
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+            http_response_code(405);
+            echo 'method_not_allowed';
+            return;
+        }
+
+        $studentId = (int)($_SESSION['user']['u_id'] ?? 0);
+        $id = isset($_POST['id']) ? (int)$_POST['id'] : 0;
+        if ($id <= 0) {
+            http_response_code(400);
+            echo 'bad_request';
+            return;
+        }
+
+        $db = Database::getInstance();
+        $idEsc = (int)$id;
+        // Ensure ownership
+        $ownRow = null;
+        if ($res = $db->query("SELECT ticket_id FROM tickets WHERE ticket_id = $idEsc AND u_id = $studentId")) {
+            $ownRow = $res->fetch_assoc();
+            $res->free();
+        }
+        if (!$ownRow) {
+            http_response_code(404);
+            echo 'not_found';
+            return;
+        }
+
+        // Update status to resolved
+        $ok = $db->query("UPDATE tickets SET status = 'resolved' WHERE ticket_id = $idEsc AND u_id = $studentId");
+        if (!$ok) {
+            http_response_code(500);
+            echo 'update_failed';
+            return;
+        }
 
         echo 'ok';
     }

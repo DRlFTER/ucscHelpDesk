@@ -10,18 +10,18 @@
     <!-- Layout Container for Sidebar and Content -->
     <div class="layout-container">
         <!-- Sidebar Navigation -->
-      <nav class="navMenu">
-        <div class="sideNav">
-          <a href="/staff/staffDashboard" class="nav-link active">Dashboard</a>
-          <a href="/staff/staffTickets" class="nav-link ">My Tickets</a>
-          <a href="/staff/staffAnnoucements" class="nav-link">Announcement</a>
-          <a href="/staff/createTemplate" class="nav-link">Template</a>
-          <a href="/staff/forum" class="nav-link">Forums</a>
-          <a href="/staff/calendar" class="nav-link">Calendar</a>
-          <a href="/staff/lostfound" class="nav-link">Lost &amp; Found</a>
-          <a href="/staff/settings" class="nav-link">Settings</a>
-        </div>
-      </nav>
+        <nav class="navMenu">
+            <div class="sideNav">
+                <a href="/staff/staffDashboard" class="nav-link active">Dashboard</a>
+                <a href="/staff/staffTickets" class="nav-link">My Tickets</a>
+                <a href="/staff/staffAnnoucements" class="nav-link">Announcement</a>
+                <a href="/staff/createTemplate" class="nav-link">Template</a>
+                <a href="/staff/staffFAQ" class="nav-link">FAQs</a>
+                <a href="/staff/staffForum" class="nav-link">Forum</a>
+                <a href="/staff/staffCalender" class="nav-link">Calendar</a>
+                <a href="/staff/staffKB" class="nav-link">Knowledge Base</a>
+            </div>
+        </nav>
         
         <!-- Main Content Area -->
         <div class="content-area">
@@ -104,7 +104,31 @@
 </main>
 
 <style>
-    /* Dashboard-specific styles */
+    /* Override from staffTickets.css to fix scrolling - add this at the end of inline styles */
+    .content-area {
+        overflow: visible !important; /* Force no internal scroll - full page only */
+        height: auto !important; /* Allow natural height */
+    }
+
+    .layout-container {
+        display: flex;
+        gap: 0;
+        height: auto !important; /* No fixed height - page grows */
+        overflow: visible !important; /* No hidden overflow */
+    }
+
+    /* Ensure full page scrolling */
+    html, body {
+        height: auto !important;
+        overflow-y: auto !important; /* Whole page scrolls smoothly */
+        overflow-x: hidden !important;
+    }
+
+    .main-content {
+        overflow: visible !important; /* Prevent main from clipping */
+    }
+
+    /* Rest of your dashboard styles (unchanged) */
     .dashboard-stats {
         display: grid;
         grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
@@ -311,24 +335,29 @@
     .status-badge.status-agent-assigned { background-color: #badbff; color: #3300ff; }
     .status-badge.status-agent-closed { background-color: #9effbc; color: #166434; }
 
-    /* Temporary inline styles for debugging - remove once CSS file works */
+    /* Layout Styles - Fixed for Full Page Scrolling */
     .layout-container {
         display: flex;
         gap: 0;
-        min-height: 70vh; /* Adjust based on viewport */
+        height: auto !important; /* No fixed height - full page flow */
     }
+
     .navMenu {
         flex: 0 0 250px;
-        background: #f8f9fa;
-        border-right: 1px solid #dee2e6;
-        padding: 20px 0;
+        background: rgba(255, 255, 255, 0.8); /* White with 80% opacity */
+        backdrop-filter: blur(10px); /* Smooth blur blend */
+        border-right: 1px solid rgba(222, 226, 230, 0.5); /* Semi-transparent border */
+        height: auto !important; /* No fixed height */
+        overflow: visible !important; /* No internal scroll */
     }
+
     .sideNav {
         display: flex;
         flex-direction: column;
         gap: 8px;
         padding: 0 15px;
     }
+
     .nav-link {
         display: block;
         padding: 12px 15px;
@@ -338,15 +367,29 @@
         font-weight: 500;
         transition: all 0.2s ease;
     }
+
     .nav-link:hover,
     .nav-link.active {
-        background: #007bff;
+        background: rgba(0, 123, 255, 0.8); /* Semi-transparent blue */
         color: white;
+        backdrop-filter: blur(5px);
     }
+
     .content-area {
         flex: 1;
         padding: 20px;
-        overflow-y: auto;
+        overflow: visible !important; /* Override staffTickets.css - no internal scroll */
+        height: auto !important; /* Natural height */
     }
 
+    /* Global overrides for full page scroll (beats staffTickets.css) */
+    html, body, .main-content, .layout-container {
+        height: auto !important;
+        overflow-y: visible !important;
+        overflow-x: hidden !important;
+    }
+
+    body {
+        overflow-y: auto !important; /* Smooth full-page vertical scroll */
+    }
 </style>

@@ -2,6 +2,19 @@
 
 class Admin extends Controller
 {
+    public function settings()
+    {
+        $this->requireLogin('admin');
+        $headContent = '\n        <link rel="stylesheet" href="/css/settings/settings.css"/>';
+        $this->view('settings', [
+            'title' => 'Settings',
+            'head' => $headContent,
+            'role' => 'admin',
+            'roleLabel' => 'Admin',
+            'roleMessage' => 'Admin settings: manage system-wide preferences (dummy content).',
+        ]);
+    }
+
     public function dashboard()
     {
         $this->requireLogin('admin');
@@ -20,15 +33,23 @@ class Admin extends Controller
     public function tickets() {
         $this->requireLogin('admin');
         $headContent = '
-        <link rel="stylesheet" href="/css/admin/adminTickets.css"/>';
-        $this->view('adminTickets', ['title' => 'Tickets', 'head' => $headContent]);
+        <link rel="stylesheet" href="/css/tickets/tickets.css"/>';
+        $this->view('tickets', [
+            'title' => 'Tickets',
+            'head' => $headContent,
+            'role' => 'admin',
+        ]);
     }
 
     public function ticket() {
         $this->requireLogin('admin');
         $headContent = '
-        <link rel="stylesheet" href="/css/admin/adminTicketFull.css"/>';
-        $this->view('adminTicketFull', ['title' => 'Ticket Details', 'head' => $headContent]);
+        <link rel="stylesheet" href="/css/ticketFull/ticketFull.css"/>';
+        $this->view('ticketFull', [
+            'title' => 'Ticket Details',
+            'head' => $headContent,
+            'role' => 'admin',
+        ]);
     }
     public function users() {
         $this->requireLogin('admin');
@@ -45,9 +66,14 @@ class Admin extends Controller
     }
     public function calender() {
         $this->requireLogin('admin');
-        $headContent = '
-        <link rel="stylesheet" href="/css/admin/adminCalender.css"/>';
-        $this->view('adminCalender', ['title' => 'Calender', 'head' => $headContent]);
+        $headContent = '\n        <link rel="stylesheet" href="/css/calender/calender.css"/>';
+        $this->view('calender', [
+            'title' => 'Calendar',
+            'head' => $headContent,
+            'role' => 'admin',
+            'roleLabel' => 'Admin',
+            'roleMessage' => 'Admin calendar: manage organization events (dummy content).',
+        ]);
     }
     public function forum() {
         $this->requireLogin('admin');
@@ -692,6 +718,18 @@ class Admin extends Controller
             if ($ts !== false) $createdPretty = date('M d, Y \\a\\t g:i A', $ts);
         }
 
+        // Map meeting flag to UI value
+        $meeting = 'none';
+        // Try to read meeting flag from tickets table
+        if ($res2 = $db->query("SELECT meeting_requested FROM tickets WHERE ticket_id = $idEsc LIMIT 1")) {
+            if ($r2 = $res2->fetch_assoc()) {
+                $mr = strtolower(trim((string)($r2['meeting_requested'] ?? '')));
+                if ($mr === 'requested') $meeting = 'requested';
+                elseif ($mr === 'scheduled') $meeting = 'scheduled';
+            }
+            $res2->free();
+        }
+
         echo json_encode([
             'id' => (int)$row['ticket_id'],
             'code' => 'TKT-' . (int)$row['ticket_id'],
@@ -701,6 +739,7 @@ class Admin extends Controller
             'priority' => ucfirst((string)($row['priority'] ?? '')),
             'status' => $statusUi,
             'createdOn' => $createdPretty,
+            'meeting' => $meeting,
             'student' => [
                 'id' => isset($row['u_id']) ? (int)$row['u_id'] : null,
                 'name' => (string)($row['student_name'] ?? ''),
@@ -771,11 +810,40 @@ class Admin extends Controller
             $s = $db->real_escape_string($search);
             $where[] = "(t.title LIKE '%$s%' OR u.name LIKE '%$s%')";
         }
-        // Filter by category
+        // Filter by category (supports grouped slugs and exact division names)
         if ($category !== '') {
-            $c = $db->real_escape_string($category);
-            // Match by division name (UI category label)
-            $where[] = "COALESCE(d.name,'') = '$c'";
+            $catKey = strtolower($category);
+            // Map grouped slugs to division name keyword matches
+            $groupMap = [
+                'it-access' => [
+                    'it','tech','technical','account','login','password','email','network','wifi','wi-fi','internet','software','hardware','device','computer','system','server','bug','error','website','portal','moodle','lms','printer','printing','access'
+                ],
+                'facilities-equipment' => [
+                    'facility','facilities','maintenance','repair','clean','electric','electrical','power','water','plumb','leak','aircon','air conditioning','ac','furniture','equipment','lab','laboratory','room','classroom','projector','door','building','lighting','light','security'
+                ],
+                'academic-services' => [
+                    'academic','course','courses','class','classes','lecture','lecturer','timetable','schedule','exam','exams','grade','grades','registration','enrollment','admission','advis','library','scholarship','student id','id card','transcript','certificate','attendance'
+                ],
+                'administrative-other' => [
+                    'finance','payment','payments','fee','fees','billing','hr','human resources','leave','policy','procurement','procure','purchase','general','other','misc','miscellaneous','event','events','parking','transport','bus','lost','found','complaint','complaints','canteen','food','cafeteria','hostel','residence','housing','staff','admin','administration'
+                ],
+            ];
+
+            $col = "LOWER(COALESCE(d.name,''))";
+            if (isset($groupMap[$catKey])) {
+                $likes = [];
+                foreach ($groupMap[$catKey] as $kw) {
+                    $kwEsc = $db->real_escape_string(strtolower($kw));
+                    $likes[] = "$col LIKE '%$kwEsc%'";
+                }
+                if (!empty($likes)) {
+                    $where[] = '(' . implode(' OR ', $likes) . ')';
+                }
+            } else {
+                // Fallback: treat as exact division name value
+                $c = $db->real_escape_string($category);
+                $where[] = "COALESCE(d.name,'') = '$c'";
+            }
         }
         // Map UI status to DB statuses
         if ($status !== '') {

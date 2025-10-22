@@ -15,21 +15,22 @@
       'student' => [
         'dashboard' => '/student/dashboard',
         'tickets'   => '/student/tickets',
-        'calender'  => '/admin/calender',
+        'calender'  => '/student/calender',
         'forum'     => '/student/forum',
         'newTicket' => '/student/ticket',
       ],
       'staff' => [
-        // No separate dashboard; use tickets view for landing
-        'dashboard' => '/staff/staffTickets',
+        'dashboard' => '/staff/staffDashboard',
         'tickets'   => '/staff/staffTickets',
-        'calender'  => '/admin/calender',
+        'calender'  => '/staff/calender',
+        'forum'     => '/staff/staffForum',
+        'FAQ'       => '/staff/staffFAQ',
         'newTicket' => null,
       ],
       'counselor' => [
         'dashboard' => '/counselor/dashboard',
-        'tickets'   => null,
-        'calender'  => '/admin/calender',
+        'tickets'   => '/counselor/tickets',
+        'calender'  => '/counselor/calender',
         'newTicket' => null,
       ],
       'lecturer' => [
