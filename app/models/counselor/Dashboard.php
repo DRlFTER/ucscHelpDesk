@@ -236,6 +236,13 @@ class CounselorDashboard
         $ts = strtotime($datetime);
         if ($ts === false) return '';
         $diff = time() - $ts;
+        if ($diff < 0) {
+            $futureDiff = abs($diff);
+            if ($futureDiff < 60) return max(1, (int)$futureDiff) . 's from now';
+            if ($futureDiff < 3600) return (int)floor($futureDiff / 60) . 'm from now';
+            if ($futureDiff < 86400) return (int)floor($futureDiff / 3600) . 'h from now';
+            return (int)floor($futureDiff / 86400) . 'd from now';
+        }
         if ($diff < 60) return max(1, (int)$diff) . 's ago';
         if ($diff < 3600) return (int)floor($diff / 60) . 'm ago';
         if ($diff < 86400) return (int)floor($diff / 3600) . 'h ago';
