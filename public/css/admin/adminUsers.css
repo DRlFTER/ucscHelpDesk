@@ -1,4 +1,4 @@
-@import url("/css/admin/adminTickets.css");
+@import url("/css/tickets/tickets.css");
 
 /* Role status pill color examples (reusing .status class from tickets markup) */
 .status.admin {
