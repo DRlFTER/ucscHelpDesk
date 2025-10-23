@@ -484,9 +484,108 @@
         btn._bound = true;
       }
     } else {
-      tb.style.display = "none";
-      tb.innerHTML = "";
+      tb.style.display = "flex";
+      tb.innerHTML =
+        '<div class="manageTicketsBtnContainer"><button id="generateTicketsBtn" class="btnPrimary btnPrimaryText">Generate report</button></div>';
+      const btn = document.getElementById("generateTicketsBtn");
+      if (btn && !btn._bound) {
+        btn.addEventListener("click", openReportModal);
+        btn._bound = true;
+      }
     }
+  }
+
+  // Report Modal helpers
+  function getReportModalEl() {
+    return document.getElementById("reportModal");
+  }
+
+  function openReportModal() {
+    const overlay = getReportModalEl();
+    if (!overlay) return;
+    overlay.classList.add("open");
+    document.body.classList.add("modal-open");
+
+    const backdropBtn = overlay.querySelector(".modalBackdropClose");
+    const onCancel = (e) => {
+      e && e.preventDefault();
+      closeReportModal();
+    };
+    backdropBtn &&
+      backdropBtn.addEventListener("click", onCancel, { once: true });
+
+    // Bind action buttons each time to ensure fresh refs
+    const genBtn = document.getElementById("reportGenerateBtn");
+    const pdfBtn = document.getElementById("reportExportBtn");
+    genBtn &&
+      genBtn.addEventListener("click", onGenerateReport, { once: true });
+    pdfBtn && pdfBtn.addEventListener("click", onExportPdf, { once: true });
+  }
+
+  function closeReportModal() {
+    const overlay = getReportModalEl();
+    if (!overlay) return;
+    overlay.classList.remove("open");
+    document.body.classList.remove("modal-open");
+  }
+
+  function readReportForm() {
+    const start = document.getElementById("reportStartDate");
+    const end = document.getElementById("reportEndDate");
+    const type = document.getElementById("reportType");
+    const startVal = (start && start.value) || "";
+    const endVal = (end && end.value) || "";
+    const typeVal = (type && type.value) || "summary";
+    return { start: startVal, end: endVal, type: typeVal };
+  }
+
+  function validateDateRange(start, end) {
+    if (!start || !end) return true; // allow empty for quick testing
+    try {
+      const s = new Date(start);
+      const e = new Date(end);
+      if (isNaN(s.getTime()) || isNaN(e.getTime())) return false;
+      return s.getTime() <= e.getTime();
+    } catch {
+      return false;
+    }
+  }
+
+  function onGenerateReport(e) {
+    e && e.preventDefault();
+    const { start, end, type } = readReportForm();
+    if (!validateDateRange(start, end)) {
+      alert(
+        "Invalid date range: Start date must be before or equal to End date."
+      );
+      return;
+    }
+    // Navigate to a reports page with query params (server can process)
+    const params = new URLSearchParams();
+    if (start) params.set("start", start);
+    if (end) params.set("end", end);
+    if (type) params.set("type", type);
+    window.location.href = "/admin/report?" + params.toString();
+    closeReportModal();
+  }
+
+  function onExportPdf(e) {
+    e && e.preventDefault();
+    const { start, end, type } = readReportForm();
+    if (!validateDateRange(start, end)) {
+      alert(
+        "Invalid date range: Start date must be before or equal to End date."
+      );
+      return;
+    }
+    const params = new URLSearchParams();
+    if (start) params.set("start", start);
+    if (end) params.set("end", end);
+    if (type) params.set("type", type);
+    params.set("format", "pdf");
+    // Trigger a download or server-side PDF rendering endpoint
+    window.location.href = "/admin/report?" + params.toString();
+    closeReportModal();
   }
 
   function setMode(mode) {
@@ -571,6 +670,8 @@
   function hydrate(data, isRefresh = false) {
     if (!data || typeof data !== "object") return;
     dataRef = data;
+    // Ensure toolbar renders on first load
+    renderToolbar(currentMode);
     // Default to analytics tab on load
     if (currentMode === "tickets") {
       renderTicketsOverview(data);
