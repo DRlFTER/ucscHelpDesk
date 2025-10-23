@@ -82,20 +82,28 @@
                 </section>
 
                 <!-- Recent Announcements -->
+                <!-- Recent Announcements - Enhanced Design -->
                 <section class="dashboard-section">
                     <h3>Recent Announcements</h3>
                     <?php if (!empty($announcements)): ?>
-                        <ul class="recent-announcements">
+                        <div class="announcements-container">
                             <?php foreach ($announcements as $ann): ?>
-                                <li class="recent-announcement">
-                                    <h4><?php echo htmlspecialchars($ann['topic'] ?? 'Untitled'); ?></h4>
-                                    <p><?php echo htmlspecialchars(substr($ann['content'] ?? '', 0, 100)) . '...'; ?></p>
-                                    <small>By <?php echo htmlspecialchars($ann['staff_name'] ?? 'Unknown'); ?> on <?php echo date('M j, Y', strtotime($ann['date_time'] ?? 'now')); ?></small>
-                                </li>
+                                <article class="announcement-card">
+                                    <div class="announcement-header">
+                                        <div class="announcement-content">
+                                            <h4 class="announcement-title"><?php echo htmlspecialchars($ann['topic'] ?? 'Untitled'); ?></h4>
+                                            <p class="announcement-excerpt"><?php echo htmlspecialchars(substr($ann['content'] ?? '', 0, 100)) . '...'; ?></p>
+                                        </div>
+                                        <div class="announcement-meta">
+                                            <small class="announcement-author">By <?php echo htmlspecialchars($ann['staff_name'] ?? 'Unknown'); ?></small>
+                                            <small class="announcement-date"><?php echo date('M j, Y', strtotime($ann['date_time'] ?? 'now')); ?></small>
+                                        </div>
+                                    </div>
+                                </article>
                             <?php endforeach; ?>
-                        </ul>
+                        </div>
                     <?php else: ?>
-                        <p>No recent announcements.</p>
+                        <p class="no-announcements">No recent announcements.</p>
                     <?php endif; ?>
                 </section>
             </div>
@@ -160,8 +168,8 @@
     }
 
     .dashboard-section {
-        background: var(--color-bg-card);
-        border: 1px solid var(--color-border-card);
+        background: #f9f9f9;
+        border: 1px solid #8c8cf9;
         border-radius: 15px;
         padding: 20px;
         margin-bottom: 30px;
@@ -238,31 +246,31 @@
     }
 
     /* Reuse existing ticket styles for consistency */
-    .tickets-container {
-        border: 1px solid var(--color-border-medium);
-        border-radius: 26px;
-        padding: 15px;
-        display: flex;
-        flex-direction: column;
-        gap: 15px;
-    }
+       .tickets-container {
+    border: 1px solid #f9f9f9;
+    border-radius: 26px;
+    padding: 15px;
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+} 
 
-    .ticket-card {
-        background-color: var(--color-bg-card);
-        border: 1px solid var(--color-border-card);
-        border-radius: 15px;
-        padding: 15px;
-        display: flex;
-        flex-direction: column;
-        gap: 10px;
-    }
+.ticket-card {
+    background-color: #f9f9f9; 
+    border: 1px solid #8c8cf9;
+    border-radius: 15px;
+    padding: 15px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
 
     .ticket-header {
         display: flex;
         justify-content: space-between;
         align-items: flex-start;
         gap: 10px;
-        border: 1px solid var(--color-border-light);
+        border: 1px solid #f9f9f9;
         padding: 10px;
     }
 
@@ -340,22 +348,24 @@
         display: flex;
         gap: 0;
         height: auto !important; /* No fixed height - full page flow */
+        background: rgba(255, 255, 255, 0.5);
     }
 
     .navMenu {
-        flex: 0 0 250px;
+        flex: 0 0 300px;
         background: rgba(255, 255, 255, 0.8); /* White with 80% opacity */
         backdrop-filter: blur(10px); /* Smooth blur blend */
         border-right: 1px solid rgba(222, 226, 230, 0.5); /* Semi-transparent border */
         height: auto !important; /* No fixed height */
         overflow: visible !important; /* No internal scroll */
+        border-radius: 0 15px 15px 0; /* Rounded right corners */
     }
 
     .sideNav {
         display: flex;
         flex-direction: column;
-        gap: 8px;
-        padding: 0 15px;
+        gap: 10px;
+        padding: 10 20px;
     }
 
     .nav-link {
@@ -391,5 +401,89 @@
 
     body {
         overflow-y: auto !important; /* Smooth full-page vertical scroll */
+    }
+
+    .announcements-container {
+        display: flex;
+        flex-direction: column;
+        gap: 15px; /* Space between cards */
+    }
+
+    .announcement-card {
+        background: #ffffff; /* Clean white background */
+        border: 1px solid #e0e0e0; /* Light border */
+        border-radius: 12px; /* Rounded corners */
+        padding: 16px;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.08); /* Soft shadow for depth */
+        transition: all 0.2s ease; /* Smooth hover */
+        cursor: pointer; /* Indicates interactivity */
+    }
+
+    .announcement-card:hover {
+        box-shadow: 0 4px 12px rgba(140, 140, 249, 0.2); /* Purple-tinted hover shadow */
+        transform: translateY(-1px); /* Subtle lift */
+        border-color: #8c8cf9; /* Purple border on hover */
+    }
+
+    .announcement-header {
+        display: flex;
+        align-items: flex-start;
+        gap: 12px; /* Space between icon and content */
+    }
+
+    .announcement-icon {
+        font-size: 24px; /* Larger icon for visual pop */
+        flex-shrink: 0; /* Icon doesn't shrink */
+        margin-top: 2px;
+    }
+
+    .announcement-content {
+        flex: 1; /* Takes remaining space */
+    }
+
+    .announcement-title {
+        font-size: 1.1em; /* Slightly larger for emphasis */
+        font-weight: 600; /* Bolder title */
+        color: var(--color-text-dark);
+        margin: 0 0 6px 0; /* Bottom margin for spacing */
+        line-height: 1.3;
+    }
+
+    .announcement-excerpt {
+        margin: 0 0 8px 0; /* Space below excerpt */
+        color: var(--color-text-light);
+        font-size: 0.95em;
+        line-height: 1.5; /* Better readability */
+    }
+
+    .announcement-meta {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        font-size: 0.85em;
+        color: #6b7280; /* Muted gray for meta */
+        border-top: 1px solid #f0f0f0; /* Subtle separator */
+        padding-top: 8px;
+        margin-top: 8px;
+    }
+
+    .announcement-author {
+        font-weight: 500; /* Slightly bold author */
+        padding-right: 10px;
+    }
+
+    .announcement-date {
+        background: #f0f0f0; /* Light badge background */
+        padding: 2px 6px;
+        border-radius: 4px;
+        font-size: 0.8em;
+    }
+
+    .no-announcements {
+        text-align: center;
+        color: var(--color-text-light);
+        font-style: italic;
+        padding: 20px;
+        margin: 0;
     }
 </style>

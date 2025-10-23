@@ -31,9 +31,6 @@ document.addEventListener("DOMContentLoaded", () => {
               <span>${ticket.created_at ? new Date(ticket.created_at).toLocaleString() : "N/A"}</span>
             </div>
           </div>
-          <span class="status-badge status-${statusClass}">
-            ${displayStatus}
-          </span>
           <div class="ticket-action">
             <button class="ticket-action-btn" onclick="window.location.href='/index.php?url=staff/ticketDetails&ticket_id=${ticket.ticket_id || 0}'">
               <span>See Ticket</span>
@@ -52,16 +49,12 @@ document.addEventListener("DOMContentLoaded", () => {
             </div>
           </div>
           <div class="details-group separator">
-            ${ticket.meeting_requested ? `
-              <div class="detail-item">
-                <span class="detail-label">Meeting:</span>
-                <span class="detail-value-box value-requested">${ticket.meeting_requested}</span>
-              </div>` : ""}
+          </div>
+          <div class="details-group">
             <div class="detail-item">
-              <span class="detail-label">Priority:</span>
-              <span class="detail-value-box value-priority-${priority.toLowerCase()}">
-                ${priority.charAt(0).toUpperCase() + priority.slice(1)}
-              </span>
+              <span class="status-badge status-${statusClass}">
+            ${displayStatus}
+          </span>
             </div>
           </div>
         </div>

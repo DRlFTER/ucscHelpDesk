@@ -62,4 +62,117 @@
         </div>
     </div>
 </main>
+<style>
+        .tickets-container {
+           background: rgba(255, 255, 255, 0.5);
+    border: 1px solid #8c8cf9;
+    border-radius: 26px;
+    padding: 15px;
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+} 
+
+.ticket-card {
+    background-color: #f9f9f9; 
+    border: 1px solid #8c8cf9;
+    border-radius: 15px;
+    padding: 15px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+    .ticket-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-start;
+        gap: 10px;
+        border: 1px solid transparent;
+        border-radius: 15px;
+        padding: 10px;
+    }
+
+    .ticket-title-group {
+        display: flex;
+        flex-direction: column;
+        gap: 2px;
+    }
+
+    .ticket-title {
+        font-size: 21px;
+        font-weight: 400;
+        letter-spacing: 0.42px;
+        margin: 0;
+    }
+
+    .ticket-meta {
+        display: flex;
+        gap: 36px;
+        font-size: 13px;
+        color: var(--color-text-light);
+        letter-spacing: 0.26px;
+        flex-wrap: wrap;
+    }
+
+    
+.response-section {
+  margin-top: 20px;
+  padding: 15px;
+  border: 1px solid #8c8cf9;
+  border-radius: 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+}
+
+.response-section h3 {
+  font-size: 22px;
+  margin-bottom: 10px;
+  font-family: "Inter", sans-serif;
+}
+
+.response-form {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-top: 15px;
+}
+
+.response-textarea {
+  width: 100%;
+  min-height: 100px;
+  padding: 12px;
+  border: 1px solid #ccc;
+  border-radius: 8px;
+  font-size: 16px;
+  font-family: "Inter", sans-serif;
+  resize: vertical;
+  outline: none;
+}
+
+.response-textarea:focus {
+  border-color: #8c8cf9;
+}
+
+.submit-response-btn {
+  align-self: flex-end;
+  padding: 10px 20px;
+  border: none;
+  border-radius: 8px;
+  background: #8c8cf9;
+  color: #fff;
+  font-family: "Poppins", sans-serif;
+  font-size: 14px;
+  font-weight: 400;
+  cursor: pointer;
+  transition: background-color 0.25s ease, transform 0.15s ease, box-shadow 0.25s ease;
+}
+
+.submit-response-btn:hover {
+  background-color: #6a6af5;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+  </style>
 

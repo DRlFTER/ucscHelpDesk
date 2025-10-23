@@ -37,7 +37,7 @@
     display: flex;
     align-items: center;
     gap: 15px;
-    border: 1px solid var(--color-border-medium);
+    border: 1px solid black;
     border-radius: 30px;
     padding: 11px 22px;
 }
@@ -51,7 +51,7 @@
     color: var(--color-text-dark);
 }
 .search-bar input::placeholder {
-    color: #808080;
+    color: #0c0c0c;
 }
 
 .filters {
@@ -128,7 +128,7 @@
     justify-content: space-between;
     align-items: flex-start;
     gap: 10px;
-    border: 1px solid var(--color-border-light);
+    border: 1px solid transparent;
     padding: 10px;
 }
 
@@ -221,7 +221,7 @@
     --color-bg-card: #fafafa;
     --color-bg-filter: #eaeaea;
     --color-border-light: #dedede;
-    --color-border-medium: #d1d1d4;
+    --color-border-medium: #171718;
     --color-border-strong: #9ca3af;
     --color-border-card: #d7d7d7;
     --color-border-separator: #c5c5c5;
