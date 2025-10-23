@@ -8,7 +8,6 @@
     </div>
     
    
-
         <!-- Main Content Area -->
         <div class="content-area">
             <div class="tickets-container">

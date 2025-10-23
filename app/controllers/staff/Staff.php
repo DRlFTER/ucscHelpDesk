@@ -38,7 +38,7 @@ class Staff extends Controller {
     $total = count($tickets);
 
     // Recent tickets (last 5)
-    $recentTickets = array_slice($tickets, 0, 5);
+    $recentTickets = array_slice($tickets, 0, 8);
 
     // Recent announcements (last 5)
     $announcements = [];

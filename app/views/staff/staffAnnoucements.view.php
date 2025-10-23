@@ -125,6 +125,56 @@ if (isset($_SESSION['success'])) {
         overflow-x: hidden; /* Prevent horizontal overflow */
         overflow-y: auto; /* Vertical scroll on body for whole page */
     }
+          .tickets-container {
+    background: rgba(255, 255, 255, 0.5);
+    border: 1px solid #f9f9f9;
+    border-radius: 26px;
+    padding: 15px;
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+} 
+
+.ticket-card {
+    background-color: #f9f9f9; 
+    border: 1px solid #8c8cf9;
+    border-radius: 15px;
+    padding: 15px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+    .ticket-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-start;
+        gap: 10px;
+        border: 1px solid #f9f9f9;
+        padding: 10px;
+    }
+
+    .ticket-title-group {
+        display: flex;
+        flex-direction: column;
+        gap: 2px;
+    }
+
+    .ticket-title {
+        font-size: 21px;
+        font-weight: 400;
+        letter-spacing: 0.42px;
+        margin: 0;
+    }
+
+    .ticket-meta {
+        display: flex;
+        gap: 36px;
+        font-size: 13px;
+        color: var(--color-text-light);
+        letter-spacing: 0.26px;
+        flex-wrap: wrap;
+    }
 
     /* Announcement Card Styles (if JS doesn't handle; fallback for static rendering) */
     .announcement-card {
