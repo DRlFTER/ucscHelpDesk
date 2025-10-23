@@ -204,7 +204,7 @@ class Counselor extends Controller
     public function ticket()
     {
         $this->requireLogin('counselor');
-        $headContent = '\n        <link rel="stylesheet" href="/css/ticketFull/ticketFull.css"/>';
+        $headContent = '       <link rel="stylesheet" href="/css/ticketFull/ticketFull.css"/>';
         $this->view('ticketFull', [
             'title' => 'Ticket Details',
             'head' => $headContent,

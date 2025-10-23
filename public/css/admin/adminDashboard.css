@@ -159,3 +159,25 @@ h3 {
     background-position: 0 0;
   }
 }
+
+/* Match edit-user modal form grid styling */
+.formGrid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+}
+.formGrid label {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.formGrid input,
+.formGrid select {
+  padding: 10px 12px;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  background: #fff;
+  color: #111827;
+  outline: none;
+  z-index: 3;
+}
