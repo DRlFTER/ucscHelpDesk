@@ -133,6 +133,65 @@ body.modal-open main {
 }
 /* ----- GENERIC MODAL OVERLAY ----- */
 
+/* ----- MODAL FORMS / POP-UP VIEWS ----- */
+.modalOverlay .msgContent {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+/* Grid form layout for modal forms */
+.formGrid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 12px;
+}
+.formGrid label {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.formGrid label > span {
+  color: #374151;
+  font-size: 13px;
+}
+.formGrid input,
+.formGrid textarea,
+.formGrid select {
+  width: 100%;
+  padding: 10px;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  font-size: 14px;
+  background: #ffffff;
+  resize: vertical;
+}
+.formGrid input:focus,
+.formGrid textarea:focus,
+.formGrid select:focus {
+  border-color: #8c8cf9;
+  outline: none;
+  box-shadow: 0 0 0 3px rgba(140, 140, 249, 0.15);
+}
+
+/* Reasonable width for modal forms */
+.msgContainer .formGrid {
+  min-width: 280px;
+  width: clamp(280px, 64vw, 520px);
+}
+
+/* Destructive action button */
+.btnDanger {
+  background-color: #ef4444 !important;
+}
+.btnDanger .btnPrimaryText {
+  color: #fff !important;
+}
+.btnDanger:hover {
+  background-color: #dc2626 !important;
+}
+/* ----- MODAL FORMS / POP-UP VIEWS ----- */
+
 .fullPage {
   width: 100%;
   display: flex;
@@ -709,31 +768,31 @@ body.modal-open main {
   background-position: 6px center;
 }
 
-.medium,
-.inProgress,
-.pending,
-.underReview {
+.status.medium,
+.status.inProgress,
+.status.pending,
+.status.underReview {
   background: #fef9c3;
   color: #92400e;
 }
 
-.open,
-.cancelled,
-.high,
-.rejected {
+.status.open,
+.status.cancelled,
+.status.high,
+.status.rejected {
   background: #fee2e1;
   color: #7f1d1d;
 }
 
-.completed,
-.closed,
-.resolved {
+.status.completed,
+.status.closed,
+.status.resolved {
   background: #dcfce7;
   color: #155724;
 }
 
-.requested,
-.low {
+.status.requested,
+.status.low {
   background-color: #badbff;
   color: #3300ff;
 }
@@ -780,21 +839,7 @@ body.modal-open main {
 }
 
 .settingsLeft
-
-/* Ensure inner nav stacks items and applies spacing */
-.settingsLeft > nav {
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-}
-
-/* Fallback for browsers without flex gap support */
-@supports not (gap: 1rem) {
-  .settingsLeft > nav .settingsNavBtn + .settingsNavBtn {
-    margin-top: 10px;
-  }
-}
-button:not(.btnSvg):not(.btnPrimary):not(.btnSecondary):not(.btnWSvg):hover,
+  button:not(.btnSvg):not(.btnPrimary):not(.btnSecondary):not(.btnWSvg):hover,
 .settingsNavBtn:hover {
   background-color: #f5f5f5;
 }
