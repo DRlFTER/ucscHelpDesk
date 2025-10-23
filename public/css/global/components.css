@@ -60,6 +60,79 @@ body {
   font-family: "SF Pro";
 }
 
+.modalOverlay {
+  position: fixed;
+  inset: 0;
+  display: none;
+  align-items: center;
+  justify-content: center;
+  z-index: 10000;
+  background: rgba(255, 255, 255, 0.35);
+  opacity: 0;
+  transition: opacity 180ms ease-in-out, backdrop-filter 180ms ease-in-out;
+}
+.modalOverlay.open {
+  display: flex;
+  opacity: 1;
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+}
+.modalOverlay .msgHolder {
+  position: relative;
+  top: 0;
+  height: auto;
+}
+.modalOverlay .msgContainer {
+  position: relative;
+  backdrop-filter: blur(20px);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: rgba(255, 255, 255, 0.9);
+  border-radius: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 16px 18px;
+  color: #111827;
+  z-index: 2;
+  box-shadow: 0 12px 30px rgba(17, 24, 39, 0.18);
+  transform: translateY(8px) scale(0.98);
+  opacity: 0;
+  transition: transform 180ms ease, opacity 180ms ease;
+}
+.modalOverlay.open .msgContainer {
+  transform: translateY(0) scale(1);
+  opacity: 1;
+}
+.msgTitle {
+  font-size: 16px;
+  font-weight: 600;
+  margin-bottom: 20px;
+}
+.msgText {
+  font-size: 13px;
+  color: #374151;
+  margin: 0;
+}
+.msgActions {
+  margin-top: 6px;
+  display: flex;
+  gap: 8px;
+  justify-content: flex-end;
+}
+.modalBackdropClose {
+  position: absolute;
+  inset: 0;
+  background: none;
+  border: none;
+  cursor: default;
+  z-index: 1;
+}
+body.modal-open main {
+  filter: blur(2px);
+  transition: filter 180ms ease-in-out;
+}
+/* ----- GENERIC MODAL OVERLAY ----- */
+
 .fullPage {
   width: 100%;
   display: flex;
