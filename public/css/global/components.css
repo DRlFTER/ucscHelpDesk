@@ -757,11 +757,10 @@ body.modal-open main {
   color: #111827;
   transition: all 0.18s ease-in-out;
   background-clip: padding-box;
-  overflow: auto; /* if menu grows, scroll inside instead of page */
+  overflow: auto;
+  scrollbar-width: thin;
 }
 
-/* Side menu buttons */
-/* Exclude specialized buttons from generic settings-left styles */
 .settingsLeft
   button:not(.btnSvg):not(.btnPrimary):not(.btnSecondary):not(.btnWSvg),
 .settingsNavBtn {
@@ -781,7 +780,21 @@ body.modal-open main {
 }
 
 .settingsLeft
-  button:not(.btnSvg):not(.btnPrimary):not(.btnSecondary):not(.btnWSvg):hover,
+
+/* Ensure inner nav stacks items and applies spacing */
+.settingsLeft > nav {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+/* Fallback for browsers without flex gap support */
+@supports not (gap: 1rem) {
+  .settingsLeft > nav .settingsNavBtn + .settingsNavBtn {
+    margin-top: 10px;
+  }
+}
+button:not(.btnSvg):not(.btnPrimary):not(.btnSecondary):not(.btnWSvg):hover,
 .settingsNavBtn:hover {
   background-color: #f5f5f5;
 }
@@ -883,11 +896,12 @@ body.modal-open main {
 /* ----- DASHBOARD GRID (Student/Admin) ----- */
 .dashboardGrid {
   display: grid;
-  grid-template-columns: 1.4fr 1fr;
+  grid-template-columns: 2.5fr 1fr;
   gap: 16px;
   min-height: 0; /* allow inner scroll */
   overflow: auto; /* enable scrolling inside the right pane */
   padding-right: 4px; /* avoid scrollbar overlap on content */
+  scrollbar-width: none;
 }
 
 .dashboardGrid .col {

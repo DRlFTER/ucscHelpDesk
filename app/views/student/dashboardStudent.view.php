@@ -1,18 +1,12 @@
 <main>
   <div class="fullPage">
-    <div class="pageHeader">
-      <h1 class="pageTitle">Student Dashboard</h1>
-      <p class="pageSubtitle">Overview of your support activity</p>
-    </div>
     <div class="pageLayout">
       <aside class="settingsLeft">
-        <nav aria-label="Student navigation">
           <a href="#" class="settingsNavBtn active">Dashboard</a>
           <a href="/student/announcements" class="settingsNavBtn">Announcements</a>
           <a href="/student/faq" class="settingsNavBtn">FAQs</a>
           <a href="/student/knowledgebase" class="settingsNavBtn">Knowledge Base</a>
           <a href="/student/lostfound" class="settingsNavBtn">Lost &amp; Found</a>
-        </nav>
       </aside>
       <section class="settingsRight">
         <div class="dashboardGrid">
