@@ -225,8 +225,8 @@ function wireActions() {
   const scheduleBtn = document.getElementById("scheduleBtn");
   if (scheduleBtn) {
     scheduleBtn.addEventListener("click", () => {
-      // Placeholder: open scheduling flow/modal; can be wired to real endpoint later
-      alert("Open scheduling dialog for ticket #" + ticketData.id);
+      // Open the custom schedule meeting modal (UI only)
+      openScheduleModal();
     });
   }
 }
@@ -379,4 +379,27 @@ function openDeleteModal() {
   cancelBtn && cancelBtn.addEventListener("click", onCancel);
   confirmBtn && confirmBtn.addEventListener("click", onConfirm);
   backdropBtn && backdropBtn.addEventListener("click", onCancel);
+}
+
+// Modal helper: counselor schedule meeting (UI only)
+function openScheduleModal() {
+  const overlay = document.getElementById("scheduleModal");
+  if (!overlay) return;
+
+  overlay.classList.add("open");
+  document.body.classList.add("modal-open");
+
+  const cancelBtn = document.getElementById("cancelScheduleBtn");
+  const backdropBtn = overlay.querySelector(".modalBackdropClose");
+
+  const close = (e) => {
+    e && e.preventDefault();
+    overlay.classList.remove("open");
+    document.body.classList.remove("modal-open");
+    cancelBtn && cancelBtn.removeEventListener("click", close);
+    backdropBtn && backdropBtn.removeEventListener("click", close);
+  };
+
+  cancelBtn && cancelBtn.addEventListener("click", close);
+  backdropBtn && backdropBtn.addEventListener("click", close);
 }

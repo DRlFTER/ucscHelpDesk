@@ -58,5 +58,14 @@
         </div>
     </div>
 
-    <script src="/js/calender/calender.js"></script>
+        <script>
+            // Expose minimal role config so calendar JS can tailor events (e.g., counselor-only)
+            (function(){
+                try {
+                    var role = (<?php echo json_encode(strtolower($_SESSION['user']['role'] ?? 'guest')); ?>) || 'guest';
+                    window.CALENDAR_CONFIG = { role: role };
+                } catch (e) { window.CALENDAR_CONFIG = { role: 'guest' }; }
+            })();
+        </script>
+        <script src="/js/calender/calender.js"></script>
 </main>
