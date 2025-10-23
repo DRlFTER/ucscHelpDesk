@@ -1,4 +1,4 @@
-<?php /* Navbar is included in layouts/main.php */ ?>
+<?php ?>
 
 <main>
 	<div class="ticketPage">
@@ -12,17 +12,14 @@
 		</div>
 
 		<div class="ticketGrid">
-			<!-- Lost item form (copied from New Ticket) -->
 			<section class="ticketCard">
 				<form id="ticketForm" action="<?= htmlspecialchars($formAction ?? '/student/newLostItem') ?>" method="POST" enctype="multipart/form-data">
 
-					<!-- Title -->
 					<div class="field">
 						<label class="label" for="title">Item Title</label>
 						<input id="title" name="title" type="text" placeholder="e.g., <?= (isset($mode) && $mode === 'found') ? 'Wallet near S104 washroom' : 'Blue Samsung Earbuds' ?>" required>
 					</div>
 
-					<!-- Category + Priority -->
 					<div class="row2">
 						<div class="field">
 							<label class="label" for="category">Category</label>
@@ -41,13 +38,11 @@
 						</div>
 					</div>
 
-					<!-- Issue details -->
 					<div class="field">
 						<label class="label" for="details">Details</label>
 						<textarea id="details" name="details" rows="6" placeholder="Describe the lost item, last seen location, date/time, and any identifiers (color, brand, unique marks)." required></textarea>
 					</div>
 
-                    <!-- Contact Info -->
 					<div class="field">
 						<label class="label">Contact Info</label>
 					</div>
@@ -62,7 +57,6 @@
 						</div>
 					</div>
 
-					<!-- Attachments -->
 					<div class="field">
 						<label class="label">Attachments</label>
 						<div id="dropzone" class="dropzone">
@@ -84,7 +78,6 @@
 				</form>
 			</section>
 
-			<!-- Right: Sidebar -->
 			<aside class="sidebar">
 				<section class="sideCard">
 					<h3>Tips to help you recover your item</h3>

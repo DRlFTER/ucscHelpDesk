@@ -141,10 +141,8 @@ if ($conn->connect_error) {
     die("DB Connection failed: " . $conn->connect_error);
 }
 
-// Get staff ID from form input (default to 1 if not provided)
-$staff_id = isset($_POST['staff_id']) ? (int)$_POST['staff_id'] : 1; // Default to 1 for testing
+$staff_id = isset($_POST['staff_id']) ? (int)$_POST['staff_id'] : 1;
 
-// Fetch divisions for the logged-in staff
 $sql = "SELECT d.did, d.name 
         FROM division d
         JOIN staff_division sd ON d.did = sd.d_id
@@ -159,7 +157,6 @@ while ($row = $result->fetch_assoc()) {
     $divisions[] = $row;
 }
 
-// Handle form submission
 $errors = [];
 $success = "";
 if ($_SERVER["REQUEST_METHOD"] == "POST") {
@@ -167,7 +164,6 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     $content = trim($_POST['content'] ?? '');
     $division_id = (int)($_POST['division'] ?? 0);
     
-    // Validate inputs
     if (empty($topic)) {
         $errors[] = "Topic is required.";
     } elseif (strlen($topic) > 50) {
@@ -184,7 +180,6 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         $errors[] = "Please select a valid division.";
     }
     
-    // Validate file upload
     $file = $_FILES['file'] ?? null;
     $allowed_types = ['application/pdf', 'image/jpeg', 'image/png', 'application/msword', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document'];
     $max_size = 5 * 1024 * 1024; // 5MB
@@ -201,7 +196,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             $errors[] = "File size exceeds 5MB limit.";
         } else {
             if (!is_dir($staff_upload_dir)) {
-                mkdir($staff_upload_dir, 0777, true); // Create staff-specific folder if it doesn't exist
+                mkdir($staff_upload_dir, 0777, true);
             }
             $file_name = time() . '_' . basename($file['name']);
             $file_path = $staff_upload_dir . $file_name;

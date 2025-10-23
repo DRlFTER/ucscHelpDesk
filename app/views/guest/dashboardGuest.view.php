@@ -20,7 +20,6 @@
 	</div>
 </main>
 
-<!-- Simple login prompt modal -->
 <div id="loginPromptOverlay" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.35); z-index:10000; align-items:center; justify-content:center;">
 	<div style="max-width:420px; width:90%; background:#fff; border-radius:12px; padding:18px; box-shadow:0 10px 30px rgba(0,0,0,0.15);">
 		<h3 style="margin:0 0 8px 0; font-weight:600;">Sign in required</h3>

@@ -1,22 +1,22 @@
 <?php
-// db.php - Database connection
+
 require_once('../../core/config.php');
 
-// Database connection using settings from config.php
+
 $conn = new mysqli(DBHOST, DBUSER, DBPASSWORD, DBNAME, DBPORT);
 
 if ($conn->connect_error) {
     die("DB Connection failed: " . $conn->connect_error);
 }
 
-// Get ticket_id from URL
+
 $ticket_id = isset($_GET['ticket_id']) ? intval($_GET['ticket_id']) : 0;
 
 if ($ticket_id === 0) {
     die("Invalid ticket ID.");
 }
 
-// Fetch ticket details
+
 $sql = "SELECT t.ticket_id, t.created_at, t.title, u.name AS student_name, d.name AS category, t.status, t.priority, t.meeting_requested, t.description
   FROM tickets t
   INNER JOIN users u ON t.u_id = u.u_id
@@ -48,7 +48,6 @@ include_once("./staff_nabar.html");
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Poppins:wght@400;500&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="./global.css">
   <style>
-    /* Reuse styles from dashboard for consistency */
     .main-content {
         padding: 45px 84px;
     }

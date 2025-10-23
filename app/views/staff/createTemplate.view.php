@@ -1,12 +1,10 @@
 <?php
-// views/staff/createTemplate.php (fixed layout and structure)
 ?>
 <main id="main-content" class="main-content">
     <div class="page-header">
         <h2 class="page-title">Create Template</h2>
         <p class="page-subtitle">Define a new FAQ template for student issues</p>
     </div>
-        <!-- Main Content Area -->
         <div class="content-area">
             <div class="tickets-container">
                 <article class="ticket-card">
@@ -85,7 +83,6 @@
 </main>
 
 <style>
-    /* Form Styles */
     .main-content { padding: 20px; max-width: 1200px; margin: 0 auto; }
     .page-header { text-align: center; margin-bottom: 20px; }
     .page-title { font-size: 24px; color: #333; margin-bottom: 10px; }

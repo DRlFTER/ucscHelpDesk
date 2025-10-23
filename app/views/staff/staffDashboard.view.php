@@ -1,15 +1,11 @@
-<?php
-// views/staff/staffDashboard.view.php
-?>
+<?php ?>
 <main id="main-content" class="main-content">
     <div class="page-header">
         <h2 class="page-title">Staff Dashboard</h2>
         <p class="page-subtitle">Overview of your tickets and recent announcements</p>
     </div>
     
-    <!-- Layout Container for Sidebar and Content -->
     <div class="layout-container">
-        <!-- Sidebar Navigation -->
         <nav class="navMenu">
             <div class="sideNav">
                 <a href="/staff/staffDashboard" class="nav-link active">Dashboard</a>
@@ -23,9 +19,7 @@
             </div>
         </nav>
         
-        <!-- Main Content Area -->
         <div class="content-area">
-            <!-- Stats Overview -->
             <section class="dashboard-stats">
                 <div class="stat-card">
                     <div class="stat-number"><?php echo $stats['total'] ?? 0; ?></div>
@@ -45,7 +39,6 @@
                 </div>
             </section>
 
-            <!-- Quick Actions -->
             <section class="quick-actions">
                 <button onclick="window.location.href='/staff/staffTickets'">View All Tickets</button>
                 <button onclick="window.location.href='/staff/staffAnnCreate'">Create Announcement</button>
@@ -53,7 +46,6 @@
             </section>
 
             <div class="dashboard-grid">
-                <!-- Recent Tickets -->
                 <section class="dashboard-section">
                     <h3>Recent Tickets</h3>
                     <?php if (!empty($recentTickets)): ?>
@@ -80,9 +72,6 @@
                         <p>No recent tickets found.</p>
                     <?php endif; ?>
                 </section>
-
-                <!-- Recent Announcements -->
-                <!-- Recent Announcements - Enhanced Design -->
                 <section class="dashboard-section">
                     <h3>Recent Announcements</h3>
                     <?php if (!empty($announcements)): ?>
@@ -112,23 +101,21 @@
 </main>
 
 <style>
-    /* Override from staffTickets.css to fix scrolling - add this at the end of inline styles */
     .content-area {
-        overflow: visible !important; /* Force no internal scroll - full page only */
-        height: auto !important; /* Allow natural height */
+        overflow: visible !important; 
+        height: auto !important; 
     }
 
     .layout-container {
         display: flex;
         gap: 0;
-        height: auto !important; /* No fixed height - page grows */
-        overflow: visible !important; /* No hidden overflow */
+        height: auto !important;
+        overflow: visible !important; 
     }
 
-    /* Ensure full page scrolling */
     html, body {
         height: auto !important;
-        overflow-y: auto !important; /* Whole page scrolls smoothly */
+        overflow-y: auto !important;
         overflow-x: hidden !important;
     }
 

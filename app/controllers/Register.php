@@ -4,29 +4,24 @@ class Register extends Controller
 {
     public function index()
     {
-        // If POST, attempt registration into consolidated users table
         if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             try {
                 $role = strtolower(trim($_POST['role'] ?? ''));
-                // Normalize possible typo
                 if ($role === 'cunsellor') { $role = 'counselor'; }
                 $fullName = trim($_POST['fullName'] ?? '');
                 $email = trim($_POST['email'] ?? '');
                 $password = $_POST['password'] ?? '';
                 $confirmPassword = $_POST['confirmPassword'] ?? '';
 
-                // optional by role
-                $number = $_POST['number'] ?? null; // phone
-                $year = null; // students may pass regNumber/year
-                $designation = null; // staff/counselor/admin designation
+                $number = $_POST['number'] ?? null; 
+                $year = null;
+                $designation = null; 
 
-                // map UI-specific fields
                 if ($role === 'student') {
                     $year = $_POST['regNumber'] ?? ($_POST['year'] ?? null);
                 } elseif ($role === 'lecturer') {
                     $designation = $_POST['department'] ?? null;
                 } elseif ($role === 'staff') {
-                    // Expect integer code 1-9 from dropdown
                     $designation = $_POST['designation'] ?? null;
                     if ($designation !== null) {
                         $designation = trim($designation);
@@ -35,7 +30,6 @@ class Register extends Controller
                         }
                     }
                 } elseif ($role === 'counselor') {
-                    // Counselors belong to division id 10
                     $designation = '10';
                 }
 
@@ -53,7 +47,6 @@ class Register extends Controller
 
                 $userId = $userModel->createUser($role, $fullName, $email, $password, $number, $year, $designation);
 
-                // If staff or counselor, also create staff_division mapping (u_id, did)
                 if ((
                         $role === 'staff' && $designation !== null && preg_match('/^[1-9]$/', $designation)
                     ) || $role === 'counselor') {

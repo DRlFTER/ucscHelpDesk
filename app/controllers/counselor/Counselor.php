@@ -17,17 +17,13 @@ class Counselor extends Controller
 
     public function dashboard()
     {
-        // Require counselor role
         $this->requireLogin('counselor');
 
-        // Page head
     $headContent = '
     <link rel="stylesheet" href="/css/counselor/counselorDashboard.css"/>';
 
-        // Current user id
         $uid = (int)($_SESSION['user']['u_id'] ?? 0);
 
-        // Load dashboard data via model (server-side; no JS fetching)
         /** @var CounselorDashboard $dash */
         require_once __DIR__ . '/../../models/counselor/Dashboard.php';
         $dash = new CounselorDashboard();
@@ -69,10 +65,6 @@ class Counselor extends Controller
         ]);
     }
 
-    /**
-     * Simple Counselor video meeting UI (no realtime functionality)
-     * Route: /counselor/meeting
-     */
     public function meeting()
     {
         $this->requireLogin('counselor');
@@ -86,11 +78,6 @@ class Counselor extends Controller
         ]);
     }
 
-    /**
-     * Return tickets for counselor as JSON for the unified Tickets page.
-     * Counselor is restricted to Counselling division tickets only.
-     * Response shape mirrors admin ticketsData.
-     */
     public function ticketsData()
     {
         $this->requireLogin('counselor');
@@ -98,18 +85,15 @@ class Counselor extends Controller
 
         $db = Database::getInstance();
 
-        // Query params
         $page    = isset($_GET['page']) ? max(1, (int)$_GET['page']) : 1;
         $perPage = isset($_GET['perPage']) ? max(1, min(100, (int)$_GET['perPage'])) : 10;
         $search  = isset($_GET['search']) ? trim((string)$_GET['search']) : '';
         $status  = isset($_GET['status']) ? trim((string)$_GET['status']) : '';
         $priority= isset($_GET['priority']) ? trim((string)$_GET['priority']) : '';
-        // category is ignored for counselor; enforced to Counselling via WHERE
 
         $where = [];
         $joins = "LEFT JOIN users u ON u.u_id = t.u_id LEFT JOIN division d ON d.did = t.division";
 
-        // Mandatory restriction: only Counselling tickets (robust lower/like match)
         $where[] = "LOWER(COALESCE(d.name,'')) LIKE 'counsel%'";
 
         if ($search !== '') {
@@ -137,7 +121,6 @@ class Counselor extends Controller
 
         $whereSql = count($where) ? ('WHERE ' . implode(' AND ', $where)) : '';
 
-        // Count
         $total = 0;
         $countSql = "SELECT COUNT(*) AS c FROM tickets t $joins $whereSql";
         if ($res = $db->query($countSql)) {
@@ -217,7 +200,6 @@ class Counselor extends Controller
         exit;
     }
 
-    /** Full ticket page for counselor using the unified view */
     public function ticket()
     {
         $this->requireLogin('counselor');
@@ -229,7 +211,6 @@ class Counselor extends Controller
         ]);
     }
 
-    /** Single ticket details for counselor (restricted to Counselling division) */
     public function ticketData()
     {
         $this->requireLogin('counselor');

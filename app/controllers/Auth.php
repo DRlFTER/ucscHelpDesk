@@ -4,7 +4,6 @@ class Auth extends Controller
 {
 	public function index()
 	{
-		// show login form
 		$this->view('login', [
 			'title' => 'UCSC Help Desk',
 		]);
@@ -27,9 +26,8 @@ class Auth extends Controller
 				throw new Exception('Invalid credentials.');
 			}
 
-			// minimal session
+
 			$_SESSION['user'] = [
-				// keep both for backward compatibility
 				'u_id' => (int)$user['u_id'],
 				'id'   => (int)$user['u_id'],
 				'email' => $user['email'],
@@ -37,12 +35,10 @@ class Auth extends Controller
 				'name'  => $user['name'],
 			];
 
-			// legacy session keys some views rely on
 			$_SESSION['u_id'] = (int)$user['u_id'];
 			$_SESSION['role'] = $user['role'];
 			$_SESSION['name'] = $user['name'];
 
-			// If staff, load division ids into session for routing
 			if ($user['role'] === 'staff') {
 				try {
 					$db = Database::getInstance();
@@ -62,7 +58,6 @@ class Auth extends Controller
 				}
 			}
 
-			// route by role (placeholder dashboards)
 				switch ($user['role']) {
 					case 'student':
 						header('Location: ' . ROOT . 'student/dashboard');

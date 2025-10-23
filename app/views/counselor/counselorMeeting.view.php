@@ -6,7 +6,6 @@
     </div>
 
     <div class="pageLayout meetingLayout">
-      <!-- Meeting surface (full width; no side navbar) -->
       <aside class="adminRight">
         <div class="meetingSurface">
           <div class="videoStage">
@@ -25,7 +24,6 @@
           </div>
 
           <div class="meetingSidebar" aria-label="Meeting details">
-            <!-- Student Details Card -->
             <section class="sectionCard" aria-labelledby="studentDetailsTitle">
               <h3 id="studentDetailsTitle" class="sectionTitle">Student Details</h3>
               <div class="detailRow">
@@ -46,7 +44,6 @@
               </div>
             </section>
 
-            <!-- Ticket Details Card -->
             <section class="sectionCard" aria-labelledby="ticketDetailsTitle">
               <h3 id="ticketDetailsTitle" class="sectionTitle">Ticket Details</h3>
               <div class="detailRow">
@@ -71,7 +68,6 @@
           </div>
         </div>
 
-        <!-- Bottom toolbar -->
         <div class="meetingToolbar" role="toolbar" aria-label="Meeting controls">
           <button type="button" class="btnSvg ctlBtn" data-action="mic" aria-pressed="false" title="Mute / Unmute microphone">
             <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none"><path d="M12 14a4 4 0 0 0 4-4V6a4 4 0 1 0-8 0v4a4 4 0 0 0 4 4Zm6-4a6 6 0 0 1-12 0H4a8 8 0 0 0 16 0h-2Z" fill="#fff"/></svg>

@@ -1,6 +1,4 @@
 <?php
-// Student Template view
-// Assumes controller supplies: $templates (array), $errors (array), $success (string), $generated_letter (string)
 include_once(__DIR__ . "/../../views/common/navbar.php");
 
 $templates = $templates ?? [];
@@ -9,7 +7,6 @@ $success = $success ?? '';
 $generated_letter = $generated_letter ?? '';
 ?>
 
-<!-- Page-specific styles -->
 <link rel="stylesheet" href="/css/student/studentTemplate.view.css">
 
 <main id="main-content" class="main-content">

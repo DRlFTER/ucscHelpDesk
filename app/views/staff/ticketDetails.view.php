@@ -1,5 +1,4 @@
 <style>
-    /* Reuse styles from dashboard for consistency */
     .main-content {
         padding: 45px 84px;
     }

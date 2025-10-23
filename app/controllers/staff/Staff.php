@@ -23,7 +23,6 @@ class Staff extends Controller {
     $modelTicket = new StaffTicket();
     $modelAnn = new Announcement();
 
-    // Fetch tickets for stats and list
     $tickets = [];
     try {
         $tickets = $modelTicket->getAllTickets();
@@ -31,16 +30,13 @@ class Staff extends Controller {
         error_log('Failed to load tickets for dashboard: ' . $e->getMessage());
     }
 
-    // Calculate stats
     $pending = array_filter($tickets, fn($t) => $t['status'] === 'pending');
     $assigned = array_filter($tickets, fn($t) => $t['status'] === 'agent assigned');
     $resolved = array_filter($tickets, fn($t) => in_array($t['status'], ['agent-closed', 'closed', 'resolved'])); // Fixed: Added 'resolved'
     $total = count($tickets);
 
-    // Recent tickets (last 5)
     $recentTickets = array_slice($tickets, 0, 8);
 
-    // Recent announcements (last 5)
     $announcements = [];
     try {
         $allAnn = $modelAnn->getAll();
@@ -56,7 +52,7 @@ class Staff extends Controller {
         'stats' => [
             'pending' => count($pending),
             'assigned' => count($assigned),
-            'resolved' => count($resolved), // Now includes 'resolved'
+            'resolved' => count($resolved), 
             'total' => $total
         ],
         'recentTickets' => $recentTickets,
@@ -64,15 +60,12 @@ class Staff extends Controller {
     ]);
 }
 
-    /**
-     * Show, update, or delete a single announcement (detail view)
-     */
     public function anView($id = null)
     {
         $this->requireLogin('staff');
         $announcement_id = $id !== null ? (int)$id : (isset($_GET['id']) ? (int)$_GET['id'] : (isset($_POST['id']) ? (int)$_POST['id'] : 0));  // Fallback to POST['id'] from hidden field
         if (!$announcement_id) {
-            header("Location: /404");  // Or adjust to your 404 route
+            header("Location: /404");
             exit;
         }
         require_once __DIR__ . '/../../models/staff/Announcement.php';
@@ -96,7 +89,7 @@ class Staff extends Controller {
             if (empty($errors)) {
                 $ok = $model->update($announcement_id, $new_topic, $new_content);
                 if ($ok) {
-                   $_SESSION['success'] = 'Announcement updated successfully!';  // Flash message
+                   $_SESSION['success'] = 'Announcement updated successfully!'; 
             header("Location: /staff/announcements");
                     exit;
                 } else {
@@ -105,7 +98,7 @@ class Staff extends Controller {
             }
         }
         
-        // Handle delete
+
         if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['delete_ticket'])) {
             $ok = $model->delete($announcement_id);
             if ($ok) {
@@ -150,13 +143,12 @@ class Staff extends Controller {
     {
         $this->requireLogin('staff');
 
-        // Load staff ticket model and fetch tickets
         require_once __DIR__ . '/../../models/staff/Ticket.php';
         $tickets = [];
         $errorMsg = null;
         try {
             $model = new StaffTicket();
-            $tickets = $model->getAllTickets();  // No param—handles filtering internally
+            $tickets = $model->getAllTickets(); 
         } catch (Throwable $e) {
             $tickets = [];
             $errorMsg = $e->getMessage();
@@ -173,19 +165,13 @@ class Staff extends Controller {
 
     public function ticketDetails($id = null)
     {
-        // Keep backward-compatible wrapper that delegates to ticketView
         $this->ticketView($id);
     }
 
-    /**
-     * Show a single ticket details page.
-     * Accepts an $id param or will check $_GET['ticket_id'].
-     */
     public function ticketView($id = null)
     {
         $this->requireLogin('staff');
 
-        // allow passing id via argument or GET (route helpers may pass arg)
         $ticket_id = null;
         if ($id !== null) {
             $ticket_id = (int)$id;
@@ -212,7 +198,6 @@ class Staff extends Controller {
             exit;
         }
 
-        // Handle POST Actions
         $errors = [];
         $success = '';
         $current_staff_id = (int)($_SESSION['user']['u_id'] ?? 0);
@@ -225,7 +210,7 @@ class Staff extends Controller {
                         $ok = $model->assignToStaff($ticket_id, $current_staff_id);
                         if ($ok) {
                             $success = 'Ticket assigned to you!';
-                            $ticket = $model->getTicketById($ticket_id);  // Refresh
+                            $ticket = $model->getTicketById($ticket_id); 
                         } else {
                             $errors[] = "Failed to assign ticket.";
                         }
@@ -254,7 +239,7 @@ class Staff extends Controller {
                         $ok = $model->forwardTicket($ticket_id, $forward_to);
                         if ($ok) {
                             $success = 'Ticket forwarded successfully!';
-                            $ticket = $model->getTicketById($ticket_id);  // Refresh
+                            $ticket = $model->getTicketById($ticket_id);
                         } else {
                             $errors[] = "Failed to forward ticket.";
                         }
@@ -267,7 +252,7 @@ class Staff extends Controller {
                     $ok = $model->resolveTicket($ticket_id);
                     if ($ok) {
                         $success = 'Ticket resolved!';
-                        $ticket = $model->getTicketById($ticket_id);  // Refresh
+                        $ticket = $model->getTicketById($ticket_id);
                     } else {
                         $errors[] = "Failed to resolve ticket. Are you assigned?";
                     }
@@ -277,7 +262,7 @@ class Staff extends Controller {
                     $ok = $model->rejectTicket($ticket_id);
                     if ($ok) {
                         $success = 'Ticket closed!';
-                        $ticket = $model->getTicketById($ticket_id);  // Refresh
+                        $ticket = $model->getTicketById($ticket_id);
                     } else {
                         $errors[] = "Failed to close ticket. Are you assigned?";
                     }
@@ -285,7 +270,6 @@ class Staff extends Controller {
             }
         }
 
-        // Fetch staff members for forward dropdown
         $staff_members = $model->getStaffMembers();
 
         $headContent = '<link rel="stylesheet" href="/css/staff/staffTickets.css" />' . "\n" .
@@ -302,9 +286,6 @@ class Staff extends Controller {
         ]);
     }
 
-    /**
-     * Render announcements list for staff.
-     */
     public function announcements()
     {
         $this->requireLogin('staff');
@@ -319,12 +300,9 @@ class Staff extends Controller {
             $announcements = [];
         }
 
-        // Capture DB error (if any) for debug display
         $dbError = method_exists($ann, 'getLastError') ? $ann->getLastError() : null;
 
-        // Use the same stylesheet as staff tickets to reuse classes
         $headContent = "<link rel=\"stylesheet\" href=\"/css/staff/staffTickets.css\" />\n";
-        // keep the small announcements tweaks after the main shelf
         $headContent .= "<link rel=\"stylesheet\" href=\"/css/staff/announcements.css\" />\n";
         $headContent .= "<script src=\"/js/staff/announcements.js\" defer></script>\n";
 
@@ -336,18 +314,11 @@ class Staff extends Controller {
         ]);
     }
 
-    /**
-     * Backwards compatible alias for legacy URL /staff/staffAnnoucements
-     */
     public function staffAnnoucements()
     {
-        // Delegate to the correct method
         $this->announcements();
     }
 
-    /**
-     * Show form and handle creation of new announcement.
-     */
     public function staffAnnCreate()
     {
         $this->requireLogin('staff');
@@ -362,7 +333,7 @@ class Staff extends Controller {
         $errors = [];
         $success = '';
 
-        // Fetch divisions for form
+
         try {
             $divisions = $model->getStaffDivisions($staff_id);
         } catch (Throwable $e) {
@@ -370,7 +341,6 @@ class Staff extends Controller {
             $divisions = [];
         }
 
-        // Handle POST
         if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $topic = trim($_POST['topic'] ?? '');
             $content = trim($_POST['content'] ?? '');
