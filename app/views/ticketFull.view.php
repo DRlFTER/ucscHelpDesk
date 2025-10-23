@@ -99,6 +99,92 @@
   
 </div>
 
+<!-- Schedule meeting modal (counselor) -->
+<div id="scheduleModal" class="modalOverlay" aria-hidden="true">
+  <div class="msgHolder">
+    <div class="msgContainer scheduleModalBox" role="dialog" aria-modal="true" aria-labelledby="scheduleModalTitle">
+      <div class="msgContent">
+        <h3 id="scheduleModalTitle" class="msgTitle">Schedule meeting</h3>
+        <form id="scheduleForm" class="formGrid scheduleForm" onsubmit="return false;">
+          <label>
+            <span>Date</span>
+            <input type="date" id="meetingDate" name="date" required />
+          </label>
+          <label>
+            <span>Start time</span>
+            <input type="time" id="meetingStart" name="start" required />
+          </label>
+          <label>
+            <span>Duration</span>
+            <select id="meetingDuration" name="duration">
+              <option value="15">15 minutes</option>
+              <option value="30">30 minutes</option>
+              <option value="45">45 minutes</option>
+              <option value="60" selected>60 minutes</option>
+              <option value="90">90 minutes</option>
+            </select>
+          </label>
+          <label>
+            <span>Mode</span>
+            <select id="meetingMode" name="mode">
+              <option value="online" selected>Online</option>
+              <option value="in-person">In person</option>
+            </select>
+          </label>
+          <label class="col-2">
+            <span>Location/Room</span>
+            <input type="text" id="meetingLocation" name="location" placeholder="e.g., Counseling Room A" />
+          </label>
+          <label class="col-2">
+            <span>Meeting link (URL)</span>
+            <input type="url" id="meetingLink" name="link" placeholder="https://…" />
+          </label>
+          <label class="col-2">
+            <span>Notes</span>
+            <textarea id="meetingNotes" name="notes" rows="3" placeholder="Optional notes for the meeting"></textarea>
+          </label>
+          <div class="msgActions">
+            <button type="button" id="cancelScheduleBtn" class="btnSecondary"><span class="btnSecondaryText">Cancel</span></button>
+            <button type="submit" id="saveScheduleBtn" class="btnPrimary"><span class="btnPrimaryText">Schedule</span></button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+  <button type="button" class="modalBackdropClose" aria-label="Close"></button>
+</div>
+
+<script>
+  // Minimal UI wiring for opening/closing the schedule meeting modal
+  (function () {
+    const openBtn = document.getElementById('scheduleBtn');
+    const modal = document.getElementById('scheduleModal');
+    if (!openBtn || !modal) return;
+
+    const cancelBtn = document.getElementById('cancelScheduleBtn');
+    const backdropBtn = modal.querySelector('.modalBackdropClose');
+
+    const open = () => {
+      modal.classList.add('open');
+      modal.setAttribute('aria-hidden', 'false');
+      document.body.classList.add('modal-open');
+      // Focus a safe control (avoid auto-opening date/time picker on some browsers)
+      if (cancelBtn) cancelBtn.focus();
+    };
+    const close = () => {
+      modal.classList.remove('open');
+      modal.setAttribute('aria-hidden', 'true');
+      document.body.classList.remove('modal-open');
+      // return focus to the trigger for accessibility
+      if (openBtn) openBtn.focus();
+    };
+
+    openBtn.addEventListener('click', open);
+    if (cancelBtn) cancelBtn.addEventListener('click', close);
+    if (backdropBtn) backdropBtn.addEventListener('click', close);
+  })();
+</script>
+
 <script>
   window.TICKET_FULL_CONFIG = {
     role: '<?= htmlspecialchars($roleName) ?>',

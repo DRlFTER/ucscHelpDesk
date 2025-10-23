@@ -70,6 +70,23 @@ class Counselor extends Controller
     }
 
     /**
+     * Simple Counselor video meeting UI (no realtime functionality)
+     * Route: /counselor/meeting
+     */
+    public function meeting()
+    {
+        $this->requireLogin('counselor');
+        $headContent = '
+        <link rel="stylesheet" href="/css/counselor/counselorMeeting.css"/>';
+
+        $this->view('counselor/counselorMeeting', [
+            'title' => 'Counselor Meeting',
+            'head' => $headContent,
+            'role' => 'counselor',
+        ]);
+    }
+
+    /**
      * Return tickets for counselor as JSON for the unified Tickets page.
      * Counselor is restricted to Counselling division tickets only.
      * Response shape mirrors admin ticketsData.
