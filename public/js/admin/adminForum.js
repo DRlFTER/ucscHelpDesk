@@ -1,8 +1,7 @@
-// Admin forum list view: mirrors studentForum.js but fetches from /admin/forumData
 window.adminForumData = [];
 
 (function () {
-  const CACHE_TTL_MS = 5 * 60 * 1000; // 5 minutes
+  const CACHE_TTL_MS = 5 * 60 * 1000;
 
   function getCache(key) {
     try {
@@ -63,7 +62,6 @@ window.adminForumData = [];
 
   populateSelect(categorySelect, categories);
   populateSelect(statusSelect, statuses);
-  // Populate Sort by (custom so first doesn't become empty value)
   if (sortSelect) {
     sortSelect.innerHTML = "";
     sortOptions.forEach((label, idx) => {
@@ -495,7 +493,6 @@ window.adminForumData = [];
     });
   });
 
-  // Listen to radio changes for type filter
   document.querySelectorAll('.filterGroup input[name="type"]').forEach((el) => {
     el.addEventListener("change", () => {
       page = 1;

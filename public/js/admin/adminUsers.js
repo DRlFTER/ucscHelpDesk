@@ -1,8 +1,7 @@
 window.adminUsersData = [];
 
 (function () {
-  // Reuse tickets list UX: caching, custom selects, pagination
-  const CACHE_TTL_MS = 5 * 60 * 1000; // 5 minutes
+  const CACHE_TTL_MS = 5 * 60 * 1000;
 
   function getCache(key) {
     try {
@@ -57,10 +56,9 @@ window.adminUsersData = [];
 
   populateSelect(typeSelect, types);
 
-  // Build custom select UI like tickets
   function buildCustomSelect(nativeSelect) {
     if (!nativeSelect) return;
-    if (nativeSelect.classList.contains("selectHidden")) return; // already built
+    if (nativeSelect.classList.contains("selectHidden")) return;
 
     const wrap = document.createElement("div");
     wrap.className = "selectWrap";
@@ -164,7 +162,6 @@ window.adminUsersData = [];
   page = initial.page;
 
   // After we fetch, we'll populate designation options from meta
-  // Build only for type initially; designation will be built after options arrive
   buildCustomSelect(typeSelect);
 
   function debounce(fn, wait) {
@@ -224,7 +221,6 @@ window.adminUsersData = [];
         const phone = u.number || "—";
         const email = u.email || "";
         const href = id ? `/admin/user?id=${encodeURIComponent(id)}` : "#";
-        // Wrap in anchor for navigation similar to tickets list
         return `
         <a class="ticket" href="${href}" aria-label="Open user ${esc(
           u.name
@@ -263,14 +259,11 @@ window.adminUsersData = [];
       .join("");
 
     container.innerHTML = html;
-    // Robust navigation fallback: delegate click to handle full-card navigation
-    // This ensures navigation works even if default anchor behavior is interfered with.
     container.addEventListener(
       "click",
       (e) => {
         const a = e.target && e.target.closest && e.target.closest("a.ticket");
         if (!a || !container.contains(a)) return;
-        // Only handle simple left-clicks without modifier keys
         if (e.button !== 0 || e.metaKey || e.ctrlKey || e.shiftKey || e.altKey)
           return;
         const href = a.getAttribute("href");
@@ -374,7 +367,6 @@ window.adminUsersData = [];
           designations: [],
         };
         window.adminUsersData = data;
-        // Populate designations select if empty
         if (
           designationSelect &&
           designationSelect.options.length <= 1 &&
@@ -387,7 +379,6 @@ window.adminUsersData = [];
         renderUsers(window.adminUsersData);
         renderPagination();
 
-        // SWR refresh
         fetch(`/admin/usersData?${qs.toString()}`, { credentials: "include" })
           .then((res) =>
             res.ok ? res.json() : Promise.reject(new Error("Bad response"))
@@ -401,7 +392,6 @@ window.adminUsersData = [];
               designations: [],
             };
             window.adminUsersData = newData;
-            // No need to rebuild designation custom select on SWR; options rarely change
             renderUsers(window.adminUsersData);
             renderPagination();
           })
@@ -426,7 +416,6 @@ window.adminUsersData = [];
       if (designationSelect && Array.isArray(meta.designations)) {
         const opts = ["All designations", ...meta.designations];
         populateSelect(designationSelect, opts);
-        // rebuild custom after options filled
         buildCustomSelect(designationSelect);
       }
 

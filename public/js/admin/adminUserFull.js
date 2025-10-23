@@ -1,4 +1,3 @@
-// Sync page layout with navbar height like other admin pages
 (function () {
   function setNavbarVar() {
     const nav = document.querySelector(".navbar");
@@ -95,7 +94,7 @@ function renderHeader() {
     statusEl.textContent = role.charAt(0).toUpperCase() + role.slice(1);
   }
   if (metaEl) {
-    const created = userData.createdOn || ""; // optional if available later
+    const created = userData.createdOn || "";
     metaEl.innerHTML = `<span>ID: ${esc(userData.id)}</span><span>Email: ${esc(
       userData.email || ""
     )}</span>${created ? `<span>Created: ${esc(created)}</span>` : ""}`;
@@ -167,7 +166,6 @@ function wireActions() {
 
   if (editBtn) {
     editBtn.addEventListener("click", () => {
-      // Pre-fill form
       document.getElementById("editName").value = userData.name || "";
       document.getElementById("editEmail").value = userData.email || "";
       document.getElementById("editNumber").value = userData.number || "";
@@ -202,7 +200,6 @@ function wireActions() {
           renderHeader();
           renderBasic();
           renderInfo();
-          // mark list cache to refresh once
           try {
             localStorage.setItem("admin_users_bust", String(Date.now()));
           } catch {}
@@ -219,7 +216,6 @@ function wireActions() {
 
   if (suspendBtn) {
     suspendBtn.addEventListener("click", () => {
-      // UI-only toggle for now
       const suspended = suspendBtn.classList.toggle("isSuspended");
       suspendBtn.querySelector(".btnSecondaryText").textContent = suspended
         ? "Unsuspend user"
@@ -287,7 +283,6 @@ function wireActions() {
         console.error(e);
       }
     } else {
-      // SWR refresh
       fetchUser(id)
         .then((fresh) => {
           saveToCache(id, fresh);
@@ -306,7 +301,6 @@ function wireActions() {
       year: "",
     };
   }
-  // View transition mapping from list card
   try {
     if (userData.id) {
       const summary = document.getElementById("userSummaryCard");

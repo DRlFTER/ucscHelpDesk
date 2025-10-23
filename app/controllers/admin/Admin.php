@@ -20,10 +20,6 @@ class Admin extends Controller
         $this->requireLogin('admin');
         $headContent = '
         <link rel="stylesheet" href="/css/admin/adminDashboard.css"/>';
-
-        // Important: Keep page render fast. All data for the dashboard is fetched
-        // asynchronously from /admin/dashboardData by adminDashboard.js.
-        // Avoid any DB work here to keep TTFB low and improve perceived speed.
         $this->view('adminDashboard', [
             'title' => 'Admin Dashboard',
             'head' => $headContent,
@@ -90,8 +86,6 @@ class Admin extends Controller
 
     /**
      * Return FAQs as JSON for the Admin FAQs page.
-     * Supports: page, perPage, search
-     * Response shape:
      * { data: [ { id, question, answer, createdAt } ], meta: { page, perPage, total, totalPages } }
      */
     public function faqsData()
@@ -160,7 +154,6 @@ class Admin extends Controller
         exit;
     }
 
-    /** Create a new FAQ */
     public function faqCreate()
     {
         $this->requireLogin('admin');
@@ -197,8 +190,6 @@ class Admin extends Controller
         ]);
         exit;
     }
-
-    /** Update an existing FAQ */
     public function faqUpdate()
     {
         $this->requireLogin('admin');
@@ -241,8 +232,6 @@ class Admin extends Controller
         ]);
         exit;
     }
-
-    /** Delete an FAQ */
     public function faqDelete()
     {
         $this->requireLogin('admin');
@@ -266,9 +255,7 @@ class Admin extends Controller
     }
 
     /**
-     * Forum posts data (JSON) for admin, sourced from forum_q.
-     * Mirrors Student::forumData response shape but admin can view all posts.
-     * Supports query params: page, perPage, search, category, status, sort, type
+     * Forum posts data (JSON) for admin, sourced from forum_q
      */
     public function forumData()
     {
@@ -291,7 +278,6 @@ class Admin extends Controller
         $sort    = isset($_GET['sort']) ? trim((string)$_GET['sort']) : 'latest';
         $type    = isset($_GET['type']) ? trim((string)$_GET['type']) : '';
 
-        // Map category slug to topic label used in DB
         $topicMap = [
             'general' => 'General',
             'it-support' => 'IT Support',
@@ -303,11 +289,10 @@ class Admin extends Controller
         $topicValue = '';
         if ($category !== '') {
             $key = strtolower($category);
-            $topicValue = $topicMap[$key] ?? $category; // allow direct match
+            $topicValue = $topicMap[$key] ?? $category; 
         }
 
         $where = [];
-        // Visibility: admin sees all; if 'my', only own posts
         if (strtolower($type) === 'my') {
             $where[] = "f.u_id = $uId";
         } else {
@@ -346,13 +331,11 @@ class Admin extends Controller
         if ($page > $totalPages) { $page = $totalPages; }
         $offset = ($page - 1) * $perPage;
 
-        // Sorting
         $orderSql = 'ORDER BY f.created_at DESC';
         $srt = strtolower($sort);
         if ($srt === 'oldest') {
             $orderSql = 'ORDER BY f.created_at ASC';
         }
-        // 'votes' and 'comments' default to created_at for now
 
         $sql = "SELECT f.q_id, f.created_at, f.title, f.topic, f.status, f.u_id, f.is_Public, u.name AS student_name
                 FROM forum_q f
@@ -406,7 +389,7 @@ class Admin extends Controller
     }
 
     /**
-     * Fetch a single user's details for the admin user page.
+     * Fetch a single user
      * Returns JSON shape: { id, name, email, role, designation, number, year }
      */
     public function userData()
@@ -446,8 +429,6 @@ class Admin extends Controller
         ]);
         exit;
     }
-
-    /** Update user basic fields. Admin only. */
     public function userUpdate()
     {
         $this->requireLogin('admin');
@@ -474,7 +455,6 @@ class Admin extends Controller
             exit;
         }
 
-        // Whitelist roles
         $allowed = ['staff','student','lecturer','admin','counselor'];
         if (!in_array(strtolower($role), $allowed, true)) {
             http_response_code(400);
@@ -482,7 +462,6 @@ class Admin extends Controller
             exit;
         }
 
-        // Escape inputs
         $nameEsc = $db->real_escape_string($name);
         $emailEsc = $db->real_escape_string($email);
         $roleEsc = $db->real_escape_string(strtolower($role));
@@ -498,12 +477,10 @@ class Admin extends Controller
             exit;
         }
 
-        // Return updated record
         $_GET['id'] = (string)$id;
         $this->userData();
     }
 
-    /** Delete a user. Note: will cascade per FK constraints in DB. */
     public function userDelete()
     {
         $this->requireLogin('admin');
@@ -529,7 +506,6 @@ class Admin extends Controller
 
     /**
      * Return users for admin as JSON for the Users page.
-     * Supports pagination, search, and filters (type/role and designation).
      * Response shape:
      * {
      *   data: [
@@ -556,13 +532,11 @@ class Admin extends Controller
 
         if ($search !== '') {
             $s = $db->real_escape_string($search);
-            // Escape LIKE wildcards
             $s_escaped = str_replace(['\\', '%', '_'], ['\\\\', '\%', '\_'], $s);
             $where[] = "(u.name LIKE '%$s_escaped%' ESCAPE '\\' OR u.email LIKE '%$s_escaped%' ESCAPE '\\' OR u.number LIKE '%$s_escaped%' ESCAPE '\\' OR u.designation LIKE '%$s_escaped%' ESCAPE '\\')";
         }
 
         if ($type !== '') {
-            // Whitelist allowed roles
             $role = strtolower($type);
             $allowed = ['staff','student','lecturer','admin','counselor'];
             if (in_array($role, $allowed, true)) {
@@ -578,7 +552,6 @@ class Admin extends Controller
 
         $whereSql = count($where) ? ('WHERE ' . implode(' AND ', $where)) : '';
 
-        // Total count
         $total = 0;
         $countSql = "SELECT COUNT(*) AS c FROM users u $whereSql";
         if ($res = $db->query($countSql)) {
@@ -591,7 +564,6 @@ class Admin extends Controller
         if ($page > $totalPages) { $page = $totalPages; }
         $offset = ($page - 1) * $perPage;
 
-        // Data query
         $sql = "SELECT u.u_id, u.name, u.email, u.role, u.designation, u.number, u.year
                 FROM users u
                 $whereSql
@@ -604,7 +576,6 @@ class Admin extends Controller
             $res->free();
         }
 
-        // Distinct designations for filter options (entire table, not page-limited)
         $designations = [];
         $dsql = "SELECT DISTINCT designation FROM users WHERE designation IS NOT NULL AND designation <> '' ORDER BY designation ASC";
         if ($res = $db->query($dsql)) {
@@ -641,18 +612,13 @@ class Admin extends Controller
         exit;
     }
 
-    /**
-     * Return dashboard datasets as JSON for client-side rendering/caching.
-     */
     public function dashboardData()
     {
         $this->requireLogin('admin');
         header('Content-Type: application/json');
 
-        // Lightweight server-side cache to reduce DB load and speed up responses
-        // Cache for 60 seconds by default
-        $CACHE_TTL = 60; // seconds
-        $cacheDir = dirname(__DIR__, 2) . DIRECTORY_SEPARATOR . 'cache'; // app/cache
+        $CACHE_TTL = 120; // seconds
+        $cacheDir = dirname(__DIR__, 2) . DIRECTORY_SEPARATOR . 'cache';
         $cacheFile = $cacheDir . DIRECTORY_SEPARATOR . 'admin_dashboard.json';
         $nowTs = time();
 
@@ -675,7 +641,6 @@ class Admin extends Controller
         $avgRespMinutes = null;
         $resolvedTickets = 0;
 
-        // Consolidate counts into a single query for efficiency
         $sqlCounts = "SELECT
             COUNT(*) AS total_count,
             SUM(CASE WHEN status IN ('pending','agent assigned') THEN 1 ELSE 0 END) AS open_count,
@@ -701,8 +666,6 @@ class Admin extends Controller
             $avgRespMinutes = isset($row['avg_minutes']) ? (float)$row['avg_minutes'] : null;
             $res->free_result();
         }
-
-        // $resolvedTickets is already populated from consolidated query
 
         $avgRespText = $avgRespMinutes !== null ? round($avgRespMinutes / 60, 1) . 'h' : '—';
         $resolutionRate = $totalTickets > 0 ? round(($resolvedTickets / $totalTickets) * 100) . '%' : '0%';
@@ -819,11 +782,9 @@ class Admin extends Controller
             'platformStatus' => $platformStatus,
         ];
 
-        // Ensure cache directory exists and is writable; then write cache
         if (!is_dir($cacheDir)) {
             @mkdir($cacheDir, 0775, true);
         }
-        // Avoid partial writes by using a temp file + rename
         $json = json_encode($payload);
         if ($json !== false) {
             $tmp = $cacheFile . '.tmp';
@@ -837,10 +798,6 @@ class Admin extends Controller
         exit;
     }
 
-    /**
-     * Return a single ticket's details as JSON for the full ticket view.
-     * Accepts id (preferred) or code like TKT-123.
-     */
     public function ticketData()
     {
         $this->requireLogin('admin');
@@ -879,7 +836,6 @@ class Admin extends Controller
             exit;
         }
 
-        // attachments from supporting_documents
         $attachments = [];
         if ($res = $db->query("SELECT doc_name, location FROM supporting_documents WHERE ticket_id = $idEsc")) {
             while ($r = $res->fetch_assoc()) {
@@ -901,9 +857,7 @@ class Admin extends Controller
             if ($ts !== false) $createdPretty = date('M d, Y \\a\\t g:i A', $ts);
         }
 
-        // Map meeting flag to UI value
         $meeting = 'none';
-        // Try to read meeting flag from tickets table
         if ($res2 = $db->query("SELECT meeting_requested FROM tickets WHERE ticket_id = $idEsc LIMIT 1")) {
             if ($r2 = $res2->fetch_assoc()) {
                 $mr = strtolower(trim((string)($r2['meeting_requested'] ?? '')));
@@ -960,8 +914,8 @@ class Admin extends Controller
      * Return tickets for admin as JSON for the Tickets page.
      * Shape per item:
      * {
-     *   code: string,           // e.g., TKT-123
-     *   createdAt: string,      // YYYY-MM-DD
+     *   code: string,        
+     *   createdAt: string,      
      *   title: string,
      *   student: { id: int|null, name: string },
      *   category: string|null,
@@ -978,7 +932,6 @@ class Admin extends Controller
 
         $db = Database::getInstance();
 
-        // Query params for pagination and filtering
         $page    = isset($_GET['page']) ? max(1, (int)$_GET['page']) : 1;
         $perPage = isset($_GET['perPage']) ? max(1, min(100, (int)$_GET['perPage'])) : 10;
         $search  = isset($_GET['search']) ? trim((string)$_GET['search']) : '';
@@ -988,15 +941,12 @@ class Admin extends Controller
 
         $where = [];
         $joins = "LEFT JOIN users u ON u.u_id = t.u_id LEFT JOIN division d ON d.did = t.division";
-        // Search by ticket title or student name
         if ($search !== '') {
             $s = $db->real_escape_string($search);
             $where[] = "(t.title LIKE '%$s%' OR u.name LIKE '%$s%')";
         }
-        // Filter by category (supports grouped slugs and exact division names)
         if ($category !== '') {
             $catKey = strtolower($category);
-            // Map grouped slugs to division name keyword matches
             $groupMap = [
                 'it-access' => [
                     'it','tech','technical','account','login','password','email','network','wifi','wi-fi','internet','software','hardware','device','computer','system','server','bug','error','website','portal','moodle','lms','printer','printing','access'
@@ -1023,12 +973,12 @@ class Admin extends Controller
                     $where[] = '(' . implode(' OR ', $likes) . ')';
                 }
             } else {
-                // Fallback: treat as exact division name value
+                
                 $c = $db->real_escape_string($category);
                 $where[] = "COALESCE(d.name,'') = '$c'";
             }
         }
-        // Map UI status to DB statuses
+
         if ($status !== '') {
             $s = strtolower($status);
             if ($s === 'open') {
@@ -1038,12 +988,12 @@ class Admin extends Controller
             } elseif ($s === 'resolved') {
                 $where[] = "t.status IN ('resolved','closed','agent-closed')";
             } else {
-                // fallback to direct match
+
                 $sEsc = $db->real_escape_string($status);
                 $where[] = "t.status = '$sEsc'";
             }
         }
-        // Filter by priority
+
         if ($priority !== '') {
             $p = $db->real_escape_string($priority);
             $where[] = "LOWER(t.priority) = LOWER('$p')";
@@ -1051,7 +1001,6 @@ class Admin extends Controller
 
         $whereSql = count($where) ? ('WHERE ' . implode(' AND ', $where)) : '';
 
-        // Total count for pagination
         $total = 0;
         $countSql = "SELECT COUNT(*) AS c FROM tickets t $joins $whereSql";
         if ($res = $db->query($countSql)) {
@@ -1064,7 +1013,6 @@ class Admin extends Controller
         if ($page > $totalPages) { $page = $totalPages; }
         $offset = ($page - 1) * $perPage;
 
-        // Data query with pagination
     $sql = "SELECT t.ticket_id, t.created_at, t.title, d.name AS category, t.status, t.priority, t.meeting_requested, t.u_id, u.name AS student_name
         FROM tickets t
         $joins
@@ -1080,7 +1028,6 @@ class Admin extends Controller
             $res->free();
         }
 
-        // Normalizers
         $mapStatus = function ($s) {
             $s = strtolower((string)$s);
             switch ($s) {
@@ -1138,10 +1085,6 @@ class Admin extends Controller
         ]);
         exit;
     }
-
-    /**
-     * Convert a MySQL datetime string to a short relative time like "2h ago".
-     */
     private static function relativeTime(?string $datetime): string
     {
         if (!$datetime) return '';

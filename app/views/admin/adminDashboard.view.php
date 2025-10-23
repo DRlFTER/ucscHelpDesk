@@ -4,7 +4,6 @@
   <div class="fullPage">
     <div class="pageLayout">
       <section class="settingsLeft" aria-label="Dashboard navigation">
-        <!-- Populated by adminDashboard.js -->
       </section>
       <aside class="adminRight">
         <div id="dashError" style="display:none;color:#b91c1c;background:#fee2e2;border:1px solid #fecaca;padding:8px 12px;border-radius:8px;">
@@ -35,7 +34,6 @@
   </div>
 </main>
 
-<!-- Report generation modal -->
 <div id="reportModal" class="modalOverlay" aria-hidden="true">
   <div class="msgHolder">
     <div class="msgContainer" role="dialog" aria-modal="true" aria-labelledby="reportModalTitle">
@@ -67,7 +65,6 @@
       </div>
     </div>
   </div>
-  <!-- clicking outside container closes modal via JS -->
   <button type="button" class="modalBackdropClose" aria-label="Close"></button>
 </div>
 <script src="/js/admin/adminDashboard.js" defer></script>

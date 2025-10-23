@@ -29,7 +29,7 @@ h3 {
   display: flex;
   flex-direction: column;
   gap: 16px;
-  min-height: 0; /* allow children to size for overflow */
+  min-height: 0;
   overflow: hidden;
 }
 
@@ -126,12 +126,10 @@ h3 {
   margin-left: auto;
 }
 
-/* Error bar */
 #dashError {
   font-size: 14px;
 }
 
-/* Simple skeleton look for info cards when aria-busy */
 .infoCard[aria-busy="true"] {
   color: transparent;
   background-image: linear-gradient(
@@ -160,7 +158,6 @@ h3 {
   }
 }
 
-/* Match edit-user modal form grid styling */
 .formGrid {
   display: grid;
   grid-template-columns: 1fr 1fr;

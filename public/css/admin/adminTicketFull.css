@@ -2,35 +2,26 @@ main {
   width: 100%;
   display: flex;
   justify-content: center;
-  min-height: calc(
-    100dvh - var(--navbar-height, 64px)
-  ); /* Fill the remaining viewport space after the navbar height */
+  min-height: calc(100dvh - var(--navbar-height, 64px));
 }
-
-/* Typography, base colors and page background to match adminTickets.css */
 body {
   font-family: "SF Pro", sans-serif;
   background: #f9fafb;
   margin: 0;
   color: #111827;
 }
-
-/* View Transition tuning for destination page */
 ::view-transition-old(root),
 ::view-transition-new(root) {
   animation-duration: 220ms;
   animation-timing-function: cubic-bezier(0.2, 0, 0, 1);
 }
-
-/* Modal + blur styles */
 .modalOverlay {
   position: fixed;
   inset: 0;
-  display: none; /* hidden by default */
+  display: none;
   align-items: center;
   justify-content: center;
   z-index: 10000;
-  /* Start transparent for fade-in */
   background: rgba(17, 24, 39, 0.08);
   opacity: 0;
   transition: opacity 180ms ease-in-out, backdrop-filter 180ms ease-in-out;
@@ -46,7 +37,7 @@ body {
   height: auto;
 }
 .modalOverlay .msgContainer {
-  position: relative; /* enable z-index to stack above backdrop */
+  position: relative;
   backdrop-filter: blur(20px);
   border: 1px solid rgba(255, 255, 255, 0.1);
   background: rgba(255, 255, 255, 0.8);
@@ -58,7 +49,7 @@ body {
   gap: 12px;
   color: black;
   font-family: "Poppins", "SF Pro", sans-serif;
-  z-index: 2; /* above the backdrop close button */
+  z-index: 2;
   box-shadow: 0 12px 30px rgba(17, 24, 39, 0.18);
   transform: translateY(8px) scale(0.98);
   opacity: 0;
@@ -103,10 +94,8 @@ body {
   background: transparent;
   border: none;
   cursor: default;
-  z-index: 1; /* keep behind the dialog so inputs remain clickable */
+  z-index: 1;
 }
-
-/* Optional page blur when modal open */
 body.modal-open main {
   filter: blur(4px);
   transition: filter 180ms ease-in-out;
@@ -151,6 +140,7 @@ body.modal-open main {
   flex-direction: column;
   gap: 12px;
   min-height: 0; /* allow flex children to size/scroll */
+  min-height: 0;
 }
 
 .ticketRight {
@@ -159,21 +149,6 @@ body.modal-open main {
   flex-direction: column;
   gap: 12px;
   min-height: 0;
-}
-
-.card {
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
-  backdrop-filter: blur(20px);
-  border-radius: 12px;
-  padding: 16px;
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  background: rgba(255, 255, 255, 0.5);
-  box-shadow: none;
-  color: #111827;
-  transition: all 0.18s ease-in-out;
-  background-clip: padding-box;
 }
 
 /* make conversation and timeline take available space */
@@ -193,7 +168,7 @@ body.modal-open main {
 }
 .ticketTitle {
   flex: 1;
-  font-size: 18px; /* match ticket list title size */
+  font-size: 18px;
   font-weight: 600;
   font-family: "SF Pro";
 }
@@ -243,7 +218,6 @@ body.modal-open main {
   gap: 8px;
   padding: 8px 10px;
   border-radius: 8px;
-  /* make small pill-like holders consistent with ticket list */
   background: #ececec;
   color: #454545;
   font-family: "SF Pro";
@@ -276,13 +250,12 @@ body.modal-open main {
   padding: 10px 12px;
   font-family: "SF Pro";
 }
-/* color coding for author types */
 .messageBubble.staff {
   background: #e7f1ff;
-} /* light blue for lecturer */
+}
 .messageBubble.student {
   background: #f3f4f6;
-} /* light gray for student */
+}
 .messageHeader {
   display: flex;
   align-items: center;

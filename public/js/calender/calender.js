@@ -23,9 +23,11 @@
 
   const eventsByDay = Object.create(null);
 
-  const ROLE = (window.CALENDAR_CONFIG && window.CALENDAR_CONFIG.role
-    ? String(window.CALENDAR_CONFIG.role)
-    : 'guest').toLowerCase();
+  const ROLE = (
+    window.CALENDAR_CONFIG && window.CALENDAR_CONFIG.role
+      ? String(window.CALENDAR_CONFIG.role)
+      : "guest"
+  ).toLowerCase();
 
   function fmtDateKey(d) {
     const y = d.getFullYear();
@@ -111,11 +113,15 @@
     eventsByDay[key2] = [{ title: "Maintenance Window" }];
 
     // Counselor-specific seed: 24th October (current year)
-    if (ROLE === 'counselor') {
+    if (ROLE === "counselor") {
       const y = new Date().getFullYear();
-      const keyCounselor = `${y}-10-23`;
+      const keyCounselor = `${y}-10-24`;
       const list = eventsByDay[keyCounselor] || [];
-      list.push({ title: "Meeting with Brian", isMeeting: true, url: "/counselor/meeting" });
+      list.push({
+        title: "Meeting with Brian",
+        isMeeting: true,
+        url: "/counselor/meeting",
+      });
       eventsByDay[keyCounselor] = list;
     }
   })();
@@ -124,36 +130,36 @@
 
   // Populate left pane Today list from eventsByDay
   (function renderTodayPane() {
-    const wrap = document.querySelector('.todayEvents');
+    const wrap = document.querySelector(".todayEvents");
     if (!wrap) return;
-    const noRow = document.getElementById('noEventsRow');
+    const noRow = document.getElementById("noEventsRow");
     // Remove any placeholder items
-    wrap.querySelectorAll('.event').forEach(el => el.remove());
+    wrap.querySelectorAll(".event").forEach((el) => el.remove());
 
     const today = new Date();
     const key = fmtDateKey(today);
     const items = eventsByDay[key] || [];
     if (!items.length) {
-      if (noRow) noRow.style.display = '';
+      if (noRow) noRow.style.display = "";
       return;
     }
-    if (noRow) noRow.style.display = 'none';
+    if (noRow) noRow.style.display = "none";
     for (const ev of items) {
-      const row = document.createElement('div');
-      row.className = 'event';
-      const h2 = document.createElement('h2');
+      const row = document.createElement("div");
+      row.className = "event";
+      const h2 = document.createElement("h2");
       h2.textContent = ev.title;
       row.appendChild(h2);
 
       if (ev.isMeeting) {
-        const btn = document.createElement('a');
-        btn.className = 'ctaButton';
-        btn.href = ev.url || '/counselor/meeting';
-        btn.textContent = 'Attend Meeting';
+        const btn = document.createElement("a");
+        btn.className = "ctaButton";
+        btn.href = ev.url || "/counselor/meeting";
+        btn.textContent = "Attend Meeting";
         row.appendChild(btn);
       } else {
-        const p = document.createElement('p');
-        p.textContent = 'All day';
+        const p = document.createElement("p");
+        p.textContent = "All day";
         row.appendChild(p);
       }
       wrap.appendChild(row);

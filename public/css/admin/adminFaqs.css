@@ -1,6 +1,4 @@
 @import url("/css/tickets/tickets.css");
-
-/* Minimal FAQ-specific tweaks while relying on global/components.css and tickets styles */
 .faqCard .faqActions {
   display: flex;
   align-items: center;
@@ -11,8 +9,6 @@
   white-space: pre-wrap;
   word-break: break-word;
 }
-
-/* Make the action buttons compact inside cards */
 .faqCard .btnAttach {
   padding: 8px 12px;
 }

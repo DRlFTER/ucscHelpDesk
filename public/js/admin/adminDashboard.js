@@ -1,6 +1,4 @@
-// Admin Dashboard client-side rendering with caching and graceful errors
 (function () {
-  // Defer fetch until DOM is ready
   if (document.readyState === "loading") {
     document.addEventListener("DOMContentLoaded", init);
   } else {
@@ -8,9 +6,9 @@
   }
 
   const CACHE_KEY = "admin_dashboard_data";
-  const CACHE_TTL_MS = 5 * 60 * 1000; // 5 minutes
-  let currentMode = "analytics"; // 'analytics' | 'tickets'
-  let dataRef = null; // cached last payload used for rendering
+  const CACHE_TTL_MS = 5 * 60 * 1000;
+  let currentMode = "analytics";
+  let dataRef = null;
 
   function getCache() {
     try {
@@ -51,7 +49,6 @@
   }
 
   function skeleton() {
-    // Optional: add simple placeholders
     const cardContainer = document.getElementById("cardContainer");
     if (cardContainer) {
       cardContainer.innerHTML = Array.from({ length: 4 })
@@ -107,7 +104,6 @@
       },
     ];
 
-    // Use same container class as settings for unified look
     const container = document.querySelector(".settingsLeft");
     if (!container) return;
     container.innerHTML = menuItems
@@ -121,7 +117,6 @@
       )
       .join("");
 
-    // Click handling: treat 'analytics' and 'tickets' as in-page tabs.
     container.addEventListener("click", (e) => {
       const btn = e.target.closest(".settingsNavBtn");
       if (!btn || !container.contains(btn)) return;
@@ -227,9 +222,7 @@
       .join("")}\n    </table>\n  `;
   }
 
-  // Group many raw categories into 4 clear buckets for the pie chart
   function groupCategories(categories) {
-    // Define the four buckets with keyword hints
     const buckets = [
       {
         name: "IT & Access",
@@ -426,7 +419,6 @@
         plugins: { legend: { position: "bottom" } },
       };
 
-      // Group raw categories into 4 buckets for clarity
       const grouped = groupCategories(categories);
       const pieData = {
         labels: grouped.labels,
@@ -467,7 +459,6 @@
       }
     };
 
-    // Defer heavy chart work until the browser is idle to improve TTI
     if (typeof window.requestIdleCallback === "function") {
       requestIdleCallback(run, { timeout: 300 });
     } else {
@@ -501,7 +492,6 @@
     }
   }
 
-  // Report Modal helpers
   function getReportModalEl() {
     return document.getElementById("reportModal");
   }
@@ -520,7 +510,6 @@
     backdropBtn &&
       backdropBtn.addEventListener("click", onCancel, { once: true });
 
-    // Bind action buttons each time to ensure fresh refs
     const genBtn = document.getElementById("reportGenerateBtn");
     const pdfBtn = document.getElementById("reportExportBtn");
     genBtn &&
@@ -546,7 +535,7 @@
   }
 
   function validateDateRange(start, end) {
-    if (!start || !end) return true; // allow empty for quick testing
+    if (!start || !end) return true;
     try {
       const s = new Date(start);
       const e = new Date(end);
@@ -566,7 +555,6 @@
       );
       return;
     }
-    // Navigate to a reports page with query params (server can process)
     const params = new URLSearchParams();
     if (start) params.set("start", start);
     if (end) params.set("end", end);
@@ -589,7 +577,6 @@
     if (end) params.set("end", end);
     if (type) params.set("type", type);
     params.set("format", "pdf");
-    // Trigger a download or server-side PDF rendering endpoint
     window.location.href = "/admin/report?" + params.toString();
     closeReportModal();
   }
@@ -615,7 +602,6 @@
   }
 
   function renderTicketsOverview(data) {
-    // Reorder and retitle cards to emphasize ticket KPIs
     const cd = Array.isArray(data.cardsData) ? data.cardsData : [];
     const ticketCards = [
       { title: "Open Tickets", value: cd[1]?.value ?? 0, change: "" },
@@ -624,28 +610,18 @@
       { title: "Total Tickets", value: cd[0]?.value ?? 0, change: "" },
     ];
     renderCards(ticketCards);
-
-    // Hide platform status in tickets overview
     const ps = document.getElementById("platformStatus");
     if (ps) ps.innerHTML = "";
-
-    // Keep recent tickets focused
     renderRecentTickets(data.recentTickets);
-
-    // Charts remain the same (tickets trends/category)
     renderCharts(data.trends, data.categories);
   }
 
   async function init() {
     renderMenu();
-
-    // Use cache immediately if available
     const cached = getCache();
     if (cached) {
       hideError();
-      // Hydrate quickly without skeletons if we already have cache
       hydrate(cached);
-      // SWR: refresh in background
       fetchData()
         .then((fresh) => {
           setCache(fresh);
@@ -656,10 +632,7 @@
         });
       return;
     }
-
-    // No cache, fetch now
     try {
-      // Only show skeletons when we have no cached content
       skeleton();
       const data = await fetchData();
       setCache(data);
@@ -676,9 +649,7 @@
   function hydrate(data, isRefresh = false) {
     if (!data || typeof data !== "object") return;
     dataRef = data;
-    // Ensure toolbar renders on first load
     renderToolbar(currentMode);
-    // Default to analytics tab on load
     if (currentMode === "tickets") {
       renderTicketsOverview(data);
     } else {

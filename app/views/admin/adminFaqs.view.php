@@ -26,7 +26,6 @@
   </div>
 </main>
 
-<!-- Delete confirmation modal -->
 <div id="deleteFaqModal" class="modalOverlay" aria-hidden="true">
   <div class="msgHolder">
     <div class="msgContainer" role="dialog" aria-modal="true" aria-labelledby="deleteFaqModalTitle">
@@ -43,7 +42,6 @@
   <button type="button" class="modalBackdropClose" aria-label="Close"></button>
 </div>
 
-<!-- Create/Edit FAQ modal -->
 <div id="editFaqModal" class="modalOverlay" aria-hidden="true">
   <div class="msgHolder">
     <div class="msgContainer" role="dialog" aria-modal="true" aria-labelledby="editFaqModalTitle">

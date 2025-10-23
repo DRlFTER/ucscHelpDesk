@@ -1,12 +1,9 @@
 (function () {
-  // Admin FAQs: fetch from backend APIs and manage modals
-
   const searchInput = document.getElementById("faqSearch");
   const listEl = document.getElementById("faqsList");
   const pagerEl = document.getElementById("faqsPagination");
   const newFaqBtn = document.getElementById("newFaqBtn");
 
-  // Modals
   const deleteModal = document.getElementById("deleteFaqModal");
   const cancelDeleteBtn = document.getElementById("cancelDeleteFaqBtn");
   const confirmDeleteBtn = document.getElementById("confirmDeleteFaqBtn");
@@ -22,7 +19,7 @@
   let page = 1;
   const perPage = 10;
   let meta = { total: 0, totalPages: 1 };
-  let editingId = null; // null => creating new
+  let editingId = null;
   let pendingDeleteId = null;
 
   function esc(s) {
@@ -185,7 +182,6 @@
     return res.json();
   }
 
-  // Event delegation for card actions
   listEl?.addEventListener("click", (e) => {
     const editBtn = e.target.closest?.(".editFaqBtn");
     const delBtn = e.target.closest?.(".deleteFaqBtn");
@@ -211,7 +207,6 @@
     }
   });
 
-  // New FAQ
   newFaqBtn?.addEventListener("click", () => {
     editingId = null;
     editFaqModalTitle.textContent = "New FAQ";
@@ -219,7 +214,6 @@
     openModal(editModal);
   });
 
-  // Delete modal controls
   cancelDeleteBtn?.addEventListener("click", () => closeModal(deleteModal));
   deleteModal
     ?.querySelector(".modalBackdropClose")
@@ -237,7 +231,6 @@
     }
   });
 
-  // Edit modal controls
   cancelFaqEditBtn?.addEventListener("click", () => closeModal(editModal));
   editModal
     ?.querySelector(".modalBackdropClose")
@@ -264,7 +257,6 @@
     }
   });
 
-  // Search
   searchInput?.addEventListener(
     "input",
     debounce(() => {
@@ -273,6 +265,5 @@
     }, 250)
   );
 
-  // init
   loadFaqs();
 })();

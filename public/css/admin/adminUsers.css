@@ -1,6 +1,4 @@
 @import url("/css/tickets/tickets.css");
-
-/* Role status pill color examples (reusing .status class from tickets markup) */
 .status.admin {
   background: #e7f0ff;
   color: #174ea6;
@@ -31,8 +29,6 @@
   padding: 6px 10px;
   border-radius: 17px;
 }
-
-/* Adjust search placeholder text for users if needed */
 .search input::placeholder {
   color: #808080;
 }
