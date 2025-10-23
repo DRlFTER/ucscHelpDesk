@@ -64,6 +64,12 @@ class Admin extends Controller
         <link rel="stylesheet" href="/css/admin/adminUserFull.css"/>';
         $this->view('adminUserFull', ['title' => 'User Details', 'head' => $headContent]);
     }
+    public function faqs() {
+        $this->requireLogin('admin');
+        $headContent = '
+        <link rel="stylesheet" href="/css/admin/adminFaqs.css"/>';
+        $this->view('adminFaqs', ['title' => 'Manage FAQs', 'head' => $headContent]);
+    }
     public function calender() {
         $this->requireLogin('admin');
         $headContent = '\n        <link rel="stylesheet" href="/css/calender/calender.css"/>';
@@ -80,6 +86,183 @@ class Admin extends Controller
         $headContent = '
         <link rel="stylesheet" href="/css/student/studentForum.css"/>';
         $this->view('adminForum', ['title' => 'Forum', 'head' => $headContent]);
+    }
+
+    /**
+     * Return FAQs as JSON for the Admin FAQs page.
+     * Supports: page, perPage, search
+     * Response shape:
+     * { data: [ { id, question, answer, createdAt } ], meta: { page, perPage, total, totalPages } }
+     */
+    public function faqsData()
+    {
+        $this->requireLogin('admin');
+        header('Content-Type: application/json');
+
+        $db = Database::getInstance();
+
+        $page    = isset($_GET['page']) ? max(1, (int)$_GET['page']) : 1;
+        $perPage = isset($_GET['perPage']) ? max(1, min(100, (int)$_GET['perPage'])) : 10;
+        $search  = isset($_GET['search']) ? trim((string)$_GET['search']) : '';
+
+        $where = [];
+        if ($search !== '') {
+            $s = $db->real_escape_string($search);
+            $s_escaped = str_replace(['\\', '%', '_'], ['\\\\', '\\%', '\\_'], $s);
+            $where[] = "(question LIKE '%$s_escaped%' ESCAPE '\\' OR answer LIKE '%$s_escaped%' ESCAPE '\\')";
+        }
+        $whereSql = count($where) ? ('WHERE ' . implode(' AND ', $where)) : '';
+
+        $total = 0;
+        if ($res = $db->query("SELECT COUNT(*) AS c FROM faq $whereSql")) {
+            $row = $res->fetch_assoc();
+            $total = (int)($row['c'] ?? 0);
+            $res->free();
+        }
+
+        $totalPages = $perPage > 0 ? (int)max(1, ceil($total / $perPage)) : 1;
+        if ($page > $totalPages) { $page = $totalPages; }
+        $offset = ($page - 1) * $perPage;
+
+        $rows = [];
+        $sql = "SELECT id, question, answer, created_at FROM faq $whereSql ORDER BY created_at DESC, id DESC LIMIT $perPage OFFSET $offset";
+        if ($res = $db->query($sql)) {
+            while ($r = $res->fetch_assoc()) { $rows[] = $r; }
+            $res->free();
+        }
+
+        $mapDate = function ($dt) {
+            if (!$dt) return '';
+            $ts = strtotime($dt);
+            if ($ts === false) return '';
+            return date('Y-m-d H:i:s', $ts);
+        };
+
+        $data = [];
+        foreach ($rows as $r) {
+            $data[] = [
+                'id' => (int)($r['id'] ?? 0),
+                'question' => (string)($r['question'] ?? ''),
+                'answer' => (string)($r['answer'] ?? ''),
+                'createdAt' => $mapDate($r['created_at'] ?? null),
+            ];
+        }
+
+        echo json_encode([
+            'data' => $data,
+            'meta' => [
+                'page' => $page,
+                'perPage' => $perPage,
+                'total' => $total,
+                'totalPages' => $totalPages,
+            ],
+        ]);
+        exit;
+    }
+
+    /** Create a new FAQ */
+    public function faqCreate()
+    {
+        $this->requireLogin('admin');
+        header('Content-Type: application/json');
+        $db = Database::getInstance();
+
+        $question = isset($_POST['question']) ? trim((string)$_POST['question']) : '';
+        $answer   = isset($_POST['answer']) ? trim((string)$_POST['answer']) : '';
+        if ($question === '' || $answer === '') {
+            http_response_code(400);
+            echo json_encode(['error' => 'Question and answer are required']);
+            exit;
+        }
+
+        $qEsc = $db->real_escape_string($question);
+        $aEsc = $db->real_escape_string($answer);
+        $ok = $db->query("INSERT INTO faq (question, answer) VALUES ('$qEsc', '$aEsc')");
+        if (!$ok) {
+            http_response_code(500);
+            echo json_encode(['error' => 'Create failed']);
+            exit;
+        }
+        $id = (int)$db->insert_id;
+        $row = null;
+        if ($res = $db->query("SELECT id, question, answer, created_at FROM faq WHERE id = $id")) {
+            $row = $res->fetch_assoc();
+            $res->free();
+        }
+        echo json_encode([
+            'id' => (int)($row['id'] ?? $id),
+            'question' => (string)($row['question'] ?? $question),
+            'answer' => (string)($row['answer'] ?? $answer),
+            'createdAt' => isset($row['created_at']) ? date('Y-m-d H:i:s', strtotime($row['created_at'])) : date('Y-m-d H:i:s'),
+        ]);
+        exit;
+    }
+
+    /** Update an existing FAQ */
+    public function faqUpdate()
+    {
+        $this->requireLogin('admin');
+        header('Content-Type: application/json');
+        $db = Database::getInstance();
+
+        $id = isset($_POST['id']) ? (int)$_POST['id'] : 0;
+        $question = isset($_POST['question']) ? trim((string)$_POST['question']) : '';
+        $answer   = isset($_POST['answer']) ? trim((string)$_POST['answer']) : '';
+        if (!$id) {
+            http_response_code(400);
+            echo json_encode(['error' => 'Missing id']);
+            exit;
+        }
+        if ($question === '' || $answer === '') {
+            http_response_code(400);
+            echo json_encode(['error' => 'Question and answer are required']);
+            exit;
+        }
+
+        $qEsc = $db->real_escape_string($question);
+        $aEsc = $db->real_escape_string($answer);
+        $ok = $db->query("UPDATE faq SET question = '$qEsc', answer = '$aEsc' WHERE id = $id");
+        if (!$ok) {
+            http_response_code(500);
+            echo json_encode(['error' => 'Update failed']);
+            exit;
+        }
+
+        $row = null;
+        if ($res = $db->query("SELECT id, question, answer, created_at FROM faq WHERE id = $id")) {
+            $row = $res->fetch_assoc();
+            $res->free();
+        }
+        echo json_encode([
+            'id' => (int)($row['id'] ?? $id),
+            'question' => (string)($row['question'] ?? $question),
+            'answer' => (string)($row['answer'] ?? $answer),
+            'createdAt' => isset($row['created_at']) ? date('Y-m-d H:i:s', strtotime($row['created_at'])) : '',
+        ]);
+        exit;
+    }
+
+    /** Delete an FAQ */
+    public function faqDelete()
+    {
+        $this->requireLogin('admin');
+        header('Content-Type: application/json');
+        $db = Database::getInstance();
+
+        $id = isset($_POST['id']) ? (int)$_POST['id'] : (isset($_GET['id']) ? (int)$_GET['id'] : 0);
+        if (!$id) {
+            http_response_code(400);
+            echo json_encode(['error' => 'Missing id']);
+            exit;
+        }
+        $ok = $db->query("DELETE FROM faq WHERE id = $id");
+        if (!$ok) {
+            http_response_code(500);
+            echo json_encode(['error' => 'Delete failed']);
+            exit;
+        }
+        echo json_encode(['success' => true]);
+        exit;
     }
 
     /**
