@@ -757,11 +757,10 @@ body.modal-open main {
   color: #111827;
   transition: all 0.18s ease-in-out;
   background-clip: padding-box;
-  overflow: auto; /* if menu grows, scroll inside instead of page */
+  overflow: auto;
+  scrollbar-width: thin;
 }
 
-/* Side menu buttons */
-/* Exclude specialized buttons from generic settings-left styles */
 .settingsLeft
   button:not(.btnSvg):not(.btnPrimary):not(.btnSecondary):not(.btnWSvg),
 .settingsNavBtn {
@@ -781,7 +780,21 @@ body.modal-open main {
 }
 
 .settingsLeft
-  button:not(.btnSvg):not(.btnPrimary):not(.btnSecondary):not(.btnWSvg):hover,
+
+/* Ensure inner nav stacks items and applies spacing */
+.settingsLeft > nav {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+/* Fallback for browsers without flex gap support */
+@supports not (gap: 1rem) {
+  .settingsLeft > nav .settingsNavBtn + .settingsNavBtn {
+    margin-top: 10px;
+  }
+}
+button:not(.btnSvg):not(.btnPrimary):not(.btnSecondary):not(.btnWSvg):hover,
 .settingsNavBtn:hover {
   background-color: #f5f5f5;
 }
@@ -807,7 +820,7 @@ body.modal-open main {
   flex-direction: column;
   gap: 16px;
   min-height: 0; /* allow child to shrink for overflow */
-  overflow: hidden; /* contain scroll within inner content */
+  overflow: hidden; /* right pane contains its own scrollable child */
 }
 
 .settingsHeader {
@@ -878,4 +891,53 @@ body.modal-open main {
 .mutedText {
   color: #6b7280;
   font-size: 12px;
+}
+
+/* ----- DASHBOARD GRID (Student/Admin) ----- */
+.dashboardGrid {
+  display: grid;
+  grid-template-columns: 2.5fr 1fr;
+  gap: 16px;
+  min-height: 0; /* allow inner scroll */
+  overflow: auto; /* enable scrolling inside the right pane */
+  padding-right: 4px; /* avoid scrollbar overlap on content */
+  scrollbar-width: none;
+}
+
+.dashboardGrid .col {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  min-height: 0;
+}
+
+@media (max-width: 960px) {
+  .dashboardGrid {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* Improve settingsLeft anchors look and spacing when using .settingsNavBtn on <a> */
+.settingsLeft .settingsNavBtn {
+  text-decoration: none;
+  color: #111827;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  padding: 12px 14px;
+  border-radius: 12px;
+  background: #ffffff;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease,
+    background-color 0.2s ease, transform 0.12s ease;
+}
+
+.settingsLeft .settingsNavBtn:hover {
+  background-color: #f5f5f5;
+}
+
+.settingsLeft .settingsNavBtn.active {
+  border-color: var(--CTA, #8c8cf9);
+  box-shadow: 0 0 0 4px rgba(140, 140, 249, 0.15);
+  background: #ffffff;
 }
