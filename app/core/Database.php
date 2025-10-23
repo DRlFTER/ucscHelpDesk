@@ -2,7 +2,7 @@
 
 class Database
 {
-	private static $instance = null; // mysqli instance
+	private static $instance = null;
 
 	public static function getInstance()
 	{
@@ -17,7 +17,6 @@ class Database
 			if ($mysqli->connect_error) {
 				die('Database connection failed: ' . $mysqli->connect_error);
 			}
-			// Set utf8mb4 for proper unicode support
 			$mysqli->set_charset('utf8mb4');
 			self::$instance = $mysqli;
 		}

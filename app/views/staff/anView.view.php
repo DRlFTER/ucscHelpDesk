@@ -1,7 +1,5 @@
 <?php
-// Expects $announcement, $files, $errors, $head, $title from controller
-// Optional: Check for success message from session (if your Controller has flash support)
-$success = ''; // Or: $_SESSION['success'] ?? ''; unset($_SESSION['success']);
+$success = '';
 ?>
 
 <main id="main-content" class="main-content">
@@ -37,7 +35,6 @@ $success = ''; // Or: $_SESSION['success'] ?? ''; unset($_SESSION['success']);
         <?php echo htmlspecialchars($announcement['content']); ?>
       </p>
 
-      <!-- File Section -->
       <div class="file-section">
         <h3>Attached Files</h3>
         <?php if (empty($files)): ?>
@@ -53,7 +50,6 @@ $success = ''; // Or: $_SESSION['success'] ?? ''; unset($_SESSION['success']);
         <?php endif; ?>
       </div>
 
-      <!-- Edit Section -->
       <div class="edit-section">
         <h3>Edit Announcement</h3>
         <?php if (!empty($errors)): ?>

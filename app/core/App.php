@@ -1,8 +1,8 @@
 <?php
 class App
 {
-    private $controller = 'Login';   // default controller
-    private $method = 'index';       // default method
+    private $controller = 'Login'; 
+    private $method = 'index'; 
 
     private function splitURL()
     {
@@ -25,13 +25,11 @@ class App
         $basePath = "../app/controllers/";
         $filename = $basePath . $controllerSegment . ".php";
 
-        /** Select Controller **/
         if (file_exists($filename)) {
             require $filename;
             $this->controller = $controllerSegment;
             unset($URL[0]);
         } else {
-            // Try nested folder: e.g., controllers/student/Student.php
             $nested = $basePath . strtolower($controllerSegment) . "/" . $controllerSegment . ".php";
             if (file_exists($nested)) {
                 require $nested;
@@ -46,7 +44,6 @@ class App
 
         $controller = new $this->controller;
 
-        /** Select Method **/
         if (!empty($URL[1])) {
             if (method_exists($controller, $URL[1])) {
                 $this->method = $URL[1];

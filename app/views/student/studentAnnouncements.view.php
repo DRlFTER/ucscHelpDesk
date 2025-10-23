@@ -1,5 +1,4 @@
 <?php
-// Student announcements view, mirrored from staff layout with student-specific links.
 ?>
 
 <main id="main-content" class="main-content">
@@ -7,11 +6,8 @@
 		<h2 class="page-title">Announcements</h2>
 		<p class="page-subtitle">Latest updates and notices</p>
 	</div>
-		<!-- Main Content Area -->
 		<div class="content-area">
-			<!-- Announcements Container -->
 			<div class="tickets-container" id="announcements-root" data-announcements='<?php echo json_encode($announcements ?? []); ?>'>
-				<!-- studentAnnouncements.js will render announcements here -->
 			</div>
 
 			<?php if (defined('DEBUG') && DEBUG && !empty($dbError)): ?>
@@ -24,12 +20,10 @@
 </main>
 
 <style>
-	/* Global Box Sizing to Prevent Layout Shifts */
 	* {
 		box-sizing: border-box;
 	}
 
-	/* Inline Status Colors for List Badges (overrides conflicts) */
 	.status-badge {
 		padding: 5px 10px;
 		border-radius: 17px;
@@ -45,7 +39,6 @@
 	.status-badge.status-agent-assigned { background-color: #badbff; color: #3300ff; }
 	.status-badge.status-agent-closed { background-color: #9effbc; color: #166434; }
 
-	/* Layout Styles - Optimized for Full Page Scrolling */
 	.layout-container {
 		display: flex;
 		gap: 0;
@@ -91,7 +84,6 @@
 		/* No overflow property - relies on body scroll for the whole page */
 	}
 
-	/* Ensure Full Page Scrolling */
 	html {
 		height: auto; /* Natural height */
 		overflow-x: hidden; /* No horizontal scroll */
@@ -155,7 +147,6 @@
 		flex-wrap: wrap;
 	}
 
-	/* Announcement Card Styles (if JS doesn't handle; fallback for static rendering) */
 	.announcement-card {
 		background: white;
 		border: 1px solid #e0e0e0;
@@ -204,7 +195,6 @@
 		background: #357abd;
 	}
 
-	/* Responsive - Stack on smaller screens to avoid issues */
 	@media (max-width: 992px) {
 		.layout-container {
 			flex-direction: column;
@@ -224,7 +214,6 @@
 </style>
 
 <script>
-// Fallback rendering if JS file fails to load
 document.addEventListener('DOMContentLoaded', function() {
 	const root = document.getElementById('announcements-root');
 	const announcementsData = JSON.parse(root.dataset.announcements || '[]');
@@ -256,6 +245,4 @@ document.addEventListener('DOMContentLoaded', function() {
 	root.innerHTML = html;
 });
 </script>
-
-<!-- Primary renderer -->
 <script src="/js/student/studentAnnouncements.js"></script>

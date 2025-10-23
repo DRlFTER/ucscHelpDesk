@@ -39,7 +39,7 @@
      .layout-container {
         display: flex;
         gap: 0;
-        min-height: 70vh; /* Adjust based on viewport */
+        min-height: 70vh;
     }
     .navMenu {
         flex: 0 0 250px;

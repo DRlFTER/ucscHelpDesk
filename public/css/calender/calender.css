@@ -4,7 +4,7 @@ main {
   justify-content: center;
   min-height: calc(
     100dvh - var(--navbar-height, 64px)
-  ); /* Fill the remaining viewport space after the navbar height */
+  );
 }
 body {
   font-family: "SF Pro", sans-serif;
@@ -13,7 +13,6 @@ body {
   color: #111827;
 }
 
-/* View Transition tuning for destination page */
 ::view-transition-old(root),
 ::view-transition-new(root) {
   animation-duration: 220ms;
@@ -35,14 +34,12 @@ body {
 }
 
 .todayDate h2:first-child {
-  /* Day number */
   font-size: 40px;
   line-height: 1;
   font-weight: 700;
 }
 
 .todayDate h2:last-child {
-  /* Weekday */
   font-size: 16px;
   color: #6b7280;
 }
@@ -117,7 +114,6 @@ body {
   font-size: 12px;
 }
 
-/* CTA button for special events like meetings in Today list */
 .todayEvents .ctaButton {
   margin-left: auto;
   border: none;
@@ -127,7 +123,7 @@ body {
   color: #fff;
   font-size: 12.5px;
   cursor: pointer;
-  text-decoration: none; /* remove underline for anchor variant */
+  text-decoration: none;
   display: inline-flex;
   align-items: center;
 }
@@ -143,7 +139,6 @@ body {
   border: 1px solid rgba(255, 255, 255, 0.1);
   background: rgba(255, 255, 255, 0.7);
   backdrop-filter: blur(20px);
-  /* Keep the add bar visible when scrolling long lists */
   position: sticky;
   bottom: 0;
   z-index: 1;
@@ -167,13 +162,11 @@ body {
   color: #9ca3af;
 }
 
-/* Make the left column scrollable while keeping overall layout consistent */
 .settingsLeft {
   gap: 12px;
   overflow: auto;
 }
 
-/* Calendar pane styles keep the right side consistent with admin cards */
 .calendarContainer {
   flex: 1;
   display: flex;

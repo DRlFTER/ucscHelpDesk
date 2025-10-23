@@ -34,7 +34,6 @@ class Student extends Controller
             $recent = [];
         }
 
-        // Load latest announcements (limit 2) for dashboard sidebar
         try {
             require_once __DIR__ . '/../../models/student/Announcement.php';
             $annModel = new StudentAnnouncement();
@@ -60,24 +59,18 @@ class Student extends Controller
         $this->requireLogin('student');
 
         if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-            // Basic validation and persistence
             $title = trim($_POST['title'] ?? '');
-            // category is now provided via hidden input populated from subcategory selection
             $category = trim($_POST['category'] ?? '');
             $when = trim($_POST['when'] ?? '');
             $details = trim($_POST['details'] ?? '');
-            // Priority defaults to 'Medium' when not provided
             $priority = trim($_POST['priority'] ?? 'Medium');
-
             $errors = [];
             if ($title === '') { $errors[] = 'Title is required.'; }
             if ($category === '') { $errors[] = 'Category is required.'; }
-            // optional: priority defaults to 'Medium' if not provided
             if ($details === '') { $errors[] = 'Details are required.'; }
 
             if (empty($errors)) {
                 try {
-                    // Load student ticket model from organized path
                     require_once __DIR__ . '/../../models/student/Ticket.php';
                     $ticketModel = new StudentTicket();
                     $meetingRequested = isset($_POST['meeting_requested']) && $_POST['meeting_requested'] ? 'Requested' : null;
@@ -90,10 +83,6 @@ class Student extends Controller
                         'description' => $details,
                         'meeting_requested' => $meetingRequested,
                     ]);
-
-                    // TODO: handle attachments in a follow-up
-
-                    // Show success popup then redirect via JS from view
                     $flash = ['type' => 'success', 'message' => 'Ticket submitted successfully. Redirecting to your dashboard...'];
                 } catch (Throwable $e) {
                     $flash = ['type' => 'error', 'message' => 'Ticket submission failed: ' . $e->getMessage()];
@@ -140,13 +129,11 @@ class Student extends Controller
     {
         $this->requireLogin('student');
 
-        // Load available templates created by staff
         $templates = [];
         try {
             require_once __DIR__ . '/../../models/staff/Template.php';
             $tplModel = new Template();
             $templates = $tplModel->getAll();
-            // Decode fields JSON for view consumption if needed
             foreach ($templates as &$tpl) {
                 if (isset($tpl['fields']) && is_string($tpl['fields'])) {
                     $decoded = json_decode($tpl['fields'], true);
@@ -164,7 +151,6 @@ class Student extends Controller
             'title' => 'Use Template',
             'head' => $headContent,
             'templates' => $templates,
-            // success/errors/generation handled by future POST flow
         ]);
     }
 
@@ -181,7 +167,6 @@ class Student extends Controller
         try {
             $model->deleteByIdForUser((int)$id, (int)($_SESSION['user']['u_id'] ?? 0));
         } catch (Throwable $e) {
-            // swallow error and redirect; could add flash messaging later
         }
         header('Location: /student/dashboard');
         exit;
@@ -205,18 +190,45 @@ class Student extends Controller
             $claimed = [];
         }
 
-        // Merge and sort all items by newest (q_id desc) for a single unified list
         $items = array_merge($found, $lost, $claimed);
         usort($items, function($a, $b){
             return (int)($b['q_id'] ?? 0) <=> (int)($a['q_id'] ?? 0);
         });
 
-        $headContent = '<link rel="stylesheet" href="/css/student/studentLostFound.css" />';
+        try {
+            $uIds = [];
+            foreach ($items as $row) {
+                if (!empty($row['u_id'])) { $uIds[] = (int)$row['u_id']; }
+            }
+            $uIds = array_values(array_unique(array_filter($uIds)));
+            if (!empty($uIds)) {
+                $db = Database::getInstance();
+                $in = implode(',', array_map('intval', $uIds));
+                $map = [];
+                if ($res = $db->query("SELECT u_id, name FROM users WHERE u_id IN ($in)")) {
+                    while ($r = $res->fetch_assoc()) {
+                        $map[(int)$r['u_id']] = (string)($r['name'] ?? '');
+                    }
+                    $res->free();
+                }
+                foreach ($items as &$row) {
+                    $uid = (int)($row['u_id'] ?? 0);
+                    if ($uid && isset($map[$uid])) {
+                        $row['owner_name'] = $map[$uid];
+                    }
+                }
+                unset($row);
+            }
+        } catch (Throwable $e) {
+        }
+
+    $headContent = '<link rel="stylesheet" href="/css/student/studentTickets.css" />' . "\n" .
+               '<link rel="stylesheet" href="/css/student/studentLostFound.css" />';
         $this->view('student/lostFound', [
             'title' => 'Lost & Found',
             'head' => $headContent,
             'items' => $items,
-            'lostItems' => $lost, // kept for compatibility if needed elsewhere in the view
+            'lostItems' => $lost,
             'foundItems' => $found,
             'claimedItems' => $claimed,
             'flash' => $_SESSION['lf_flash'] ?? null,
@@ -231,7 +243,6 @@ class Student extends Controller
         if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $title = trim($_POST['title'] ?? '');
             $category = trim($_POST['category'] ?? '');
-            // when replaced priority: read datetime-local input
             $when = trim($_POST['when'] ?? '');
             $details = trim($_POST['details'] ?? '');
             $contact_mobile = trim($_POST['contact_mobile'] ?? '');
@@ -333,7 +344,6 @@ class Student extends Controller
         ]);
     }
 
-    // Mark a Lost & Found entry as found (owner only)
     public function lostfound_markfound($id = null)
     {
         $this->requireLogin('student');

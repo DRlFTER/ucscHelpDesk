@@ -15,12 +15,7 @@ if ($conn->connect_error) {
     die("DB Connection failed: " . $conn->connect_error);
 }
 
-/* Get logged-in staff ID
-$staff_id = isset($_SESSION['staff_id']) ? (int)$_SESSION['staff_id'] : 0;
-if ($staff_id <= 0) {
-    die("You must be logged in to create a template.");
-}*/
-$staff_id = 1; // For testing purposes only. Remove this line in production.
+$staff_id = 1; 
 
 $errors = [];
 $success = "";

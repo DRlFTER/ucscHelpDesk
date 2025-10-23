@@ -1,23 +1,22 @@
 <?php
-// views/staff/staffAnnoucements.view.php (fixed layout for full page scrolling without internal scrolls)
 ?>
 <main id="main-content" class="main-content">
     <div class="page-header">
         <h2 class="page-title">Announcements</h2>
         <p class="page-subtitle">Latest updates and notices</p>
     </div>
-        <!-- Main Content Area -->
+
         <div class="content-area">
-            <!-- Create New Announcement Button -->
+
             <div class="ticket-action" style="width:250px; justify-content: center; align-items: center; display: flex; margin-left: auto; margin-right: auto; margin-top: 20px; margin-bottom: 20px;">
                 <button class="ticket-action-btn" onclick="window.location.href='/staff/staffAnnCreate';">
                     <span>Create New Announcement</span>
                 </button>
             </div>
 
-            <!-- Announcements Container -->
+
             <div class="tickets-container" id="announcements-root" data-announcements='<?php echo json_encode($announcements ?? []); ?>'>
-                <!-- announcements.js will render announcements here -->
+
             </div>
 
             <?php if (defined('DEBUG') && DEBUG && !empty($dbError)): ?>
@@ -45,12 +44,11 @@ if (isset($_SESSION['success'])) {
 ?>
 
 <style>
-    /* Global Box Sizing to Prevent Layout Shifts */
     * {
         box-sizing: border-box;
     }
 
-    /* Inline Status Colors for List Badges (overrides conflicts) */
+
     .status-badge {
         padding: 5px 10px;
         border-radius: 17px;

@@ -1,14 +1,10 @@
 <?php
-// views/staff/createKB.view.php (fixed button styling - no nested colors)
 ?>
 <main id="main-content" class="main-content">
     <div class="page-header">
         <h2 class="page-title">Add Knowledge Base Resource</h2>
         <p class="page-subtitle">Create a new guide, policy, or document for the Knowledge Base</p>
     </div>
-    
-   
-        <!-- Main Content Area -->
         <div class="content-area">
             <div class="tickets-container">
                 <article class="ticket-card">
@@ -80,7 +76,6 @@
 </main>
 
 <style>
-    /* Form Styles - Fixed Alignment & Widths */
     .kb-form {
         width: 100%;
     }
@@ -151,7 +146,6 @@
         font-size: 12px;
     }
 
-    /* Button Row Alignment - Fixed No Nested Colors */
     .ticket-action {
         display: flex;
         justify-content: flex-end;

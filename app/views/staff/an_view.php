@@ -1,5 +1,4 @@
 <?php
-// db.php - Database connection
 $host = "localhost";
 $user = "root";
 $pass = "";
@@ -11,14 +10,12 @@ if ($conn->connect_error) {
     die("DB Connection failed: " . $conn->connect_error);
 }
 
-// Get ticket_id from URL
 $ticket_id = isset($_GET['id']) ? intval($_GET['id']) : 0;
 
 if ($ticket_id === 0) {
     die("Invalid ticket ID.");
 }
 
-// Handle update submission
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['update_ticket'])) {
     $new_topic = trim($_POST['topic'] ?? '');
     $new_content = trim($_POST['content'] ?? '');
@@ -42,13 +39,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['update_ticket'])) {
         $stmt->execute();
         $stmt->close();
 
-        // Redirect to refresh the page with updated data
   header("Location: /staff/announcements?ticket_id=$ticket_id");
         exit;
     }
 }
 
-// Handle delete action
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['delete_ticket'])) {
     $sql = "DELETE FROM announcement WHERE id = ?";
     $stmt = $conn->prepare($sql);
@@ -56,12 +51,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['delete_ticket'])) {
     $stmt->execute();
     $stmt->close();
 
-    // Redirect to a list page or home page after deletion
-  header("Location: /staff/announcements"); // Adjust to your list page URL
+  header("Location: /staff/announcements");
     exit;
 }
 
-// Fetch ticket details
 $sql = "SELECT id, topic, content, date_time, u.name AS staff_name, d.name AS division_name
         FROM announcement a
         JOIN users u ON a.u_id = u.u_id
@@ -79,7 +72,6 @@ if (!$ticket) {
     die("Ticket not found.");
 }
 
-// Fetch attached files
 $sql = "SELECT file_name, file_path, file_type, file_size FROM announcement_files WHERE announcement_id = ?";
 $stmt = $conn->prepare($sql);
 $stmt->bind_param("i", $ticket_id);
@@ -143,7 +135,6 @@ include_once("./staff_nabar.html");
         <?php echo htmlspecialchars($ticket['content']); ?>
       </p>
 
-      <!-- File Section -->
       <div class="file-section">
         <h3>Attached Files</h3>
         <?php if (empty($files)): ?>
@@ -159,7 +150,6 @@ include_once("./staff_nabar.html");
         <?php endif; ?>
       </div>
 
-      <!-- Edit Section -->
       <div class="edit-section">
         <h3>Edit Announcement</h3>
         <?php if (!empty($errors)): ?>

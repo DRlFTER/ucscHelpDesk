@@ -6,11 +6,9 @@
 		</div>
 
 		<div class="ticketGrid">
-			<!-- Ticket form -->
 			<section class="ticketCard">
 				<form id="ticketForm" action="#" method="POST" enctype="multipart/form-data">
 
-					<!-- Ticket type toggle -->
 					<div class="field">
 						<label class="label">Ticket Type</label>
 						<div class="ticketToggle" role="group" aria-label="Ticket type">
@@ -26,13 +24,11 @@
 						<input type="hidden" name="ticketType" id="ticketType" value="private">
 					</div>
 
-					<!-- Title -->
 					<div class="field">
 						<label class="label" for="title">Title/Subject</label>
 						<input id="title" name="title" type="text" placeholder="Briefly describe your issue..." required>
 					</div>
 
-					<!-- Category + Priority -->
 					<div class="row2">
 						<div class="field">
 							<label class="label" for="category">Category</label>
@@ -56,13 +52,11 @@
 						</div>
 					</div>
 
-					<!-- Issue details -->
 					<div class="field">
 						<label class="label" for="details">Issue Details</label>
 						<textarea id="details" name="details" rows="6" placeholder="Describe your issue in detail. Include any error messages, steps to reproduce, or relevant information." required></textarea>
 					</div>
 
-					<!-- Attachments -->
 					<div class="field">
 						<label class="label">Attachments</label>
 						<div id="dropzone" class="dropzone">
@@ -84,7 +78,6 @@
 				</form>
 			</section>
 
-			<!-- Right: Sidebar -->
 			<aside class="sidebar">
 				<section class="sideCard">
 					<h3>Tips for Better Support</h3>

@@ -1,5 +1,4 @@
 <?php
-	// Page metadata and CSS include for student forum full view
 	$title = 'Forum Post';
 	$head = '<link rel="stylesheet" href="/css/student/studentForumFull.css">';
 ?>

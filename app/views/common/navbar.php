@@ -131,7 +131,6 @@
            <p class="role"><?= htmlspecialchars($displayRole) ?></p>
            <?php endif; ?>
           </div>
-         <a href="#">My Account</a>
          <a href="#">Help / FAQ</a>
          <a href="/settings">Settings</a>
 

@@ -7,10 +7,8 @@ class Controller
     {
         extract($data);
 
-        // Base views directory
         $baseDir = __DIR__ . "/../views/";
 
-        // Resolve the view path (supports explicit subpaths and fallback recursive lookup)
         $viewPath = $this->resolveViewPath($baseDir, $view);
         if (!$viewPath || !file_exists($viewPath)) {
             $pretty = rtrim(str_replace(['.', '\\'], '/', $view), '/');
@@ -24,27 +22,17 @@ class Controller
         require($baseDir . "layouts/main.php");
     }
 
-    /**
-     * Resolve a view file path.
-     * - Accepts explicit subpaths like "admin/adminDashboard" or "admin.adminDashboard".
-     * - If only a bare name is provided (e.g., "adminDashboard"), searches recursively
-     *   under the views directory for a matching "<name>.view.php" and returns the first match.
-     */
     private function resolveViewPath(string $baseDir, string $view): ?string
     {
-        // Normalize incoming view spec
         $normalized = trim(str_replace(['.', '\\'], '/', $view), '/');
 
-        // 1) Try explicit/relative path first
         $candidate = $baseDir . $normalized . '.view.php';
         if (file_exists($candidate)) {
             return $candidate;
         }
 
-        // 2) Fallback: search by filename anywhere under views
         $target = basename($normalized) . '.view.php';
 
-        // Use SPL iterators for a lightweight recursive search
         if (class_exists('RecursiveDirectoryIterator')) {
             $flags = \FilesystemIterator::SKIP_DOTS;
             $dirIter = new \RecursiveDirectoryIterator($baseDir, $flags);
@@ -78,7 +66,6 @@ class Controller
         exit();
      }
 
-    // if role mismatch
      if (strtolower($_SESSION['user']['role'] ?? '') !== strtolower($role)) {
         header("Location: " . ROOT . "login?denied=$role");
         exit();

@@ -155,7 +155,6 @@
 </div>
 
 <script>
-  // Minimal UI wiring for opening/closing the schedule meeting modal
   (function () {
     const openBtn = document.getElementById('scheduleBtn');
     const modal = document.getElementById('scheduleModal');
@@ -168,14 +167,12 @@
       modal.classList.add('open');
       modal.setAttribute('aria-hidden', 'false');
       document.body.classList.add('modal-open');
-      // Focus a safe control (avoid auto-opening date/time picker on some browsers)
       if (cancelBtn) cancelBtn.focus();
     };
     const close = () => {
       modal.classList.remove('open');
       modal.setAttribute('aria-hidden', 'true');
       document.body.classList.remove('modal-open');
-      // return focus to the trigger for accessibility
       if (openBtn) openBtn.focus();
     };
 

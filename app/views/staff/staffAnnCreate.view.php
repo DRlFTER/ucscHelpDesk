@@ -1,5 +1,4 @@
 <?php
-// Expects $divisions, $staff_id, $errors, $success from controller
 ?>
 
 <main id="main-content" class="main-content">

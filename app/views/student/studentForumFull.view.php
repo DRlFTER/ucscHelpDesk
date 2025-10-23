@@ -1,5 +1,4 @@
 <?php
-	// Page metadata and CSS include for student forum full view
 	$title = 'Forum Post';
 	$head = '<link rel="stylesheet" href="/css/student/studentForumFull.css">';
 ?>
@@ -12,7 +11,6 @@
 		</div>
 
 		<div class="ticketLayout">
-			<!-- Left content -->
 			<section class="ticketLeft">
 				<div class="card ticketSummary">
 					<div class="ticketHeader">
@@ -61,7 +59,6 @@
 					</div>
 				</section>
 
-			<!-- Right sidebar -->
 			<aside class="ticketRight">
 				<div class="card ticketInfo">
 					<h3 class="sectionTitle">Post information</h3>
@@ -98,7 +95,6 @@
 	</div>
 </main>
 
-<!-- Delete confirmation modal -->
 <div id="deleteModal" class="modalOverlay" aria-hidden="true">
 	<div class="msgHolder">
 		<div class="msgContainer" role="dialog" aria-modal="true" aria-labelledby="deleteModalTitle">
@@ -112,7 +108,6 @@
 			</div>
 		</div>
 	</div>
-	<!-- clicking outside container closes modal via JS -->
 	<button type="button" class="modalBackdropClose" aria-label="Close"></button>
   
 </div>

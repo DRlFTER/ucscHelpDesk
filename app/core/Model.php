@@ -2,7 +2,7 @@
 
 abstract class Model
 {
-	protected $db; // mysqli
+	protected $db;
 
 	public function __construct()
 	{

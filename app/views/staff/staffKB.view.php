@@ -10,7 +10,6 @@
   <p class="pageSubtitle">Access detailed guides, policies, and technical documentation.</p>
     </div>
 
-    <!-- Filters row copied to match studentTickets page structure -->
     <div class="ticketsFilters kbFiltersRow">
       <div class="search">
         <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 22 21" fill="none">

@@ -1,5 +1,4 @@
 <?php
-// Student FAQ page. Static content for now; JS provides search/filter UX.
 ?>
 
 <main id="main-content" class="faq-main">

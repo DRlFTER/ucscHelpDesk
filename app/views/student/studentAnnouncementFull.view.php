@@ -1,5 +1,4 @@
 <?php
-// Expects $announcement, $files, $head, $title from controller
 ?>
 
 <main id="main-content" class="main-content">
@@ -35,7 +34,6 @@
         <?php echo nl2br(htmlspecialchars($announcement['content'])); ?>
       </p>
 
-      <!-- File Section -->
       <div class="file-section">
         <h3>Attached Files</h3>
         <?php if (empty($files)): ?>

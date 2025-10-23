@@ -1,18 +1,14 @@
 <?php
-// views/staff/staffFAQ.view.php (original FAQ content with staff layout and create button)
 ?>
 <main id="main-content" class="main-content">
    
-    <!-- Main Content Area -->
         <div class="content-area">
-            <!-- Create FAQ Button -->
             <div class="ticket-action" style="width:250px; justify-content: center; align-items: center; display: flex; margin-left: auto; margin-right: auto; margin-top: 20px; margin-bottom: 20px;">
                 <button class="ticket-action-btn" onclick="window.location.href='/staff/createFAQ';">
                     <span>Create New FAQ</span>
                 </button>
             </div>
 
-            <!-- Original FAQ Content -->
             <main id="main-content" class="faq-main">
                 <div class="faq-header">
                     <h1 class="faq-title">Frequently Asked Questions</h1>
@@ -96,11 +92,10 @@
 
 <style>
 
-    /* Layout Styles */
     .layout-container {
         display: flex;
         gap: 0;
-        min-height: 70vh; /* Adjust based on viewport */
+        min-height: 70vh;
     }
     .navMenu {
         flex: 0 0 250px;

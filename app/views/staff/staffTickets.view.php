@@ -1,5 +1,4 @@
 <?php
-// views/staff/staffTickets.view.php (updated with better structure)
 ?>
 <main id="main-content" class="main-content">
     <div class="page-header">
@@ -7,8 +6,6 @@
       <p class="page-subtitle">Manage and respond to your assigned student issues</p>
     </div>
     
-    <!-- Layout Container for Sidebar and Content -->
-      <!-- Main Content Area -->
       <div class="content-area">
         <?php if (!empty($error)): ?>
           <div class="error-alert" style="margin:10px 0 20px; padding:12px 14px; border:1px solid #ef4444; background:#fee2e2; color:#991b1b; border-radius:8px;">
@@ -46,7 +43,7 @@
 </main>
 
 <style>
-    /* Inline Status Colors for List Badges (overrides conflicts) */
+
     .status-badge {
         padding: 5px 10px;
         border-radius: 17px;
