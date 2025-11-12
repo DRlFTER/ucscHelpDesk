@@ -146,7 +146,6 @@
     </div>
   </nav>
 </header>
-
 <script>
 document.addEventListener('DOMContentLoaded', function () {
   const profile = document.querySelector('.profile');
