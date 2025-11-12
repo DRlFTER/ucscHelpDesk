@@ -89,7 +89,7 @@ class StaffTicket
         FROM tickets t
         INNER JOIN users u ON t.u_id = u.u_id
         LEFT JOIN division d ON d.did = t.division
-        WHERE t.division IN ($placeholders) 
+        WHERE t.division IN ($placeholders) OR t.assigned_to = $staff_id
         ORDER BY t.created_at DESC";
 
         $stmt = $conn->prepare($sql);
@@ -111,12 +111,36 @@ class StaffTicket
         $conn->close();
         return $tickets;
     }
+    public function getticketassignedstaffname(int $ticket_id): ?string
+    {
+        $conn = self::getConnection();
+        $sql = "SELECT u.name AS staff_name
+                FROM tickets t
+                INNER JOIN users u ON t.assigned_to = u.u_id
+                WHERE t.ticket_id = ?
+                LIMIT 1";
+        $stmt = $conn->prepare($sql);
+        if (!$stmt) {
+            $err = $conn->error;
+            $conn->close();
+            throw new Exception('Prepare failed: ' . $err);
+        }
+        $stmt->bind_param('i', $ticket_id);
+        $stmt->execute();
+        $result = $stmt->get_result();
+        $row = $result->fetch_assoc();
+        $stmt->close();
+        $conn->close();
+        return $row['staff_name'] ?? null;
+    }
+
 
     public function getTicketById(int $ticket_id): ?array
     {
         $conn = self::getConnection();
+        $staff_name = $this->getticketassignedstaffname($ticket_id);
         $current_staff = (int)($_SESSION['user']['u_id'] ?? 0);
-                        $sql = "SELECT t.ticket_id, t.created_at, t.title, u.name AS student_name, d.name AS category, t.status, t.priority, t.meeting_requested, t.description, t.assigned_to
+                        $sql = "SELECT t.ticket_id, t.created_at, t.title, u.name AS student_name, d.name AS category, t.status, t.priority, t.meeting_requested, t.description, t.assigned_to , '$staff_name' AS staff_name
                                 FROM tickets t
                                 INNER JOIN users u ON t.u_id = u.u_id
                                 LEFT JOIN division d ON d.did = t.division
@@ -137,6 +161,7 @@ class StaffTicket
         $conn->close();
         return $ticket;
     }
+    
 
     // Backwards compatible method name used elsewhere in the code base
     public function getById(int $ticket_id): ?array
@@ -144,6 +169,7 @@ class StaffTicket
         return $this->getTicketById($ticket_id);
     }
 
+    
    /**
  * Assign ticket to staff (update status to 'agent assigned' and assigned_to).
  */
