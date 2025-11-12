@@ -11,17 +11,19 @@ document.addEventListener("DOMContentLoaded", () => {
     return;
   }
 
-  // Map over tickets and create HTML for each
-  container.innerHTML = tickets.map(ticket => {
-    // Default status to "pending" if null or undefined, and ensure it's a string
-    const status = ticket.status || "pending";
-    const displayStatus = typeof status === "string" ? status.charAt(0).toUpperCase() + status.slice(1) : "Pending";
-    const priority = ticket.priority || "medium"; // Default priority if null
+  function renderTickets(list) {
+    if (!Array.isArray(list) || list.length === 0) {
+      container.innerHTML = `<p style="color:#6b7280;">No tickets found for your division(s).</p>`;
+      return;
+    }
 
-    // Normalize status for CSS class (replace spaces with hyphens, lowercase)
-    const statusClass = status.toLowerCase().replace(/\s+/g, '-');
+    container.innerHTML = list.map(ticket => {
+      const status = ticket.status || "pending";
+      const displayStatus = typeof status === "string" ? status.charAt(0).toUpperCase() + status.slice(1) : "Pending";
+      const priority = ticket.priority || "medium";
+      const statusClass = status.toLowerCase().replace(/\s+/g, '-');
 
-    return `
+      return `
       <article class="ticket-card">
         <div class="ticket-header">
           <div class="ticket-title-group">
@@ -60,7 +62,47 @@ document.addEventListener("DOMContentLoaded", () => {
         </div>
       </article>
     `;
-  }).join("");
+    }).join("");
+  }
+
+  // Initial render
+  renderTickets(tickets);
+
+  // Wire up status filter
+  const statusSelect = document.getElementById('status-filter');
+  if (statusSelect) {
+    statusSelect.addEventListener('change', () => {
+      const sel = statusSelect.value || '';
+      const normSel = sel.toString().toLowerCase().trim().replace(/\s+/g, '-');
+      if (!normSel) {
+        renderTickets(tickets);
+        return;
+      }
+      const filtered = tickets.filter(t => {
+        const st = (t.status || 'pending').toString().toLowerCase().trim().replace(/\s+/g, '-');
+        return st === normSel;
+      });
+      renderTickets(filtered);
+    });
+  }
+
+  const searchInput = document.getElementById('faq-search');
+  if (searchInput) {
+    searchInput.addEventListener('input', (e) => {
+      const searchInput = e.target.value.toLowerCase().trim()
+      if(!searchInput){
+        currentTickets = [...tickets];
+        renderTickets(currentTickets);  
+        return;
+      }
+      const filtered = tickets.filter(t => {
+        const title = (t.title || '').toLowerCase().trim();
+        return title.includes(searchInput);
+      });
+      currentTickets = filtered;
+      renderTickets(currentTickets);
+    });
+  }
 
   // Debug: Log tickets to console
   console.log("Tickets:", tickets);
