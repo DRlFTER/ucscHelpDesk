@@ -64,6 +64,7 @@ class Student extends Controller
             $when = trim($_POST['when'] ?? '');
             $details = trim($_POST['details'] ?? '');
             $priority = trim($_POST['priority'] ?? 'Medium');
+            $t_type = trim($_POST['type'] ?? 'private');
             $errors = [];
             if ($title === '') { $errors[] = 'Title is required.'; }
             if ($category === '') { $errors[] = 'Category is required.'; }
@@ -82,6 +83,7 @@ class Student extends Controller
                         'status' => 'pending',
                         'description' => $details,
                         'meeting_requested' => $meetingRequested,
+                        'type' => $t_type,
                     ]);
                     $flash = ['type' => 'success', 'message' => 'Ticket submitted successfully. Redirecting to your dashboard...'];
                 } catch (Throwable $e) {
@@ -125,34 +127,148 @@ class Student extends Controller
         ]);
     }
 
-    public function templates()
-    {
-        $this->requireLogin('student');
+   // Updated templates() method in controllers/student.php
+// Replace the existing templates() method with this:
 
+public function templates()
+{
+    $this->requireLogin('student');
+
+    $templates = [];
+    $errors = [];
+    $success = '';
+
+    require_once __DIR__ . '/../../models/staff/Template.php';
+    require_once __DIR__ . '/../../models/student/Ticket.php';
+    $tplModel = new Template();
+    $ticketModel = new StudentTicket();
+
+    try {
+        $allTemplates = $tplModel->getAll();
+        foreach ($allTemplates as &$tpl) {
+            if (isset($tpl['fields']) && is_string($tpl['fields'])) {
+                $decoded = json_decode($tpl['fields'], true);
+                $tpl['fields'] = is_array($decoded) ? $decoded : [];
+            }
+        }
+        $templates = $allTemplates;
+        unset($tpl);
+    } catch (Throwable $e) {
+        error_log('Failed to load templates: ' . $e->getMessage());
         $templates = [];
-        try {
-            require_once __DIR__ . '/../../models/staff/Template.php';
-            $tplModel = new Template();
-            $templates = $tplModel->getAll();
-            foreach ($templates as &$tpl) {
-                if (isset($tpl['fields']) && is_string($tpl['fields'])) {
-                    $decoded = json_decode($tpl['fields'], true);
-                    $tpl['fields'] = is_array($decoded) ? $decoded : [];
+    }
+
+    if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['template_id'])) {
+        $template_id = (int)$_POST['template_id'];
+        $u_id = (int)($_SESSION['user']['u_id'] ?? 0);
+
+        if (!$u_id || !$template_id) {
+            $errors[] = 'Invalid submission.';
+        } else {
+            // Fetch specific template for validation and data
+            $template = null;
+            try {
+                $template = $tplModel->getById($template_id);
+                if ($template && isset($template['fields']) && is_string($template['fields'])) {
+                    $decoded = json_decode($template['fields'], true);
+                    $template['fields'] = is_array($decoded) ? $decoded : [];
+                }
+            } catch (Throwable $e) {
+                error_log('Failed to load template: ' . $e->getMessage());
+                $template = null;
+            }
+
+            if (!$template || empty($template['fields'])) {
+                $errors[] = 'Invalid template selected.';
+            } else {
+                // Validate required fields
+                $field_values = [];
+                foreach ($template['fields'] as $field) {
+                    $value = trim($_POST[$field] ?? '');
+                    if (empty($value)) {
+                        $errors[] = ucfirst(str_replace('_', ' ', $field)) . ' is required.';
+                    }
+                    $field_values[$field] = $value;
+                }
+
+                // Handle file upload (optional)
+                $file_path = null;
+                $upload_dir = __DIR__ . '/../../../uploads/tickets/';
+                if (!is_dir($upload_dir)) {
+                    mkdir($upload_dir, 0777, true);
+                }
+                $allowed_types = ['pdf', 'jpg', 'jpeg', 'png', 'doc', 'docx'];
+                $max_size = 5 * 1024 * 1024; // 5MB
+
+                $file = $_FILES['file'] ?? null;
+                if ($file && $file['error'] === UPLOAD_ERR_OK) {
+                    $ext = strtolower(pathinfo($file['name'], PATHINFO_EXTENSION));
+                    if (!in_array($ext, $allowed_types)) {
+                        $errors[] = 'Invalid file type. Allowed: PDF, JPG, JPEG, PNG, DOC, DOCX.';
+                    } elseif ($file['size'] > $max_size) {
+                        $errors[] = 'File size exceeds 5MB limit.';
+                    } else {
+                        $filename = uniqid() . '.' . $ext;
+                        $full_path = $upload_dir . $filename;
+                        if (move_uploaded_file($file['tmp_name'], $full_path)) {
+                            $file_path = '/uploads/tickets/' . $filename;
+                        } else {
+                            $errors[] = 'Failed to upload file.';
+                        }
+                    }
+                } elseif ($file && $file['error'] !== UPLOAD_ERR_NO_FILE) {
+                    $errors[] = 'File upload error: ' . $file['error'];
+                }
+                if (empty($errors)) {
+                    // Build numbered description from fields
+                    $description = '';
+                    $counter = 1;
+                    foreach ($field_values as $field => $value) {
+                        $label = ucfirst(str_replace('_', ' ', $field));
+                        $description .= '['.$counter .']'. '. ' . $label . ': ' . $value . "\n";
+                        $counter++;
+                    }
+
+                    // Prepare ticket data
+                    $data = [
+                        'title' => $template['name'],
+                        'u_id' => $u_id,
+                        'category' => $template['category'], // Division name for mapping
+                        'priority' => 'Medium', // Default
+                        'status' => 'pending',
+                        'description' => $description,
+                        'meeting_requested' => null, // No request in template
+                        'type' => 'template',
+                    ];
+
+                    try {
+                        $ticket_id = $ticketModel->create($data);
+
+                        // Add file if uploaded
+                        if ($file_path) {
+                            $ticketModel->addFile($ticket_id, $file_path, $_FILES['file']['name']);
+                        }
+
+                        $success = 'Ticket submitted successfully using template "' . htmlspecialchars($template['name']) . '". Ticket ID: TKT-' . str_pad($ticket_id, 4, '0', STR_PAD_LEFT);
+                    } catch (Throwable $e) {
+                        error_log('Failed to create ticket from template: ' . $e->getMessage());
+                        $errors[] = 'Failed to submit ticket: ' . $e->getMessage();
+                    }
                 }
             }
-            unset($tpl);
-        } catch (Throwable $e) {
-            $templates = [];
         }
-
-        $headContent = '<link rel="stylesheet" href="/css/student/studentTemplate.view.css" />';
-
-        $this->view('studentTemplate', [
-            'title' => 'Use Template',
-            'head' => $headContent,
-            'templates' => $templates,
-        ]);
     }
+
+    $headContent = '<link rel="stylesheet" href="/css/student/studentTemplate.view.css" />';
+
+    $this->view('studentTemplate', [
+        'title' => 'Use Template',
+        'head' => $headContent,
+        'templates' => $templates,
+        'errors' => $errors,
+        'success' => $success,
+    ]);
+}
 
     public function delete($id = null)
     {

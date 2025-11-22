@@ -140,7 +140,7 @@ class StaffTicket
         $conn = self::getConnection();
         $staff_name = $this->getticketassignedstaffname($ticket_id);
         $current_staff = (int)($_SESSION['user']['u_id'] ?? 0);
-                        $sql = "SELECT t.ticket_id, t.created_at, t.title, u.name AS student_name, d.name AS category, t.status, t.priority, t.meeting_requested, t.description, t.assigned_to , '$staff_name' AS staff_name
+                        $sql = "SELECT t.ticket_id, t.created_at, t.title, u.name AS student_name, d.name AS category, t.status, t.priority, t.meeting_requested, t.description, t.assigned_to , '$staff_name' AS staff_name,t.t_type
                                 FROM tickets t
                                 INNER JOIN users u ON t.u_id = u.u_id
                                 LEFT JOIN division d ON d.did = t.division

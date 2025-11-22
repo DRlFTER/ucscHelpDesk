@@ -505,6 +505,10 @@
       <div class="ticket-body">
         <div class="details-group">
           <div class="detail-item">
+            <span class="detail-label">Ticket type</span>
+            <span class="detail-value-box"><?php echo htmlspecialchars($ticket['t_type']); ?></span>
+          </div>
+          <div class="detail-item">
             <span class="detail-label">Student Name</span>
             <span class="detail-value-box"><?php echo htmlspecialchars($ticket['student_name']); ?></span>
           </div>
