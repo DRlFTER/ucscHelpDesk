@@ -986,12 +986,45 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
      public function staffKB()
     {
         $this->requireLogin('staff');
+
+        require_once __DIR__ . '/../../models/staff/KB.php';
+        $kbModel = new KB();
+        $kb_data = [];
+        try {
+            $flat_articles = $kbModel->getAllArticles();
+        
+        $grouped = [];   
+        foreach($flat_articles as $article){
+            $section = $article['section'] ?? 'Uncategorized';
+            if(!isset($grouped[$section])){
+                $grouped[$section] = [
+                    'section' => $section,
+                    'items' => []
+                ];
+            }
+
+            $updated_pretty = date('F Y', strtotime($article['updated']));
+            $grouped[$section]['items'][] = [
+                'id' => $article['base_id'],
+                'title' => $article['topic'],
+                'description' => $article['description'],
+                'updated' => $updated_pretty,
+            ];
+        }
+        $kb_data = array_values($grouped);
+    }catch (Throwable $e) {
+            error_log('KB load failed: ' . $e->getMessage());
+            $kb_data = [];
+        }
+
         $headContent = '<link rel="stylesheet" href="/css/staff/staffKB.css" />';
         $this->view('staff/staffKB', [
             'title' => 'Knowledge Base',
             'head' => $headContent,
+            'kb_data' => $kb_data,
         ]);
     }
+
     public function createKB() {
     $this->requireLogin('staff');
     $staff_id = (int)($_SESSION['user']['u_id'] ?? 0);
