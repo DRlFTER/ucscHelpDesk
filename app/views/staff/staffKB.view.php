@@ -1,8 +1,3 @@
-<?php
-  $title = 'Knowledge Base';
-  $head = '<link rel="stylesheet" href="/css/student/studentKnowledgeBase.css">';
-?>
-
 <main>
   <div class="fullPage kbPage">
     <div class="pageHeader">
@@ -71,5 +66,7 @@
   padding: 0;
 }
     </style>
-
-<script src="/js/staff/staffKB.js"></script>
+<script>
+  const KB_DATA = <?php echo json_encode($kb_data ?? []); ?>;
+</script>
+<script src="/js/staff/staffKB.js" defer></script>
