@@ -1009,6 +1009,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                 'title' => $article['topic'],
                 'description' => $article['description'],
                 'updated' => $updated_pretty,
+                'type'=> $article['type'],
             ];
         }
         $kb_data = array_values($grouped);
@@ -1033,14 +1034,14 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     $post_data = $_POST ?? [];
 
     if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-        $title = trim($_POST['title'] ?? '');
-        $category = trim($_POST['category'] ?? '');
+        $topic = trim($_POST['topic'] ?? '');
+        $section = trim($_POST['section'] ?? '');
         $description = trim($_POST['description'] ?? '');
-        $tags = trim($_POST['tags'] ?? '');
+        $type = trim($_POST['type'] ?? '');
         $file = $_FILES['resource_file'] ?? null;
 
-        if (empty($title)) $errors[] = "Title is required.";
-        if (strlen($title) > 200) $errors[] = "Title must be 200 characters or less.";
+        if (empty($topic)) $errors[] = "Topic is required.";
+        if (strlen($topic) > 200) $errors[] = "Topic must be 200 characters or less.";
         if (empty($description)) $errors[] = "Description is required.";
         if (strlen($description) > 5000) $errors[] = "Description must be 5000 characters or less.";
 
@@ -1057,10 +1058,10 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             require_once __DIR__ . '/../../models/staff/KB.php';
             $model = new KB();
             $ok = $model->create([
-                'title' => $title,
-                'category' => $category,
+                'topic' => $topic,
+                'section' => $section,
                 'description' => $description,
-                'tags' => $tags,
+                'type' => $type,
                 'file_path' => $file ? $file['tmp_name'] : null, // Handle upload in model
                 'created_by' => $staff_id
             ]);
@@ -1074,17 +1075,129 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         }
     }
 
-    $headContent = '<link rel="stylesheet" href="/css/staff/staffTickets.css?v=' . time() . '"/>';
                      
 
     $this->view('staff/createKB', [
         'title' => 'Add Knowledge Base Resource',
-        'head' => $headContent,
         'errors' => $errors,
         'success' => $success,
         'post_data' => $post_data,
         'staff_id' => $staff_id,
     ]);
+}
+public function updateKB($id = null) {
+    $this->requireLogin('staff');
+    require_once __DIR__ . '/../../models/staff/KB.php';
+    $kbModel = new KB();
+    $errors = [];
+    $success = '';
+
+    if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+        // Handle Delete
+        if (isset($_POST['delete_ticket'])) {
+            if ($kbModel->deleteArticle($id)) {
+                $_SESSION['flash_success'] = 'Resource deleted successfully.';  // Flash message
+                header('Location: /staff/staffKB');  // Redirect to list
+                exit;
+            } else {
+                $errors[] = 'Delete failed (check DB permissions).';
+            }
+        } 
+        // Handle Update (existing logic)
+        else if (isset($_POST['title'])) {
+            // Validate (add more as needed)
+            if (empty($_POST['title']) || empty($_POST['section']) || empty($_POST['type'])) {
+                $errors[] = 'All fields required.';
+            } else {
+                $updateData = [
+                    'topic' => trim($_POST['title']),
+                    'description' => trim($_POST['description']),
+                    'section' => $_POST['section'],
+                    'type' => $_POST['type']
+                ];
+                if ($kbModel->updateArticle($id, $updateData)) {
+                    $success = 'Resource updated successfully.';
+                    // Handle file upload if present (similar to create)
+                    if (isset($_FILES['resource_file']) && $_FILES['resource_file']['error'] === 0) {
+                        // Upload logic: Move to dir, insert to knowledgebase_files
+                        // e.g., $uploadPath = '/uploads/kb/' . time() . '_' . $_FILES['resource_file']['name'];
+                        // move_uploaded_file($_FILES['resource_file']['tmp_name'], $uploadPath);
+                        // Then: Insert to files table with base_id = $id
+                    }
+                    // Redirect back to KB list
+                    header('Location: /staff/staffKB');
+                    exit;
+                } else {
+                    $errors[] = 'Update failed.';
+                }
+            }
+        }
+        // Repopulate form on error
+        $post_data = $_POST;
+    } else {
+        // GET: Fetch existing data
+        $article = $kbModel->getArticleById($id);
+        if (!$article) {
+            $errors[] = 'Resource not found.';
+            $this->view('staff/staffKB', ['title' => 'KB Not Found', 'errors' => $errors]);  // Or 404
+            return;
+        }
+        $post_data = [
+            'title' => $article['topic'],
+            'description' => $article['description'],
+            'section' => $article['section'],
+            'type' => $article['type']
+        ];
+    }
+
+    $this->view('staff/updateKB', [
+        'title' => 'Update KB Resource',
+        'post_data' => $post_data ?? [],
+        'errors' => $errors,
+        'success' => $success,
+        'staff_id' => $_SESSION['user_id'] ?? '',  // For meta
+        'kb_id' => $id  // Pass ID for form
+    ]);
+}
+
+public function deleteKB($id = null) {
+    $this->requireLogin('staff');
+    if (!$id || !is_numeric($id)) {
+        http_response_code(400);
+        echo json_encode(['error' => 'Invalid ID']);
+        return;
+    }
+
+    require_once __DIR__ . '/../../models/staff/KB.php';
+    $kbModel = new KB();
+
+    // Handle as POST (JS fetch sends DELETE, but PHP sees POST; check _method if using spoofing)
+    if ($_SERVER['REQUEST_METHOD'] === 'POST' || $_SERVER['REQUEST_METHOD'] === 'DELETE') {
+        if ($kbModel->deleteArticle($id)) {
+            http_response_code(200);
+            echo json_encode(['success' => true, 'message' => 'Deleted successfully']);
+        } else {
+            http_response_code(500);
+            echo json_encode(['error' => 'Delete failed (check DB permissions)']);
+        }
+    } else {
+        http_response_code(405);
+        echo json_encode(['error' => 'Method not allowed']);
+    }
+}
+
+public function downloadKB($id) {
+    $this->requireLogin('staff');
+    require_once __DIR__ . '/../../models/staff/KB.php';
+    $kbModel = new KB();
+    $files = $kbModel->getFilesByArticle($id);
+    if (!empty($files)) {
+        $file = $files[0];  // First file
+        // Serve file: header('Content-Type: application/pdf'); readfile($file['file_path']); etc.
+        // Or redirect: header('Location: ' . $file['file_path']);
+    } else {
+        http_response_code(404);
+    }
 }
 
 }
