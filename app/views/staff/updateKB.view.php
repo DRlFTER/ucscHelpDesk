@@ -2,17 +2,17 @@
 ?>
 <main id="main-content" class="main-content">
     <div class="page-header">
-        <h2 class="page-title">Add Knowledge Base Resource</h2>
-        <p class="page-subtitle">Create a new guide, policy, or document for the Knowledge Base</p>
+        <h2 class="page-title">Update Knowledge Base Resource</h2>
+        <p class="page-subtitle">Edit the selected guide, policy, or document</p>
     </div>
     <div class="content-area">
         <div class="tickets-container">
             <article class="ticket-card">
                 <div class="ticket-header">
                     <div class="ticket-title-group">
-                        <h3 class="ticket-title">New Resource</h3>
+                        <h3 class="ticket-title">Edit Resource</h3>
                         <div class="ticket-meta">
-                            <span>Created by: <?php echo htmlspecialchars($staff_id ?? ''); ?></span>
+                            <span>Updated by: <?php echo htmlspecialchars($staff_id ?? ''); ?></span>
                             <span>Date: <?php echo date('Y-m-d H:i:s'); ?></span>
                         </div>
                     </div>
@@ -28,15 +28,16 @@
                         <?php endforeach; ?>
                     <?php endif; ?>
 
-                    <form method="POST" action="" enctype="multipart/form-data" class="kb-form">
+                    <form method="POST" action="/staff/updateKB/<?php echo htmlspecialchars($kb_id ?? ''); ?>" enctype="multipart/form-data" class="kb-form">
+                        <input type="hidden" name="base_id" value="<?php echo htmlspecialchars($kb_id ?? ''); ?>">
                         <input type="hidden" name="staff_id" value="<?php echo htmlspecialchars($staff_id ?? ''); ?>">
                         <div class="details-group">
                             <div class="detail-item">
                                 <span class="detail-label">Topic:</span>
                                 <div class="detail-value-box">
-                                    <input type="text" name="topic"
+                                    <input type="text" name="title"
                                         placeholder="Enter resource title (e.g., 'UCSC Wi-Fi Setup Guide')"
-                                        value="<?php echo isset($post_data['topic']) ? htmlspecialchars($post_data['topic']) : ''; ?>"
+                                        value="<?php echo isset($post_data['title']) ? htmlspecialchars($post_data['title']) : ''; ?>"
                                         maxlength="200" required>
                                 </div>
                             </div>
@@ -45,12 +46,9 @@
                                 <div class="detail-value-box">
                                     <select id="section" name="section" required>
                                         <option value=''>Select a section</option>
-                                        <option value='General Documents' <?php echo (isset($post_data['section']) && $post_data['section'] === 'General Documents') ? 'selected' : ''; ?>>General
-                                            Documents</option>
-                                        <option value='Policies and rules' <?php echo (isset($post_data['section']) && $post_data['section'] === 'Policies and rules') ? 'selected' : ''; ?>>Policies
-                                            and rules</option>
-                                        <option value='Academic resources' <?php echo (isset($post_data['section']) && $post_data['section'] === 'Academic resources') ? 'selected' : ''; ?>>Academic
-                                            resources</option>
+                                        <option value='General Documents' <?php echo (isset($post_data['section']) && $post_data['section'] === 'General Documents') ? 'selected' : ''; ?>>General Documents</option>
+                                        <option value='Policies and rules' <?php echo (isset($post_data['section']) && $post_data['section'] === 'Policies and rules') ? 'selected' : ''; ?>>Policies and rules</option>
+                                        <option value='Academic resources' <?php echo (isset($post_data['section']) && $post_data['section'] === 'Academic resources') ? 'selected' : ''; ?>>Academic resources</option>
                                     </select>
                                 </div>
                             </div>
@@ -63,13 +61,11 @@
                                 </div>
                             </div>
                             <div class="detail-item">
-                                <span class="detail-label">Upload Resource File:</span>
+                                <span class="detail-label">Upload New Resource File (Optional):</span>
                                 <div class="detail-value-box">
                                     <input class="resource-file" type="file" name="resource_file"
                                         accept=".pdf,.doc,.docx,.jpg,.png,.txt">
-                                    <small
-                                        style="color: #666; font-size: 12px; display: block; margin-top: 5px;">Supported:
-                                        PDF, DOC, DOCX, JPG, PNG, TXT (Max 10MB)</small>
+                                    <small style="color: #666; font-size: 12px; display: block; margin-top: 5px;">Supported: PDF, DOC, DOCX, JPG, PNG, TXT (Max 10MB) - Replaces existing</small>
                                 </div>
                             </div>
                             <div class="detail-item">
@@ -83,21 +79,22 @@
                                 </div>
                             </div>
                         </div>
-
                         <div class="ticket-action">
-                            <button type="submit" class="ticket-action-btn">Add the Document</button>
-                            <form method="POST" action="" style="display: contents;">  <!-- Nested form with display: contents to inline without breaking flex -->
-                                <input type="hidden" name="action" value="reject">
-                                <button type="submit" class="action-btn reject-btn" onclick="window.history.back(); return false;">Close</button>
-                            </form>
+                        <button type="submit" class="kbDeleteBtn" name="delete_ticket" onclick="return confirm('Are you sure you want to delete this announcement?');">Delete Announcement</button>
+                        <button type="submit" class="ticket-action-btn">Update Resource</button>
+                        <a href="/staff/staffKB" class="action-btn reject-btn" style="text-decoration: none; display: inline-flex; align-items: center;">Cancel</a>
                         </div>
+
+                        <!-- Delete Button (text, red theme) -->
+                      
                     </form>
                 </div>
             </article>
         </div>
     </div>
 </main>
-<style>
+<!-- Reuse your createKB.css or inline styles from before -->
+ <style>
     .main-content {
         padding: 40px 20px;
         max-width: 900px;
@@ -398,6 +395,28 @@
     }
 
     .action-btn.reject-btn {
+        background: #fef3c7;  /* Soft yellow base (matches your pending status) */
+    color: #92400e;       /* Warm brown text for contrast */
+    padding: 10px 20px;
+    border: 1px solid #f59e0b;  /* Amber border for outline */
+    border-radius: 8px;
+    font-family: "Poppins", sans-serif;
+    font-size: 14px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    box-shadow: 0 1px 3px rgba(245, 158, 11, 0.1);
+    }
+
+    .action-btn.reject-btn:hover {
+        background: #fde68a;  /* Deeper golden yellow on hover */
+    border-color: #d97706;  /* Darker amber border */
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(245, 158, 11, 0.2);  /* Enhanced shadow for lift */
+    color: #92400e;  /* Text stays for consistency */
+    }
+
+    .kbDeleteBtn {
         background: #fee2e2;
         color: #dc2626;
         padding: 12px 24px;
@@ -412,10 +431,23 @@
         display: inline-flex;  /* Keep for button content alignment */
     }
 
-    .action-btn.reject-btn:hover {
-        background: #fecaca;
+    .kbDeleteBtn:hover {
+         background: #fecaca;
         transform: translateY(-1px);
         box-shadow: 0 4px 12px rgba(239, 68, 68, 0.3);
         border-color: #ef4444;
+    }
+
+    /* Responsive: Stack on small screens */
+    @media (max-width: 768px) {
+        .kbFooter {
+            flex-direction: row;  /* Keep horizontal if space allows */
+            gap: 6px;
+        }
+        .kbUpdateBtn,
+        .kbDeleteBtn {
+            padding: 8px 12px;  /* Slightly taller on mobile for touch */
+            min-width: 70px;
+        }
     }
 </style>

@@ -23,31 +23,28 @@ document.addEventListener("DOMContentLoaded", () => {
   console.log('KB_DATA:', KB_DATA);  // Debug: Shows your grouped data (e.g., [{section: "General Documents", items: [...]}])
 
   function buildCard(item) {
-    // Derive color from section (fixed keys to match your DB)
-    const sectionColor = {
-      'General Documents': 'blue',  // Matches your DB (capital D)
-      'Policies and rules': 'green',
-      'Academic resources': 'orange',
-      'Uncategorized': 'gray'
-    };
-    const colorCls = item.sectionColor || (sectionColor[item.section] ? `kbCard--${sectionColor[item.section]}` : '');
+    // Color by type (as you have; green for Guide, blue for Schedule)
+    const colorCls = item.type === 'Guide' ? 'kbCard--green' : (item.type === 'Schedule' ? 'kbCard--blue' : '');
 
     // Type fallback (hardcode or from DB)
     const typeBadge = item.type || 'Guide';
 
     return `
-      <div class="kbCard ${colorCls}" data-id="${item.id}">  <!-- Added data-id for future downloads -->
+      <div class="kbCard ${colorCls}" data-id="${item.id}">
         <div class="kbCardHeader">
           <div class="kbCardTitle">${item.title}</div>
           <div class="kbBadge">${typeBadge}</div>
         </div>
         <div class="kbMeta">Updated: ${item.updated}</div>
-        <div class="kbDesc">${item.description}</div>  <!-- Fixed: 'description' not 'desc' -->
+        <div class="kbDesc">${item.description}</div>
         <div class="kbFooter">
+          <!-- Download Button (unchanged: icon-only) -->
           <button class="kbDownloadBtn" type="button" title="Download">
             <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
-            <span>Download</span>
           </button>
+          <!-- Update Button (text, green theme) -->
+          <button class="kbUpdateBtn" type="button">View Resource</button>
+          <!-- Delete Button (text, red theme) -->
         </div>
       </div>
     `;
@@ -162,6 +159,44 @@ document.addEventListener("DOMContentLoaded", () => {
     if (input) input.addEventListener('input', apply);  // 'input' event for real-time search
     if (sel) sel.addEventListener('change', apply);
     apply();  // Initial render with no filters
+
+    // Wire card buttons (delegated to document for dynamic cards)
+    document.addEventListener('click', (e) => {
+      const card = e.target.closest('.kbCard');
+      if (!card) return;
+      const id = card.dataset.id;
+
+      // Update Button
+      if (e.target.classList.contains('kbUpdateBtn')) {
+        if (id) window.location.href = `/staff/updateKB/${id}`;
+        e.preventDefault();
+      }
+
+      // Delete Button
+      if (e.target.classList.contains('kbDeleteBtn')) {
+        if (id && confirm(`Delete "${card.querySelector('.kbCardTitle').textContent}"? This cannot be undone.`)) {
+          fetch(`/staff/deleteKB/${id}`, { method: 'DELETE' })
+            .then(res => {
+              if (res.ok) {
+                location.reload();  // Refetch and re-render
+              } else {
+                alert('Delete failed—check console.');
+                console.error('Delete error:', res);
+              }
+            })
+            .catch(err => {
+              alert('Delete failed.');
+              console.error('Delete error:', err);
+            });
+        }
+        e.preventDefault();
+      }
+
+      // Download Button (unchanged)
+      if (e.target.closest('.kbDownloadBtn')) {
+        if (id) window.location.href = `/staff/downloadKB/${id}`;
+      }
+    });
   }
 
   // Your init
