@@ -11,36 +11,29 @@
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', setNavbarVar); else setNavbarVar();
 })();
 
-// Minimal mock data for now (could be returned by an endpoint later)
-const KB_DATA = [
-  {
-    section: 'General documents',
-    items: [
-      { title: 'Map of UCSC', updated: 'May 2025', type: 'Guide', desc: 'Detailed floor map of UCSC buildings and facilities.', color: 'blue' },
-      { title: 'Student handbook 2025', updated: 'January 2025', type: 'Guide', desc: 'Complete guide for new and continuing students.', color: 'blue' },
-      { title: 'Undergraduate academic calender', updated: 'January 2025', type: 'Schedule', desc: 'Complete timeline of the semesters and exams for students of all years', color: 'green' }
-    ]
-  },
-  {
-    section: 'Policies and rules',
-    items: [
-      { title: 'Map of UCSC', updated: 'May 2025', type: 'Guide', desc: 'Detailed floor map of UCSC buildings and facilities.', color: 'blue' },
-      { title: 'Student handbook 2025', updated: 'January 2025', type: 'Guide', desc: 'Complete guide for new and continuing students.', color: 'blue' },
-      { title: 'Undergraduate academic calender', updated: 'January 2025', type: 'Schedule', desc: 'Complete timeline of the semesters and exams for students of all years', color: 'green' }
-    ]
-  },
-  {
-    section: 'Academic resources',
-    items: [
-      { title: 'Student handbook 2025', updated: 'January 2025', type: 'Guide', desc: 'Complete guide for new and continuing students.', color: 'blue' },
-      { title: 'Undergraduate academic calender', updated: 'January 2025', type: 'Schedule', desc: 'Complete timeline of the semesters and exams for students of all years', color: 'green' },
-      { title: 'Undergraduate academic calender', updated: 'January 2025', type: 'Schedule', desc: 'Complete timeline of the semesters and exams for students of all years', color: 'green' }
-    ]
-  }
-];
+let KB_DATA = [];
 
 function buildCard(item) {
   const colorCls = item.color === 'green' ? 'kbCard--green' : (item.color === 'blue' ? 'kbCard--blue' : '');
+  let downloadBtn = '';
+  if (item.fileUrl) {
+      downloadBtn = `
+      <div class="kbFooter">
+        <a href="${item.fileUrl}" class="kbDownloadBtn" download title="Download" style="text-decoration:none; display:flex; align-items:center; justify-content:center; gap:8px;">
+          <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+          <span>Download</span>
+        </a>
+      </div>`;
+  } else {
+       downloadBtn = `
+      <div class="kbFooter">
+        <button class="kbDownloadBtn" type="button" title="No file available" disabled style="opacity:0.5; cursor:not-allowed;">
+          <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+          <span>Download</span>
+        </button>
+      </div>`;
+  }
+
   return `
     <div class="kbCard ${colorCls}">
       <div class="kbCardHeader">
@@ -49,12 +42,7 @@ function buildCard(item) {
       </div>
       <div class="kbMeta">Updated: ${item.updated}</div>
       <div class="kbDesc">${item.desc}</div>
-      <div class="kbFooter">
-        <button class="kbDownloadBtn" type="button" title="Download">
-          <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
-          <span>Download</span>
-        </button>
-      </div>
+      ${downloadBtn}
     </div>
   `;
 }
@@ -160,8 +148,21 @@ function wireInteractions() {
   apply();
 }
 
+async function loadData() {
+  try {
+    const res = await fetch('/student/knowledgebaseData');
+    if (!res.ok) throw new Error('Failed to load data');
+    KB_DATA = await res.json();
+    populateCategories(KB_DATA);
+    renderSections(KB_DATA);
+    wireInteractions();
+  } catch (e) {
+    console.error(e);
+    const wrap = document.getElementById('kbSections');
+    if(wrap) wrap.innerHTML = '<p style="text-align:center; color:red;">Failed to load knowledge base.</p>';
+  }
+}
+
 (function init() {
-  populateCategories(KB_DATA);
-  renderSections(KB_DATA);
-  wireInteractions();
+  loadData();
 })();

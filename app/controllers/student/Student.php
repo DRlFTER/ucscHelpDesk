@@ -602,6 +602,71 @@ public function templates()
         ]);
     }
 
+    // Knowledge Base data (JSON)
+    public function knowledgebaseData()
+    {
+        $this->requireLogin('student');
+        header('Content-Type: application/json');
+
+        require_once __DIR__ . '/../../models/staff/KB.php';
+        $kbModel = new KB();
+        $articles = [];
+        try {
+            $articles = $kbModel->getAllArticles();
+        } catch (Throwable $e) {
+            $articles = [];
+        }
+
+        // Group by section
+        $grouped = [];
+        foreach ($articles as $row) {
+            $sec = $row['section'] ?? 'Other';
+            if (!isset($grouped[$sec])) {
+                $grouped[$sec] = [
+                    'section' => $sec,
+                    'items' => []
+                ];
+            }
+            
+            // Format date
+            $updated = $row['updated'] ?? '';
+            if ($updated) {
+                $ts = strtotime($updated);
+                if ($ts) $updated = date('F Y', $ts);
+            }
+
+            // Determine color based on type
+            $type = $row['type'] ?? 'Guide';
+            $color = 'blue';
+            if (stripos($type, 'schedule') !== false) $color = 'green';
+            
+            // Get files
+            $files = $kbModel->getFilesByArticle($row['base_id']);
+            $fileUrl = null;
+            if (!empty($files)) {
+                // Use the first file
+                $fileUrl = $files[0]['file_path'] ?? null;
+                // Ensure path starts with / if relative
+                if ($fileUrl && $fileUrl[0] !== '/') {
+                    $fileUrl = '/' . $fileUrl;
+                }
+            }
+
+            $grouped[$sec]['items'][] = [
+                'id' => (int)$row['base_id'],
+                'title' => $row['topic'],
+                'updated' => $updated,
+                'type' => $type,
+                'desc' => $row['description'],
+                'color' => $color,
+                'fileUrl' => $fileUrl
+            ];
+        }
+
+        echo json_encode(array_values($grouped));
+        exit;
+    }
+
     // Student Calendar page
     public function calender()
     {
