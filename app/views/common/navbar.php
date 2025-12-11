@@ -31,6 +31,7 @@
         'dashboard' => '/counselor/dashboard',
         'tickets'   => '/counselor/tickets',
         'calender'  => '/counselor/calender',
+        'forum'     => '/counselor/forum',
         'newTicket' => null,
       ],
       'lecturer' => [

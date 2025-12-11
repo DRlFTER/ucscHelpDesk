@@ -78,6 +78,199 @@ class Counselor extends Controller
         ]);
     }
 
+    public function forum()
+    {
+        $this->requireLogin('counselor');
+        $headContent = '
+        <link rel="stylesheet" href="/css/counselor/counselorDashboard.css"/>
+        <link rel="stylesheet" href="/css/counselor/counselorForum.css"/>';
+
+        require_once __DIR__ . '/../../models/counselor/Forum.php';
+        $forumModel = new CounselorForumModel();
+        
+        $category = $_GET['category'] ?? null;
+        $sortBy = $_GET['sort'] ?? 'recent';
+        $search = $_GET['search'] ?? null;
+        
+        $forumTopics = $forumModel->getForumTopics($category, $sortBy, $search);
+
+        $this->view('counselor/counselorForum', [
+            'title' => 'Counseling Forum',
+            'head' => $headContent,
+            'forumTopics' => $forumTopics,
+        ]);
+    }
+
+    public function forumTopic()
+    {
+        $this->requireLogin('counselor');
+        $headContent = '
+        <link rel="stylesheet" href="/css/counselor/counselorDashboard.css"/>
+        <link rel="stylesheet" href="/css/counselor/counselorForum.css"/>';
+
+        $topicId = (int)($_GET['id'] ?? 0);
+        
+        if (!$topicId) {
+            header('Location: /counselor/forum');
+            exit;
+        }
+
+        require_once __DIR__ . '/../../models/counselor/Forum.php';
+        $forumModel = new CounselorForumModel();
+        
+        // Increment view count
+        $forumModel->incrementViewCount($topicId);
+        
+        $topic = $forumModel->getTopicById($topicId);
+        $replies = $forumModel->getTopicReplies($topicId);
+        $replyCount = count($replies);
+
+        $this->view('counselor/counselorForumTopic', [
+            'title' => 'Forum Discussion',
+            'head' => $headContent,
+            'topic' => $topic,
+            'replies' => $replies,
+            'replyCount' => $replyCount,
+        ]);
+    }
+
+    public function forumCreateTopic()
+    {
+        $this->requireLogin('counselor');
+        header('Content-Type: application/json');
+        
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+            http_response_code(405);
+            echo json_encode(['success' => false, 'message' => 'Method not allowed']);
+            exit;
+        }
+        
+        $data = json_decode(file_get_contents('php://input'), true);
+        
+        $title = trim($data['title'] ?? '');
+        $content = trim($data['content'] ?? '');
+        $category = trim($data['category'] ?? '');
+        $isPinned = !empty($data['is_pinned']);
+        $authorId = (int)($_SESSION['user']['u_id'] ?? 0);
+        
+        if (empty($title) || empty($content) || empty($category) || !$authorId) {
+            http_response_code(400);
+            echo json_encode(['success' => false, 'message' => 'Missing required fields']);
+            exit;
+        }
+        
+        require_once __DIR__ . '/../../models/counselor/Forum.php';
+        $forumModel = new CounselorForumModel();
+        
+        $topicId = $forumModel->createTopic($title, $content, $category, $isPinned, $authorId);
+        
+        if ($topicId) {
+            echo json_encode([
+                'success' => true,
+                'message' => 'Topic created successfully',
+                'topic_id' => $topicId
+            ]);
+        } else {
+            http_response_code(500);
+            echo json_encode(['success' => false, 'message' => 'Failed to create topic']);
+        }
+        exit;
+    }
+
+    public function forumCreateReply()
+    {
+        $this->requireLogin('counselor');
+        header('Content-Type: application/json');
+        
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+            http_response_code(405);
+            echo json_encode(['success' => false, 'message' => 'Method not allowed']);
+            exit;
+        }
+        
+        $data = json_decode(file_get_contents('php://input'), true);
+        
+        $topicId = (int)($data['topic_id'] ?? 0);
+        $content = trim($data['content'] ?? '');
+        $authorId = (int)($_SESSION['user']['u_id'] ?? 0);
+        
+        if (!$topicId || empty($content) || !$authorId) {
+            http_response_code(400);
+            echo json_encode(['success' => false, 'message' => 'Missing required fields']);
+            exit;
+        }
+        
+        require_once __DIR__ . '/../../models/counselor/Forum.php';
+        $forumModel = new CounselorForumModel();
+        
+        $replyId = $forumModel->createReply($topicId, $content, $authorId);
+        
+        if ($replyId) {
+            echo json_encode([
+                'success' => true,
+                'message' => 'Reply posted successfully',
+                'reply_id' => $replyId
+            ]);
+        } else {
+            http_response_code(500);
+            echo json_encode(['success' => false, 'message' => 'Failed to post reply']);
+        }
+        exit;
+    }
+
+    public function forumDeleteReply()
+    {
+        $this->requireLogin('counselor');
+        header('Content-Type: application/json');
+        
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+            http_response_code(405);
+            echo json_encode(['success' => false, 'message' => 'Method not allowed']);
+            exit;
+        }
+        
+        $data = json_decode(file_get_contents('php://input'), true);
+        $replyId = (int)($data['reply_id'] ?? 0);
+        $userId = (int)($_SESSION['user']['u_id'] ?? 0);
+        
+        if (!$replyId || !$userId) {
+            http_response_code(400);
+            echo json_encode(['success' => false, 'message' => 'Invalid request']);
+            exit;
+        }
+        
+        require_once __DIR__ . '/../../models/counselor/Forum.php';
+        $forumModel = new CounselorForumModel();
+        
+        $success = $forumModel->deleteReply($replyId, $userId);
+        
+        if ($success) {
+            echo json_encode(['success' => true, 'message' => 'Reply deleted']);
+        } else {
+            http_response_code(403);
+            echo json_encode(['success' => false, 'message' => 'Unauthorized or reply not found']);
+        }
+        exit;
+    }
+
+    public function forumSearch()
+    {
+        $this->requireLogin('counselor');
+        header('Content-Type: application/json');
+        
+        $query = trim($_GET['q'] ?? '');
+        $category = trim($_GET['category'] ?? '');
+        $sortBy = trim($_GET['sort'] ?? 'recent');
+        
+        require_once __DIR__ . '/../../models/counselor/Forum.php';
+        $forumModel = new CounselorForumModel();
+        
+        $topics = $forumModel->getForumTopics($category ?: null, $sortBy, $query ?: null);
+        
+        echo json_encode(['success' => true, 'topics' => $topics]);
+        exit;
+    }
+
     public function ticketsData()
     {
         $this->requireLogin('counselor');

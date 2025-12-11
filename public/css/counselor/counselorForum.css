@@ -1,0 +1,70 @@
+/* Forum specific styles */
+.forum-item {
+  transition: all 0.2s ease;
+}
+
+.forum-item:hover {
+  background: #f9fafb !important;
+  border-left-color: #4f46e5 !important;
+  transform: translateX(2px);
+}
+
+/* Modal styles */
+#newTopicModal {
+  animation: fadeIn 0.2s ease;
+}
+
+#newTopicModal > div {
+  animation: slideUp 0.3s ease;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes slideUp {
+  from {
+    transform: translateY(20px);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+/* Reply section styles */
+#repliesList > div > div {
+  transition: all 0.2s ease;
+}
+
+#repliesList > div > div:hover {
+  background: #f5f5f5 !important;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+}
+
+/* Button hover effects */
+button[onclick*="deleteReply"]:hover {
+  background: #fee2e2 !important;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+  #newTopicModal > div {
+    width: 95%;
+    margin: 1rem;
+  }
+  
+  .forum-item > div {
+    flex-direction: column;
+  }
+  
+  .itemMeta {
+    flex-wrap: wrap;
+  }
+}
