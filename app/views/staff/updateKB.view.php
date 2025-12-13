@@ -80,7 +80,7 @@
                             </div>
                         </div>
                         <div class="ticket-action">
-                        <button type="submit" class="kbDeleteBtn" name="delete_ticket" onclick="return confirm('Are you sure you want to delete this announcement?');">Delete Announcement</button>
+                        <button type="submit" class="kbDeleteBtn" name="delete_ticket" onclick="return confirm('Are you sure you want to delete this resource?');">Delete Resource</button>
                         <button type="submit" class="ticket-action-btn">Update Resource</button>
                         <a href="/staff/staffKB" class="action-btn reject-btn" style="text-decoration: none; display: inline-flex; align-items: center;">Cancel</a>
                         </div>

@@ -40,21 +40,24 @@ $success = '';
         </div>
 
         <div class="file-section">
-            <h3 class="section-label">Attached Files</h3>
-            <?php if (empty($files)): ?>
-                <p class="no-files">No files attached.</p>
-            <?php else: ?>
-                <ul class="files-list">
-                    <?php foreach ($files as $file): ?>
-                        <li class="file-item">
-                            <a href="<?php echo htmlspecialchars($file['file_path']); ?>" download="<?php echo htmlspecialchars($file['file_name']); ?>" class="file-link">
-                                <?php echo htmlspecialchars($file['file_name']); ?>
-                            </a>
-                        </li>
-                    <?php endforeach; ?>
-                </ul>
-            <?php endif; ?>
-        </div>
+    <h3 class="section-label">Attached Files</h3>
+    <?php if (empty($files)): ?>
+        <p class="no-files">No files attached.</p>
+    <?php else: ?>
+        <ul class="files-list">
+            <?php foreach ($files as $file): ?>
+                <li class="file-item">
+                    <a href="/<?php echo htmlspecialchars($file['file_path']); ?>" 
+                       download="<?php echo htmlspecialchars($file['file_name']); ?>" 
+                       class="file-link"
+                       rel="noopener noreferrer">
+                        <?php echo htmlspecialchars($file['file_name']); ?> (<?php echo number_format($file['file_size'] / 1024, 1); ?> KB)
+                    </a>
+                </li>
+            <?php endforeach; ?>
+        </ul>
+    <?php endif; ?>
+</div>
 
         <div class="edit-section">
             <h3 class="section-label">Edit Announcement</h3>

@@ -983,16 +983,16 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         $this->calender();
     }
 
-     public function staffKB()
-    {
-        $this->requireLogin('staff');
+  public function staffKB()
+{
+    $this->requireLogin('staff');
 
-        require_once __DIR__ . '/../../models/staff/KB.php';
-        $kbModel = new KB();
-        $kb_data = [];
-        try {
-            $flat_articles = $kbModel->getAllArticles();
-        
+    require_once __DIR__ . '/../../models/staff/KB.php';
+    $kbModel = new KB();
+    $kb_data = [];
+    try {
+        $flat_articles = $kbModel->getAllArticles();
+    
         $grouped = [];   
         foreach($flat_articles as $article){
             $section = $article['section'] ?? 'Uncategorized';
@@ -1004,16 +1004,18 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             }
 
             $updated_pretty = date('F Y', strtotime($article['updated']));
-            $grouped[$section]['items'][] = [
+            $item = [
                 'id' => $article['base_id'],
                 'title' => $article['topic'],
                 'description' => $article['description'],
                 'updated' => $updated_pretty,
                 'type'=> $article['type'],
+                'files' => $kbModel->getFilesByArticle($article['base_id']) // NEW: Load files for each article
             ];
+            $grouped[$section]['items'][] = $item;
         }
         $kb_data = array_values($grouped);
-    }catch (Throwable $e) {
+    } catch (Throwable $e) {
             error_log('KB load failed: ' . $e->getMessage());
             $kb_data = [];
         }
@@ -1024,7 +1026,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             'head' => $headContent,
             'kb_data' => $kb_data,
         ]);
-    }
+}
 
     public function createKB() {
     $this->requireLogin('staff');
@@ -1047,24 +1049,27 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
 
         // File validation (optional, but if uploaded)
         if ($file && $file['error'] === UPLOAD_ERR_OK) {
-            $allowed = ['.pdf', '.doc', '.docx', '.jpg', '.png', '.txt'];
-            $ext = strtolower(pathinfo($file['name'], PATHINFO_EXTENSION));
-            if (!in_array('.' . $ext, $allowed)) $errors[] = "Invalid file type.";
-            if ($file['size'] > 10 * 1024 * 1024) $errors[] = "File too large (max 10MB).";
+            $allowed_types = ['application/pdf', 'image/jpeg', 'image/png', 'application/msword', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document', 'text/plain'];
+            $max_size = 10 * 1024 * 1024; // 10MB
+            if (!in_array($file['type'], $allowed_types)) {
+                $errors[] = "Invalid file type. Allowed: PDF, JPG, PNG, DOC, DOCX, TXT.";
+            } elseif ($file['size'] > $max_size) {
+                $errors[] = "File too large (max 10MB).";
+            }
         }
 
         if (empty($errors)) {
-            // Save via model (implement KB::create() in models/staff/KB.php)
-            require_once __DIR__ . '/../../models/staff/KB.php';
-            $model = new KB();
-            $ok = $model->create([
+            // FIXED: Pass $data and $file separately to model
+            $data = [
+                'staff_id' => $staff_id,
                 'topic' => $topic,
                 'section' => $section,
                 'description' => $description,
-                'type' => $type,
-                'file_path' => $file ? $file['tmp_name'] : null, // Handle upload in model
-                'created_by' => $staff_id
-            ]);
+                'type' => $type
+            ];
+            require_once __DIR__ . '/../../models/staff/KB.php';
+            $model = new KB();
+            $ok = $model->create($data, $file);
             if ($ok) {
                 $_SESSION['kb_success'] = 'Resource added successfully!';
                 header("Location: /staff/staffKB");
@@ -1075,7 +1080,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         }
     }
 
-                     
+            
 
     $this->view('staff/createKB', [
         'title' => 'Add Knowledge Base Resource',
@@ -1118,11 +1123,25 @@ public function updateKB($id = null) {
                 if ($kbModel->updateArticle($id, $updateData)) {
                     $success = 'Resource updated successfully.';
                     // Handle file upload if present (similar to create)
-                    if (isset($_FILES['resource_file']) && $_FILES['resource_file']['error'] === 0) {
-                        // Upload logic: Move to dir, insert to knowledgebase_files
-                        // e.g., $uploadPath = '/uploads/kb/' . time() . '_' . $_FILES['resource_file']['name'];
-                        // move_uploaded_file($_FILES['resource_file']['tmp_name'], $uploadPath);
-                        // Then: Insert to files table with base_id = $id
+                    $file = $_FILES['resource_file'] ?? null;
+                    if ($file && $file['error'] === UPLOAD_ERR_OK) {
+                        // Delete old files first (optional: call deleteArticle but skip core delete)
+                        $oldFiles = $kbModel->getFilesByArticle($id);
+                        foreach ($oldFiles as $oldFile) {
+                            // Optionally: unlink full server path
+                            $fullOldPath = __DIR__ . '/../../../public/' . $oldFile['file_path'];
+                            if (file_exists($fullOldPath)) unlink($fullOldPath);
+                        }
+                        // Clear old DB entries
+                        $db = Database::getInstance();
+                        $stmt = $db->prepare("DELETE FROM knowledgebase_files WHERE base_id = ?");
+                        $stmt->bind_param('i', $id);
+                        $stmt->execute();
+                        $stmt->close();
+                        
+                        // Upload new file (reuse model logic with dummy data)
+                        $uploadData = ['staff_id' => (int)($_SESSION['user']['u_id'] ?? 0)];
+                        $kbModel->create($uploadData, $file); // This inserts only the file (since article exists)
                     }
                     // Redirect back to KB list
                     header('Location: /staff/staffKB');
