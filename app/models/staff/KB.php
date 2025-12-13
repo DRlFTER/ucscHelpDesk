@@ -80,30 +80,60 @@ public function deleteArticle($base_id) {
 }
 
     public function create(array $data, ?array $file = null): bool {
-        $db = Database::getInstance();
-        $staff_id = $data['staff_id'];
-        $topic = $data['topic'];
-        $description = $data['description'];
-        $section = $data['section'];
-        $type = $data['type'];
-        $sql = "INSERT INTO knowledgebase (created_by, topic, description, section, type) VALUES (?,?,?,?,?)";
-        $stmt = $db->prepare($sql);
-        $stmt->bind_param('issss', $staff_id, $topic, $description, $section, $type);
-        $ok = $stmt->execute();
+    $db = Database::getInstance();
+    $staff_id = $data['staff_id'];
+    $topic = $data['topic'];
+    $description = $data['description'];
+    $section = $data['section'];
+    $type = $data['type'];
+    $sql = "INSERT INTO knowledgebase (created_by, topic, description, section, type) VALUES (?,?,?,?,?)";
+    $stmt = $db->prepare($sql);
+    $stmt->bind_param('issss', $staff_id, $topic, $description, $section, $type);
+    $ok = $stmt->execute();
 
-        if ($ok && $file) {
-            $base_id = $stmt->insert_id;
-            $file_name = $file['name'];
-            $file_path = $file['path'];
-            $sql = "INSERT INTO knowledgebase_files (base_id, file_name, file_path) VALUES (?,?,?)";
-            $stmt_file = $db->prepare($sql);
-            $stmt_file->bind_param('iss', $base_id, $file_name, $file_path);
-            $stmt_file->execute();
-            $stmt_file->close();
+    if ($ok && $file && $file['error'] === UPLOAD_ERR_OK) {
+        $base_id = $stmt->insert_id;
+        
+        $allowed_types = ['application/pdf', 'image/jpeg', 'image/png', 'application/msword', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document'];
+        $max_size = 5 * 1024 * 1024;  // 5MB
+        
+        if (!in_array($file['type'], $allowed_types) || $file['size'] > $max_size) {
+            error_log("Invalid file for KB article $base_id: " . $file['name']);
+            // Article created, but file invalid – proceed without file
+        } else {
+            // Server path for upload
+            $base_upload_dir = __DIR__ . '/../../../public/uploads/kb/';
+            $staff_upload_dir = $base_upload_dir . $staff_id . '/';
+            if (!is_dir($staff_upload_dir)) {
+                mkdir($staff_upload_dir, 0777, true);
+            }
+
+            $file_name = time() . '_' . basename($file['name']);
+            $server_file_path = $staff_upload_dir . $file_name;
+            
+            if (move_uploaded_file($file['tmp_name'], $server_file_path)) {
+                // Web-relative path for DB
+                $web_file_path = 'uploads/kb/' . $staff_id . '/' . $file_name;
+                
+                // Insert into consistent table: kb_files
+                $sql_file = "INSERT INTO kb_files (kb_id, file_name, file_path, file_type, file_size) 
+                             VALUES (?, ?, ?, ?, ?)";
+                $stmt_file = $db->prepare($sql_file);
+                if ($stmt_file) {
+                    $stmt_file->bind_param('isssi', $base_id, $file['name'], $web_file_path, $file['type'], $file['size']);
+                    $stmt_file->execute();
+                    $stmt_file->close();
+                } else {
+                    error_log("Failed to prepare file insert for KB $base_id (missing table/columns?)");
+                }
+            } else {
+                error_log("Failed to upload file for KB article $base_id");
+            }
         }
-        $stmt->close();
-        return $ok; 
     }
+    $stmt->close();
+    return $ok; 
+}
 
     /**
      * Fetch single article by ID
