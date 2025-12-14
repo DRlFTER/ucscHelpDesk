@@ -192,9 +192,13 @@ document.addEventListener("DOMContentLoaded", () => {
         e.preventDefault();
       }
 
-      // Download Button (unchanged)
+      // Download Button — invoke server download endpoint
       if (e.target.closest('.kbDownloadBtn')) {
-        if (id) window.location.href = `/staff/downloadKB/${id}`;
+        if (id) {
+          // Use the backend download route which streams the file with proper headers
+          window.location.href = `/staff/downloadKB/${id}`;
+          e.preventDefault();
+        }
       }
     });
   }

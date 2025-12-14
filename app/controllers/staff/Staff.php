@@ -1108,9 +1108,9 @@ public function updateKB($id = null) {
                 $errors[] = 'Delete failed (check DB permissions).';
             }
         } 
-        // Handle Update (existing logic)
+        // Handle Update
         else if (isset($_POST['title'])) {
-            // Validate (add more as needed)
+            // Validate
             if (empty($_POST['title']) || empty($_POST['section']) || empty($_POST['type'])) {
                 $errors[] = 'All fields required.';
             } else {
@@ -1122,27 +1122,36 @@ public function updateKB($id = null) {
                 ];
                 if ($kbModel->updateArticle($id, $updateData)) {
                     $success = 'Resource updated successfully.';
-                    // Handle file upload if present (similar to create)
+                    
+                    // Handle file upload if present
                     $file = $_FILES['resource_file'] ?? null;
                     if ($file && $file['error'] === UPLOAD_ERR_OK) {
-                        // Delete old files first (optional: call deleteArticle but skip core delete)
+                        // Delete old files (if any)
                         $oldFiles = $kbModel->getFilesByArticle($id);
                         foreach ($oldFiles as $oldFile) {
-                            // Optionally: unlink full server path
                             $fullOldPath = __DIR__ . '/../../../public/' . $oldFile['file_path'];
-                            if (file_exists($fullOldPath)) unlink($fullOldPath);
+                            if (file_exists($fullOldPath)) {
+                                unlink($fullOldPath);
+                            }
                         }
-                        // Clear old DB entries
+                        // FIXED: Clear old DB entries (consistent table/column)
                         $db = Database::getInstance();
-                        $stmt = $db->prepare("DELETE FROM knowledgebase_files WHERE base_id = ?");
-                        $stmt->bind_param('i', $id);
-                        $stmt->execute();
-                        $stmt->close();
+                        $stmt = $db->prepare("DELETE FROM kb_files WHERE kb_id = ?");
+                        if ($stmt) {
+                            $stmt->bind_param('i', $id);
+                            $stmt->execute();
+                            $stmt->close();
+                        }
                         
-                        // Upload new file (reuse model logic with dummy data)
-                        $uploadData = ['staff_id' => (int)($_SESSION['user']['u_id'] ?? 0)];
-                        $kbModel->create($uploadData, $file); // This inserts only the file (since article exists)
+                        // Add new file (NEW: Use dedicated method)
+                        $staff_id = (int)($_SESSION['user']['u_id'] ?? 0);
+                        if ($kbModel->addFile($id, $file, $staff_id)) {  // Pass staff_id
+                            $success .= ' File added successfully.';
+                        } else {
+                            $errors[] = 'Article updated, but file upload failed.';
+                        }
                     }
+                    
                     // Redirect back to KB list
                     header('Location: /staff/staffKB');
                     exit;
@@ -1179,44 +1188,72 @@ public function updateKB($id = null) {
     ]);
 }
 
-public function deleteKB($id = null) {
+/**
+ * Download a specific file by file_id (matches JS href)
+ * FIXED: Fetch by file_id, not article ID; direct serve
+ */
+public function downloadKB($file_id = null) {
     $this->requireLogin('staff');
-    if (!$id || !is_numeric($id)) {
+    if (!$file_id || !is_numeric($file_id)) {
         http_response_code(400);
-        echo json_encode(['error' => 'Invalid ID']);
-        return;
+        echo 'Invalid file ID';
+        exit;
     }
-
     require_once __DIR__ . '/../../models/staff/KB.php';
     $kbModel = new KB();
-
-    // Handle as POST (JS fetch sends DELETE, but PHP sees POST; check _method if using spoofing)
-    if ($_SERVER['REQUEST_METHOD'] === 'POST' || $_SERVER['REQUEST_METHOD'] === 'DELETE') {
-        if ($kbModel->deleteArticle($id)) {
-            http_response_code(200);
-            echo json_encode(['success' => true, 'message' => 'Deleted successfully']);
-        } else {
-            http_response_code(500);
-            echo json_encode(['error' => 'Delete failed (check DB permissions)']);
-        }
-    } else {
-        http_response_code(405);
-        echo json_encode(['error' => 'Method not allowed']);
+    $db = Database::getInstance();
+    
+    // FIXED: Query single file by file_id
+    $sql = "SELECT file_name, file_path, file_type, file_size FROM kb_files WHERE kb_id = ?";
+    $stmt = $db->prepare($sql);
+    if (!$stmt) {
+        http_response_code(500);
+        echo 'Database error';
+        exit;
     }
-}
-
-public function downloadKB($id) {
-    $this->requireLogin('staff');
-    require_once __DIR__ . '/../../models/staff/KB.php';
-    $kbModel = new KB();
-    $files = $kbModel->getFilesByArticle($id);
-    if (!empty($files)) {
-        $file = $files[0];  // First file
-        // Serve file: header('Content-Type: application/pdf'); readfile($file['file_path']); etc.
-        // Or redirect: header('Location: ' . $file['file_path']);
-    } else {
+    $stmt->bind_param('i', $file_id);
+    $stmt->execute();
+    $result = $stmt->get_result();
+    $file = $result->fetch_assoc();
+    $stmt->close();
+    
+    if (!$file) {
         http_response_code(404);
+        echo 'File not found';
+        exit;
     }
+    
+    // Build server path from web-relative
+    $webPath = $file['file_path'] ?? '';
+    $serverPath = realpath(__DIR__ . '/../../../public/' . ltrim($webPath, '/'));
+    $uploadRoot = realpath(__DIR__ . '/../../../public/uploads/kb');
+    if ($serverPath === false || !$uploadRoot || strpos($serverPath, $uploadRoot) !== 0 || !is_file($serverPath) || !is_readable($serverPath)) {
+        http_response_code(404);
+        echo 'File not accessible';
+        exit;
+    }
+    
+    // Clear output buffer for clean headers
+    if (ob_get_level()) ob_end_clean();
+    
+    $fileSize = $file['file_size'] ?? filesize($serverPath);
+    $mime = $file['file_type'] ?? 'application/octet-stream';
+    if (function_exists('mime_content_type')) {
+        $detectedMime = mime_content_type($serverPath);
+        if ($detectedMime) $mime = $detectedMime;
+    }
+    
+    // Force download headers
+    header('Content-Description: File Transfer');
+    header('Content-Type: ' . $mime);
+    header('Content-Disposition: attachment; filename="' . basename($file['file_name']) . '"');
+    header('Content-Transfer-Encoding: binary');
+    header('Expires: 0');
+    header('Cache-Control: must-revalidate');
+    header('Pragma: public');
+    header('Content-Length: ' . $fileSize);
+    readfile($serverPath);
+    exit;
 }
 
 }
