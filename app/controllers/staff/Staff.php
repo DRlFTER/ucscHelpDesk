@@ -140,28 +140,32 @@ class Staff extends Controller {
     }
 
     public function staffTickets()
-    {
-        $this->requireLogin('staff');
+{
+    $this->requireLogin('staff');
 
-        require_once __DIR__ . '/../../models/staff/Ticket.php';
+    require_once __DIR__ . '/../../models/staff/Ticket.php';
+    $tickets = [];
+    $errorMsg = null;
+    $staff_level = null;  // Initialize
+    try {
+        $model = new StaffTicket();
+        $tickets = $model->getAllTickets(); 
+        $staff_level = $model->getStaffLevel((int)$_SESSION['user']['u_id']);  // FIXED: Correct method name, cast int
+    } catch (Throwable $e) {
         $tickets = [];
-        $errorMsg = null;
-        try {
-            $model = new StaffTicket();
-            $tickets = $model->getAllTickets(); 
-        } catch (Throwable $e) {
-            $tickets = [];
-            $errorMsg = $e->getMessage();
-        }
-
-        $headContent = '<link rel="stylesheet" href="/css/staff/staffTickets.css"/>';
-        $this->view('staff/staffTickets', [
-            'title' => 'Tickets',
-            'head' => $headContent,
-            'tickets' => $tickets,
-            'error' => $errorMsg,
-        ]);
+        $errorMsg = $e->getMessage();
+        error_log('StaffTickets error: ' . $e->getMessage());  // Log for debug
     }
+
+    $headContent = '<link rel="stylesheet" href="/css/staff/staffTickets.css"/>';
+    $this->view('staff/staffTickets', [
+        'title' => 'Tickets',
+        'head' => $headContent,
+        'tickets' => $tickets,
+        'error' => $errorMsg,
+        'staff_level' => $staff_level ?? 0,  // Default to 0 if null (or 'staff' string if preferred)
+    ]);
+}
 
     public function ticketDetails($id = null)
     {
