@@ -13,6 +13,7 @@ class StaffTicket
         return $conn;
     }
 
+
     /**
      * Get staff's division names from staff_division + division table.
      */
@@ -70,47 +71,102 @@ class StaffTicket
         $conn->close();
         return $divisions;
     }
+       /**
+ * Get staff level from hierarchy via division.
+ */
+public function getStaffLevel(int $staff_id): ?int
+{
+    $conn = self::getConnection();
+    $sql = "SELECT level FROM staff_hierachy WHERE h_id = (SELECT h_id FROM staff_division WHERE u_id = ? LIMIT 1) LIMIT 1";
+    $stmt = $conn->prepare($sql);
+    if (!$stmt) {
+        $err = $conn->error;
+        $conn->close();
+        throw new Exception('Prepare failed: ' . $err);
+    }
+    $stmt->bind_param('i', $staff_id);
+    $stmt->execute();
+    $result = $stmt->get_result();
+    $row = $result->fetch_assoc();
+    $stmt->close();
+    $conn->close();
+    return $row['level'] ?? null;  // FIXED: Fetch 'level' (matches SELECT)
+}
+
 
     /**
      * Get all tickets ordered by created_at desc, including student name via users join.
      * Filters by staff's division names (t.category = division name).
      */
     public function getAllTickets(): array
-    {
+{
     $staff_id = (int)($_SESSION['user']['u_id'] ?? 0);
     $divisions = $this->getStaffDivisions($staff_id);
-        if (empty($divisions)) {
-            throw new Exception('No division mapping found for your staff account. Please contact admin to assign your division.');
-        }
+    $staff_level = $this->getStaffLevel($staff_id);
+    
+    if (empty($divisions)) {
+        throw new Exception('No division mapping found for your staff account. Please contact admin to assign your division.');
+    }
 
-        $conn = self::getConnection();
-    $placeholders = implode(',', array_fill(0, count($divisions), '?'));
-    $sql = "SELECT t.ticket_id, t.created_at, t.title, u.name AS student_name, d.name AS category, t.status, t.priority, t.meeting_requested
-        FROM tickets t
-        INNER JOIN users u ON t.u_id = u.u_id
-        LEFT JOIN division d ON d.did = t.division
-        WHERE t.division IN ($placeholders) OR t.assigned_to = $staff_id
-        ORDER BY t.created_at DESC";
-
-        $stmt = $conn->prepare($sql);
-        if (!$stmt) {
-            $err = $conn->error;
-            $conn->close();
-            throw new Exception('Prepare failed: ' . $err);
+    $conn = self::getConnection();
+    $tickets = [];
+    
+    try {
+        if ($staff_level !== null && $staff_level <= 2) {
+            // Level <=2: See all in divisions OR assigned to self
+            $placeholders = implode(',', array_fill(0, count($divisions), '?'));
+            $sql = "SELECT t.ticket_id, t.created_at, t.title, u.name AS student_name, d.name AS category, t.status, t.priority, t.meeting_requested
+                    FROM tickets t
+                    INNER JOIN users u ON t.u_id = u.u_id
+                    LEFT JOIN division d ON d.did = t.division
+                    WHERE t.division IN ($placeholders) OR t.assigned_to = ?
+                    ORDER BY t.created_at DESC";
+            
+            $stmt = $conn->prepare($sql);
+            if (!$stmt) {
+                throw new Exception('Prepare failed: ' . $conn->error);
+            }
+            
+            // Bind: divisions + staff_id
+            $didParams = array_map(fn($d) => (int)$d['did'], $divisions);
+            $allParams = array_merge($didParams, [$staff_id]);
+            $types = str_repeat('i', count($allParams));
+            $stmt->bind_param($types, ...$allParams);
+            
+        } else {
+            // Lower levels: Only assigned to self
+            $sql = "SELECT t.ticket_id, t.created_at, t.title, u.name AS student_name, d.name AS category, t.status, t.priority, t.meeting_requested
+                    FROM tickets t
+                    INNER JOIN users u ON t.u_id = u.u_id
+                    LEFT JOIN division d ON d.did = t.division
+                    WHERE t.assigned_to = ?
+                    ORDER BY t.created_at DESC";
+            
+            $stmt = $conn->prepare($sql);
+            if (!$stmt) {
+                throw new Exception('Prepare failed: ' . $conn->error);
+            }
+            
+            // Bind: only staff_id
+            $stmt->bind_param('i', $staff_id);
         }
-    $didParams = array_map(fn($d) => (int)$d['did'], $divisions);
-    $types = str_repeat('i', count($didParams));
-    $stmt->bind_param($types, ...$didParams);
+        
         $stmt->execute();
         $result = $stmt->get_result();
-        $tickets = [];
         while ($row = $result->fetch_assoc()) {
             $tickets[] = $row;
         }
         $stmt->close();
+        
+    } catch (Exception $e) {
+        error_log('getAllTickets error: ' . $e->getMessage());
+        throw $e;  // Re-throw for controller handling
+    } finally {
         $conn->close();
-        return $tickets;
     }
+    
+    return $tickets;
+}
     public function getticketassignedstaffname(int $ticket_id): ?string
     {
         $conn = self::getConnection();
@@ -193,6 +249,24 @@ public function assignToStaff(int $ticket_id, int $staff_id): bool
     return $ok;
 }
 
+public function setTicketupdateTimeline(int $ticket_id):bool
+{
+    $conn = self::getConnection();
+    $sql = "UPDATE ticket_timeline SET assigned = CURRENT_TIMESTAMP WHERE ticket_id = ? ";
+    $staff_id = (int)($_SESSION['user']['u_id'] ?? 0);
+    $stmt = $conn->prepare($sql);
+    if (!$stmt) {
+        $err = $conn->error;
+        $conn->close();
+        throw new Exception('Prepare failed: ' . $err);
+    }
+    $stmt->bind_param('i', $ticket_id);
+    $ok = $stmt->execute() && $stmt->affected_rows > 0;
+    $stmt->close();
+    $conn->close();
+    return $ok;
+}
+
 /**
  * Add response to ticket (insert into ticket_response).
  */
@@ -213,6 +287,24 @@ public function addResponse(int $ticket_id, int $staff_id, string $response_text
     return $ok;
 }
 
+public function setTimeLineReview(int $ticket_id):bool
+{
+    $conn = self::getConnection();
+    $sql = "UPDATE ticket_timeline SET under_review = CURRENT_TIMESTAMP WHERE ticket_id = ? ";
+    $staff_id = (int)($_SESSION['user']['u_id'] ?? 0);
+    $stmt = $conn->prepare($sql);
+    if (!$stmt) {
+        $err = $conn->error;
+        $conn->close();
+        throw new Exception('Prepare failed: ' . $err);
+    }
+    $stmt->bind_param('i', $ticket_id);
+    $ok = $stmt->execute() && $stmt->affected_rows > 0;
+    $stmt->close();
+    $conn->close();
+    return $ok;
+}
+
 /**
  * Forward ticket to another staff (update assigned_to).
  */
@@ -228,6 +320,24 @@ public function forwardTicket(int $ticket_id, int $new_staff_id): bool
         throw new Exception('Prepare failed: ' . $err);
     }
     $stmt->bind_param('iii', $new_staff_id, $ticket_id, $current_staff_id);
+    $ok = $stmt->execute() && $stmt->affected_rows > 0;
+    $stmt->close();
+    $conn->close();
+    return $ok;
+}
+
+public function setTicketLevel(int $ticket_id, int $new_staff_id , int $level): bool
+{
+    $conn = self::getConnection();
+
+    $sql = "UPDATE ticket_timeline SET level_$level = CURRENT_TIMESTAMP WHERE ticket_id = ?";
+    $stmt = $conn->prepare($sql);
+    if (!$stmt) {
+        $err = $conn->error;
+        $conn->close();
+        throw new Exception('Prepare failed: ' . $err);
+    }
+    $stmt->bind_param('i', $ticket_id);
     $ok = $stmt->execute() && $stmt->affected_rows > 0;
     $stmt->close();
     $conn->close();
@@ -258,6 +368,22 @@ public function resolveTicket(int $ticket_id): bool
     return $ok;
 }
 
+public function resolveTicketTimeLine(int $ticket_id):bool{
+    $conn = self::getConnection();
+    $sql = "UPDATE ticket_timeline SET resolved = CURRENT_TIMESTAMP WHERE ticket_id = ? ";
+    $staff_id = (int)($_SESSION['user']['u_id'] ?? 0);
+    $stmt = $conn->prepare($sql);
+    if (!$stmt) {
+        $err = $conn->error;
+        $conn->close();
+        throw new Exception('Prepare failed: ' . $err);
+    }
+    $stmt->bind_param('i', $ticket_id);
+    $ok = $stmt->execute() && $stmt->affected_rows > 0;
+    $stmt->close();
+    $conn->close();
+    return $ok;
+}
 /**
  * Reject/Close ticket (update status to 'agent-closed' or 'closed').
  */
@@ -298,5 +424,7 @@ public function rejectTicket(int $ticket_id): bool
         $conn->close();
         return $staff;
     }
+
+ 
 }
 ?>
