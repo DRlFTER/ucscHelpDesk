@@ -212,9 +212,13 @@ class Staff extends Controller {
                 case 'assign':
                     if ($ticket['status'] === 'pending') {
                         $ok = $model->assignToStaff($ticket_id, $current_staff_id);
-                        if ($ok) {
+                        $ok2 = $model->setTicketupdateTimeline($ticket_id);
+                        if ($ok && $ok2) {
                             $success = 'Ticket assigned to you!';
-                            $ticket = $model->getTicketById($ticket_id); 
+                            $ticket = $model->getTicketById($ticket_id);
+                            $set_level = $model->setTicketLevel($ticket_id, $current_staff_id, $model->getStaffLevel($current_staff_id));
+                            error_log('Ticket level set for ticket ID ' . $ticket_id . ' to staff ID ' . $current_staff_id."ticket level: ".$model->getStaffLevel($current_staff_id));
+
                         } else {
                             $errors[] = "Failed to assign ticket.";
                         }
@@ -227,8 +231,10 @@ class Staff extends Controller {
                     $response_text = trim($_POST['response'] ?? '');
                     if (!empty($response_text)) {
                         $ok = $model->addResponse($ticket_id, $current_staff_id, $response_text);
-                        if ($ok) {
+                        $ok2 = $model->setTimeLineReview($ticket_id);
+                        if ($ok && $ok2) {
                             $success = 'Response added successfully!';
+
                         } else {
                             $errors[] = "Failed to add response.";
                         }
@@ -244,6 +250,9 @@ class Staff extends Controller {
                         if ($ok) {
                             $success = 'Ticket forwarded successfully!';
                             $ticket = $model->getTicketById($ticket_id);
+                            $get_level = $model->getStaffLevel($forward_to);
+                            $set_level = $model->setTicketLevel($ticket_id,$forward_to,$get_level);
+                      //      echo 'Ticket level set for ticket ID ' . $ticket_id . ' to staff ID ' . $forward_to.' ticket level: '.$get_level;
                         } else {
                             $errors[] = "Failed to forward ticket.";
                         }
@@ -254,7 +263,8 @@ class Staff extends Controller {
             
                 case 'resolve':
                     $ok = $model->resolveTicket($ticket_id);
-                    if ($ok) {
+                    $ok2 = $model->resolveTicketTimeLine($ticket_id);
+                    if ($ok && $ok2) {
                         $success = 'Ticket resolved!';
                         $ticket = $model->getTicketById($ticket_id);
                     } else {

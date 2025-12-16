@@ -249,6 +249,24 @@ public function assignToStaff(int $ticket_id, int $staff_id): bool
     return $ok;
 }
 
+public function setTicketupdateTimeline(int $ticket_id):bool
+{
+    $conn = self::getConnection();
+    $sql = "UPDATE ticket_timeline SET assigned = CURRENT_TIMESTAMP WHERE ticket_id = ? ";
+    $staff_id = (int)($_SESSION['user']['u_id'] ?? 0);
+    $stmt = $conn->prepare($sql);
+    if (!$stmt) {
+        $err = $conn->error;
+        $conn->close();
+        throw new Exception('Prepare failed: ' . $err);
+    }
+    $stmt->bind_param('i', $ticket_id);
+    $ok = $stmt->execute() && $stmt->affected_rows > 0;
+    $stmt->close();
+    $conn->close();
+    return $ok;
+}
+
 /**
  * Add response to ticket (insert into ticket_response).
  */
@@ -269,6 +287,24 @@ public function addResponse(int $ticket_id, int $staff_id, string $response_text
     return $ok;
 }
 
+public function setTimeLineReview(int $ticket_id):bool
+{
+    $conn = self::getConnection();
+    $sql = "UPDATE ticket_timeline SET under_review = CURRENT_TIMESTAMP WHERE ticket_id = ? ";
+    $staff_id = (int)($_SESSION['user']['u_id'] ?? 0);
+    $stmt = $conn->prepare($sql);
+    if (!$stmt) {
+        $err = $conn->error;
+        $conn->close();
+        throw new Exception('Prepare failed: ' . $err);
+    }
+    $stmt->bind_param('i', $ticket_id);
+    $ok = $stmt->execute() && $stmt->affected_rows > 0;
+    $stmt->close();
+    $conn->close();
+    return $ok;
+}
+
 /**
  * Forward ticket to another staff (update assigned_to).
  */
@@ -284,6 +320,24 @@ public function forwardTicket(int $ticket_id, int $new_staff_id): bool
         throw new Exception('Prepare failed: ' . $err);
     }
     $stmt->bind_param('iii', $new_staff_id, $ticket_id, $current_staff_id);
+    $ok = $stmt->execute() && $stmt->affected_rows > 0;
+    $stmt->close();
+    $conn->close();
+    return $ok;
+}
+
+public function setTicketLevel(int $ticket_id, int $new_staff_id , int $level): bool
+{
+    $conn = self::getConnection();
+
+    $sql = "UPDATE ticket_timeline SET level_$level = CURRENT_TIMESTAMP WHERE ticket_id = ?";
+    $stmt = $conn->prepare($sql);
+    if (!$stmt) {
+        $err = $conn->error;
+        $conn->close();
+        throw new Exception('Prepare failed: ' . $err);
+    }
+    $stmt->bind_param('i', $ticket_id);
     $ok = $stmt->execute() && $stmt->affected_rows > 0;
     $stmt->close();
     $conn->close();
@@ -314,6 +368,22 @@ public function resolveTicket(int $ticket_id): bool
     return $ok;
 }
 
+public function resolveTicketTimeLine(int $ticket_id):bool{
+    $conn = self::getConnection();
+    $sql = "UPDATE ticket_timeline SET resolved = CURRENT_TIMESTAMP WHERE ticket_id = ? ";
+    $staff_id = (int)($_SESSION['user']['u_id'] ?? 0);
+    $stmt = $conn->prepare($sql);
+    if (!$stmt) {
+        $err = $conn->error;
+        $conn->close();
+        throw new Exception('Prepare failed: ' . $err);
+    }
+    $stmt->bind_param('i', $ticket_id);
+    $ok = $stmt->execute() && $stmt->affected_rows > 0;
+    $stmt->close();
+    $conn->close();
+    return $ok;
+}
 /**
  * Reject/Close ticket (update status to 'agent-closed' or 'closed').
  */
