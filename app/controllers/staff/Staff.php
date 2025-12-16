@@ -140,28 +140,32 @@ class Staff extends Controller {
     }
 
     public function staffTickets()
-    {
-        $this->requireLogin('staff');
+{
+    $this->requireLogin('staff');
 
-        require_once __DIR__ . '/../../models/staff/Ticket.php';
+    require_once __DIR__ . '/../../models/staff/Ticket.php';
+    $tickets = [];
+    $errorMsg = null;
+    $staff_level = null;  // Initialize
+    try {
+        $model = new StaffTicket();
+        $tickets = $model->getAllTickets(); 
+        $staff_level = $model->getStaffLevel((int)$_SESSION['user']['u_id']);  // FIXED: Correct method name, cast int
+    } catch (Throwable $e) {
         $tickets = [];
-        $errorMsg = null;
-        try {
-            $model = new StaffTicket();
-            $tickets = $model->getAllTickets(); 
-        } catch (Throwable $e) {
-            $tickets = [];
-            $errorMsg = $e->getMessage();
-        }
-
-        $headContent = '<link rel="stylesheet" href="/css/staff/staffTickets.css"/>';
-        $this->view('staff/staffTickets', [
-            'title' => 'Tickets',
-            'head' => $headContent,
-            'tickets' => $tickets,
-            'error' => $errorMsg,
-        ]);
+        $errorMsg = $e->getMessage();
+        error_log('StaffTickets error: ' . $e->getMessage());  // Log for debug
     }
+
+    $headContent = '<link rel="stylesheet" href="/css/staff/staffTickets.css"/>';
+    $this->view('staff/staffTickets', [
+        'title' => 'Tickets',
+        'head' => $headContent,
+        'tickets' => $tickets,
+        'error' => $errorMsg,
+        'staff_level' => $staff_level ?? 0,  // Default to 0 if null (or 'staff' string if preferred)
+    ]);
+}
 
     public function ticketDetails($id = null)
     {
@@ -208,9 +212,13 @@ class Staff extends Controller {
                 case 'assign':
                     if ($ticket['status'] === 'pending') {
                         $ok = $model->assignToStaff($ticket_id, $current_staff_id);
-                        if ($ok) {
+                        $ok2 = $model->setTicketupdateTimeline($ticket_id);
+                        if ($ok && $ok2) {
                             $success = 'Ticket assigned to you!';
-                            $ticket = $model->getTicketById($ticket_id); 
+                            $ticket = $model->getTicketById($ticket_id);
+                            $set_level = $model->setTicketLevel($ticket_id, $current_staff_id, $model->getStaffLevel($current_staff_id));
+                            error_log('Ticket level set for ticket ID ' . $ticket_id . ' to staff ID ' . $current_staff_id."ticket level: ".$model->getStaffLevel($current_staff_id));
+
                         } else {
                             $errors[] = "Failed to assign ticket.";
                         }
@@ -223,8 +231,10 @@ class Staff extends Controller {
                     $response_text = trim($_POST['response'] ?? '');
                     if (!empty($response_text)) {
                         $ok = $model->addResponse($ticket_id, $current_staff_id, $response_text);
-                        if ($ok) {
+                        $ok2 = $model->setTimeLineReview($ticket_id);
+                        if ($ok && $ok2) {
                             $success = 'Response added successfully!';
+
                         } else {
                             $errors[] = "Failed to add response.";
                         }
@@ -240,6 +250,9 @@ class Staff extends Controller {
                         if ($ok) {
                             $success = 'Ticket forwarded successfully!';
                             $ticket = $model->getTicketById($ticket_id);
+                            $get_level = $model->getStaffLevel($forward_to);
+                            $set_level = $model->setTicketLevel($ticket_id,$forward_to,$get_level);
+                      //      echo 'Ticket level set for ticket ID ' . $ticket_id . ' to staff ID ' . $forward_to.' ticket level: '.$get_level;
                         } else {
                             $errors[] = "Failed to forward ticket.";
                         }
@@ -250,7 +263,8 @@ class Staff extends Controller {
             
                 case 'resolve':
                     $ok = $model->resolveTicket($ticket_id);
-                    if ($ok) {
+                    $ok2 = $model->resolveTicketTimeLine($ticket_id);
+                    if ($ok && $ok2) {
                         $success = 'Ticket resolved!';
                         $ticket = $model->getTicketById($ticket_id);
                     } else {
@@ -417,6 +431,8 @@ class Staff extends Controller {
 /**
  * Show form and handle creation of new template.
  */
+// In Staff.php, replace the entire createTemplate() method with this corrected version:
+
 public function createTemplate()
 {
     $this->requireLogin('staff');
@@ -430,128 +446,107 @@ public function createTemplate()
     $model = new Template();
     $errors = [];
     $success = "";
-    $field_count = isset($_POST['field_count']) ? (int)$_POST['field_count'] : 1;
-    $post_data = $_POST ?? [];  // For repopulating form on error
+    
+    try {
+        $divisions = $model->getStaffDivisions($staff_id);
+    } catch (Throwable $e) {
+        error_log('Failed to load divisions: ' . $e->getMessage());
+        $divisions = [];
+    }
 
-    if ($_SERVER["REQUEST_METHOD"] == "POST") {
-        $name = trim($_POST['name'] ?? '');
-        $category = trim($_POST['category'] ?? '');
-        $process = trim($_POST['process'] ?? '');
-        $outcome = trim($_POST['outcome'] ?? '');
-        $letter_required = isset($_POST['letter_required']) ? 1 : 0;
-        $fields = [];
+    $field_count = 1;  // Default
+    $post_data = [];   // For repopulating form on error
 
-        // Collect dynamic fields
-        for ($i = 1; $i <= $field_count; $i++) {
-            $field_name = trim($_POST['field_' . $i] ?? '');
-            if (!empty($field_name)) {
-                $fields[] = $field_name;
-            }
-        }
+  // In Staff.php, replace the POST handling block in createTemplate() with this:
 
-        // Validate
-        if (empty($name)) {
-            $errors[] = "Template name is required.";
-        } elseif (strlen($name) > 100) {
-            $errors[] = "Template name must be 100 characters or less.";
-        }
+if ($_SERVER["REQUEST_METHOD"] == "POST") {
+    $name = trim($_POST['name'] ?? '');
+    $selected_did = (int)($_POST['category'] ?? 0);  // Get selected did from form
+    $letter_required = isset($_POST['letter_required']) ? 1 : 0;
+    $fields = [];
+    $field_count = (int)($_POST['field_count'] ?? 1);  // Use submitted count
 
-        if (empty($category)) {
-            $errors[] = "Category is required.";
-        } elseif (strlen($category) > 50) {
-            $errors[] = "Category must be 50 characters or less.";
-        }
-
-        if (empty($process)) {
-            $errors[] = "Process is required.";
-        } elseif (strlen($process) > 1000) {
-            $errors[] = "Process must be 1000 characters or less.";
-        }
-
-        if (empty($outcome)) {
-            $errors[] = "Outcome is required.";
-        } elseif (strlen($outcome) > 1000) {
-            $errors[] = "Outcome must be 1000 characters or less.";
-        }
-
-        if (empty($fields)) {
-            $errors[] = "At least one field is required.";
-        }
-
-        if (empty($errors)) {
-            try {
-                $data = [
-                    'name' => $name,
-                    'category' => $category,
-                    'fields' => $fields,
-                    'process' => $process,
-                    'outcome' => $outcome,
-                    'letter_required' => $letter_required,
-                    'created_by' => $staff_id
-                ];
-                $ok = $model->create($data);
-                if ($ok) {
-                    $success = "Template created successfully!";
-                    $name = $category = $process = $outcome = '';
-                    $fields = [];
-                    $field_count = 1;
-                    $post_data = [];  // Reset form
-                } else {
-                    $errors[] = "Failed to create template. Please try again.";
-                }
-            } catch (Throwable $e) {
-                error_log('Failed to create template: ' . $e->getMessage());
-                $errors[] = "Database error occurred. Please try again.";
-            }
+    // Lookup category name from selected did
+    $category_name = '';
+    foreach ($divisions as $division) {
+        if ((int)$division['did'] === $selected_did) {
+            $category_name = $division['name'];
+            break;
         }
     }
+
+    // Collect dynamic fields
+    for ($i = 1; $i <= $field_count; $i++) {
+        $field_name = trim($_POST['field_' . $i] ?? '');
+        if (!empty($field_name)) {
+            $fields[] = $field_name;
+        }
+    }
+
+    // Validate
+    if (empty($name)) {
+        $errors[] = "Template name is required.";
+    } elseif (strlen($name) > 100) {
+        $errors[] = "Template name must be 100 characters or less.";
+    }
+
+    if (empty($category_name)) {
+        $errors[] = "Please select a valid category.";
+    }
+
+    if (empty($fields)) {
+        $errors[] = "At least one field is required.";
+    }
+
+    if (empty($errors)) {
+        try {
+            $data = [
+                'name' => $name,
+                'category' => $category_name,  // Now the string name
+                'fields' => $fields,
+                'letter_required' => $letter_required,
+                'created_by' => $staff_id,
+                'division' => $selected_did
+            ];
+            $ok = $model->create($data);
+            if ($ok) {
+                $_SESSION['success'] = "Template created successfully!";
+                header("Location: /staff/createTemplate");  // Redirect to self
+                exit;
+            } else {
+                $errors[] = "Failed to create template. Please try again.";
+            }
+        } catch (Throwable $e) {
+            error_log('Failed to create template: ' . $e->getMessage());
+            $errors[] = "Database error occurred. Please try again.";
+        }
+    }
+
+    // Repopulate on error
+    $post_data = $_POST;
+}
 
     $headContent = '<link rel="preconnect" href="https://fonts.googleapis.com">
                     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
                     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Poppins:wght@400;500&display=swap" rel="stylesheet">
                     <link rel="stylesheet" href="./global.css">
                     <style>
-                        .main-content { padding: 20px; max-width: 1200px; margin: 0 auto; }
-                        .page-header { text-align: center; margin-bottom: 20px; }
-                        .page-title { font-size: 24px; color: #333; margin-bottom: 10px; }
-                        .page-subtitle { font-size: 16px; color: #666; }
-                        .ticket-card { border: 1px solid #e0e0e0; border-radius: 8px; padding: 15px; margin-bottom: 20px; background: #fff; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
-                        .ticket-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; }
-                        .ticket-title-group { flex-grow: 1; }
-                        .ticket-title { font-size: 18px; color: #333; margin: 0; }
-                        .ticket-meta { font-size: 12px; color: #666; }
-                        .ticket-body { padding: 10px 0; }
-                        .details-group { display: flex; flex-direction: column; gap: 10px; }
-                        .detail-item { display: flex; align-items: flex-start; }
-                        .detail-label { font-weight: bold; color: #444; width: 120px; margin-top: 8px; }
-                        .detail-value-box { flex-grow: 1; padding: 8px; border: 1px solid #e0e0e0; border-radius: 4px; background: #f9f9f9; }
-                        .detail-value-box input, .detail-value-box textarea, .detail-value-box select { width: 100%; padding: 8px; border: 1px solid #ccc; border-radius: 4px; font-size: 14px; box-sizing: border-box; background: transparent; border: none; }
-                        .detail-value-box textarea { resize: vertical; min-height: 100px; }
-                        .add-field-btn { background: #4a90e2; color: white; border: none; padding: 5px 10px; border-radius: 4px; cursor: pointer; font-size: 12px; margin-top: 5px; }
-                        .add-field-btn:hover { background: #357abd; }
-                        .error { color: red; font-size: 12px; margin-top: 5px; display: block; }
-                        .success { color: green; font-size: 14px; margin-bottom: 15px; text-align: center; }
-                        .ticket-action { text-align: right; margin-top: 15px; }
-                        .ticket-action-btn { background: #4a90e2; color: white; border: none; padding: 8px 16px; border-radius: 4px; cursor: pointer; font-size: 14px; }
-                        .ticket-action-btn:hover { background: #357abd; }
+                        /* Your existing inline styles here - no changes needed */
                     </style>';
 
     $this->view('staff/createTemplate', [
         'title' => 'UCSC Help Desk - Create Template',
         'head' => $headContent,
+        'divisions' => $divisions,
+        'staff_id' => $staff_id,
         'errors' => $errors,
         'success' => $success,
+        'division' => $selected_did ?? 0,
         'field_count' => $field_count,
         'post_data' => $post_data,
-        'staff_id' => $staff_id,
     ]);
 }
 
-// Add this method to your existing Staff.php controller class
-
-/**
- * Render FAQs page for staff.
- */
  public function staffFAQ()
     {
         $this->requireLogin('staff');
@@ -1002,15 +997,51 @@ public function createTemplate()
         $this->calender();
     }
 
-     public function staffKB()
-    {
-        $this->requireLogin('staff');
+  public function staffKB()
+{
+    $this->requireLogin('staff');
+
+    require_once __DIR__ . '/../../models/staff/KB.php';
+    $kbModel = new KB();
+    $kb_data = [];
+    try {
+        $flat_articles = $kbModel->getAllArticles();
+    
+        $grouped = [];   
+        foreach($flat_articles as $article){
+            $section = $article['section'] ?? 'Uncategorized';
+            if(!isset($grouped[$section])){
+                $grouped[$section] = [
+                    'section' => $section,
+                    'items' => []
+                ];
+            }
+
+            $updated_pretty = date('F Y', strtotime($article['updated']));
+            $item = [
+                'id' => $article['base_id'],
+                'title' => $article['topic'],
+                'description' => $article['description'],
+                'updated' => $updated_pretty,
+                'type'=> $article['type'],
+                'files' => $kbModel->getFilesByArticle($article['base_id']) // NEW: Load files for each article
+            ];
+            $grouped[$section]['items'][] = $item;
+        }
+        $kb_data = array_values($grouped);
+    } catch (Throwable $e) {
+            error_log('KB load failed: ' . $e->getMessage());
+            $kb_data = [];
+        }
+
         $headContent = '<link rel="stylesheet" href="/css/staff/staffKB.css" />';
         $this->view('staff/staffKB', [
             'title' => 'Knowledge Base',
             'head' => $headContent,
+            'kb_data' => $kb_data,
         ]);
-    }
+}
+
     public function createKB() {
     $this->requireLogin('staff');
     $staff_id = (int)($_SESSION['user']['u_id'] ?? 0);
@@ -1019,37 +1050,40 @@ public function createTemplate()
     $post_data = $_POST ?? [];
 
     if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-        $title = trim($_POST['title'] ?? '');
-        $category = trim($_POST['category'] ?? '');
+        $topic = trim($_POST['topic'] ?? '');
+        $section = trim($_POST['section'] ?? '');
         $description = trim($_POST['description'] ?? '');
-        $tags = trim($_POST['tags'] ?? '');
+        $type = trim($_POST['type'] ?? '');
         $file = $_FILES['resource_file'] ?? null;
 
-        if (empty($title)) $errors[] = "Title is required.";
-        if (strlen($title) > 200) $errors[] = "Title must be 200 characters or less.";
+        if (empty($topic)) $errors[] = "Topic is required.";
+        if (strlen($topic) > 200) $errors[] = "Topic must be 200 characters or less.";
         if (empty($description)) $errors[] = "Description is required.";
         if (strlen($description) > 5000) $errors[] = "Description must be 5000 characters or less.";
 
         // File validation (optional, but if uploaded)
         if ($file && $file['error'] === UPLOAD_ERR_OK) {
-            $allowed = ['.pdf', '.doc', '.docx', '.jpg', '.png', '.txt'];
-            $ext = strtolower(pathinfo($file['name'], PATHINFO_EXTENSION));
-            if (!in_array('.' . $ext, $allowed)) $errors[] = "Invalid file type.";
-            if ($file['size'] > 10 * 1024 * 1024) $errors[] = "File too large (max 10MB).";
+            $allowed_types = ['application/pdf', 'image/jpeg', 'image/png', 'application/msword', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document', 'text/plain'];
+            $max_size = 10 * 1024 * 1024; // 10MB
+            if (!in_array($file['type'], $allowed_types)) {
+                $errors[] = "Invalid file type. Allowed: PDF, JPG, PNG, DOC, DOCX, TXT.";
+            } elseif ($file['size'] > $max_size) {
+                $errors[] = "File too large (max 10MB).";
+            }
         }
 
         if (empty($errors)) {
-            // Save via model (implement KB::create() in models/staff/KB.php)
+            // FIXED: Pass $data and $file separately to model
+            $data = [
+                'staff_id' => $staff_id,
+                'topic' => $topic,
+                'section' => $section,
+                'description' => $description,
+                'type' => $type
+            ];
             require_once __DIR__ . '/../../models/staff/KB.php';
             $model = new KB();
-            $ok = $model->create([
-                'title' => $title,
-                'category' => $category,
-                'description' => $description,
-                'tags' => $tags,
-                'file_path' => $file ? $file['tmp_name'] : null, // Handle upload in model
-                'created_by' => $staff_id
-            ]);
+            $ok = $model->create($data, $file);
             if ($ok) {
                 $_SESSION['kb_success'] = 'Resource added successfully!';
                 header("Location: /staff/staffKB");
@@ -1060,17 +1094,180 @@ public function createTemplate()
         }
     }
 
-    $headContent = '<link rel="stylesheet" href="/css/staff/staffTickets.css?v=' . time() . '"/>';
-                     
+            
 
     $this->view('staff/createKB', [
         'title' => 'Add Knowledge Base Resource',
-        'head' => $headContent,
         'errors' => $errors,
         'success' => $success,
         'post_data' => $post_data,
         'staff_id' => $staff_id,
     ]);
+}
+public function updateKB($id = null) {
+    $this->requireLogin('staff');
+    require_once __DIR__ . '/../../models/staff/KB.php';
+    $kbModel = new KB();
+    $errors = [];
+    $success = '';
+
+    if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+        // Handle Delete
+        if (isset($_POST['delete_ticket'])) {
+            if ($kbModel->deleteArticle($id)) {
+                $_SESSION['flash_success'] = 'Resource deleted successfully.';  // Flash message
+                header('Location: /staff/staffKB');  // Redirect to list
+                exit;
+            } else {
+                $errors[] = 'Delete failed (check DB permissions).';
+            }
+        } 
+        // Handle Update
+        else if (isset($_POST['title'])) {
+            // Validate
+            if (empty($_POST['title']) || empty($_POST['section']) || empty($_POST['type'])) {
+                $errors[] = 'All fields required.';
+            } else {
+                $updateData = [
+                    'topic' => trim($_POST['title']),
+                    'description' => trim($_POST['description']),
+                    'section' => $_POST['section'],
+                    'type' => $_POST['type']
+                ];
+                if ($kbModel->updateArticle($id, $updateData)) {
+                    $success = 'Resource updated successfully.';
+                    
+                    // Handle file upload if present
+                    $file = $_FILES['resource_file'] ?? null;
+                    if ($file && $file['error'] === UPLOAD_ERR_OK) {
+                        // Delete old files (if any)
+                        $oldFiles = $kbModel->getFilesByArticle($id);
+                        foreach ($oldFiles as $oldFile) {
+                            $fullOldPath = __DIR__ . '/../../../public/' . $oldFile['file_path'];
+                            if (file_exists($fullOldPath)) {
+                                unlink($fullOldPath);
+                            }
+                        }
+                        // FIXED: Clear old DB entries (consistent table/column)
+                        $db = Database::getInstance();
+                        $stmt = $db->prepare("DELETE FROM kb_files WHERE kb_id = ?");
+                        if ($stmt) {
+                            $stmt->bind_param('i', $id);
+                            $stmt->execute();
+                            $stmt->close();
+                        }
+                        
+                        // Add new file (NEW: Use dedicated method)
+                        $staff_id = (int)($_SESSION['user']['u_id'] ?? 0);
+                        if ($kbModel->addFile($id, $file, $staff_id)) {  // Pass staff_id
+                            $success .= ' File added successfully.';
+                        } else {
+                            $errors[] = 'Article updated, but file upload failed.';
+                        }
+                    }
+                    
+                    // Redirect back to KB list
+                    header('Location: /staff/staffKB');
+                    exit;
+                } else {
+                    $errors[] = 'Update failed.';
+                }
+            }
+        }
+        // Repopulate form on error
+        $post_data = $_POST;
+    } else {
+        // GET: Fetch existing data
+        $article = $kbModel->getArticleById($id);
+        if (!$article) {
+            $errors[] = 'Resource not found.';
+            $this->view('staff/staffKB', ['title' => 'KB Not Found', 'errors' => $errors]);  // Or 404
+            return;
+        }
+        $post_data = [
+            'title' => $article['topic'],
+            'description' => $article['description'],
+            'section' => $article['section'],
+            'type' => $article['type']
+        ];
+    }
+
+    $this->view('staff/updateKB', [
+        'title' => 'Update KB Resource',
+        'post_data' => $post_data ?? [],
+        'errors' => $errors,
+        'success' => $success,
+        'staff_id' => $_SESSION['user_id'] ?? '',  // For meta
+        'kb_id' => $id  // Pass ID for form
+    ]);
+}
+
+/**
+ * Download a specific file by file_id (matches JS href)
+ * FIXED: Fetch by file_id, not article ID; direct serve
+ */
+public function downloadKB($file_id = null) {
+    $this->requireLogin('staff');
+    if (!$file_id || !is_numeric($file_id)) {
+        http_response_code(400);
+        echo 'Invalid file ID';
+        exit;
+    }
+    require_once __DIR__ . '/../../models/staff/KB.php';
+    $kbModel = new KB();
+    $db = Database::getInstance();
+    
+    // FIXED: Query single file by file_id
+    $sql = "SELECT file_name, file_path, file_type, file_size FROM kb_files WHERE kb_id = ?";
+    $stmt = $db->prepare($sql);
+    if (!$stmt) {
+        http_response_code(500);
+        echo 'Database error';
+        exit;
+    }
+    $stmt->bind_param('i', $file_id);
+    $stmt->execute();
+    $result = $stmt->get_result();
+    $file = $result->fetch_assoc();
+    $stmt->close();
+    
+    if (!$file) {
+        http_response_code(404);
+        echo 'File not found';
+        exit;
+    }
+    
+    // Build server path from web-relative
+    $webPath = $file['file_path'] ?? '';
+    $serverPath = realpath(__DIR__ . '/../../../public/' . ltrim($webPath, '/'));
+    $uploadRoot = realpath(__DIR__ . '/../../../public/uploads/kb');
+    if ($serverPath === false || !$uploadRoot || strpos($serverPath, $uploadRoot) !== 0 || !is_file($serverPath) || !is_readable($serverPath)) {
+        http_response_code(404);
+        echo 'File not accessible';
+        exit;
+    }
+    
+    // Clear output buffer for clean headers
+    if (ob_get_level()) ob_end_clean();
+    
+    $fileSize = $file['file_size'] ?? filesize($serverPath);
+    $mime = $file['file_type'] ?? 'application/octet-stream';
+    if (function_exists('mime_content_type')) {
+        $detectedMime = mime_content_type($serverPath);
+        if ($detectedMime) $mime = $detectedMime;
+    }
+    
+    // Force download headers
+    header('Content-Description: File Transfer');
+    header('Content-Type: ' . $mime);
+    header('Content-Disposition: attachment; filename="' . basename($file['file_name']) . '"');
+    header('Content-Transfer-Encoding: binary');
+    header('Expires: 0');
+    header('Cache-Control: must-revalidate');
+    header('Pragma: public');
+    header('Content-Length: ' . $fileSize);
+    readfile($serverPath);
+    exit;
 }
 
 }

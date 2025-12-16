@@ -19,21 +19,14 @@
                         <input id="faq-search" type="text" placeholder="Search FAQs..." autocomplete="off"/>
           </div>
           <div class="filters">
-            <select id="status-filter" class="filter-btn">
-              <option value="">All Statuses</option>
-              <option value="all">All</option>
-              <option value="pending">Pending</option>
-              <option value="resolved">Resolved</option>
-              <option value="closed">Closed</option>
-              <option value="assigned">Assigned</option>
-            </select>
-            <select id="priority-filter" class="filter-btn">
-              <option value="">All Priorities</option>
-              <option value="all">All</option>
-              <option value="high">High</option>
-              <option value="medium">Medium</option>
-              <option value="low">Low</option>
-            </select>
+                        <select id="status-filter" class="filter-btn">
+                            <option value="">All Statuses</option>
+                            <option value="pending">Pending</option>
+                            <option value="agent assigned">Agent Assigned</option>
+                            <option value="agent-closed">Agent Closed</option>
+                            <option value="resolved">Resolved</option>
+                            <option value="closed">Closed</option>
+                        </select>
           </div>
         </div>
 
@@ -45,20 +38,25 @@
 <style>
 
     .status-badge {
-        padding: 5px 10px;
-        border-radius: 17px;
-        font-size: 12px;
-        font-weight: 500;
-        letter-spacing: 0.24px;
+        padding: 6px 12px;
+        border-radius: 20px;
+        font-size: 0.8em;
+        font-weight: 600;
+        letter-spacing: 0.5px;
         white-space: nowrap;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        transition: all 0.2s ease;
     }
 
-    .status-badge.status-pending { background-color: #fff68f; color: #844d0f; }
-    .status-badge.status-resolved { background-color: #9effbc; color: #166434; }
-    .status-badge.status-closed { background-color: #9effbc; color: #166434; }
-    .status-badge.status-agent-assigned { background-color: #badbff; color: #3300ff; }
-    .status-badge.status-agent-closed { background-color: #9effbc; color: #166434; }
+    .status-badge:hover {
+        transform: scale(1.05);
+    }
 
+    .status-pending { background-color: #fff68f; color: #844d0f; }
+    .status-resolved { background-color: #9effbc; color: #166434; }
+    .status-closed { background-color: #9effbc; color: #166434; }
+    .status-agent-assigned { background-color: #badbff; color: #3300ff; }
+    .status-agent-closed { background-color: #9effbc; color: #166434; }
     /* Temporary inline styles for debugging - remove once CSS file works */
     .layout-container {
         display: flex;
@@ -200,13 +198,15 @@
 } 
 
 .ticket-card {
-    background-color: #f9f9f9; 
-    border: 1px solid #8c8cf9;
+    background: linear-gradient(135deg, #ffffff 0%, #f8f9ff 100%);
+    border: 1px solid #e0e7ff;
     border-radius: 15px;
     padding: 15px;
     display: flex;
     flex-direction: column;
     gap: 10px;
+    box-shadow: 0 2px 8px rgba(140, 140, 249, 0.1);
+    transition: all 0.3s ease;
 }
 .ticket-header {
     display: flex;
@@ -216,7 +216,11 @@
     border: 1px solid transparent;
     padding: 10px;
 }
-
+.ticket-card:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 6px 20px rgba(140, 140, 249, 0.15);
+        border-color: #8c8cf9;
+}
 
 
 </style>

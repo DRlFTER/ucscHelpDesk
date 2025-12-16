@@ -31,6 +31,7 @@
         'dashboard' => '/counselor/dashboard',
         'tickets'   => '/counselor/tickets',
         'calender'  => '/counselor/calender',
+        'forum'     => '/counselor/forum',
         'newTicket' => null,
       ],
       'lecturer' => [
@@ -146,7 +147,6 @@
     </div>
   </nav>
 </header>
-
 <script>
 document.addEventListener('DOMContentLoaded', function () {
   const profile = document.querySelector('.profile');

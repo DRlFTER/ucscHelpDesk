@@ -1,8 +1,3 @@
-<?php
-  $title = 'Knowledge Base';
-  $head = '<link rel="stylesheet" href="/css/student/studentKnowledgeBase.css">';
-?>
-
 <main>
   <div class="fullPage kbPage">
     <div class="pageHeader">
@@ -70,6 +65,109 @@
   cursor: pointer;
   padding: 0;
 }
-    </style>
 
-<script src="/js/staff/staffKB.js"></script>
+    .ticket-action {
+        padding: 8px 16px;
+        border: none;
+        border-radius: 8px;
+        background: var(--CTA, #8c8cf9);
+        cursor: pointer;
+        transition: background-color 0.25s ease, transform 0.15s ease, box-shadow 0.25s ease;
+    }
+
+    .ticket-action:hover {
+        background-color: #6a6af5;
+        transform: translateY(-2px);
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+    }
+
+    .ticket-action-btn {
+        color: #fff;
+        font-family: "Poppins", sans-serif;
+        font-size: 14px;
+        font-style: normal;
+        font-weight: 400;
+        line-height: normal;
+        letter-spacing: 0.16px;
+        background: none;
+        border: none;
+        cursor: pointer;
+        padding: 0;
+    }
+
+    /* Footer Layout: Compact, balanced buttons */
+    .kbFooter {
+        display: flex;
+        justify-content: flex-end;  /* All right-aligned for clean look */
+        align-items: center;
+        gap: 8px;  /* Tight spacing */
+        padding-top: 12px;
+        border-top: 1px solid #e5e7eb;
+        margin-top: 12px;
+    }
+
+    /* Download: Unchanged compact icon (40px square, blue) */
+    .kbFooter .kbDownloadBtn {
+        width: 40px;
+        height: 40px;
+        border: none;
+        border-radius: 8px;
+        background: #3b82f6;
+        color: white;
+        cursor: pointer;
+        transition: all 0.2s ease;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+    .kbFooter .kbDownloadBtn:hover {
+        background: #2563eb;
+        transform: translateY(-1px);
+        box-shadow: 0 2px 8px rgba(59, 130, 246, 0.3);
+    }
+
+   
+
+    /* Delete: Slim text button, soft red theme */
+    .kbUpdateBtn {
+        padding: 6px 12px;  /* Slimmer for proportion */
+        border: none;
+        border-radius: 6px;
+        background: #fee2e2;  /* Light red bg */
+        color: #dc2626;       /* Dark red text */
+        font-size: 13px;      /* Slightly smaller text */
+        font-weight: 500;
+        cursor: pointer;
+        transition: all 0.2s ease;
+        height: auto;         /* Matches ~28px height */
+        white-space: nowrap;
+    }
+
+    .kbUpdateBtn:hover {
+        background: #fecaca;  /* Medium red on hover */
+        transform: translateY(-1px);
+        box-shadow: 0 2px 8px rgba(220, 38, 38, 0.2);
+    }
+
+    /* Responsive: Stack on small screens */
+    @media (max-width: 768px) {
+        .kbFooter {
+            flex-direction: row;  /* Keep horizontal if space allows */
+            gap: 6px;
+        }
+        .kbUpdateBtn,
+        .kbDeleteBtn {
+            padding: 8px 12px;  /* Slightly taller on mobile for touch */
+            min-width: 70px;
+        }
+    }
+
+    </style>
+<script>
+  // Assign into the global window object to avoid redeclaration errors
+  if (typeof window.KB_DATA === 'undefined') {
+    window.KB_DATA = <?php echo json_encode($kb_data ?? []); ?>;
+  }
+</script>
+<script src="/js/staff/staffKB.js" defer></script>

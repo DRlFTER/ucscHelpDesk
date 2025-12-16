@@ -46,18 +46,6 @@ $generated_letter = $generated_letter ?? '';
                     <?php echo nl2br(htmlspecialchars(($template['process'] ?? ''))); ?>
                   </div>
                 </div>
-                <div class="detail-item">
-                  <span class="detail-label">Process:</span>
-                  <div class="detail-value-box">
-                    <?php echo nl2br(htmlspecialchars(($template['process'] ?? ''))); ?>
-                  </div>
-                </div>
-                <div class="detail-item">
-                  <span class="detail-label">Expected Outcome:</span>
-                  <div class="detail-value-box">
-                    <?php echo nl2br(htmlspecialchars(($template['outcome'] ?? ''))); ?>
-                  </div>
-                </div>
               </div>
             </div>
             <form method="POST" action="" enctype="multipart/form-data">

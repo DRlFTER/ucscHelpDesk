@@ -16,8 +16,8 @@ class StudentTicket
     public function create(array $data): int
     {
         $conn = self::getConnection();
-    $sql = "INSERT INTO tickets (created_at, title, u_id, status, priority, description, meeting_requested, division)
-        VALUES (NOW(), ?, ?, ?, ?, ?, ?, ?)";
+    $sql = "INSERT INTO tickets (created_at, title, u_id, status, priority, description, meeting_requested, division,t_type)
+        VALUES (NOW(), ?, ?, ?, ?, ?, ?, ?,?)";
 
         $stmt = $conn->prepare($sql);
         if (!$stmt) {
@@ -32,6 +32,7 @@ class StudentTicket
         $priority = $data['priority'];
         $description = $data['description'];
         $meetingRequested = $data['meeting_requested'] ?? null;
+        $t_type = $data['type'] ?? 'private';
 
         // Map category to division id via canonical map first (handles minor name differences)
         $canonMap = [
@@ -66,7 +67,7 @@ class StudentTicket
             }
         }
 
-    $stmt->bind_param('sissssi', $title, $u_id, $status, $priority, $description, $meetingRequested, $divisionId);
+    $stmt->bind_param('sissssis', $title, $u_id, $status, $priority, $description, $meetingRequested, $divisionId, $t_type);
         if (!$stmt->execute()) {
             throw new Exception('Execute failed: ' . $stmt->error);
         }
@@ -256,4 +257,24 @@ class StudentTicket
         $conn->close();
         return $data;
     }
+
+    // Add this method to models/student/Ticket.php (StudentTicket class)
+// This handles associating a file with the newly created ticket.kavindu added this
+
+public function addFile(int $ticket_id, string $file_path, string $original_name = ''): bool
+{
+    $conn = self::getConnection();
+    $sql = "INSERT INTO supporting_documents (ticket_id, doc_name, location, uploaded_at) VALUES (?, ?, ?, NOW())";
+
+    $stmt = $conn->prepare($sql);
+    if (!$stmt) {
+        throw new Exception('Prepare failed: ' . $conn->error);
+    }
+
+    $stmt->bind_param('iss', $ticket_id, $original_name, $file_path);
+    $result = $stmt->execute();
+    $stmt->close();
+    $conn->close();
+    return $result;
+}
 }

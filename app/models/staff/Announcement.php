@@ -50,21 +50,21 @@ class Announcement {
     /**
      * Get attached files for an announcement
      */
-    public function getFiles($announcement_id)
-    {
-        $db = Database::getInstance();
-        $sql = "SELECT file_name, file_path, file_type, file_size FROM announcement_files WHERE announcement_id = ?";
-        $stmt = $db->prepare($sql);
-        $stmt->bind_param('i', $announcement_id);
-        $stmt->execute();
-        $res = $stmt->get_result();
-        $files = [];
-        while ($row = $res->fetch_assoc()) {
-            $files[] = $row;
-        }
-        $stmt->close();
-        return $files;
+  public function getFiles(int $announcement_id): array
+{
+    $db = Database::getInstance();
+    $sql = "SELECT file_name, file_path, file_type, file_size FROM announcement_files WHERE announcement_id = ?";
+    $stmt = $db->prepare($sql);
+    $stmt->bind_param("i", $announcement_id);
+    $stmt->execute();
+    $result = $stmt->get_result();
+    $files = [];
+    while ($row = $result->fetch_assoc()) {
+        $files[] = $row;
     }
+    $stmt->close();
+    return $files;
+}
     /** @var string|null */
     private $lastError = null;
     /**
@@ -144,7 +144,7 @@ public function create(array $data, ?array $file = null): bool
     $content = $data['content'];
     $division_id = $data['division_id'];
 
-    // Validate division association
+    // Validate division association (unchanged)
     $sql = "SELECT 1 FROM staff_division WHERE u_id = ? AND did = ?";
     $stmt = $db->prepare($sql);
     $stmt->bind_param("ii", $staff_id, $division_id);
@@ -156,7 +156,7 @@ public function create(array $data, ?array $file = null): bool
     }
     $stmt->close();
 
-    // Insert announcement
+    // Insert announcement (unchanged)
     $sql = "INSERT INTO announcement (topic, content, u_id, date_time) VALUES (?, ?, ?, NOW())";
     $stmt = $db->prepare($sql);
     $stmt->bind_param("ssi", $topic, $content, $staff_id);
@@ -171,26 +171,31 @@ public function create(array $data, ?array $file = null): bool
     if ($file && $file['error'] === UPLOAD_ERR_OK) {
         $allowed_types = ['application/pdf', 'image/jpeg', 'image/png', 'application/msword', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document'];
         $max_size = 5 * 1024 * 1024;  // 5MB
-        $base_upload_dir = 'C:/xampp/htdocs/UCSC/ucscHelpDesk/app/public/uploads/announcements/';  // Your XAMPP path
-        $staff_upload_dir = $base_upload_dir . $staff_id . '/';
-
+        
         if (!in_array($file['type'], $allowed_types) || $file['size'] > $max_size) {
-            // Invalid file, but announcement created – log if needed
             error_log("Invalid file for announcement $announcement_id: " . $file['name']);
             return true;
         }
 
+        // Server path for upload (unchanged)
+        $base_upload_dir = __DIR__ . '/../../../public/uploads/announcements/';
+        $staff_upload_dir = $base_upload_dir . $staff_id . '/';
         if (!is_dir($staff_upload_dir)) {
             mkdir($staff_upload_dir, 0777, true);
         }
 
         $file_name = time() . '_' . basename($file['name']);
-        $file_path = $staff_upload_dir . $file_name;
-        if (move_uploaded_file($file['tmp_name'], $file_path)) {
+        $server_file_path = $staff_upload_dir . $file_name;  // Server path for move_uploaded_file()
+        
+        if (move_uploaded_file($file['tmp_name'], $server_file_path)) {
+            // NEW: Compute web-relative path for DB (e.g., 'uploads/announcements/1/filename.pdf')
+            $web_file_path = 'uploads/announcements/' . $staff_id . '/' . $file_name;
+            
+            // Insert web-relative path into DB
             $sql = "INSERT INTO announcement_files (announcement_id, file_name, file_path, file_type, file_size) 
                     VALUES (?, ?, ?, ?, ?)";
             $stmt = $db->prepare($sql);
-            $stmt->bind_param("isssi", $announcement_id, $file['name'], $file_path, $file['type'], $file['size']);
+            $stmt->bind_param("isssi", $announcement_id, $file['name'], $web_file_path, $file['type'], $file['size']);
             $stmt->execute();
             $stmt->close();
         } else {
@@ -200,5 +205,4 @@ public function create(array $data, ?array $file = null): bool
 
     return true;
 }
-
 }
