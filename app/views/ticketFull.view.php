@@ -12,7 +12,6 @@
     <div class="pageLayout">
       <div class="pageHeader">
         <h1 class="pageTitle">Ticket status</h1>
-        <p class="pageSubtitle">Track the progress and responses for this ticket</p>
       </div>
       <div class="pageContent">
         <section class="ticketLeft">

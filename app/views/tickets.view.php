@@ -3,7 +3,6 @@
         <div class="pageLayout">
             <div class="pageHeader">
                 <h2 class="pageTitle">All tickets</h2>
-                <p class="pageSubtitle">Manage all issued tickets</p>
             </div>
             <div class="ticketsFilters">
             <div class="search">

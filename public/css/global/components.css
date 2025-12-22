@@ -247,10 +247,6 @@ body.modal-open main {
   font-size: 26px;
   font-weight: 600;
 }
-.pageSubtitle {
-  color: #394353;
-  font-size: 16px;
-}
 
 .card {
   display: flex;

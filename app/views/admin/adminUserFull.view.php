@@ -9,7 +9,6 @@
 		<div class="pageLayout">
 			<div class="pageHeader">
 				<h1 class="pageTitle">User details</h1>
-				<p class="pageSubtitle">View and manage user information</p>
 			</div>
 			<div class="pageContent">
 				<section class="ticketLeft">

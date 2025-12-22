@@ -3,7 +3,6 @@
         <div class="pageLayout">
             <div class="pageHeader">
                 <h2 class="pageTitle">All users</h2>
-                <p class="pageSubtitle">Manage all registered users</p>
             </div>
             <div class="ticketsFilters">
             <div class="search">
