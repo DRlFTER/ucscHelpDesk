@@ -111,10 +111,10 @@ class StudentTicket
     public function getByIdForUser(int $ticket_id, int $u_id): ?array
     {
         $conn = self::getConnection();
-    $sql = "SELECT t.ticket_id, t.created_at, t.title, d.name AS category, t.status, t.priority, t.description, t.meeting_requested
+    $sql = "SELECT t.ticket_id, t.created_at, t.title, d.name AS category, t.status, t.priority, t.description, t.meeting_requested, t.t_type
         FROM tickets t
         LEFT JOIN division d ON d.did = t.division
-        WHERE t.ticket_id = ? AND t.u_id = ?
+        WHERE t.ticket_id = ? AND (t.u_id = ? OR t.t_type = 'public')
         LIMIT 1";
         $stmt = $conn->prepare($sql);
         if (!$stmt) {

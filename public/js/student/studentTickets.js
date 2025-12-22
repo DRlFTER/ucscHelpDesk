@@ -284,6 +284,12 @@ window.studentTicketsData = [];
         const pr = getPriorityMeta((t && t.priority) || "");
         const meetingLabel = getMeetingLabel((t && t.meeting) || "");
 
+        const visibility = (t.visibility || 'private').toLowerCase();
+        const visLabel = visibility.charAt(0).toUpperCase() + visibility.slice(1);
+        const visStyle = visibility === 'public' 
+            ? 'color:#155724; background:#D4EDDA;' 
+            : 'color:#B50000; background:#FFD8D8;';
+
         return `
       <div class="ticket" tabindex="0" role="link" aria-label="Open ticket ${esc(
         t.title
@@ -297,7 +303,10 @@ window.studentTicketsData = [];
                             <p>${esc(t.student?.name || "")}</p>
                         </div>
                     </div>
-                    <div class="status ${status.cls}">${esc(status.label)}</div>
+                    <div style="display:flex; gap:10px; align-items:center;">
+                        <div class="status" style="${visStyle}">${esc(visLabel)}</div>
+                        <div class="status ${status.cls}">${esc(status.label)}</div>
+                    </div>
                 </div>
                 <div class="ticketRow2">
                     <div class="ticketDetails">
