@@ -557,55 +557,6 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         ]);
     }
 
-    public function createFAQ() {
-    $this->requireLogin('staff');
-    $staff_id = (int)($_SESSION['user']['u_id'] ?? 0);
-    $errors = [];
-    $success = '';
-    $post_data = $_POST ?? [];
-
-    if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-        $question = trim($_POST['question'] ?? '');
-        $answer = trim($_POST['answer'] ?? '');
-        $category = trim($_POST['category'] ?? '');
-
-        if (empty($question)) $errors[] = "Question is required.";
-        if (strlen($question) > 500) $errors[] = "Question must be 500 characters or less.";
-        if (empty($answer)) $errors[] = "Answer is required.";
-        if (strlen($answer) > 2000) $errors[] = "Answer must be 2000 characters or less.";
-
-        if (empty($errors)) {
-            // Save to DB via model (implement FAQ::create())
-            require_once __DIR__ . '/../../models/staff/FAQ.php';
-            $model = new FAQ();
-            $ok = $model->create([
-                'question' => $question,
-                'answer' => $answer,
-                'category' => $category,
-                'created_by' => $staff_id
-            ]);
-            if ($ok) {
-                $_SESSION['faq_success'] = 'FAQ created successfully!';
-                header("Location: /staff/staffFAQ");
-                exit;
-            } else {
-                $errors[] = "Failed to create FAQ. Please try again.";
-            }
-        }
-    }
-
-    $headContent = '<link rel="stylesheet" href="/css/staff/staffTickets.css?v=' . time() . '"/>'. "\n" .
-                       '<link rel="stylesheet" href="/css/staff/anncreate.css" />';
-
-    $this->view('staff/createFAQ', [
-        'title' => 'Create FAQ',
-        'head' => $headContent,
-        'errors' => $errors,
-        'success' => $success,
-        'post_data' => $post_data,
-        'staff_id' => $staff_id,
-    ]);
-}
     public function staffForum()
     {
         $this->requireLogin('staff');
