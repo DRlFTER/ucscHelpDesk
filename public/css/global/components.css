@@ -204,10 +204,44 @@ body.modal-open main {
 
 .pageHeader {
   display: flex;
-  flex-direction: column;
-  gap: 6px;
+  flex-direction: row;
+  align-items: center;
+  gap: 12px;
   padding: 0;
   flex-shrink: 0;
+}
+
+.pageHeaderContent {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.backBtn {
+  display: flex;
+  width: 36px;
+  height: 36px;
+  justify-content: center;
+  align-items: center;
+  flex-shrink: 0;
+  cursor: pointer;
+  border: 1px solid #e5e7eb;
+  border-radius: 50%;
+  background: #ffffff;
+  transition: background-color 0.2s ease, border-color 0.2s ease,
+    transform 0.15s ease;
+}
+
+.backBtn:hover {
+  background-color: #f3f4f6;
+  border-color: #d1d5db;
+  transform: translateX(-2px);
+}
+
+.backBtn svg {
+  width: 18px;
+  height: 18px;
+  stroke: #374151;
 }
 
 .pageLayout {
@@ -244,7 +278,7 @@ body.modal-open main {
 }
 
 .pageTitle {
-  font-size: 26px;
+  font-size: 20px;
   font-weight: 600;
 }
 

@@ -1,9 +1,6 @@
 <main>
     <div class="fullPage">
         <div class="pageLayout">
-            <div class="pageHeader">
-                <h2 class="pageTitle">All users</h2>
-            </div>
             <div class="ticketsFilters">
             <div class="search">
                 <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 22 21" fill="none">

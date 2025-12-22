@@ -6,10 +6,6 @@
 <main>
     <div class="fullPage">
         <div class="pageLayout">
-            <div class="pageHeader">
-                <h1 class="pageTitle">Calendar</h1>
-                <p class="pageSubtitle">View and manage calendar events</p>
-            </div>
             <div class="pageContent">
                 <div class="settingsLeft">
                     <div class="todayDate">
