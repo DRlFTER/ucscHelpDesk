@@ -66,14 +66,12 @@
 
     imgEl.draggable = false;
 
-    // Texts for the three positions (left, center, right)
     const texts = [
       "Welcome to UCSC HelpDesk",
       "Get support fast",
-      "Lorem ipsum",
+      "We're here to help you",
     ];
 
-    // Use existing pills if present, else create 3
     let pills = Array.from(pillsWrap.querySelectorAll(".pill"));
     if (pills.length !== 3) {
       pillsWrap.innerHTML = "";
@@ -85,24 +83,21 @@
       });
     }
 
-    // Geometry and state
-    let positions = [0, 0, 0]; // x offsets for left, center, right (px)
-    let current = 0; // 0: left, 1: center, 2: right
-    let dir = 1; // direction across states: 1 forward, -1 backward
+    let positions = [0, 0, 0];
+    let current = 0;
+    let dir = 1;
     let animId = 0;
     let timerId = 0;
     let paused = false;
 
-    // Animation config
-    const stepMs = 16; // fallback when RAF not available
-    const animDuration = 600; // ms per transition
-    const autoInterval = 4000; // ms between transitions
+    const stepMs = 16;
+    const animDuration = 600;
+    const autoInterval = 4000;
 
     function computePositions() {
       const cWidth = carousel.clientWidth;
       const cHeight = carousel.clientHeight;
 
-      // Estimate displayed image width when height is constrained to container height
       let imgDisplayWidth;
       if (imgEl.naturalWidth && imgEl.naturalHeight && cHeight) {
         imgDisplayWidth = (imgEl.naturalWidth * cHeight) / imgEl.naturalHeight;
@@ -116,7 +111,6 @@
       const center = Math.round((left + right) / 2);
       positions = [left, center, right];
 
-      // Snap to current state's position when recomputing
       applyTransform(positions[current]);
     }
 

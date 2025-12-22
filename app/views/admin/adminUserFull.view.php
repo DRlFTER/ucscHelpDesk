@@ -6,13 +6,17 @@
 ?>
 <main>
 	<div class="fullPage">
-		<div class="pageHeader">
-			<h1 class="pageTitle">User details</h1>
-			<p class="pageSubtitle">View and manage user information</p>
-		</div>
-
 		<div class="pageLayout">
-			<section class="ticketLeft">
+			<div class="pageHeader">
+				<button type="button" class="backBtn" onclick="history.back()" aria-label="Go back">
+					<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5"></path><path d="M12 19l-7-7 7-7"></path></svg>
+				</button>
+				<div class="pageHeaderContent">
+					<h1 class="pageTitle">User details</h1>
+				</div>
+			</div>
+			<div class="pageContent">
+				<section class="ticketLeft">
 				<div class="card ticketSummary" id="userSummaryCard" <?= $__vt ? ('style="view-transition-name: ' . htmlspecialchars($__vt) . '"') : '' ?> >
 					<div class="ticketHeader">
 						<h2 id="userName" class="ticketTitle"></h2>
@@ -52,6 +56,7 @@
 					</div>
 				</div>
 			</aside>
+			</div>
 		</div>
 	</div>
 </main>

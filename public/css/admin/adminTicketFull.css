@@ -110,12 +110,6 @@ body.modal-open main {
   min-height: calc(100dvh - var(--navbar-height, 64px));
 }
 
-.pageHeader {
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
-}
-
 .ticketLayout {
   display: flex;
   align-items: stretch; /* columns match height */
