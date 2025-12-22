@@ -64,7 +64,7 @@ class Student extends Controller
             $when = trim($_POST['when'] ?? '');
             $details = trim($_POST['details'] ?? '');
             $priority = trim($_POST['priority'] ?? 'Medium');
-            $t_type = trim($_POST['type'] ?? 'private');
+            $t_type = trim($_POST['ticketType'] ?? 'private');
             $errors = [];
             if ($title === '') { $errors[] = 'Title is required.'; }
             if ($category === '') { $errors[] = 'Category is required.'; }
@@ -1135,8 +1135,8 @@ public function templates()
         $priority= isset($_GET['priority']) ? trim((string)$_GET['priority']) : '';
 
         $where = [];
-        // Scope to current user
-        $where[] = "t.u_id = $uId";
+        // Scope to current user OR public tickets
+        $where[] = "(t.u_id = $uId OR t.t_type = 'public')";
 
         if ($search !== '') {
             $s = $db->real_escape_string($search);
@@ -1178,9 +1178,10 @@ public function templates()
         if ($page > $totalPages) { $page = $totalPages; }
         $offset = ($page - 1) * $perPage;
 
-    $sql = "SELECT t.ticket_id, t.created_at, t.title, d.name AS division_name, t.status, t.priority, t.meeting_requested
+    $sql = "SELECT t.ticket_id, t.created_at, t.title, d.name AS division_name, t.status, t.priority, t.meeting_requested, t.t_type, u.name AS student_name, u.u_id AS student_id
         FROM tickets t
         LEFT JOIN division d ON d.did = t.division
+        LEFT JOIN users u ON u.u_id = t.u_id
                 $whereSql
                 ORDER BY t.created_at DESC
                 LIMIT $perPage OFFSET $offset";
@@ -1224,11 +1225,12 @@ public function templates()
                 'code' => 'TKT-' . (string)($r['ticket_id'] ?? ''),
                 'createdAt' => $mapDate($r['created_at'] ?? null),
                 'title' => (string)($r['title'] ?? ''),
-                'student' => [ 'id' => $uId, 'name' => $_SESSION['user']['name'] ?? 'You' ],
+                'student' => [ 'id' => (int)($r['student_id'] ?? 0), 'name' => (string)($r['student_name'] ?? 'Unknown') ],
                 'category' => (string)($r['division_name'] ?? ''),
                 'status' => $mapStatus($r['status'] ?? ''),
                 'meeting' => $mapMeeting($r['meeting_requested'] ?? ''),
                 'priority' => strtolower((string)($r['priority'] ?? '')),
+                'visibility' => (string)($r['t_type'] ?? 'private'),
             ];
         }
 
