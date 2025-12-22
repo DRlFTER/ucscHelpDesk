@@ -7,8 +7,6 @@
 <div class="logInContainer">
     <div class="msgHolder">
     </div>
-    <div class="loginGradientHolder">
-    <img class="loginGradient" src="/assets/imgs/loginGradient.jpg" alt="Gradient Background"></div>
     <div class="logInBox">
         <div class="imgsHolder">
             <div class="imgCarousel">

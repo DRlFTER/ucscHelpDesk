@@ -9,13 +9,13 @@
 ?>
 <main>
   <div class="fullPage">
-    <div class="pageHeader">
-      <h1 class="pageTitle">Ticket status</h1>
-      <p class="pageSubtitle">Track the progress and responses for this ticket</p>
-    </div>
-
     <div class="pageLayout">
-      <section class="ticketLeft">
+      <div class="pageHeader">
+        <h1 class="pageTitle">Ticket status</h1>
+        <p class="pageSubtitle">Track the progress and responses for this ticket</p>
+      </div>
+      <div class="pageContent">
+        <section class="ticketLeft">
         <div class="card ticketSummary" id="ticketSummaryCard" <?= $__vt ? ('style="view-transition-name: ' . htmlspecialchars($__vt) . '"') : '' ?> >
           <div class="ticketHeader">
             <h2 id="ticketTitle" class="ticketTitle"></h2>
@@ -77,6 +77,7 @@
           </div>
         </div>
       </aside>
+      </div>
     </div>
   </div>
 </main>

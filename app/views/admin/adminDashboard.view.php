@@ -3,14 +3,11 @@
 <main>
   <div class="fullPage">
     <div class="pageLayout">
-      <section class="settingsLeft" aria-label="Dashboard navigation">
-      </section>
       <aside class="adminRight">
         <div id="dashError" style="display:none;color:#b91c1c;background:#fee2e2;border:1px solid #fecaca;padding:8px 12px;border-radius:8px;">
           Error: Failed to load data.
         </div>
         <div class="dashboardContent">
-          <div class="dashboardToolbar" id="dashboardToolbar" style="display:none;"></div>
           <div class="cardContainer" id="cardContainer"></div>
           <div class="contentRow">
             <div class="ticketTrends chartBox">

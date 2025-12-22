@@ -2,9 +2,7 @@ main {
   width: 100%;
   display: flex;
   justify-content: center;
-  min-height: calc(
-    100dvh - var(--navbar-height, 64px)
-  );
+  min-height: calc(100dvh - var(--navbar-height, 64px));
 }
 body {
   font-family: "SF Pro", sans-serif;
@@ -127,7 +125,10 @@ body {
   display: inline-flex;
   align-items: center;
 }
-.todayEvents .ctaButton:hover { background: #6a6af5; text-decoration: none; }
+.todayEvents .ctaButton:hover {
+  background: #6a6af5;
+  text-decoration: none;
+}
 
 .addEvent {
   display: flex;
@@ -145,7 +146,7 @@ body {
 }
 
 .inputEvent {
-  flex: 1;
+  width: 100%;
   height: 42px;
   padding: 0 12px;
   outline: none;
@@ -258,9 +259,10 @@ body {
 }
 
 .eventTitle {
-  display: block;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
   width: 100%;
-  white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
   font-size: 12px;
@@ -268,6 +270,7 @@ body {
   padding: 4px 8px;
   border-radius: 8px;
   background: #f3f4f6;
+  word-break: break-word;
 }
 
 .dayCell.today {

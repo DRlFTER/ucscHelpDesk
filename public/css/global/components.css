@@ -197,34 +197,50 @@ body.modal-open main {
   display: flex;
   flex-direction: column;
   gap: 16px;
-  padding: 30px;
-  height: calc(100dvh - var(--navbar-height, 64px)); /* fixed to viewport */
+  height: 100dvh; /* full viewport height with sidenav layout */
   min-height: 0; /* allow inner flex items to shrink */
+  box-sizing: border-box;
 }
 
 .pageHeader {
   display: flex;
   flex-direction: column;
   gap: 6px;
-  padding: 0 10px;
+  padding: 0;
+  flex-shrink: 0;
 }
 
 .pageLayout {
   display: flex;
-  align-items: stretch; /* columns match height */
+  flex-direction: column;
   gap: 16px;
-  height: 100%;
-  padding: 10px;
+  flex: 1;
+  min-height: 0;
   backdrop-filter: blur(20px);
   border-radius: 20px;
-  padding: 16px;
+  padding: 30px;
   border: 1px solid rgba(255, 255, 255, 0.1);
   background: rgba(255, 255, 255, 0.5);
   box-shadow: none;
   color: #111827;
   transition: all 0.18s ease-in-out;
   background-clip: padding-box;
-  overflow: hidden; /* prevent page scroll; allow inner panes to manage scrolling */
+  overflow: auto;
+}
+
+/* When pageContent contains side-by-side content (like ticketFull, settings, calendar) */
+.pageContent:has(.ticketLeft),
+.pageContent:has(.settingsLeft) {
+  flex-direction: row;
+  align-items: stretch;
+}
+
+.pageContent {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  flex: 1;
+  min-height: 0;
 }
 
 .pageTitle {
@@ -526,7 +542,295 @@ body.modal-open main {
   font-weight: normal;
 }
 
-/* ----- NAVBAR STYLES ----- */
+/* ----- SIDENAV STYLES ----- */
+
+.appLayout {
+  display: flex;
+  flex-direction: row;
+  width: 100%;
+  min-height: 100vh;
+}
+
+.sidenavWrapper {
+  width: 260px;
+  min-width: 260px;
+  height: 100vh;
+  position: sticky;
+  top: 0;
+}
+
+.mainContent {
+  flex: 1;
+  min-height: 100vh;
+  overflow-x: hidden;
+}
+
+.mainContentFull {
+  width: 100%;
+  min-height: 100vh;
+  overflow-x: hidden;
+}
+
+.sidenav {
+  display: flex;
+  flex-direction: column;
+  width: 260px;
+  height: 100vh;
+  padding: 20px 12px;
+  box-sizing: border-box;
+  position: fixed;
+  top: 0;
+  left: 0;
+  z-index: 1000;
+}
+
+.sidenavBrand {
+  display: flex;
+  height: 20%;
+  align-items: center;
+  gap: 12px;
+  padding: 8px 12px;
+  margin-bottom: 24px;
+}
+
+.sidenavLogo {
+  width: 32px;
+  height: 32px;
+}
+
+.sidenavTitle {
+  font-size: 18px;
+  font-weight: 600;
+  color: #111827;
+}
+
+.sidenavMenu {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  flex: 1;
+}
+
+.sidenavLink {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 14px;
+  border-radius: 10px;
+  text-decoration: none;
+  color: #374151;
+  font-size: 14px;
+  font-weight: 400;
+  transition: all 0.2s ease;
+}
+
+.sidenavLink:hover {
+  background: rgba(0, 0, 0, 0.05);
+  color: #111827;
+}
+
+.sidenavLink.active {
+  background: #8c8cf9;
+  color: #fff;
+  font-weight: 500;
+}
+
+.sidenavLink.active svg {
+  stroke: #fff;
+}
+
+.sidenavLink svg {
+  flex-shrink: 0;
+  stroke: #6b7280;
+  transition: stroke 0.2s ease;
+}
+
+.sidenavNewTicket {
+  margin-top: 12px;
+  background: linear-gradient(135deg, #8c8cf9 0%, #6b6bf7 100%);
+  color: #fff;
+  font-weight: 500;
+}
+
+.sidenavNewTicket svg {
+  stroke: #fff;
+}
+
+.sidenavNewTicket:hover {
+  background: linear-gradient(135deg, #7a7af7 0%, #5a5af5 100%);
+  color: #fff;
+}
+
+.sidenavNewTicket:hover svg {
+  stroke: #fff;
+}
+
+/* Sidenav Bottom / Profile */
+.sidenavBottom {
+  border-top: 1px solid rgba(0, 0, 0, 0.08);
+  padding-top: 12px;
+  margin-top: auto;
+}
+
+.sidenavProfile {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 12px;
+  border-radius: 10px;
+  cursor: pointer;
+  position: relative;
+  transition: background 0.2s ease;
+}
+
+.sidenavProfile:hover {
+  background: rgba(0, 0, 0, 0.05);
+}
+
+.sidenavProfileImg {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  background: #e5e7eb;
+}
+
+.sidenavProfileInfo {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  flex: 1;
+  min-width: 0;
+}
+
+.sidenavProfileName {
+  font-size: 14px;
+  font-weight: 500;
+  color: #111827;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.sidenavProfileRole {
+  font-size: 12px;
+  color: #8c8cf9;
+  font-weight: 500;
+}
+
+/* Sidenav Profile Dropdown */
+.sidenavProfileDropdown {
+  display: none;
+  position: absolute;
+  bottom: 100%;
+  left: 0;
+  right: 0;
+  margin-bottom: 8px;
+  background: #fff;
+  border: 1px solid rgba(0, 0, 0, 0.1);
+  border-radius: 12px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
+  overflow: hidden;
+  z-index: 9999;
+}
+
+.sidenavProfileDropdown.open {
+  display: block;
+}
+
+.sidenavDropdownContent {
+  display: flex;
+  flex-direction: column;
+}
+
+.sidenavUserInfo {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 16px;
+  border-bottom: 1px solid #f3f4f6;
+  background: #fafafa;
+}
+
+.sidenavProfilePicture {
+  width: 64px;
+  height: 64px;
+  border-radius: 50%;
+  background: #e5e7eb;
+  margin-bottom: 8px;
+}
+
+.sidenavUserName {
+  font-size: 14px;
+  font-weight: 600;
+  color: #111827;
+  margin: 0;
+}
+
+.sidenavUserEmail {
+  font-size: 12px;
+  color: #6b7280;
+  margin: 4px 0 0;
+}
+
+.sidenavUserRole {
+  font-size: 12px;
+  color: #8c8cf9;
+  font-weight: 500;
+  margin: 4px 0 0;
+}
+
+.sidenavDropdownContent > a {
+  display: block;
+  padding: 12px 16px;
+  text-decoration: none;
+  color: #374151;
+  font-size: 14px;
+  transition: background 0.15s ease;
+}
+
+.sidenavDropdownContent > a:hover {
+  background: #f3f4f6;
+}
+
+.sidenavLogout,
+.sidenavLogin {
+  border-top: 1px solid #f3f4f6;
+}
+
+.sidenavLogout a {
+  display: block;
+  padding: 12px 16px;
+  text-decoration: none;
+  color: #dc2626;
+  font-size: 14px;
+  font-weight: 500;
+  text-align: center;
+  transition: background 0.15s ease;
+}
+
+.sidenavLogout a:hover {
+  background: #fef2f2;
+}
+
+.sidenavLogin a {
+  display: block;
+  padding: 12px 16px;
+  text-decoration: none;
+  color: #fff;
+  background: #8c8cf9;
+  font-size: 14px;
+  font-weight: 500;
+  text-align: center;
+  transition: background 0.15s ease;
+}
+
+.sidenavLogin a:hover {
+  background: #7a7af7;
+}
+
+/* ----- SIDENAV STYLES ----- */
+
+/* ----- NAVBAR STYLES (Legacy) ----- */
 
 * {
   margin: 0;
