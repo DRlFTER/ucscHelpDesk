@@ -44,6 +44,21 @@
   text-decoration: line-through;
   color: #6b7280;
 }
+/* Suspended user indicator */
+.status.suspended {
+  background: #fef3c7;
+  color: #92400e;
+  padding: 6px 10px;
+  border-radius: 17px;
+}
+.ticket.isSuspended {
+  opacity: 0.85;
+  background-color: #fef9c3;
+}
+.ticket.isSuspended .ticketName h2 {
+  text-decoration: line-through;
+  color: #92400e;
+}
 .statusHolder {
   display: flex;
   gap: 8px;

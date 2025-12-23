@@ -28,6 +28,11 @@
   background: #fee2e2;
   color: #991b1b;
 }
+/* Suspended status styling */
+.status.suspended {
+  background: #fef3c7;
+  color: #92400e;
+}
 /* Full width delete/restore buttons */
 #deleteHolder,
 #restoreHolder {

@@ -222,12 +222,18 @@ window.adminUsersData = [];
         const email = u.email || "";
         const href = id ? `/admin/user?id=${encodeURIComponent(id)}` : "#";
         const isDeleted = u.isDeleted === true;
+        const isSuspended = u.isSuspended === true;
         const deletedClass = isDeleted ? " isDeleted" : "";
+        const suspendedClass = isSuspended && !isDeleted ? " isSuspended" : "";
         const deletedBadge = isDeleted
           ? '<span class="status deleted">Deleted</span>'
           : "";
+        const suspendedBadge =
+          isSuspended && !isDeleted
+            ? '<span class="status suspended">Suspended</span>'
+            : "";
         return `
-        <a class="ticket${deletedClass}" href="${href}" aria-label="Open user ${esc(
+        <a class="ticket${deletedClass}${suspendedClass}" href="${href}" aria-label="Open user ${esc(
           u.name
         )}" style="view-transition-name: ${vt}; text-decoration: none; color: inherit;">
           <div class="ticketRow1">
@@ -241,6 +247,7 @@ window.adminUsersData = [];
             </div>
             <div class="statusHolder">
               ${deletedBadge}
+              ${suspendedBadge}
               <div class="status ${esc(role)}">${esc(roleCap)}</div>
             </div>
           </div>

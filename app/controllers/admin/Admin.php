@@ -1,7 +1,16 @@
 <?php
 
+require_once __DIR__ . '/../../models/admin/Admin.php';
+
 class Admin extends Controller
 {
+    private $adminModel;
+
+    public function __construct()
+    {
+        $this->adminModel = new AdminModel();
+    }
+
     public function settings()
     {
         $this->requireLogin('admin');
@@ -93,37 +102,16 @@ class Admin extends Controller
         $this->requireLogin('admin');
         header('Content-Type: application/json');
 
-        $db = Database::getInstance();
-
         $page    = isset($_GET['page']) ? max(1, (int)$_GET['page']) : 1;
         $perPage = isset($_GET['perPage']) ? max(1, min(100, (int)$_GET['perPage'])) : 10;
         $search  = isset($_GET['search']) ? trim((string)$_GET['search']) : '';
 
-        $where = [];
-        if ($search !== '') {
-            $s = $db->real_escape_string($search);
-            $s_escaped = str_replace(['\\', '%', '_'], ['\\\\', '\\%', '\\_'], $s);
-            $where[] = "(question LIKE '%$s_escaped%' ESCAPE '\\' OR answer LIKE '%$s_escaped%' ESCAPE '\\')";
-        }
-        $whereSql = count($where) ? ('WHERE ' . implode(' AND ', $where)) : '';
-
-        $total = 0;
-        if ($res = $db->query("SELECT COUNT(*) AS c FROM faq $whereSql")) {
-            $row = $res->fetch_assoc();
-            $total = (int)($row['c'] ?? 0);
-            $res->free();
-        }
-
+        $total = $this->adminModel->getFaqCount($search);
         $totalPages = $perPage > 0 ? (int)max(1, ceil($total / $perPage)) : 1;
         if ($page > $totalPages) { $page = $totalPages; }
         $offset = ($page - 1) * $perPage;
 
-        $rows = [];
-        $sql = "SELECT id, question, answer, created_at FROM faq $whereSql ORDER BY created_at DESC, id DESC LIMIT $perPage OFFSET $offset";
-        if ($res = $db->query($sql)) {
-            while ($r = $res->fetch_assoc()) { $rows[] = $r; }
-            $res->free();
-        }
+        $rows = $this->adminModel->getFaqs($search, $perPage, $offset);
 
         $mapDate = function ($dt) {
             if (!$dt) return '';
@@ -158,7 +146,6 @@ class Admin extends Controller
     {
         $this->requireLogin('admin');
         header('Content-Type: application/json');
-        $db = Database::getInstance();
 
         $question = isset($_POST['question']) ? trim((string)$_POST['question']) : '';
         $answer   = isset($_POST['answer']) ? trim((string)$_POST['answer']) : '';
@@ -168,33 +155,26 @@ class Admin extends Controller
             exit;
         }
 
-        $qEsc = $db->real_escape_string($question);
-        $aEsc = $db->real_escape_string($answer);
-        $ok = $db->query("INSERT INTO faq (question, answer) VALUES ('$qEsc', '$aEsc')");
-        if (!$ok) {
+        try {
+            $id = $this->adminModel->createFaq($question, $answer);
+            $row = $this->adminModel->getFaqById($id);
+
+            echo json_encode([
+                'id' => (int)($row['id'] ?? $id),
+                'question' => (string)($row['question'] ?? $question),
+                'answer' => (string)($row['answer'] ?? $answer),
+                'createdAt' => isset($row['created_at']) ? date('Y-m-d H:i:s', strtotime($row['created_at'])) : date('Y-m-d H:i:s'),
+            ]);
+        } catch (Exception $e) {
             http_response_code(500);
             echo json_encode(['error' => 'Create failed']);
-            exit;
         }
-        $id = (int)$db->insert_id;
-        $row = null;
-        if ($res = $db->query("SELECT id, question, answer, created_at FROM faq WHERE id = $id")) {
-            $row = $res->fetch_assoc();
-            $res->free();
-        }
-        echo json_encode([
-            'id' => (int)($row['id'] ?? $id),
-            'question' => (string)($row['question'] ?? $question),
-            'answer' => (string)($row['answer'] ?? $answer),
-            'createdAt' => isset($row['created_at']) ? date('Y-m-d H:i:s', strtotime($row['created_at'])) : date('Y-m-d H:i:s'),
-        ]);
         exit;
     }
     public function faqUpdate()
     {
         $this->requireLogin('admin');
         header('Content-Type: application/json');
-        $db = Database::getInstance();
 
         $id = isset($_POST['id']) ? (int)$_POST['id'] : 0;
         $question = isset($_POST['question']) ? trim((string)$_POST['question']) : '';
@@ -210,33 +190,31 @@ class Admin extends Controller
             exit;
         }
 
-        $qEsc = $db->real_escape_string($question);
-        $aEsc = $db->real_escape_string($answer);
-        $ok = $db->query("UPDATE faq SET question = '$qEsc', answer = '$aEsc' WHERE id = $id");
-        if (!$ok) {
+        try {
+            $ok = $this->adminModel->updateFaq($id, $question, $answer);
+            if (!$ok) {
+                http_response_code(500);
+                echo json_encode(['error' => 'Update failed']);
+                exit;
+            }
+
+            $row = $this->adminModel->getFaqById($id);
+            echo json_encode([
+                'id' => (int)($row['id'] ?? $id),
+                'question' => (string)($row['question'] ?? $question),
+                'answer' => (string)($row['answer'] ?? $answer),
+                'createdAt' => isset($row['created_at']) ? date('Y-m-d H:i:s', strtotime($row['created_at'])) : '',
+            ]);
+        } catch (Exception $e) {
             http_response_code(500);
             echo json_encode(['error' => 'Update failed']);
-            exit;
         }
-
-        $row = null;
-        if ($res = $db->query("SELECT id, question, answer, created_at FROM faq WHERE id = $id")) {
-            $row = $res->fetch_assoc();
-            $res->free();
-        }
-        echo json_encode([
-            'id' => (int)($row['id'] ?? $id),
-            'question' => (string)($row['question'] ?? $question),
-            'answer' => (string)($row['answer'] ?? $answer),
-            'createdAt' => isset($row['created_at']) ? date('Y-m-d H:i:s', strtotime($row['created_at'])) : '',
-        ]);
         exit;
     }
     public function faqDelete()
     {
         $this->requireLogin('admin');
         header('Content-Type: application/json');
-        $db = Database::getInstance();
 
         $id = isset($_POST['id']) ? (int)$_POST['id'] : (isset($_GET['id']) ? (int)$_GET['id'] : 0);
         if (!$id) {
@@ -244,13 +222,19 @@ class Admin extends Controller
             echo json_encode(['error' => 'Missing id']);
             exit;
         }
-        $ok = $db->query("DELETE FROM faq WHERE id = $id");
-        if (!$ok) {
+
+        try {
+            $ok = $this->adminModel->deleteFaq($id);
+            if (!$ok) {
+                http_response_code(500);
+                echo json_encode(['error' => 'Delete failed']);
+                exit;
+            }
+            echo json_encode(['success' => true]);
+        } catch (Exception $e) {
             http_response_code(500);
             echo json_encode(['error' => 'Delete failed']);
-            exit;
         }
-        echo json_encode(['success' => true]);
         exit;
     }
 
@@ -262,7 +246,6 @@ class Admin extends Controller
         $this->requireLogin('admin');
         header('Content-Type: application/json');
 
-        $db = Database::getInstance();
         $uId = (int)($_SESSION['user']['u_id'] ?? 0);
         if ($uId <= 0) {
             http_response_code(401);
@@ -292,65 +275,12 @@ class Admin extends Controller
             $topicValue = $topicMap[$key] ?? $category; 
         }
 
-        $where = [];
-        if (strtolower($type) === 'my') {
-            $where[] = "f.u_id = $uId";
-        } else {
-            $where[] = '1=1';
-        }
-
-        if ($search !== '') {
-            $s = $db->real_escape_string($search);
-            $where[] = "(f.title LIKE '%$s%' OR f.description LIKE '%$s%')";
-        }
-        if ($topicValue !== '') {
-            $t = $db->real_escape_string($topicValue);
-            $where[] = "f.topic = '$t'";
-        }
-        if ($status !== '') {
-            $s = strtolower($status);
-            if ($s === 'open' || $s === 'answered') {
-                $where[] = "LOWER(f.status) = '$s'";
-            } else {
-                $sEsc = $db->real_escape_string($status);
-                $where[] = "f.status = '$sEsc'";
-            }
-        }
-
-        $whereSql = 'WHERE ' . implode(' AND ', $where);
-
-        $total = 0;
-        $countSql = "SELECT COUNT(*) AS c FROM forum_q f $whereSql";
-        if ($res = $db->query($countSql)) {
-            $row = $res->fetch_assoc();
-            $total = (int)($row['c'] ?? 0);
-            $res->free();
-        }
-
+        $total = $this->adminModel->getForumCount($uId, $search, $topicValue, $status, $type);
         $totalPages = $perPage > 0 ? (int)max(1, ceil($total / $perPage)) : 1;
         if ($page > $totalPages) { $page = $totalPages; }
         $offset = ($page - 1) * $perPage;
 
-        $orderSql = 'ORDER BY f.created_at DESC';
-        $srt = strtolower($sort);
-        if ($srt === 'oldest') {
-            $orderSql = 'ORDER BY f.created_at ASC';
-        }
-
-        $sql = "SELECT f.q_id, f.created_at, f.title, f.topic, f.status, f.u_id, f.is_Public, u.name AS student_name
-                FROM forum_q f
-                LEFT JOIN users u ON u.u_id = f.u_id
-                $whereSql
-                $orderSql
-                LIMIT $perPage OFFSET $offset";
-
-        $rows = [];
-        if ($res = $db->query($sql)) {
-            while ($row = $res->fetch_assoc()) {
-                $rows[] = $row;
-            }
-            $res->free();
-        }
+        $rows = $this->adminModel->getForumPosts($uId, $search, $topicValue, $status, $type, $sort, $perPage, $offset);
 
         $mapDate = function ($dt) {
             if (!$dt) return '';
@@ -396,7 +326,6 @@ class Admin extends Controller
     {
         $this->requireLogin('admin');
         header('Content-Type: application/json');
-        $db = Database::getInstance();
 
         $id = isset($_GET['id']) ? (int)$_GET['id'] : 0;
         if (!$id) {
@@ -405,13 +334,7 @@ class Admin extends Controller
             exit;
         }
 
-        $idEsc = (int)$id;
-        $sql = "SELECT u_id, name, email, role, designation, number, year, is_deleted, deleted_at FROM users WHERE u_id = $idEsc LIMIT 1";
-        $row = null;
-        if ($res = $db->query($sql)) {
-            $row = $res->fetch_assoc();
-            $res->free();
-        }
+        $row = $this->adminModel->getUserById($id);
         if (!$row) {
             http_response_code(404);
             echo json_encode(['error' => 'User not found']);
@@ -428,6 +351,8 @@ class Admin extends Controller
             'year' => isset($row['year']) ? (int)$row['year'] : null,
             'isDeleted' => (bool)($row['is_deleted'] ?? 0),
             'deletedAt' => isset($row['deleted_at']) ? (string)$row['deleted_at'] : null,
+            'isSuspended' => (bool)($row['is_suspended'] ?? 0),
+            'suspendedAt' => isset($row['suspended_at']) ? (string)$row['suspended_at'] : null,
         ]);
         exit;
     }
@@ -435,7 +360,6 @@ class Admin extends Controller
     {
         $this->requireLogin('admin');
         header('Content-Type: application/json');
-        $db = Database::getInstance();
 
         $id = isset($_POST['id']) ? (int)$_POST['id'] : 0;
         if (!$id) {
@@ -464,30 +388,27 @@ class Admin extends Controller
             exit;
         }
 
-        $nameEsc = $db->real_escape_string($name);
-        $emailEsc = $db->real_escape_string($email);
-        $roleEsc = $db->real_escape_string(strtolower($role));
-        $numberEsc = $number !== null ? "'" . $db->real_escape_string($number) . "'" : 'NULL';
-        $designationEsc = $designation !== null ? "'" . $db->real_escape_string($designation) . "'" : 'NULL';
-        $yearVal = $year !== null ? (int)$year : 'NULL';
+        try {
+            $ok = $this->adminModel->updateUser($id, $name, $email, strtolower($role), $number, $designation, $year);
+            if (!$ok) {
+                http_response_code(500);
+                echo json_encode(['error' => 'Update failed']);
+                exit;
+            }
 
-        $sql = "UPDATE users SET name='$nameEsc', email='$emailEsc', role='$roleEsc', number=$numberEsc, designation=$designationEsc, year=$yearVal WHERE u_id = " . (int)$id;
-        $ok = $db->query($sql);
-        if (!$ok) {
+            $_GET['id'] = (string)$id;
+            $this->userData();
+        } catch (Exception $e) {
             http_response_code(500);
             echo json_encode(['error' => 'Update failed']);
             exit;
         }
-
-        $_GET['id'] = (string)$id;
-        $this->userData();
     }
 
     public function userDelete()
     {
         $this->requireLogin('admin');
         header('Content-Type: application/json');
-        $db = Database::getInstance();
 
         $id = isset($_POST['id']) ? (int)$_POST['id'] : (isset($_GET['id']) ? (int)$_GET['id'] : 0);
         if (!$id) {
@@ -495,15 +416,20 @@ class Admin extends Controller
             echo json_encode(['error' => 'Missing id']);
             exit;
         }
-        $idEsc = (int)$id;
-        // Soft delete: set is_deleted flag (deleted_at handled by trigger)
-        $ok = $db->query("UPDATE users SET is_deleted = 1 WHERE u_id = $idEsc");
-        if (!$ok) {
+
+        try {
+            // Soft delete: set is_deleted flag (deleted_at handled by trigger)
+            $ok = $this->adminModel->softDeleteUser($id);
+            if (!$ok) {
+                http_response_code(500);
+                echo json_encode(['error' => 'Delete failed']);
+                exit;
+            }
+            echo json_encode(['success' => true]);
+        } catch (Exception $e) {
             http_response_code(500);
             echo json_encode(['error' => 'Delete failed']);
-            exit;
         }
-        echo json_encode(['success' => true]);
         exit;
     }
 
@@ -514,7 +440,6 @@ class Admin extends Controller
     {
         $this->requireLogin('admin');
         header('Content-Type: application/json');
-        $db = Database::getInstance();
 
         $id = isset($_POST['id']) ? (int)$_POST['id'] : (isset($_GET['id']) ? (int)$_GET['id'] : 0);
         if (!$id) {
@@ -522,15 +447,75 @@ class Admin extends Controller
             echo json_encode(['error' => 'Missing id']);
             exit;
         }
-        $idEsc = (int)$id;
-        // Restore: clear is_deleted flag (deleted_at handled by trigger)
-        $ok = $db->query("UPDATE users SET is_deleted = 0 WHERE u_id = $idEsc");
-        if (!$ok) {
+
+        try {
+            // Restore: clear is_deleted flag (deleted_at handled by trigger)
+            $ok = $this->adminModel->restoreUser($id);
+            if (!$ok) {
+                http_response_code(500);
+                echo json_encode(['error' => 'Restore failed']);
+                exit;
+            }
+            echo json_encode(['success' => true]);
+        } catch (Exception $e) {
             http_response_code(500);
             echo json_encode(['error' => 'Restore failed']);
+        }
+        exit;
+    }
+
+     public function userSuspend()
+    {
+        $this->requireLogin('admin');
+        header('Content-Type: application/json');
+
+        $id = isset($_POST['id']) ? (int)$_POST['id'] : (isset($_GET['id']) ? (int)$_GET['id'] : 0);
+        if (!$id) {
+            http_response_code(400);
+            echo json_encode(['error' => 'Missing id']);
             exit;
         }
-        echo json_encode(['success' => true]);
+
+        try {
+            // Soft delete: set is_deleted flag (deleted_at handled by trigger)
+            $ok = $this->adminModel->suspendUser($id);
+            if (!$ok) {
+                http_response_code(500);
+                echo json_encode(['error' => 'Suspend failed']);
+                exit;
+            }
+            echo json_encode(['success' => true]);
+        } catch (Exception $e) {
+            http_response_code(500);
+            echo json_encode(['error' => 'Suspend failed']);
+        }
+        exit;
+    }
+
+    public function userUnsuspend()
+    {
+        $this->requireLogin('admin');
+        header('Content-Type: application/json');
+
+        $id = isset($_POST['id']) ? (int)$_POST['id'] : (isset($_GET['id']) ? (int)$_GET['id'] : 0);
+        if (!$id) {
+            http_response_code(400);
+            echo json_encode(['error' => 'Missing id']);
+            exit;
+        }
+
+        try {
+            $ok = $this->adminModel->unsuspendUser($id);
+            if (!$ok) {
+                http_response_code(500);
+                echo json_encode(['error' => 'Unsuspend failed']);
+                exit;
+            }
+            echo json_encode(['success' => true]);
+        } catch (Exception $e) {
+            http_response_code(500);
+            echo json_encode(['error' => 'Unsuspend failed']);
+        }
         exit;
     }
 
@@ -549,8 +534,6 @@ class Admin extends Controller
         $this->requireLogin('admin');
         header('Content-Type: application/json');
 
-        $db = Database::getInstance();
-
         // Query params
         $page       = isset($_GET['page']) ? max(1, (int)$_GET['page']) : 1;
         $perPage    = isset($_GET['perPage']) ? max(1, min(100, (int)$_GET['perPage'])) : 10;
@@ -558,63 +541,22 @@ class Admin extends Controller
         $type       = isset($_GET['type']) ? trim((string)$_GET['type']) : '';
         $designation= isset($_GET['designation']) ? trim((string)$_GET['designation']) : '';
 
-        $where = [];
-
-        if ($search !== '') {
-            $s = $db->real_escape_string($search);
-            $s_escaped = str_replace(['\\', '%', '_'], ['\\\\', '\%', '\_'], $s);
-            $where[] = "(u.name LIKE '%$s_escaped%' ESCAPE '\\' OR u.email LIKE '%$s_escaped%' ESCAPE '\\' OR u.number LIKE '%$s_escaped%' ESCAPE '\\' OR u.designation LIKE '%$s_escaped%' ESCAPE '\\')";
-        }
-
+        // Validate role
+        $role = '';
         if ($type !== '') {
-            $role = strtolower($type);
             $allowed = ['staff','student','lecturer','admin','counselor'];
-            if (in_array($role, $allowed, true)) {
-                $roleEsc = $db->real_escape_string($role);
-                $where[] = "u.role = '$roleEsc'";
+            if (in_array(strtolower($type), $allowed, true)) {
+                $role = strtolower($type);
             }
         }
 
-        if ($designation !== '') {
-            $d = $db->real_escape_string($designation);
-            $where[] = "COALESCE(u.designation,'') = '$d'";
-        }
-
-        $whereSql = count($where) ? ('WHERE ' . implode(' AND ', $where)) : '';
-
-        $total = 0;
-        $countSql = "SELECT COUNT(*) AS c FROM users u $whereSql";
-        if ($res = $db->query($countSql)) {
-            $row = $res->fetch_assoc();
-            $total = (int)($row['c'] ?? 0);
-            $res->free();
-        }
-
+        $total = $this->adminModel->getUsersCount($search, $role, $designation);
         $totalPages = $perPage > 0 ? (int)max(1, ceil($total / $perPage)) : 1;
         if ($page > $totalPages) { $page = $totalPages; }
         $offset = ($page - 1) * $perPage;
 
-        $sql = "SELECT u.u_id, u.name, u.email, u.role, u.designation, u.number, u.year, u.is_deleted
-                FROM users u
-                $whereSql
-                ORDER BY u.name ASC
-                LIMIT $perPage OFFSET $offset";
-
-        $rows = [];
-        if ($res = $db->query($sql)) {
-            while ($r = $res->fetch_assoc()) { $rows[] = $r; }
-            $res->free();
-        }
-
-        $designations = [];
-        $dsql = "SELECT DISTINCT designation FROM users WHERE designation IS NOT NULL AND designation <> '' ORDER BY designation ASC";
-        if ($res = $db->query($dsql)) {
-            while ($r = $res->fetch_assoc()) {
-                $val = (string)($r['designation'] ?? '');
-                if ($val !== '') $designations[] = $val;
-            }
-            $res->free();
-        }
+        $rows = $this->adminModel->getUsers($search, $role, $designation, $perPage, $offset);
+        $designations = $this->adminModel->getDistinctDesignations();
 
         $out = [];
         foreach ($rows as $r) {
@@ -627,6 +569,8 @@ class Admin extends Controller
                 'number' => isset($r['number']) ? (string)$r['number'] : null,
                 'year' => isset($r['year']) ? (int)$r['year'] : null,
                 'isDeleted' => (bool)($r['is_deleted'] ?? 0),
+                'isSuspended' => (bool)($r['is_suspended'] ?? 0),
+                'suspendedAt' => isset($r['suspended_at']) ? (string)$r['suspended_at'] : null,
             ];
         }
 
@@ -664,40 +608,13 @@ class Admin extends Controller
             }
         }
 
-        $db = Database::getInstance();
-
         // 1) Cards
-        $totalTickets = 0;
-        $openTickets = 0;
-        $avgRespMinutes = null;
-        $resolvedTickets = 0;
+        $ticketCounts = $this->adminModel->getTicketCounts();
+        $totalTickets = $ticketCounts['total'];
+        $openTickets = $ticketCounts['open'];
+        $resolvedTickets = $ticketCounts['resolved'];
 
-        $sqlCounts = "SELECT
-            COUNT(*) AS total_count,
-            SUM(CASE WHEN status IN ('pending','agent assigned') THEN 1 ELSE 0 END) AS open_count,
-            SUM(CASE WHEN status IN ('resolved','closed','agent-closed') THEN 1 ELSE 0 END) AS resolved_count
-        FROM tickets";
-        if ($res = $db->query($sqlCounts)) {
-            $row = $res->fetch_assoc();
-            $totalTickets = (int)($row['total_count'] ?? 0);
-            $openTickets = (int)($row['open_count'] ?? 0);
-            $resolvedTickets = (int)($row['resolved_count'] ?? 0);
-            $res->free_result();
-        }
-
-        $sqlAvg = "SELECT AVG(TIMESTAMPDIFF(MINUTE, t.created_at, tr.first_response)) AS avg_minutes
-                   FROM tickets t
-                   JOIN (
-                     SELECT ticket_id, MIN(date_time) AS first_response
-                     FROM ticket_response
-                     GROUP BY ticket_id
-                   ) tr ON tr.ticket_id = t.ticket_id";
-        if ($res = $db->query($sqlAvg)) {
-            $row = $res->fetch_assoc();
-            $avgRespMinutes = isset($row['avg_minutes']) ? (float)$row['avg_minutes'] : null;
-            $res->free_result();
-        }
-
+        $avgRespMinutes = $this->adminModel->getAverageResponseTime();
         $avgRespText = $avgRespMinutes !== null ? round($avgRespMinutes / 60, 1) . 'h' : '—';
         $resolutionRate = $totalTickets > 0 ? round(($resolvedTickets / $totalTickets) * 100) . '%' : '0%';
 
@@ -709,51 +626,28 @@ class Admin extends Controller
         ];
 
         // 2) Recent tickets
+        $recentTicketsData = $this->adminModel->getRecentTickets(6);
         $recentTickets = [];
-        $sqlRecent = "SELECT t.ticket_id, t.title, u.name AS requester, t.created_at, t.priority
-                      FROM tickets t
-                      LEFT JOIN users u ON u.u_id = t.u_id
-                      ORDER BY t.created_at DESC
-                      LIMIT 6";
-        if ($res = $db->query($sqlRecent)) {
-            while ($row = $res->fetch_assoc()) {
-                $recentTickets[] = [
-                    'id' => (int)$row['ticket_id'],
-                    'title' => (string)$row['title'],
-                    'agent' => (string)($row['requester'] ?? 'Unknown'),
-                    'time' => self::relativeTime($row['created_at']),
-                    'priority' => strtoupper((string)$row['priority']),
-                ];
-            }
-            $res->free_result();
+        foreach ($recentTicketsData as $row) {
+            $recentTickets[] = [
+                'id' => (int)$row['ticket_id'],
+                'title' => (string)$row['title'],
+                'agent' => (string)($row['requester'] ?? 'Unknown'),
+                'time' => self::relativeTime($row['created_at']),
+                'priority' => strtoupper((string)$row['priority']),
+            ];
         }
 
         // 3) Top agents
+        $topAgentsData = $this->adminModel->getTopAgents(5);
         $topAgents = [];
-        $sqlTopAgents = "SELECT u.name,
-                                COUNT(DISTINCT tr.ticket_id) AS resolved,
-                                AVG(TIMESTAMPDIFF(MINUTE, t.created_at, tr.first_response)) AS avg_minutes
-                         FROM users u
-                         JOIN (
-                           SELECT ticket_id, u_id, MIN(date_time) AS first_response
-                           FROM ticket_response
-                           GROUP BY ticket_id, u_id
-                         ) tr ON tr.u_id = u.u_id
-                         JOIN tickets t ON t.ticket_id = tr.ticket_id
-                         WHERE u.role IN ('staff','admin','counselor','lecturer')
-                         GROUP BY u.u_id, u.name
-                         ORDER BY resolved DESC
-                         LIMIT 5";
-        if ($res = $db->query($sqlTopAgents)) {
-            while ($row = $res->fetch_assoc()) {
-                $avgMin = isset($row['avg_minutes']) ? (float)$row['avg_minutes'] : null;
-                $topAgents[] = [
-                    'name' => (string)$row['name'],
-                    'resolved' => (int)$row['resolved'],
-                    'responseTime' => $avgMin !== null ? round($avgMin / 60, 1) . 'h' : '—',
-                ];
-            }
-            $res->free_result();
+        foreach ($topAgentsData as $row) {
+            $avgMin = isset($row['avg_minutes']) ? (float)$row['avg_minutes'] : null;
+            $topAgents[] = [
+                'name' => (string)$row['name'],
+                'resolved' => (int)$row['resolved'],
+                'responseTime' => $avgMin !== null ? round($avgMin / 60, 1) . 'h' : '—',
+            ];
         }
 
         // 4) Trends (last 4 weeks)
@@ -768,32 +662,19 @@ class Admin extends Controller
             $label = 'Week ' . (4 - $i);
             $trends['labels'][] = $label;
 
-            $startEsc = $db->real_escape_string($start->format('Y-m-d H:i:s'));
-            $endEsc = $db->real_escape_string($end->format('Y-m-d H:i:s'));
+            $startStr = $start->format('Y-m-d H:i:s');
+            $endStr = $end->format('Y-m-d H:i:s');
 
-            $qNew = "SELECT COUNT(*) AS c FROM tickets WHERE created_at >= '$startEsc' AND created_at < '$endEsc'";
-            $countNew = 0;
-            if ($res = $db->query($qNew)) { $r = $res->fetch_assoc(); $countNew = (int)($r['c'] ?? 0); $res->free_result(); }
-            $trends['new'][] = $countNew;
-
-            $qRes = "SELECT COUNT(*) AS c FROM tickets WHERE created_at >= '$startEsc' AND created_at < '$endEsc' AND status IN ('resolved','closed','agent-closed')";
-            $countRes = 0;
-            if ($res = $db->query($qRes)) { $r = $res->fetch_assoc(); $countRes = (int)($r['c'] ?? 0); $res->free_result(); }
-            $trends['resolved'][] = $countRes;
+            $trends['new'][] = $this->adminModel->getTicketCountByDateRange($startStr, $endStr, false);
+            $trends['resolved'][] = $this->adminModel->getTicketCountByDateRange($startStr, $endStr, true);
         }
 
         // 5) Tickets by category (now derived from division table)
+        $categoriesData = $this->adminModel->getTicketsByCategory();
         $categories = [ 'labels' => [], 'data' => [] ];
-        if ($res = $db->query("SELECT COALESCE(d.name,'Other') AS category, COUNT(*) AS c
-                                 FROM tickets t
-                                 LEFT JOIN division d ON d.did = t.division
-                                 GROUP BY COALESCE(d.name,'Other')
-                                 ORDER BY c DESC")) {
-            while ($row = $res->fetch_assoc()) {
-                $categories['labels'][] = (string)$row['category'];
-                $categories['data'][] = (int)$row['c'];
-            }
-            $res->free_result();
+        foreach ($categoriesData as $row) {
+            $categories['labels'][] = (string)$row['category'];
+            $categories['data'][] = (int)$row['c'];
         }
 
         // 6) Platform status (static placeholders for now)
@@ -833,7 +714,6 @@ class Admin extends Controller
     {
         $this->requireLogin('admin');
         header('Content-Type: application/json');
-        $db = Database::getInstance();
 
         $id = isset($_GET['id']) ? (int)$_GET['id'] : 0;
         $code = isset($_GET['code']) ? trim((string)$_GET['code']) : '';
@@ -848,34 +728,20 @@ class Admin extends Controller
             exit;
         }
 
-        $idEsc = (int)$id;
-    $sql = "SELECT t.ticket_id, t.created_at, t.title, d.name AS category, t.status, t.priority, t.description, t.u_id, u.name AS student_name
-        FROM tickets t
-        LEFT JOIN users u ON u.u_id = t.u_id
-        LEFT JOIN division d ON d.did = t.division
-        WHERE t.ticket_id = $idEsc
-        LIMIT 1";
-
-        $row = null;
-        if ($res = $db->query($sql)) {
-            $row = $res->fetch_assoc();
-            $res->free();
-        }
+        $row = $this->adminModel->getTicketById($id);
         if (!$row) {
             http_response_code(404);
             echo json_encode(['error' => 'Ticket not found']);
             exit;
         }
 
+        $attachmentsData = $this->adminModel->getTicketAttachments($id);
         $attachments = [];
-        if ($res = $db->query("SELECT doc_name, location FROM supporting_documents WHERE ticket_id = $idEsc")) {
-            while ($r = $res->fetch_assoc()) {
-                $attachments[] = [
-                    'name' => (string)($r['doc_name'] ?? ''),
-                    'url' => '/' . ltrim((string)($r['location'] ?? ''), '/'),
-                ];
-            }
-            $res->free();
+        foreach ($attachmentsData as $r) {
+            $attachments[] = [
+                'name' => (string)($r['doc_name'] ?? ''),
+                'url' => '/' . ltrim((string)($r['location'] ?? ''), '/'),
+            ];
         }
 
         $statusRaw = strtolower((string)($row['status'] ?? ''));
@@ -888,15 +754,10 @@ class Admin extends Controller
             if ($ts !== false) $createdPretty = date('M d, Y \\a\\t g:i A', $ts);
         }
 
+        $mr = strtolower(trim((string)($row['meeting_requested'] ?? '')));
         $meeting = 'none';
-        if ($res2 = $db->query("SELECT meeting_requested FROM tickets WHERE ticket_id = $idEsc LIMIT 1")) {
-            if ($r2 = $res2->fetch_assoc()) {
-                $mr = strtolower(trim((string)($r2['meeting_requested'] ?? '')));
-                if ($mr === 'requested') $meeting = 'requested';
-                elseif ($mr === 'scheduled') $meeting = 'scheduled';
-            }
-            $res2->free();
-        }
+        if ($mr === 'requested') $meeting = 'requested';
+        elseif ($mr === 'scheduled') $meeting = 'scheduled';
 
         echo json_encode([
             'id' => (int)$row['ticket_id'],
@@ -923,21 +784,26 @@ class Admin extends Controller
     {
         $this->requireLogin('admin');
         header('Content-Type: application/json');
-        $db = Database::getInstance();
+
         $id = isset($_POST['id']) ? (int)$_POST['id'] : (isset($_GET['id']) ? (int)$_GET['id'] : 0);
         if (!$id) {
             http_response_code(400);
             echo json_encode(['error' => 'Missing id']);
             exit;
         }
-        $idEsc = (int)$id;
-        $ok = $db->query("DELETE FROM tickets WHERE ticket_id = $idEsc");
-        if (!$ok) {
+
+        try {
+            $ok = $this->adminModel->deleteTicket($id);
+            if (!$ok) {
+                http_response_code(500);
+                echo json_encode(['error' => 'Delete failed']);
+                exit;
+            }
+            echo json_encode(['success' => true]);
+        } catch (Exception $e) {
             http_response_code(500);
             echo json_encode(['error' => 'Delete failed']);
-            exit;
         }
-        echo json_encode(['success' => true]);
         exit;
     }
 
@@ -961,8 +827,6 @@ class Admin extends Controller
 
         header('Content-Type: application/json');
 
-        $db = Database::getInstance();
-
         $page    = isset($_GET['page']) ? max(1, (int)$_GET['page']) : 1;
         $perPage = isset($_GET['perPage']) ? max(1, min(100, (int)$_GET['perPage'])) : 10;
         $search  = isset($_GET['search']) ? trim((string)$_GET['search']) : '';
@@ -970,94 +834,12 @@ class Admin extends Controller
         $status  = isset($_GET['status']) ? trim((string)$_GET['status']) : '';
         $priority= isset($_GET['priority']) ? trim((string)$_GET['priority']) : '';
 
-        $where = [];
-        $joins = "LEFT JOIN users u ON u.u_id = t.u_id LEFT JOIN division d ON d.did = t.division";
-        if ($search !== '') {
-            $s = $db->real_escape_string($search);
-            $where[] = "(t.title LIKE '%$s%' OR u.name LIKE '%$s%')";
-        }
-        if ($category !== '') {
-            $catKey = strtolower($category);
-            $groupMap = [
-                'it-access' => [
-                    'it','tech','technical','account','login','password','email','network','wifi','wi-fi','internet','software','hardware','device','computer','system','server','bug','error','website','portal','moodle','lms','printer','printing','access'
-                ],
-                'facilities-equipment' => [
-                    'facility','facilities','maintenance','repair','clean','electric','electrical','power','water','plumb','leak','aircon','air conditioning','ac','furniture','equipment','lab','laboratory','room','classroom','projector','door','building','lighting','light','security'
-                ],
-                'academic-services' => [
-                    'academic','course','courses','class','classes','lecture','lecturer','timetable','schedule','exam','exams','grade','grades','registration','enrollment','admission','advis','library','scholarship','student id','id card','transcript','certificate','attendance'
-                ],
-                'administrative-other' => [
-                    'finance','payment','payments','fee','fees','billing','hr','human resources','leave','policy','procurement','procure','purchase','general','other','misc','miscellaneous','event','events','parking','transport','bus','lost','found','complaint','complaints','canteen','food','cafeteria','hostel','residence','housing','staff','admin','administration'
-                ],
-            ];
-
-            $col = "LOWER(COALESCE(d.name,''))";
-            if (isset($groupMap[$catKey])) {
-                $likes = [];
-                foreach ($groupMap[$catKey] as $kw) {
-                    $kwEsc = $db->real_escape_string(strtolower($kw));
-                    $likes[] = "$col LIKE '%$kwEsc%'";
-                }
-                if (!empty($likes)) {
-                    $where[] = '(' . implode(' OR ', $likes) . ')';
-                }
-            } else {
-                
-                $c = $db->real_escape_string($category);
-                $where[] = "COALESCE(d.name,'') = '$c'";
-            }
-        }
-
-        if ($status !== '') {
-            $s = strtolower($status);
-            if ($s === 'open') {
-                $where[] = "t.status = 'pending'";
-            } elseif ($s === 'in-progress') {
-                $where[] = "t.status = 'agent assigned'";
-            } elseif ($s === 'resolved') {
-                $where[] = "t.status IN ('resolved','closed','agent-closed')";
-            } else {
-
-                $sEsc = $db->real_escape_string($status);
-                $where[] = "t.status = '$sEsc'";
-            }
-        }
-
-        if ($priority !== '') {
-            $p = $db->real_escape_string($priority);
-            $where[] = "LOWER(t.priority) = LOWER('$p')";
-        }
-
-        $whereSql = count($where) ? ('WHERE ' . implode(' AND ', $where)) : '';
-
-        $total = 0;
-        $countSql = "SELECT COUNT(*) AS c FROM tickets t $joins $whereSql";
-        if ($res = $db->query($countSql)) {
-            $row = $res->fetch_assoc();
-            $total = (int)($row['c'] ?? 0);
-            $res->free();
-        }
-
+        $total = $this->adminModel->getTicketsCount($search, $category, $status, $priority);
         $totalPages = $perPage > 0 ? (int)max(1, ceil($total / $perPage)) : 1;
         if ($page > $totalPages) { $page = $totalPages; }
         $offset = ($page - 1) * $perPage;
 
-    $sql = "SELECT t.ticket_id, t.created_at, t.title, d.name AS category, t.status, t.priority, t.meeting_requested, t.u_id, u.name AS student_name
-        FROM tickets t
-        $joins
-        $whereSql
-        ORDER BY t.created_at DESC
-        LIMIT $perPage OFFSET $offset";
-
-        $rows = [];
-        if ($res = $db->query($sql)) {
-            while ($row = $res->fetch_assoc()) {
-                $rows[] = $row;
-            }
-            $res->free();
-        }
+        $rows = $this->adminModel->getTickets($search, $category, $status, $priority, $perPage, $offset);
 
         $mapStatus = function ($s) {
             $s = strtolower((string)$s);

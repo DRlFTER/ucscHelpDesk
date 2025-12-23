@@ -4,16 +4,38 @@ class User extends Model
 {
 	/**
 	 * Find a user by email in the new users schema.
-	 * Returns: [u_id, email, name, role, password_hash, number, year, designation, is_deleted]
+	 * Returns: [u_id, email, name, role, password_hash, number, year, designation, is_deleted, is_suspended]
+	 * Only returns non-deleted users (suspended users are returned so we can show proper message)
 	 */
 	public function findByEmail(string $email): ?array
 	{
-		$sql = "SELECT u_id, email, name, role, password_hash, number, year, designation, is_deleted FROM users WHERE email = ? LIMIT 1";
+		$sql = "SELECT u_id, email, name, role, password_hash, number, year, designation, is_deleted, is_suspended FROM users WHERE email = ? AND is_deleted = 0 LIMIT 1";
 		$stmt = $this->db->prepare($sql);
 		if (!$stmt) {
 			throw new Exception('Prepare failed: ' . $this->db->error);
 		}
 		$stmt->bind_param('s', $email);
+		if (!$stmt->execute()) {
+			throw new Exception('Execute failed: ' . $stmt->error);
+		}
+		$result = $stmt->get_result();
+		$row = $result ? $result->fetch_assoc() : null;
+		$stmt->close();
+		return $row ?: null;
+	}
+
+	/**
+	 * Get user status (is_deleted, is_suspended) by user ID.
+	 * Used to check if user status changed mid-session.
+	 */
+	public function getUserStatus(int $userId): ?array
+	{
+		$sql = "SELECT is_deleted, is_suspended FROM users WHERE u_id = ? LIMIT 1";
+		$stmt = $this->db->prepare($sql);
+		if (!$stmt) {
+			throw new Exception('Prepare failed: ' . $this->db->error);
+		}
+		$stmt->bind_param('i', $userId);
 		if (!$stmt->execute()) {
 			throw new Exception('Execute failed: ' . $stmt->error);
 		}

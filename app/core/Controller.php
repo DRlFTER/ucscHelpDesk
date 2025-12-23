@@ -70,6 +70,28 @@ class Controller
         header("Location: " . ROOT . "login?denied=$role");
         exit();
      }
+
+     // Check if user status changed mid-session (deleted or suspended)
+     try {
+        $userModel = $this->model('User');
+        $status = $userModel->getUserStatus((int)$_SESSION['user']['u_id']);
+        
+        if (!$status || !empty($status['is_deleted']) || !empty($status['is_suspended'])) {
+           // Kill session - user has been deleted or suspended
+           $_SESSION = [];
+           if (ini_get('session.use_cookies')) {
+              $params = session_get_cookie_params();
+              setcookie(session_name(), '', time() - 42000, $params['path'], $params['domain'], $params['secure'], $params['httponly']);
+           }
+           session_destroy();
+           
+           $reason = !$status ? 'invalid' : (!empty($status['is_deleted']) ? 'deleted' : 'suspended');
+           header("Location: " . ROOT . "login?{$reason}=1");
+           exit();
+        }
+     } catch (Throwable $e) {
+        // On error, allow access but log if possible
+     }
     }
     
 

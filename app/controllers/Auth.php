@@ -26,11 +26,14 @@ class Auth extends Controller
 				throw new Exception('Invalid credentials.');
 			}
 
-			// Check if user is deleted
-			if (!empty($user['is_deleted'])) {
-				header('Location: ' . ROOT . 'login?deleted=1');
+			// Check if user is suspended
+			if (!empty($user['is_suspended'])) {
+				header('Location: ' . ROOT . 'login?suspended=1');
 				exit;
 			}
+
+			// Regenerate session ID to prevent session fixation attacks
+			session_regenerate_id(true);
 
 			$_SESSION['user'] = [
 				'u_id' => (int)$user['u_id'],
@@ -38,6 +41,8 @@ class Auth extends Controller
 				'email' => $user['email'],
 				'role'  => $user['role'],
 				'name'  => $user['name'],
+				'is_deleted' => (int)($user['is_deleted'] ?? 0),
+				'is_suspended' => (int)($user['is_suspended'] ?? 0),
 			];
 
 			$_SESSION['u_id'] = (int)$user['u_id'];
