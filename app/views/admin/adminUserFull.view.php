@@ -49,7 +49,7 @@
 						<button id="editUserBtn" class="btnPrimary" type="button"><span class="btnPrimaryText">Edit</span></button>
 					</div>
 					<div class="btnHolder" id="suspendHolder">
-						<button id="suspendBtn" class="btnSecondary" type="button"><span class="btnSecondaryText">Suspend</span></button>
+						<button id="suspendBtn" class="btnSecondary" style="width: 100%;" type="button"><span class="btnSecondaryText">Suspend</span></button>
 					</div>
 					<div class="btnHolder" id="unsuspendHolder" style="display: none;">
 						<button id="unsuspendBtn" class="btnSecondary" style="background-color: #22c55e; width: 100%;" type="button"><span class="btnSecondaryText" style="color: white;">Unsuspend</span></button>
