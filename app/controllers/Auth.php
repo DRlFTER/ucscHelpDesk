@@ -26,6 +26,11 @@ class Auth extends Controller
 				throw new Exception('Invalid credentials.');
 			}
 
+			// Check if user is deleted
+			if (!empty($user['is_deleted'])) {
+				header('Location: ' . ROOT . 'login?deleted=1');
+				exit;
+			}
 
 			$_SESSION['user'] = [
 				'u_id' => (int)$user['u_id'],

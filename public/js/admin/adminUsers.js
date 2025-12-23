@@ -221,8 +221,13 @@ window.adminUsersData = [];
         const phone = u.number || "—";
         const email = u.email || "";
         const href = id ? `/admin/user?id=${encodeURIComponent(id)}` : "#";
+        const isDeleted = u.isDeleted === true;
+        const deletedClass = isDeleted ? " isDeleted" : "";
+        const deletedBadge = isDeleted
+          ? '<span class="status deleted">Deleted</span>'
+          : "";
         return `
-        <a class="ticket" href="${href}" aria-label="Open user ${esc(
+        <a class="ticket${deletedClass}" href="${href}" aria-label="Open user ${esc(
           u.name
         )}" style="view-transition-name: ${vt}; text-decoration: none; color: inherit;">
           <div class="ticketRow1">
@@ -234,7 +239,10 @@ window.adminUsersData = [];
                 <p>${esc(designation)}</p>
               </div>
             </div>
-            <div class="status ${esc(role)}">${esc(roleCap)}</div>
+            <div class="statusHolder">
+              ${deletedBadge}
+              <div class="status ${esc(role)}">${esc(roleCap)}</div>
+            </div>
           </div>
           <div class="ticketRow2">
             <div class="ticketDetails">

@@ -406,7 +406,7 @@ class Admin extends Controller
         }
 
         $idEsc = (int)$id;
-        $sql = "SELECT u_id, name, email, role, designation, number, year FROM users WHERE u_id = $idEsc LIMIT 1";
+        $sql = "SELECT u_id, name, email, role, designation, number, year, is_deleted, deleted_at FROM users WHERE u_id = $idEsc LIMIT 1";
         $row = null;
         if ($res = $db->query($sql)) {
             $row = $res->fetch_assoc();
@@ -426,6 +426,8 @@ class Admin extends Controller
             'designation' => isset($row['designation']) ? (string)$row['designation'] : null,
             'number' => isset($row['number']) ? (string)$row['number'] : null,
             'year' => isset($row['year']) ? (int)$row['year'] : null,
+            'isDeleted' => (bool)($row['is_deleted'] ?? 0),
+            'deletedAt' => isset($row['deleted_at']) ? (string)$row['deleted_at'] : null,
         ]);
         exit;
     }
@@ -494,10 +496,38 @@ class Admin extends Controller
             exit;
         }
         $idEsc = (int)$id;
-        $ok = $db->query("DELETE FROM users WHERE u_id = $idEsc");
+        // Soft delete: set is_deleted flag (deleted_at handled by trigger)
+        $ok = $db->query("UPDATE users SET is_deleted = 1 WHERE u_id = $idEsc");
         if (!$ok) {
             http_response_code(500);
             echo json_encode(['error' => 'Delete failed']);
+            exit;
+        }
+        echo json_encode(['success' => true]);
+        exit;
+    }
+
+    /**
+     * Restore a soft-deleted user.
+     */
+    public function userRestore()
+    {
+        $this->requireLogin('admin');
+        header('Content-Type: application/json');
+        $db = Database::getInstance();
+
+        $id = isset($_POST['id']) ? (int)$_POST['id'] : (isset($_GET['id']) ? (int)$_GET['id'] : 0);
+        if (!$id) {
+            http_response_code(400);
+            echo json_encode(['error' => 'Missing id']);
+            exit;
+        }
+        $idEsc = (int)$id;
+        // Restore: clear is_deleted flag (deleted_at handled by trigger)
+        $ok = $db->query("UPDATE users SET is_deleted = 0 WHERE u_id = $idEsc");
+        if (!$ok) {
+            http_response_code(500);
+            echo json_encode(['error' => 'Restore failed']);
             exit;
         }
         echo json_encode(['success' => true]);
@@ -564,7 +594,7 @@ class Admin extends Controller
         if ($page > $totalPages) { $page = $totalPages; }
         $offset = ($page - 1) * $perPage;
 
-        $sql = "SELECT u.u_id, u.name, u.email, u.role, u.designation, u.number, u.year
+        $sql = "SELECT u.u_id, u.name, u.email, u.role, u.designation, u.number, u.year, u.is_deleted
                 FROM users u
                 $whereSql
                 ORDER BY u.name ASC
@@ -596,6 +626,7 @@ class Admin extends Controller
                 'designation' => isset($r['designation']) ? (string)$r['designation'] : null,
                 'number' => isset($r['number']) ? (string)$r['number'] : null,
                 'year' => isset($r['year']) ? (int)$r['year'] : null,
+                'isDeleted' => (bool)($r['is_deleted'] ?? 0),
             ];
         }
 

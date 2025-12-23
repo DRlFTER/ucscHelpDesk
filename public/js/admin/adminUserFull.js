@@ -89,15 +89,45 @@ function renderHeader() {
   const metaEl = document.getElementById("userMeta");
   if (nameEl) nameEl.textContent = userData.name || "User";
   if (statusEl) {
-    statusEl.className = statusClassByRole(userData.role);
-    const role = (userData.role || "").toString();
-    statusEl.textContent = role.charAt(0).toUpperCase() + role.slice(1);
+    // Show deleted status if user is deleted
+    if (userData.isDeleted) {
+      statusEl.className = "status deleted";
+      statusEl.textContent = "Deleted";
+    } else {
+      statusEl.className = statusClassByRole(userData.role);
+      const role = (userData.role || "").toString();
+      statusEl.textContent = role.charAt(0).toUpperCase() + role.slice(1);
+    }
   }
   if (metaEl) {
     const created = userData.createdOn || "";
+    let deletedInfo = "";
+    if (userData.isDeleted && userData.deletedAt) {
+      deletedInfo = `<span style="color: #dc2626;">Deleted: ${esc(
+        userData.deletedAt
+      )}</span>`;
+    }
     metaEl.innerHTML = `<span>ID: ${esc(userData.id)}</span><span>Email: ${esc(
       userData.email || ""
-    )}</span>${created ? `<span>Created: ${esc(created)}</span>` : ""}`;
+    )}</span>${
+      created ? `<span>Created: ${esc(created)}</span>` : ""
+    }${deletedInfo}`;
+  }
+
+  // Toggle delete/restore buttons based on user state
+  updateDeleteRestoreButtons();
+}
+
+function updateDeleteRestoreButtons() {
+  const deleteHolder = document.getElementById("deleteHolder");
+  const restoreHolder = document.getElementById("restoreHolder");
+
+  if (userData.isDeleted) {
+    if (deleteHolder) deleteHolder.style.display = "none";
+    if (restoreHolder) restoreHolder.style.display = "block";
+  } else {
+    if (deleteHolder) deleteHolder.style.display = "block";
+    if (restoreHolder) restoreHolder.style.display = "none";
   }
 }
 
@@ -163,6 +193,7 @@ function wireActions() {
   const editBtn = document.getElementById("editUserBtn");
   const suspendBtn = document.getElementById("suspendBtn");
   const deleteBtn = document.getElementById("deleteBtn");
+  const restoreBtn = document.getElementById("restoreBtn");
 
   if (editBtn) {
     editBtn.addEventListener("click", () => {
@@ -224,9 +255,14 @@ function wireActions() {
   }
 
   if (deleteBtn) {
+    console.log("Delete button found, attaching click handler");
     deleteBtn.addEventListener("click", () => {
+      console.log("Delete button clicked");
       const overlay = document.getElementById("deleteModal");
-      if (!overlay) return;
+      if (!overlay) {
+        console.error("Delete modal not found");
+        return;
+      }
       const close = openModal("deleteModal");
       const cancelBtn = document.getElementById("cancelDeleteBtn");
       const confirmBtn = document.getElementById("confirmDeleteBtn");
@@ -238,6 +274,7 @@ function wireActions() {
       };
       const onConfirm = async (e) => {
         e && e.preventDefault();
+        console.log("Confirming delete for user:", userData.id);
         try {
           const res = await fetch("/admin/userDelete", {
             method: "POST",
@@ -245,16 +282,70 @@ function wireActions() {
             body: `id=${encodeURIComponent(userData.id)}`,
             credentials: "include",
           });
+          console.log("Delete response status:", res.status);
           if (!res.ok) throw new Error("Delete failed");
+          // Refresh user data to show deleted state
+          userData.isDeleted = true;
           localStorage.removeItem(cacheKeyForUser(userData.id));
           try {
             localStorage.setItem("admin_users_bust", String(Date.now()));
           } catch {}
-          window.location.href = "/admin/users";
+          renderHeader();
+          cleanup();
+          close();
+        } catch (err) {
+          console.error("Delete error:", err);
+          alert("Failed to delete user");
+          cleanup();
+          close();
+        }
+      };
+
+      const cleanup = () => {
+        cancelBtn && cancelBtn.removeEventListener("click", onCancel);
+        confirmBtn && confirmBtn.removeEventListener("click", onConfirm);
+      };
+
+      cancelBtn && cancelBtn.addEventListener("click", onCancel);
+      confirmBtn && confirmBtn.addEventListener("click", onConfirm);
+    });
+  }
+
+  if (restoreBtn) {
+    restoreBtn.addEventListener("click", () => {
+      const overlay = document.getElementById("restoreModal");
+      if (!overlay) return;
+      const close = openModal("restoreModal");
+      const cancelBtn = document.getElementById("cancelRestoreBtn");
+      const confirmBtn = document.getElementById("confirmRestoreBtn");
+
+      const onCancel = (e) => {
+        e && e.preventDefault();
+        cleanup();
+        close();
+      };
+      const onConfirm = async (e) => {
+        e && e.preventDefault();
+        try {
+          const res = await fetch("/admin/userRestore", {
+            method: "POST",
+            headers: { "Content-Type": "application/x-www-form-urlencoded" },
+            body: `id=${encodeURIComponent(userData.id)}`,
+            credentials: "include",
+          });
+          if (!res.ok) throw new Error("Restore failed");
+          // Refresh user data to show restored state
+          userData.isDeleted = false;
+          localStorage.removeItem(cacheKeyForUser(userData.id));
+          try {
+            localStorage.setItem("admin_users_bust", String(Date.now()));
+          } catch {}
+          renderHeader();
+          cleanup();
+          close();
         } catch (err) {
           console.error(err);
-          alert("Failed to delete user");
-        } finally {
+          alert("Failed to restore user");
           cleanup();
           close();
         }

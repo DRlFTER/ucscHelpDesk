@@ -29,6 +29,27 @@
   padding: 6px 10px;
   border-radius: 17px;
 }
+/* Deleted user indicator */
+.status.deleted {
+  background: #fee2e2;
+  color: #991b1b;
+  padding: 6px 10px;
+  border-radius: 17px;
+}
+.ticket.isDeleted {
+  opacity: 0.7;
+  background-color: #ffcbcbff;
+}
+.ticket.isDeleted .ticketName h2 {
+  text-decoration: line-through;
+  color: #6b7280;
+}
+.statusHolder {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  flex-wrap: wrap;
+}
 .search input::placeholder {
   color: #808080;
 }

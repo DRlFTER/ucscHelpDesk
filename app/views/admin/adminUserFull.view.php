@@ -51,8 +51,11 @@
 					<div class="btnHolder">
 						<button id="suspendBtn" class="btnSecondary" type="button"><span class="btnSecondaryText">Suspend user</span></button>
 					</div>
-					<div class="btnHolder">
+					<div class="btnHolder" id="deleteHolder">
 						<button id="deleteBtn" class="btnSecondary" style="background-color: #ff7b7bff;" type="button"><span class="btnSecondaryText" style="color: white;">Delete user</span></button>
+					</div>
+					<div class="btnHolder" id="restoreHolder" style="display: none;">
+						<button id="restoreBtn" class="btnSecondary" style="background-color: #22c55e;" type="button"><span class="btnSecondaryText" style="color: white;">Restore user</span></button>
 					</div>
 				</div>
 			</aside>
@@ -65,7 +68,7 @@
 		<div class="msgContainer" role="dialog" aria-modal="true" aria-labelledby="deleteModalTitle">
 			<div class="msgContent">
 				<h3 id="deleteModalTitle" class="msgTitle">Delete this user?</h3>
-				<p class="msgText">This action is permanent and cannot be undone.</p>
+				<p class="msgText">The user will be marked as deleted and can be restored later.</p>
 				<div class="msgActions">
 					<button id="cancelDeleteBtn" type="button" class="btnSecondary"><span class="btnSecondaryText">Cancel</span></button>
 					<button id="confirmDeleteBtn" type="button" class="btnPrimary btnDanger"><span class="btnPrimaryText">Delete</span></button>
@@ -75,6 +78,22 @@
 	</div>
 	<button type="button" class="modalBackdropClose" aria-label="Close"></button>
 
+</div>
+
+<div id="restoreModal" class="modalOverlay" aria-hidden="true">
+	<div class="msgHolder">
+		<div class="msgContainer" role="dialog" aria-modal="true" aria-labelledby="restoreModalTitle">
+			<div class="msgContent">
+				<h3 id="restoreModalTitle" class="msgTitle">Restore this user?</h3>
+				<p class="msgText">This will restore the user's account and they will be able to log in again.</p>
+				<div class="msgActions">
+					<button id="cancelRestoreBtn" type="button" class="btnSecondary"><span class="btnSecondaryText">Cancel</span></button>
+					<button id="confirmRestoreBtn" type="button" class="btnPrimary" style="background-color: #22c55e;"><span class="btnPrimaryText">Restore</span></button>
+				</div>
+			</div>
+		</div>
+	</div>
+	<button type="button" class="modalBackdropClose" aria-label="Close"></button>
 </div>
 
 <div id="editModal" class="modalOverlay" aria-hidden="true">

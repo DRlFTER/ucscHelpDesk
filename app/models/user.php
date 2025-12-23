@@ -4,11 +4,11 @@ class User extends Model
 {
 	/**
 	 * Find a user by email in the new users schema.
-	 * Returns: [u_id, email, name, role, password_hash, number, year, designation]
+	 * Returns: [u_id, email, name, role, password_hash, number, year, designation, is_deleted]
 	 */
 	public function findByEmail(string $email): ?array
 	{
-		$sql = "SELECT u_id, email, name, role, password_hash, number, year, designation FROM users WHERE email = ? LIMIT 1";
+		$sql = "SELECT u_id, email, name, role, password_hash, number, year, designation, is_deleted FROM users WHERE email = ? LIMIT 1";
 		$stmt = $this->db->prepare($sql);
 		if (!$stmt) {
 			throw new Exception('Prepare failed: ' . $this->db->error);

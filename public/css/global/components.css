@@ -127,10 +127,14 @@ body {
   cursor: default;
   z-index: 1;
 }
-body.modal-open main {
+
+/* Blur main content and sidenav when modal is open */
+body.modal-open .appLayout,
+body.modal-open .mainContentFull {
   filter: blur(2px);
   transition: filter 180ms ease-in-out;
 }
+
 /* ----- GENERIC MODAL OVERLAY ----- */
 
 /* ----- MODAL FORMS / POP-UP VIEWS ----- */

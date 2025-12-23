@@ -104,6 +104,15 @@
    
 
     <script>
+      // Move all modals to body level so they appear over sidenav
+      document.addEventListener("DOMContentLoaded", () => {
+        document.querySelectorAll('.modalOverlay').forEach(modal => {
+          document.body.appendChild(modal);
+        });
+      });
+    </script>
+
+    <script>
       const loader = document.getElementById("pageLoader");
       let loaderTimeout;
 

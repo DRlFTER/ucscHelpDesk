@@ -23,6 +23,20 @@
   background: #fef3c7;
   border-color: #f59e0b;
 }
+/* Deleted status styling */
+.status.deleted {
+  background: #fee2e2;
+  color: #991b1b;
+}
+/* Full width delete/restore buttons */
+#deleteHolder,
+#restoreHolder {
+  width: 100%;
+}
+#deleteBtn,
+#restoreBtn {
+  width: 100%;
+}
 #editModal .msgContainer,
 #editModal .msgContent,
 #editModal input,
