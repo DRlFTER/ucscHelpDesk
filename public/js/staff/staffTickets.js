@@ -22,9 +22,38 @@ document.addEventListener("DOMContentLoaded", () => {
       const displayStatus = typeof status === "string" ? status.charAt(0).toUpperCase() + status.slice(1) : "Pending";
       const priority = ticket.priority || "medium";
       const statusClass = status.toLowerCase().replace(/\s+/g, '-');
+      
+      // New: Overdue pending styling
+      let cardClass = "ticket-card";
+      let overdueBadge = "";
+      const isOverdue = ticket.is_overdue_pending === 1; // Flag from model
+      if (isOverdue) {
+        cardClass += " overdue-pending";
+        overdueBadge = `
+          <div class="detail-item">
+            <span class="status-badge overdue-badge">
+              Overdue (Pending)
+            </span>
+          </div>
+        `;
+      }
+
+      // Existing: Level-based (for future escalation; optional)
+      let escalationBadge = "";
+      const level = ticket.assigned_level || 99;
+      if (level <= 2) {
+        cardClass += ` level-${level}`;
+        escalationBadge = `
+          <div class="detail-item">
+            <span class="status-badge escalated-badge" style="background:${level === 1 ? '#dc2626' : '#ea580c'}; color:white;">
+              Escalated (Level ${level})
+            </span>
+          </div>
+        `;
+      }
 
       return `
-      <article class="ticket-card">
+      <article class="${cardClass}">
         <div class="ticket-header">
           <div class="ticket-title-group">
             <h3 class="ticket-title">${ticket.title || "No Title"}</h3>
@@ -55,9 +84,10 @@ document.addEventListener("DOMContentLoaded", () => {
           <div class="details-group">
             <div class="detail-item">
               <span class="status-badge status-${statusClass}">
-            ${displayStatus}
-          </span>
+                ${displayStatus}
+              </span>
             </div>
+            ${overdueBadge}${escalationBadge} <!-- Overdue first, then level -->
           </div>
         </div>
       </article>
@@ -68,7 +98,7 @@ document.addEventListener("DOMContentLoaded", () => {
   // Initial render
   renderTickets(tickets);
 
-  // Wire up status filter
+  // Status filter
   const statusSelect = document.getElementById('status-filter');
   if (statusSelect) {
     statusSelect.addEventListener('change', () => {
@@ -86,21 +116,20 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   }
 
+  // Search
   const searchInput = document.getElementById('faq-search');
   if (searchInput) {
     searchInput.addEventListener('input', (e) => {
-      const searchInput = e.target.value.toLowerCase().trim()
-      if(!searchInput){
-        currentTickets = [...tickets];
-        renderTickets(currentTickets);  
+      const searchTerm = e.target.value.toLowerCase().trim();
+      if (!searchTerm) {
+        renderTickets(tickets);
         return;
       }
       const filtered = tickets.filter(t => {
         const title = (t.title || '').toLowerCase().trim();
-        return title.includes(searchInput);
+        return title.includes(searchTerm);
       });
-      currentTickets = filtered;
-      renderTickets(currentTickets);
+      renderTickets(filtered);
     });
   }
 

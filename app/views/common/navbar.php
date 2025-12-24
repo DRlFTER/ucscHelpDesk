@@ -28,6 +28,10 @@
         ['href' => '/staff/staffFAQ', 'label' => 'FAQs', 'icon' => 'faq'],
         ['href' => '/staff/calender', 'label' => 'Calendar', 'icon' => 'calendar'],
         ['href' => '/staff/staffForum', 'label' => 'Forum', 'icon' => 'forum'],
+        ['href' => '/staff/staffKB', 'label' => 'Knowledge Base', 'icon' => 'knowledgebase'],
+        ['href' => '/staff/staffAnnoucements', 'label' => 'Announcement', 'icon' => 'announcements'],
+        ['href' => '/staff/createTemplate', 'label' => 'Create Templates', 'icon' => 'template'],
+        
       ],
       'counselor' => [
         ['href' => '/counselor/dashboard', 'label' => 'Dashboard', 'icon' => 'dashboard'],
@@ -53,6 +57,9 @@
       'users' => '<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M23 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path></svg>',
       'faq' => '<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"></path><line x1="12" y1="17" x2="12.01" y2="17"></line></svg>',
       'plus' => '<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>',
+      'knowledgebase' => '<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 2a2 2 0 0 1 2 2v16a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h12m0 2h-5v10l-2.5-2.25L8 12V4H6v16h12V4z"></path></svg>',
+      'announcements' => '<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 8H4a2 2 0 0 0-2 2v4a2 2 0 0 0 2 2h1v4a1 1 0 0 0 1 1h2a1 1 0 0 0 1-1v-4h7l5 4v-4m0-4v-4m-9.5 4c-1.53-.75-2.5-2.3-2.5-4 0-1.7 1-3.25 2.5-4"></path></svg>',
+      'template' => '<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14,2 14,8 20,8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><polyline points="10,9 9,9 8,9"></polyline></svg>',
     ];
 
     // Get navigation items for current role
