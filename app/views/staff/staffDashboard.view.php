@@ -6,34 +6,7 @@
     </div>
     
     <div class="layout-container">
-        <nav class="navMenu">
-            <div class="sideNav">
-                <a href="/staff/staffDashboard" class="nav-link active">
-                    <span class="nav-icon"></span> Dashboard
-                </a>
-                <a href="/staff/staffTickets" class="nav-link">
-                    <span class="nav-icon"></span> My Tickets
-                </a>
-                <a href="/staff/staffAnnoucements" class="nav-link">
-                    <span class="nav-icon"></span> Announcement
-                </a>
-                <a href="/staff/createTemplate" class="nav-link">
-                    <span class="nav-icon"></span> Template
-                </a>
-                <a href="/staff/staffFAQ" class="nav-link">
-                    <span class="nav-icon"></span> FAQs
-                </a>
-                <a href="/staff/staffForum" class="nav-link">
-                    <span class="nav-icon"></span> Forum
-                </a>
-                <a href="/staff/staffCalender" class="nav-link">
-                    <span class="nav-icon"></span> Calendar
-                </a>
-                <a href="/staff/staffKB" class="nav-link">
-                    <span class="nav-icon"></span> Knowledge Base
-                </a>
-            </div>
-        </nav>
+      
         
         <div class="content-area">
             <section class="dashboard-stats">
@@ -57,18 +30,6 @@
                     <div class="stat-number"><?php echo $stats['resolved'] ?? 0; ?></div>
                     <div class="stat-label">Resolved</div>
                 </div>
-            </section>
-
-            <section class="quick-actions">
-                <button onclick="window.location.href='/staff/staffTickets'" class="action-btn">
-                    <span class="btn-icon"></span> View All Tickets
-                </button>
-                <button onclick="window.location.href='/staff/staffAnnCreate'" class="action-btn">
-                    <span class="btn-icon"></span> Create Announcement
-                </button>
-                <button onclick="window.location.href='/staff/createTemplate'" class="action-btn">
-                    <span class="btn-icon"></span> Create Template
-                </button>
             </section>
 
             <div class="dashboard-grid">
