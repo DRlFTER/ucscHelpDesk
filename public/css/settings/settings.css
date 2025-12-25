@@ -14,7 +14,212 @@ main {
   background: #ffffff;
 }
 
+.settingControl input:disabled,
+.settingControl select:disabled,
+.settingControl textarea:disabled {
+  background: #f3f4f6;
+  color: #6b7280;
+  cursor: not-allowed;
+}
+
+.settingControl input:focus,
+.settingControl select:focus,
+.settingControl textarea:focus {
+  outline: none;
+  border-color: #8c8cf9;
+  box-shadow: 0 0 0 3px rgba(140, 140, 249, 0.1);
+}
+
+.settingHint {
+  display: block;
+  font-size: 12px;
+  color: #9ca3af;
+  font-weight: normal;
+  margin-top: 2px;
+}
+
 .mutedText {
   color: #6b7280;
   font-size: 12px;
+}
+
+/* Profile Photo Section */
+.profilePhotoSection {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 16px;
+  padding: 20px 0;
+}
+
+.profilePhotoWrapper {
+  position: relative;
+  width: 120px;
+  height: 120px;
+  border-radius: 50%;
+  overflow: hidden;
+  cursor: pointer;
+}
+
+.profilePhoto {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.profilePhotoPlaceholder {
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(135deg, #8c8cf9 0%, #6b6be0 100%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 40px;
+  font-weight: 600;
+  color: white;
+  text-transform: uppercase;
+}
+
+.profilePhotoOverlay {
+  position: absolute;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  opacity: 0;
+  transition: opacity 0.2s ease;
+  color: white;
+}
+
+.profilePhotoWrapper:hover .profilePhotoOverlay {
+  opacity: 1;
+}
+
+.profilePhotoActions {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+
+.photoHint {
+  font-size: 12px;
+  color: #9ca3af;
+  text-align: center;
+  margin: 0;
+}
+
+/* Button Styles */
+.btnPrimary,
+.btnSecondary,
+.btnDanger {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 10px 20px;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  border: none;
+}
+
+.btnPrimary {
+  background: #8c8cf9;
+  color: white;
+}
+
+.btnPrimary:hover:not(:disabled) {
+  background: #7a7ae8;
+}
+
+.btnPrimary:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.btnSecondary {
+  background: #f3f4f6;
+  color: #374151;
+  border: 1px solid #e5e7eb;
+}
+
+.btnSecondary:hover:not(:disabled) {
+  background: #e5e7eb;
+}
+
+.btnDanger {
+  background: #fee2e2;
+  color: #dc2626;
+  border: 1px solid #fecaca;
+}
+
+.btnDanger:hover:not(:disabled) {
+  background: #fecaca;
+}
+
+.btnSmall {
+  padding: 8px 16px;
+  font-size: 13px;
+}
+
+/* Settings Actions */
+.settingsActions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 12px;
+  padding-top: 20px;
+  margin-top: 20px;
+  border-top: 1px solid #e5e7eb;
+}
+
+/* Settings Message */
+.settingsMessage {
+  margin-top: 16px;
+  padding: 12px 16px;
+  border-radius: 8px;
+  font-size: 14px;
+  display: none;
+}
+
+.settingsMessage.success {
+  background: #d1fae5;
+  color: #065f46;
+  border: 1px solid #a7f3d0;
+}
+
+.settingsMessage.error {
+  background: #fee2e2;
+  color: #dc2626;
+  border: 1px solid #fecaca;
+}
+
+.settingsMessage.info {
+  background: #dbeafe;
+  color: #1d4ed8;
+  border: 1px solid #bfdbfe;
+}
+
+/* Button Loader */
+.btnLoader {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.btnLoader .spinner {
+  width: 18px;
+  height: 18px;
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
 }
