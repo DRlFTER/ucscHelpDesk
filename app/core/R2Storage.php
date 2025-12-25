@@ -126,13 +126,14 @@ class R2Storage
         $ch = curl_init();
         curl_setopt_array($ch, [
             CURLOPT_URL => $url,
-            CURLOPT_PUT => true,
             CURLOPT_RETURNTRANSFER => true,
             CURLOPT_HTTPHEADER => $curlHeaders,
             CURLOPT_POSTFIELDS => $content,
             CURLOPT_CUSTOMREQUEST => 'PUT',
             CURLOPT_TIMEOUT => 30,
-            // Note: Set to true in production with proper CA bundle
+            CURLOPT_HTTP_VERSION => CURL_HTTP_VERSION_1_1,
+            CURLOPT_FRESH_CONNECT => true,
+            CURLOPT_FORBID_REUSE => true,
             CURLOPT_SSL_VERIFYPEER => false,
             CURLOPT_SSL_VERIFYHOST => false,
         ]);
@@ -237,7 +238,6 @@ class R2Storage
             CURLOPT_RETURNTRANSFER => true,
             CURLOPT_HTTPHEADER => $curlHeaders,
             CURLOPT_TIMEOUT => 30,
-            // Note: Set to true in production with proper CA bundle
             CURLOPT_SSL_VERIFYPEER => false,
             CURLOPT_SSL_VERIFYHOST => false,
         ]);

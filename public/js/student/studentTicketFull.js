@@ -107,8 +107,32 @@ function renderAttachments() {
     .join("");
 }
 
+function formatDate(dateString) {
+  if (!dateString) return '';
+  const date = new Date(dateString.replace(/-/g, '/'));
+  const today = new Date();
+  const yesterday = new Date(today);
+  yesterday.setDate(yesterday.getDate() - 1);
+
+  if (date.toDateString() === today.toDateString()) {
+    return 'Today';
+  } else if (date.toDateString() === yesterday.toDateString()) {
+    return 'Yesterday';
+  } else {
+    return date.toLocaleDateString(undefined, { year: 'numeric', month: 'long', day: 'numeric' });
+  }
+}
+
+function formatTime(dateString) {
+  if (!dateString) return '';
+  const date = new Date(dateString.replace(/-/g, '/'));
+  return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: false });
+}
+
 function renderMessages() {
   const m = document.getElementById("messages");
+  let lastDate = null;
+
   m.innerHTML = conversation
     .map((msg) => {
       const isStaff = msg.authorType === "staff";
@@ -117,12 +141,23 @@ function renderMessages() {
         const headerTitle = isStaff
           ? `<span class="name"><span class="staffLabel">Staff</span>${division ? ` <span class="role">(${division})</span>` : ""}</span>`
         : `<span class="name">${msg.name || "You"}</span>`;
+      
+      const dateStr = formatDate(msg.time);
+      const timeStr = formatTime(msg.time);
+      
+      let dateHeader = '';
+      if (dateStr !== lastDate) {
+          dateHeader = `<div class="chat-date-separator"><span>${dateStr}</span></div>`;
+          lastDate = dateStr;
+      }
+
       return `
-      <div class="message">
-        <div class="messageBubble ${typeClass}">
+      ${dateHeader}
+      <div class="message ${typeClass}">
+        <div class="messageBubble">
           <div class="messageHeader">
             ${headerTitle}
-            <span class="time">${msg.time || ""}</span>
+            <span class="time">${timeStr}</span>
           </div>
           <div class="messageText">${msg.text}</div>
         </div>
@@ -169,13 +204,45 @@ function renderTimeline() {
 function wireActions() {
   const sendBtn = document.getElementById("sendBtn");
   if (sendBtn) {
-    sendBtn.addEventListener("click", () => {
+    sendBtn.addEventListener("click", async () => {
       const input = document.getElementById("replyInput");
       const text = input.value.trim();
       if (!text) return;
-      conversation.push({ name: "You", role: "", time: "Just now", text, authorType: "student" });
-      input.value = "";
-      renderMessages();
+      
+      const ticketId = getTicketIdFromUrl();
+      if (!ticketId) return;
+
+      // Show loading state
+      sendBtn.classList.add("loading");
+      sendBtn.disabled = true;
+
+      try {
+        const res = await fetch('/student/sendMessage', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({
+            ticket_id: ticketId,
+            message: text
+          })
+        });
+        
+        const data = await res.json();
+        if (data.success) {
+          input.value = "";
+          await fetchMessages(ticketId); // Refresh messages
+        } else {
+          alert("Failed to send message: " + (data.error || "Unknown error"));
+        }
+      } catch (e) {
+        console.error("Error sending message:", e);
+        alert("Error sending message");
+      } finally {
+        // Hide loading state
+        sendBtn.classList.remove("loading");
+        sendBtn.disabled = false;
+      }
     });
   }
 
@@ -244,27 +311,51 @@ async function fetchTicket(id) {
   return res.json();
 }
 
+async function fetchMessages(id) {
+  try {
+    const res = await fetch(`/student/chatMessages?ticket_id=${encodeURIComponent(id)}`, { credentials: "include" });
+    if (!res.ok) throw new Error("Failed to fetch messages");
+    const data = await res.json();
+    if (data.messages) {
+      conversation.length = 0;
+      data.messages.forEach(msg => {
+        conversation.push({
+          name: msg.sender_name,
+          role: msg.sender_role,
+          time: msg.created_at,
+          text: msg.message,
+          authorType: msg.sender_role === 'student' ? 'student' : 'staff'
+        });
+      });
+      renderMessages();
+    }
+  } catch (e) {
+    console.error("Error fetching messages:", e);
+  }
+}
+
 (async function init() {
   const id = getTicketIdFromUrl();
   if (id) {
     ticketData = loadFromCache(id);
     if (!ticketData) {
-      try { ticketData = await fetchTicket(id); saveToCache(id, ticketData); }
+      try { 
+        ticketData = await fetchTicket(id); 
+        saveToCache(id, ticketData); 
+      }
       catch (e) { console.error(e); }
     } else {
       fetchTicket(id).then((fresh) => { saveToCache(id, fresh); }).catch(() => {});
     }
+    // Fetch messages
+    fetchMessages(id);
+    // Poll for new messages every 10 seconds
+    setInterval(() => fetchMessages(id), 10000);
   }
   if (!ticketData) {
     ticketData = { id: 0, code: "", title: "Ticket", status: "Under Review", createdOn: "", attachments: [], description: "", category: "", priority: "", assigned: "" };
   }
-  // Load conversation from payload if available
-  try {
-    if (ticketData && Array.isArray(ticketData.messages)) {
-      conversation.length = 0;
-      for (const m of ticketData.messages) conversation.push(m);
-    }
-  } catch {}
+  
   renderHeader();
   renderDescription();
   renderAttachments();
