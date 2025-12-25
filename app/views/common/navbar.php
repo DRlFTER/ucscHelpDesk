@@ -75,6 +75,7 @@
     $displayName = $sessionUser['name'] ?? 'Guest';
     $displayEmail = $sessionUser['email'] ?? '';
     $displayRole = isset($sessionUser['role']) ? ucfirst($sessionUser['role']) : '';
+    $displayProfile = $sessionUser['profile_url'] ?? '';
   ?>
 
   <!-- Logo / Brand -->
@@ -105,7 +106,7 @@
   <!-- Bottom Section: Profile -->
   <div class="sidenavBottom">
     <div class="sidenavProfile">
-      <img src="/assets/profile.svg" alt="Profile" class="sidenavProfileImg" />
+      <?= $displayProfile ? '<img src="' . htmlspecialchars($displayProfile) . '" alt="Profile" class="sidenavProfileImg" />' : '<img src="/assets/profile.svg" alt="Profile" class="sidenavProfileImg" />' ?>
       <div class="sidenavProfileInfo">
         <span class="sidenavProfileName"><?= htmlspecialchars($displayName) ?></span>
         <?php if ($displayRole): ?>

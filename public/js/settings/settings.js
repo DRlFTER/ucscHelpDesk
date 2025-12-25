@@ -177,48 +177,42 @@
 
     return `
       <div class="profilePhotoSection">
-        <div class="profilePhotoWrapper">
+        <div class="profilePhotoWrapper${photoUrl ? " hasPhoto" : ""}">
           ${
             photoUrl
               ? `<img src="${photoUrl}" alt="Profile photo" class="profilePhoto" id="profilePhotoImg">`
               : `<div class="profilePhotoPlaceholder" id="profilePhotoPlaceholder">${initials}</div>`
           }
+          <input type="file" id="photoInput" accept="image/jpeg,image/png,image/gif,image/webp" style="display: none;">
+          ${
+            photoUrl
+              ? `
+          <div class="profilePhotoOverlay splitOverlay" id="photoOverlay">
+            <div class="overlayAction overlayChange" id="changePhotoArea">
+              <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"></path>
+                <circle cx="12" cy="13" r="4"></circle>
+              </svg>
+            </div>
+            <div class="overlayAction overlayRemove" id="removePhotoArea">
+              <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <line x1="18" y1="6" x2="6" y2="18"></line>
+                <line x1="6" y1="6" x2="18" y2="18"></line>
+              </svg>
+            </div>
+          </div>
+          `
+              : `
           <div class="profilePhotoOverlay" id="photoOverlay">
             <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
               <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"></path>
               <circle cx="12" cy="13" r="4"></circle>
             </svg>
           </div>
-        </div>
-        <div class="profilePhotoActions">
-          <input type="file" id="photoInput" accept="image/jpeg,image/png,image/gif,image/webp" style="display: none;">
-          <button type="button" class="btnSecondary btnSmall" id="uploadPhotoBtn">
-            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-              <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
-              <polyline points="17 8 12 3 7 8"></polyline>
-              <line x1="12" y1="3" x2="12" y2="15"></line>
-            </svg>
-            <span class="btnText">Upload Photo</span>
-            <span class="btnLoader" style="display: none;">
-              <svg class="spinner" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                <circle cx="12" cy="12" r="10" fill="none" stroke="currentColor" stroke-width="3" stroke-dasharray="31.4" stroke-linecap="round"/>
-              </svg>
-            </span>
-          </button>
-          ${
-            photoUrl
-              ? `<button type="button" class="btnDanger btnSmall" id="removePhotoBtn">
-                  <span class="btnText">Remove</span>
-                  <span class="btnLoader" style="display: none;">
-                    <svg class="spinner" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                      <circle cx="12" cy="12" r="10" fill="none" stroke="currentColor" stroke-width="3" stroke-dasharray="31.4" stroke-linecap="round"/>
-                    </svg>
-                  </span>
-                </button>`
-              : ""
+          `
           }
         </div>
-        <p class="photoHint">Supported formats: JPEG, PNG, GIF, WebP. Max size: 5MB</p>
+        <p class="photoHint">Supported formats: <br> JPEG, PNG, GIF, WebP. Max size: 5MB</p>
       </div>
     `;
   }
@@ -365,29 +359,36 @@
       input.addEventListener("input", checkForChanges);
     });
 
-    // Photo upload button and input
-    const uploadBtn = document.getElementById("uploadPhotoBtn");
+    // Photo input and overlay elements
     const photoInput = document.getElementById("photoInput");
     const photoOverlay = document.getElementById("photoOverlay");
+    const changePhotoArea = document.getElementById("changePhotoArea");
+    const removePhotoArea = document.getElementById("removePhotoArea");
 
-    if (uploadBtn && photoInput) {
-      uploadBtn.addEventListener("click", () => {
+    // If split overlay (has photo), handle separately
+    if (changePhotoArea && photoInput) {
+      changePhotoArea.addEventListener("click", (e) => {
+        e.stopPropagation();
         photoInput.click();
       });
-
-      photoInput.addEventListener("change", handlePhotoUpload);
     }
 
-    if (photoOverlay && photoInput) {
+    if (removePhotoArea) {
+      removePhotoArea.addEventListener("click", (e) => {
+        e.stopPropagation();
+        handlePhotoRemove();
+      });
+    }
+
+    // Single overlay (no photo) - click to upload
+    if (photoOverlay && !changePhotoArea && photoInput) {
       photoOverlay.addEventListener("click", () => {
         photoInput.click();
       });
     }
 
-    // Remove photo button
-    const removeBtn = document.getElementById("removePhotoBtn");
-    if (removeBtn) {
-      removeBtn.addEventListener("click", handlePhotoRemove);
+    if (photoInput) {
+      photoInput.addEventListener("change", handlePhotoUpload);
     }
 
     // Cancel button
@@ -501,12 +502,48 @@
     }
   }
 
-  // Handle photo removal
-  async function handlePhotoRemove() {
-    if (!confirm("Are you sure you want to remove your profile photo?")) {
-      return;
-    }
+  // Open delete photo modal
+  function openDeletePhotoModal() {
+    const overlay = document.getElementById("deletePhotoModal");
+    if (!overlay) return;
+    overlay.classList.add("open");
+    document.body.classList.add("modal-open");
 
+    const cancelBtn = document.getElementById("cancelDeletePhotoBtn");
+    const confirmBtn = document.getElementById("confirmDeletePhotoBtn");
+    const backdropBtn = overlay.querySelector(".modalBackdropClose");
+
+    const close = () => {
+      overlay.classList.remove("open");
+      document.body.classList.remove("modal-open");
+      cancelBtn && cancelBtn.removeEventListener("click", onCancel);
+      confirmBtn && confirmBtn.removeEventListener("click", onConfirm);
+      backdropBtn && backdropBtn.removeEventListener("click", onCancel);
+    };
+
+    const onCancel = (e) => {
+      e && e.preventDefault();
+      close();
+    };
+
+    const onConfirm = async (e) => {
+      e && e.preventDefault();
+      close();
+      await performPhotoRemoval();
+    };
+
+    cancelBtn && cancelBtn.addEventListener("click", onCancel);
+    confirmBtn && confirmBtn.addEventListener("click", onConfirm);
+    backdropBtn && backdropBtn.addEventListener("click", onCancel);
+  }
+
+  // Handle photo removal (called after modal confirmation)
+  function handlePhotoRemove() {
+    openDeletePhotoModal();
+  }
+
+  // Perform the actual photo removal
+  async function performPhotoRemoval() {
     const removeBtn = document.getElementById("removePhotoBtn");
     setLoading(removeBtn, true);
 

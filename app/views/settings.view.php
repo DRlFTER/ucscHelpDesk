@@ -28,6 +28,23 @@
 	</div>
 </main>
 
+<!-- Delete Photo Confirmation Modal -->
+<div id="deletePhotoModal" class="modalOverlay" aria-hidden="true">
+	<div class="msgHolder">
+		<div class="msgContainer" role="dialog" aria-modal="true" aria-labelledby="deletePhotoModalTitle">
+			<div class="msgContent">
+				<h3 id="deletePhotoModalTitle" class="msgTitle">Remove profile photo?</h3>
+				<p class="msgText">Your profile photo will be removed. You can upload a new one at any time.</p>
+				<div class="msgActions">
+					<button id="cancelDeletePhotoBtn" type="button" class="btnSecondary"><span class="btnSecondaryText">Cancel</span></button>
+					<button id="confirmDeletePhotoBtn" type="button" class="btnPrimary btnDanger"><span class="btnPrimaryText">Remove</span></button>
+				</div>
+			</div>
+		</div>
+	</div>
+	<button type="button" class="modalBackdropClose" aria-label="Close"></button>
+</div>
+
 <!-- Pass user data to JavaScript -->
 <script>
 	window.SETTINGS_USER_DATA = <?= json_encode([

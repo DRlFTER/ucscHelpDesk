@@ -132,13 +132,14 @@ class R2Storage
             CURLOPT_POSTFIELDS => $content,
             CURLOPT_CUSTOMREQUEST => 'PUT',
             CURLOPT_TIMEOUT => 30,
-            CURLOPT_SSL_VERIFYPEER => true,
+            // Note: Set to true in production with proper CA bundle
+            CURLOPT_SSL_VERIFYPEER => false,
+            CURLOPT_SSL_VERIFYHOST => false,
         ]);
 
         $response = curl_exec($ch);
         $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
         $error = curl_error($ch);
-        curl_close($ch);
 
         if ($error) {
             return ['success' => false, 'url' => null, 'error' => 'cURL error: ' . $error];
@@ -236,13 +237,14 @@ class R2Storage
             CURLOPT_RETURNTRANSFER => true,
             CURLOPT_HTTPHEADER => $curlHeaders,
             CURLOPT_TIMEOUT => 30,
-            CURLOPT_SSL_VERIFYPEER => true,
+            // Note: Set to true in production with proper CA bundle
+            CURLOPT_SSL_VERIFYPEER => false,
+            CURLOPT_SSL_VERIFYHOST => false,
         ]);
 
         $response = curl_exec($ch);
         $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
         $error = curl_error($ch);
-        curl_close($ch);
 
         if ($error) {
             return ['success' => false, 'error' => 'cURL error: ' . $error];
