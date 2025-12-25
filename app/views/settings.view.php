@@ -1,6 +1,10 @@
 <?php
 	$title = 'Settings';
 	$head = '<link rel="stylesheet" href="/css/settings/settings.css">';
+	
+	// Get user data from session
+	$user = $_SESSION['user'] ?? null;
+	$role = strtolower($user['role'] ?? 'guest');
 ?>
 
 <main>
@@ -12,14 +16,6 @@
 				</button>
 				<div class="pageHeaderContent">
 					<h1 class="pageTitle">Settings</h1>
-					<?php if (!empty($roleLabel) || !empty($roleMessage)) : ?>
-						<div class="roleNotice" style="margin-top:8px;color:#374151;font-size:14px;">
-							<?php if (!empty($roleLabel)): ?>
-								<strong><?php echo htmlspecialchars($roleLabel); ?></strong>:
-							<?php endif; ?>
-							<?php echo htmlspecialchars($roleMessage ?? 'Role-specific settings (dummy).'); ?>
-						</div>
-					<?php endif; ?>
 				</div>
 			</div>
 			<div class="pageContent">
@@ -32,5 +28,37 @@
 	</div>
 </main>
 
+<!-- Delete Photo Confirmation Modal -->
+<div id="deletePhotoModal" class="modalOverlay" aria-hidden="true">
+	<div class="msgHolder">
+		<div class="msgContainer" role="dialog" aria-modal="true" aria-labelledby="deletePhotoModalTitle">
+			<div class="msgContent">
+				<h3 id="deletePhotoModalTitle" class="msgTitle">Remove profile photo?</h3>
+				<p class="msgText">Your profile photo will be removed. You can upload a new one at any time.</p>
+				<div class="msgActions">
+					<button id="cancelDeletePhotoBtn" type="button" class="btnSecondary"><span class="btnSecondaryText">Cancel</span></button>
+					<button id="confirmDeletePhotoBtn" type="button" class="btnPrimary btnDanger"><span class="btnPrimaryText">Remove</span></button>
+				</div>
+			</div>
+		</div>
+	</div>
+	<button type="button" class="modalBackdropClose" aria-label="Close"></button>
+</div>
+
+<!-- Pass user data to JavaScript -->
+<script>
+	window.SETTINGS_USER_DATA = <?= json_encode([
+		'u_id' => $user['u_id'] ?? null,
+		'name' => $user['name'] ?? '',
+		'email' => $user['email'] ?? '',
+		'number' => $user['number'] ?? '',
+		'role' => $user['role'] ?? '',
+		'year' => $user['year'] ?? '',
+		'designation' => $user['designation'] ?? '',
+		'profile_photo' => $user['profile_url'] ?? $user['profile_photo'] ?? null,
+	]) ?>;
+	window.SETTINGS_ROLE = <?= json_encode($role) ?>;
+	window.SETTINGS_API_BASE = <?= json_encode('/' . $role) ?>;
+</script>
 <script src="/js/settings/settings.js"></script>
 
