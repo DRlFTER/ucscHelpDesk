@@ -1465,4 +1465,99 @@ public function templates()
         header('Location: /student/lostfound');
         exit;
     }
+
+    public function chatMessages()
+    {
+        $this->requireLogin('student');
+        header('Content-Type: application/json');
+
+        $ticketId = isset($_GET['ticket_id']) ? (int)$_GET['ticket_id'] : 0;
+        if ($ticketId <= 0) {
+            echo json_encode(['error' => 'missing ticket_id']);
+            return;
+        }
+
+        require_once __DIR__ . '/../../models/TicketChat.php';
+        $chatModel = new TicketChat();
+        
+        // Verify ticket ownership
+        $db = Database::getInstance();
+        $studentId = (int)($_SESSION['user']['u_id'] ?? 0);
+        $checkSql = "SELECT u_id FROM tickets WHERE ticket_id = $ticketId AND u_id = $studentId";
+        $res = $db->query($checkSql);
+        if (!$res || $res->num_rows === 0) {
+             echo json_encode(['error' => 'access_denied']);
+             return;
+        }
+
+        $chat = $chatModel->getChatByTicketId($ticketId);
+        $messages = [];
+        
+        if ($chat) {
+            $messages = $chatModel->getMessages($chat['chat_id']);
+            // Mark messages as read
+            $chatModel->markMessagesAsRead($chat['chat_id'], $studentId);
+        }
+
+        echo json_encode(['messages' => $messages]);
+    }
+
+    public function sendMessage()
+    {
+        $this->requireLogin('student');
+        header('Content-Type: application/json');
+
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+            echo json_encode(['error' => 'invalid_method']);
+            return;
+        }
+
+        $input = json_decode(file_get_contents('php://input'), true);
+        $ticketId = isset($input['ticket_id']) ? (int)$input['ticket_id'] : 0;
+        $message = isset($input['message']) ? trim($input['message']) : '';
+
+        if ($ticketId <= 0 || empty($message)) {
+            echo json_encode(['error' => 'missing_data']);
+            return;
+        }
+
+        require_once __DIR__ . '/../../models/TicketChat.php';
+        $chatModel = new TicketChat();
+        
+        // Verify ticket ownership and get assigned staff
+        $db = Database::getInstance();
+        $studentId = (int)($_SESSION['user']['u_id'] ?? 0);
+        $checkSql = "SELECT u_id, assigned_to FROM tickets WHERE ticket_id = $ticketId AND u_id = $studentId";
+        $res = $db->query($checkSql);
+        if (!$res || $res->num_rows === 0) {
+             echo json_encode(['error' => 'access_denied']);
+             return;
+        }
+        $ticket = $res->fetch_assoc();
+        $assignedTo = $ticket['assigned_to'];
+
+        $chat = $chatModel->getChatByTicketId($ticketId);
+        $chatId = 0;
+
+        if (!$chat) {
+            if (!$assignedTo) {
+                 echo json_encode(['error' => 'no_agent_assigned']);
+                 return;
+            }
+            $chatId = $chatModel->createChat($ticketId, $studentId, $assignedTo);
+        } else {
+            $chatId = $chat['chat_id'];
+        }
+
+        if ($chatId) {
+            $success = $chatModel->sendMessage($chatId, $studentId, $message);
+            if ($success) {
+                echo json_encode(['success' => true]);
+            } else {
+                echo json_encode(['error' => 'send_failed']);
+            }
+        } else {
+            echo json_encode(['error' => 'chat_creation_failed']);
+        }
+    }
 }

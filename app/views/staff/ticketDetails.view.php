@@ -479,6 +479,94 @@
         font-family: 'Inter', sans-serif;
         line-height: 1.6;
     }
+
+    /* Chat Styles */
+    .chat-messages {
+        border: 1px solid #e5e7eb;
+        border-radius: 10px;
+        padding: 16px;
+        height: 300px;
+        overflow-y: auto;
+        margin-bottom: 16px;
+        background: #f9fafb;
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+    }
+    .message {
+        max-width: 80%;
+        padding: 10px 14px;
+        border-radius: 12px;
+        font-size: 14px;
+        line-height: 1.4;
+    }
+    .message.staff {
+        align-self: flex-end;
+        background-color: #3b82f6;
+        color: white;
+        border-bottom-right-radius: 2px;
+    }
+    .message.student {
+        align-self: flex-start;
+        background-color: #e5e7eb;
+        color: #1f2937;
+        border-bottom-left-radius: 2px;
+    }
+    .message-meta {
+        font-size: 11px;
+        margin-bottom: 4px;
+        opacity: 0.8;
+        display: flex;
+        justify-content: space-between;
+        gap: 10px;
+    }
+
+    /* Loading spinner */
+    .spinner {
+        border: 3px solid rgba(255, 255, 255, 0.3);
+        border-radius: 50%;
+        border-top: 3px solid #fff;
+        width: 18px;
+        height: 18px;
+        animation: spin 1s linear infinite;
+        display: none;
+    }
+
+    @keyframes spin {
+        0% { transform: rotate(0deg); }
+        100% { transform: rotate(360deg); }
+    }
+
+    .submit-response-btn {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 8px;
+    }
+
+    .submit-response-btn.loading .btn-text {
+        display: none;
+    }
+
+    .submit-response-btn.loading .spinner {
+        display: block;
+    }
+    .chat-date-separator {
+        text-align: center;
+        margin: 20px 0;
+        position: relative;
+        display: flex;
+        justify-content: center;
+    }
+    .chat-date-separator span {
+        background-color: #e5e7eb;
+        color: #4b5563;
+        padding: 4px 12px;
+        border-radius: 12px;
+        font-size: 12px;
+        font-weight: 500;
+        box-shadow: 0 1px 2px rgba(0,0,0,0.05);
+    }
 </style>
 
 <main id="main-content" class="main-content">
@@ -554,20 +642,22 @@
         </div>
       <?php endif; ?>
 
-      <!-- Response Section -->
-       <?php if ($ticket['status'] !== 'Agent-closed'): ?>
-        <?php if (isset($ticket['assigned_to']) && $ticket['assigned_to'] == $_SESSION['user']['u_id']): ?>
-      <div class="response-section">
-        <h3>Add Response</h3>
-        <p>Add a comment or update to this ticket.</p>
-        <form method="POST" action="">
-          <input type="hidden" name="action" value="respond">
-          <textarea name="response" class="response-textarea" placeholder="Enter your response here..." required></textarea>
-          <button type="submit" class="submit-response-btn">Submit Response</button>
-        </form>
+      <!-- Chat Section -->
+      <?php if ($ticket['status'] !== 'Agent-closed' && isset($ticket['assigned_to']) && $ticket['assigned_to'] == $_SESSION['user']['u_id']): ?>
+      <div class="chat-section">
+        <h3>Conversation</h3>
+        <div id="chat-messages" class="chat-messages">
+            <!-- Messages will be loaded here -->
+        </div>
+        <div class="chat-input-area">
+            <textarea id="chat-input" class="response-textarea" placeholder="Type your message here..."></textarea>
+            <button id="send-chat-btn" class="submit-response-btn" type="button">
+                <span class="btn-text">Send</span>
+                <div class="spinner"></div>
+            </button>
+        </div>
       </div>
       <?php endif; ?>
-<?php endif; ?>
 
       <!-- Forward Section (Only if Assigned to Current Staff) -->
       <?php if (isset($ticket['assigned_to']) && $ticket['assigned_to'] == $_SESSION['user']['u_id']): ?>
@@ -608,10 +698,108 @@
 <script>
   // Basic validation for response
   document.querySelector('.submit-response-btn')?.addEventListener('click', function(e) {
-    const response = document.querySelector('.response-textarea').value.trim();
-    if (!response) {
-      e.preventDefault();
-      alert('Response cannot be empty.');
-    }
+    // This is for the old response form if it still exists somewhere, but we replaced it.
+    // However, we reused the class .submit-response-btn for the chat send button.
+    // So we should handle it specifically.
   });
+
+  const ticketId = <?php echo json_encode($ticket['ticket_id']); ?>;
+  const chatMessages = document.getElementById('chat-messages');
+  const chatInput = document.getElementById('chat-input');
+  const sendBtn = document.getElementById('send-chat-btn');
+
+  if (chatMessages && sendBtn) {
+      function formatDate(dateString) {
+          const date = new Date(dateString.replace(/-/g, '/')); // Replace - with / for better browser support if needed, though modern browsers handle ISO
+          const today = new Date();
+          const yesterday = new Date(today);
+          yesterday.setDate(yesterday.getDate() - 1);
+
+          if (date.toDateString() === today.toDateString()) {
+              return 'Today';
+          } else if (date.toDateString() === yesterday.toDateString()) {
+              return 'Yesterday';
+          } else {
+              return date.toLocaleDateString(undefined, { year: 'numeric', month: 'long', day: 'numeric' });
+          }
+      }
+
+      function formatTime(dateString) {
+          const date = new Date(dateString.replace(/-/g, '/'));
+          return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: false });
+      }
+
+      async function fetchMessages() {
+          try {
+              const res = await fetch(`/staff/chatMessages?ticket_id=${ticketId}`);
+              const data = await res.json();
+              if (data.messages) {
+                  let lastDate = null;
+                  chatMessages.innerHTML = data.messages.map(msg => {
+                      const isStaff = msg.sender_role === 'staff';
+                      const typeClass = isStaff ? 'staff' : 'student';
+                      
+                      const dateStr = formatDate(msg.created_at);
+                      const timeStr = formatTime(msg.created_at);
+                      
+                      let dateHeader = '';
+                      if (dateStr !== lastDate) {
+                          dateHeader = `<div class="chat-date-separator"><span>${dateStr}</span></div>`;
+                          lastDate = dateStr;
+                      }
+                      
+                      return `
+                          ${dateHeader}
+                          <div class="message ${typeClass}">
+                              <div class="message-meta">
+                                  <span>${msg.sender_name}</span>
+                                  <span>${timeStr}</span>
+                              </div>
+                              <div class="message-text">${msg.message}</div>
+                          </div>
+                      `;
+                  }).join('');
+                  chatMessages.scrollTop = chatMessages.scrollHeight;
+              }
+          } catch (err) {
+              console.error(err);
+          }
+      }
+
+      sendBtn.addEventListener('click', async () => {
+          const text = chatInput.value.trim();
+          if (!text) return;
+
+          // Show loading state
+          sendBtn.classList.add('loading');
+          sendBtn.disabled = true;
+
+          try {
+              const res = await fetch('/staff/sendMessage', {
+                  method: 'POST',
+                  headers: { 'Content-Type': 'application/json' },
+                  body: JSON.stringify({ ticket_id: ticketId, message: text })
+              });
+              const data = await res.json();
+              
+              if (data.success) {
+                  chatInput.value = '';
+                  await fetchMessages(); // Wait for messages to reload
+              } else {
+                  alert('Failed to send message');
+              }
+          } catch (err) {
+              console.error(err);
+              alert('Error sending message');
+          } finally {
+              // Hide loading state
+              sendBtn.classList.remove('loading');
+              sendBtn.disabled = false;
+          }
+      });
+
+      // Initial fetch and poll
+      fetchMessages();
+      setInterval(fetchMessages, 5000);
+  }
 </script>

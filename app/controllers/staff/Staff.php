@@ -1221,4 +1221,86 @@ public function downloadKB($file_id = null) {
     exit;
 }
 
+    public function chatMessages()
+    {
+        $this->requireLogin('staff');
+        header('Content-Type: application/json');
+
+        $ticketId = isset($_GET['ticket_id']) ? (int)$_GET['ticket_id'] : 0;
+        if ($ticketId <= 0) {
+            echo json_encode(['error' => 'missing ticket_id']);
+            return;
+        }
+
+        require_once __DIR__ . '/../../models/TicketChat.php';
+        $chatModel = new TicketChat();
+        
+        $chat = $chatModel->getChatByTicketId($ticketId);
+        $messages = [];
+        
+        if ($chat) {
+            $messages = $chatModel->getMessages($chat['chat_id']);
+            // Mark messages as read
+            $staffId = (int)($_SESSION['user']['u_id'] ?? 0);
+            $chatModel->markMessagesAsRead($chat['chat_id'], $staffId);
+        }
+
+        echo json_encode(['messages' => $messages]);
+    }
+
+    public function sendMessage()
+    {
+        $this->requireLogin('staff');
+        header('Content-Type: application/json');
+
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+            echo json_encode(['error' => 'invalid_method']);
+            return;
+        }
+
+        $input = json_decode(file_get_contents('php://input'), true);
+        $ticketId = isset($input['ticket_id']) ? (int)$input['ticket_id'] : 0;
+        $message = isset($input['message']) ? trim($input['message']) : '';
+
+        if ($ticketId <= 0 || empty($message)) {
+            echo json_encode(['error' => 'missing_data']);
+            return;
+        }
+
+        require_once __DIR__ . '/../../models/TicketChat.php';
+        $chatModel = new TicketChat();
+        
+        $staffId = (int)($_SESSION['user']['u_id'] ?? 0);
+        
+        $chat = $chatModel->getChatByTicketId($ticketId);
+        $chatId = 0;
+
+        if (!$chat) {
+            require_once __DIR__ . '/../../models/staff/Ticket.php';
+            $ticketModel = new StaffTicket();
+            $ticket = $ticketModel->getTicketById($ticketId);
+            
+            if (!$ticket) {
+                echo json_encode(['error' => 'ticket_not_found']);
+                return;
+            }
+            
+            $studentId = $ticket['u_id'];
+            $chatId = $chatModel->createChat($ticketId, $studentId, $staffId);
+        } else {
+            $chatId = $chat['chat_id'];
+        }
+
+        if ($chatId) {
+            $success = $chatModel->sendMessage($chatId, $staffId, $message);
+            if ($success) {
+                echo json_encode(['success' => true]);
+            } else {
+                echo json_encode(['error' => 'send_failed']);
+            }
+        } else {
+            echo json_encode(['error' => 'chat_creation_failed']);
+        }
+    }
+
 }
