@@ -587,6 +587,22 @@ class AdminModel extends Model
 
         return $result;
     }
+    public function resolveTicket(int $id): bool
+    {
+        $sql = "UPDATE tickets 
+                SET status = 'resolved' 
+                WHERE ticket_id = ?";
+        $stmt = $this->db->prepare($sql);
+        if (!$stmt) {
+            throw new Exception('Prepare failed: ' . $this->db->error);
+        }
+
+        $stmt->bind_param('i', $id);
+        $result = $stmt->execute();
+        $stmt->close();
+
+        return $result;
+    }
 
     /**
      * Get tickets count with filters

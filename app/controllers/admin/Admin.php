@@ -806,6 +806,32 @@ class Admin extends Controller
         }
         exit;
     }
+    public function ticketResolve()
+    {
+        $this->requireLogin('admin');
+        header('Content-Type: application/json');
+
+        $id = isset($_POST['id']) ? (int)$_POST['id'] : (isset($_GET['id']) ? (int)$_GET['id'] : 0);
+        if (!$id) {
+            http_response_code(400);
+            echo json_encode(['error' => 'Missing id']);
+            exit;
+        }
+
+        try {
+            $ok = $this->adminModel->resolveTicket($id);
+            if (!$ok) {
+                http_response_code(500);
+                echo json_encode(['error' => 'Mark as resolved failed']);
+                exit;
+            }
+            echo json_encode(['success' => true]);
+        } catch (Exception $e) {
+            http_response_code(500);
+            echo json_encode(['error' => 'Mark as resolved failed']);
+        }
+        exit;
+    }
 
     /**
      * Return tickets for admin as JSON for the Tickets page.

@@ -2,79 +2,85 @@
 @import url("/css/admin/adminTicketFull.css");
 
 .scheduleModalBox {
-	max-width: 760px;
-
+  max-width: 760px;
 }
 
 .scheduleForm {
-	display: grid;
-	grid-template-columns: 1fr 1fr;
-	gap: 12px 14px;
-	margin-top: 6px;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px 14px;
+  margin-top: 6px;
 }
 
 .scheduleForm label {
-	display: flex;
-	flex-direction: column;
-	gap: 6px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
 }
 
 .scheduleForm label > span {
-	font-size: 13px;
-	color: #374151;
+  font-size: 13px;
+  color: #374151;
 }
 
 .scheduleForm input,
 .scheduleForm select,
 .scheduleForm textarea {
-	width: 100%;
-	border: 1px solid #e5e7eb;
-	border-radius: 10px;
-	background: #fff;
-	color: #111827;
-	padding: 10px 12px;
-	font: inherit;
+  width: 100%;
+  border: 1px solid #e5e7eb;
+  border-radius: 10px;
+  background: #fff;
+  color: #111827;
+  padding: 10px 12px;
+  font: inherit;
 }
 
 /* Dropdowns styled like student new ticket selects */
 .scheduleForm select {
-	-webkit-appearance: none;
-	-moz-appearance: none;
-	appearance: none;
-	background-color: #fff;
-	background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%236b7280' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'><polyline points='6 9 12 15 18 9'/></svg>");
-	background-repeat: no-repeat;
-	background-position: right 12px center;
-	background-size: 16px 16px;
-	padding-right: 42px; /* space for chevron */
-	box-shadow: inset 0 1px 2px rgba(0,0,0,0.03);
-	transition: border-color 0.2s ease, box-shadow 0.2s ease, background-color 0.2s ease;
-	cursor: pointer;
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  appearance: none;
+  background-color: #fff;
+  background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%236b7280' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'><polyline points='6 9 12 15 18 9'/></svg>");
+  background-repeat: no-repeat;
+  background-position: right 12px center;
+  background-size: 16px 16px;
+  padding-right: 42px; /* space for chevron */
+  box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.03);
+  transition: border-color 0.2s ease, box-shadow 0.2s ease,
+    background-color 0.2s ease;
+  cursor: pointer;
 }
 
-.scheduleForm select:hover { background-color: #fcfcfc; }
+.scheduleForm select:hover {
+  background-color: #fcfcfc;
+}
 .scheduleForm select:focus {
-	outline: none;
-	border-color: var(--CTA, #8c8cf9);
-	box-shadow: 0 0 0 4px rgba(140,140,249,0.15);
-	background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%238c8cf9' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'><polyline points='6 9 12 15 18 9'/></svg>");
+  outline: none;
+  border-color: var(--CTA, #8c8cf9);
+  box-shadow: 0 0 0 4px rgba(140, 140, 249, 0.15);
+  background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%238c8cf9' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'><polyline points='6 9 12 15 18 9'/></svg>");
 }
 
-select::-ms-expand { display: none; }
+select::-ms-expand {
+  display: none;
+}
 
 .scheduleForm textarea {
-	min-height: 96px;
-	resize: vertical;
+  min-height: 96px;
+  resize: vertical;
 }
 
 .scheduleForm .col-2 {
-	grid-column: 1 / -1;
+  grid-column: 1 / -1;
 }
 
 .scheduleModalBox .msgActions {
-	grid-column: 1 / -1;
+  grid-column: 1 / -1;
 }
 
 @media (max-width: 680px) {
-	.scheduleForm { grid-template-columns: 1fr; }
+  .scheduleForm {
+    grid-template-columns: 1fr;
+  }
 }

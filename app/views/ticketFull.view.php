@@ -51,6 +51,7 @@
               </button>
               <button id="sendBtn" class="btnSvg" type="button" aria-label="Send">
                 <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="2" x2="11" y2="13"></line><polygon points="22 2 15 22 11 13 2 9 22 2"></polygon></svg>
+                <div class="spinner"></div>
               </button>
             </div>
           </div>
@@ -86,6 +87,23 @@
   </div>
 </main>
 
+<!-- Mark resolved confirmation modal (admin, student only; hidden for others) -->
+<div id="resolveModal" class="modalOverlay" aria-hidden="true">
+  <div class="msgHolder">
+    <div class="msgContainer" role="dialog" aria-modal="true" aria-labelledby="resolveModalTitle">
+      <div class="msgContent">
+        <h3 id="resolveModalTitle" class="msgTitle">Mark this ticket as resolved?</h3>
+        <p class="msgText">This action is permanent and cannot be undone.</p>
+        <div class="msgActions">
+          <button id="cancelResolveBtn" type="button" class="btnSecondary"><span class="btnSecondaryText">Cancel</span></button>
+          <button id="confirmResolveBtn" type="button" class="btnPrimary"><span class="btnPrimaryText">Mark</span></button>
+        </div>
+      </div>
+    </div>
+  </div>
+  <button type="button" class="modalBackdropClose" aria-label="Close"></button>
+</div>
+
 <!-- Delete confirmation modal (admin only; hidden for others) -->
 <div id="deleteModal" class="modalOverlay" aria-hidden="true">
   <div class="msgHolder">
@@ -101,7 +119,23 @@
     </div>
   </div>
   <button type="button" class="modalBackdropClose" aria-label="Close"></button>
-  
+</div>
+
+<!-- Delete message confirmation modal (admin only) -->
+<div id="deleteMessageModal" class="modalOverlay" aria-hidden="true">
+  <div class="msgHolder">
+    <div class="msgContainer" role="dialog" aria-modal="true" aria-labelledby="deleteMessageModalTitle">
+      <div class="msgContent">
+        <h3 id="deleteMessageModalTitle" class="msgTitle">Delete this message?</h3>
+        <p class="msgText">This message will be permanently removed from the conversation.</p>
+        <div class="msgActions">
+          <button id="cancelDeleteMsgBtn" type="button" class="btnSecondary"><span class="btnSecondaryText">Cancel</span></button>
+          <button id="confirmDeleteMsgBtn" type="button" class="btnPrimary btnDanger"><span class="btnPrimaryText">Delete</span></button>
+        </div>
+      </div>
+    </div>
+  </div>
+  <button type="button" class="modalBackdropClose" aria-label="Close"></button>
 </div>
 
 <!-- Schedule meeting modal (counselor) -->

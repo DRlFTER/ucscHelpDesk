@@ -47,6 +47,7 @@ const CFG = window.TICKET_FULL_CONFIG || {
   role: "guest",
   apiBase: "/admin/ticketData",
   deleteEndpoint: "/admin/ticketDelete",
+  resolveEndpoint: "/admin/ticketResolve",
 };
 const ROLE = (CFG.role || "guest").toLowerCase();
 
@@ -205,17 +206,10 @@ function wireActions() {
     renderMessages();
   });
 
-  document.getElementById("resolveBtn").addEventListener("click", () => {
-    ticketData.status = "Resolved";
-    timeline[timeline.length - 1] = {
-      label: "Resolved",
-      time: "Just now",
-      color: "green",
-      pending: false,
-    };
-    renderHeader();
-    renderTimeline();
-  });
+  const resolveBtn = document.getElementById("resolveBtn");
+  if (resolveBtn) {
+    resolveBtn.addEventListener("click", () => openResolveModal());
+  }
 
   const deleteBtn = document.getElementById("deleteBtn");
   if (deleteBtn) {
@@ -371,6 +365,56 @@ function openDeleteModal() {
     } catch (e) {
       console.error(e);
       alert("Failed to delete the ticket.");
+    } finally {
+      close();
+    }
+  };
+
+  cancelBtn && cancelBtn.addEventListener("click", onCancel);
+  confirmBtn && confirmBtn.addEventListener("click", onConfirm);
+  backdropBtn && backdropBtn.addEventListener("click", onCancel);
+}
+
+function openResolveModal() {
+  if (ROLE !== "admin") return; // safety
+  const overlay = document.getElementById("resolveModal");
+  if (!overlay) return;
+  overlay.classList.add("open");
+  document.body.classList.add("modal-open");
+
+  const cancelBtn = document.getElementById("cancelResolveBtn");
+  const confirmBtn = document.getElementById("confirmResolveBtn");
+  const backdropBtn = overlay.querySelector(".modalBackdropClose");
+
+  const close = () => {
+    overlay.classList.remove("open");
+    document.body.classList.remove("modal-open");
+    cancelBtn && cancelBtn.removeEventListener("click", onCancel);
+    confirmBtn && confirmBtn.removeEventListener("click", onConfirm);
+    backdropBtn && backdropBtn.removeEventListener("click", onCancel);
+  };
+  const onCancel = (e) => {
+    e && e.preventDefault();
+    close();
+  };
+  const onConfirm = async (e) => {
+    e && e.preventDefault();
+    try {
+      const res = await fetch(CFG.deleteEndpoint, {
+        method: "POST",
+        headers: { "Content-Type": "application/x-www-form-urlencoded" },
+        body: `id=${encodeURIComponent(ticketData.id)}`,
+        credentials: "include",
+      });
+      if (!res.ok) throw new Error("Mark as resolved failed");
+      try {
+        localStorage.setItem("admin_tickets_bust", String(Date.now()));
+      } catch {}
+      window.location.href =
+        "/admin/ticket?id=" + encodeURIComponent(ticketData.id);
+    } catch (e) {
+      console.error(e);
+      alert("Failed to mark the ticket as resolved.");
     } finally {
       close();
     }
