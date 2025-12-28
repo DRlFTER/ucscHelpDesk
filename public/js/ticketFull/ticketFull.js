@@ -44,12 +44,12 @@ const timeline = [
 ];
 
 const CFG = window.TICKET_FULL_CONFIG || {
-  role: "guest",
+  role: "admin",
   apiBase: "/admin/ticketData",
   deleteEndpoint: "/admin/ticketDelete",
   resolveEndpoint: "/admin/ticketResolve",
 };
-const ROLE = (CFG.role || "guest").toLowerCase();
+const ROLE = (CFG.role || "admin").toLowerCase();
 
 function statusClass(status) {
   const normalized = (status || "").toLowerCase().replace(/\s+/g, "");
@@ -168,9 +168,17 @@ function renderTimeline() {
 function toggleActionButtons() {
   const del = document.getElementById("deleteBtn");
   const sched = document.getElementById("scheduleBtn");
+  const resolveBtn = document.getElementById("resolveBtn");
   // Defaults: show delete for admin only
   if (ROLE === "admin") {
     if (del) del.style.display = "";
+    if (resolveBtn) {
+      if (ticketData.status === "Resolved") {
+        resolveBtn.style.display = "none";
+      } else {
+        resolveBtn.style.display = "";
+      }
+    }
     if (sched) sched.style.display = "none";
     return;
   }
@@ -183,10 +191,12 @@ function toggleActionButtons() {
       if (sched) sched.style.display = "none";
     }
     if (del) del.style.display = "none";
+    if (resolveBtn) resolveBtn.style.display = "none";
   } else {
     // Other roles: hide both
     if (del) del.style.display = "none";
     if (sched) sched.style.display = "none";
+    if (resolveBtn) resolveBtn.style.display = "none";
   }
 }
 
@@ -357,6 +367,11 @@ function openDeleteModal() {
         body: `id=${encodeURIComponent(ticketData.id)}`,
         credentials: "include",
       });
+      if (res.url.includes("/login")) {
+        alert("Session expired. Please log in again.");
+        window.location.href = "/login";
+        return;
+      }
       if (!res.ok) throw new Error("Delete failed");
       try {
         localStorage.setItem("admin_tickets_bust", String(Date.now()));
@@ -375,11 +390,16 @@ function openDeleteModal() {
   backdropBtn && backdropBtn.addEventListener("click", onCancel);
 }
 
+// ... (top of file)
+
 function openResolveModal() {
-  if (ROLE !== "admin") return; // safety
+  if (ROLE !== "admin") return;
   const overlay = document.getElementById("resolveModal");
   if (!overlay) return;
+
   overlay.classList.add("open");
+  // Fix the aria-hidden console warning
+  overlay.removeAttribute("aria-hidden");
   document.body.classList.add("modal-open");
 
   const cancelBtn = document.getElementById("cancelResolveBtn");
@@ -388,41 +408,65 @@ function openResolveModal() {
 
   const close = () => {
     overlay.classList.remove("open");
+    overlay.setAttribute("aria-hidden", "true");
     document.body.classList.remove("modal-open");
-    cancelBtn && cancelBtn.removeEventListener("click", onCancel);
-    confirmBtn && confirmBtn.removeEventListener("click", onConfirm);
-    backdropBtn && backdropBtn.removeEventListener("click", onCancel);
+    // Use {once: true} or manual removal to prevent multiple listeners
   };
-  const onCancel = (e) => {
-    e && e.preventDefault();
-    close();
-  };
+
   const onConfirm = async (e) => {
     e && e.preventDefault();
+
+    // Manual fallback if the variable is magically disappearing
+    const endpoint = CFG.resolveEndpoint || "/admin/ticketResolve";
+    console.log("Resolved Endpoint Path:", endpoint);
+
     try {
-      const res = await fetch(CFG.deleteEndpoint, {
+      const res = await fetch(endpoint, {
         method: "POST",
         headers: { "Content-Type": "application/x-www-form-urlencoded" },
         body: `id=${encodeURIComponent(ticketData.id)}`,
         credentials: "include",
       });
-      if (!res.ok) throw new Error("Mark as resolved failed");
+
+      // Capture as text first to avoid "Unexpected token <" crash
+      const rawText = await res.text();
+
+      let data;
       try {
-        localStorage.setItem("admin_tickets_bust", String(Date.now()));
-      } catch {}
-      window.location.href =
-        "/admin/ticket?id=" + encodeURIComponent(ticketData.id);
-    } catch (e) {
-      console.error(e);
-      alert("Failed to mark the ticket as resolved.");
-    } finally {
+        data = JSON.parse(rawText);
+      } catch (jsonErr) {
+        throw new Error(
+          "Server returned non-JSON response. Check PHP error logs."
+        );
+      }
+
+      if (!res.ok) throw new Error(data.error || "Mark as resolved failed");
+
+      ticketData.status = "Resolved";
+
+      renderHeader();
+      renderInfo();
+      toggleActionButtons();
+
+      // Clear cache so it doesn't revert on manual refresh
+      try {
+        localStorage.removeItem(cacheKeyFor(ticketData.id));
+      } catch (e) {}
+
+      alert("Ticket marked as resolved.");
       close();
+    } catch (err) {
+      console.error("RESOLVE ERROR:", err);
+      alert("Error: " + err.message);
     }
   };
 
-  cancelBtn && cancelBtn.addEventListener("click", onCancel);
-  confirmBtn && confirmBtn.addEventListener("click", onConfirm);
-  backdropBtn && backdropBtn.addEventListener("click", onCancel);
+  // Ensure listeners are only attached once
+  confirmBtn.onclick = onConfirm;
+  cancelBtn.onclick = (e) => {
+    e.preventDefault();
+    close();
+  };
 }
 
 // Modal helper: counselor schedule meeting (UI only)

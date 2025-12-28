@@ -588,21 +588,39 @@ class AdminModel extends Model
         return $result;
     }
     public function resolveTicket(int $id): bool
-    {
-        $sql = "UPDATE tickets 
-                SET status = 'resolved' 
-                WHERE ticket_id = ?";
-        $stmt = $this->db->prepare($sql);
-        if (!$stmt) {
-            throw new Exception('Prepare failed: ' . $this->db->error);
-        }
+{
+    // LOG 1: Check what ID arrived at the model
+    error_log("Model resolveTicket called for ID: " . $id);
 
-        $stmt->bind_param('i', $id);
-        $result = $stmt->execute();
-        $stmt->close();
+    $sql = "UPDATE tickets
+            SET status = 'resolved'
+            WHERE ticket_id = ?
+            AND status != 'resolved'";
 
-        return $result;
+    $stmt = $this->db->prepare($sql);
+    if (!$stmt) {
+        error_log("Prepare failed: " . $this->db->error);
+        throw new Exception('Prepare failed: ' . $this->db->error);
     }
+
+    $stmt->bind_param('i', $id);
+    $result = $stmt->execute();
+    
+    if (!$result) {
+        error_log("Execute failed: " . $stmt->error);
+        throw new Exception('Execute failed: ' . $stmt->error);
+    }
+
+    $affected = $stmt->affected_rows;
+    $stmt->close();
+
+    // LOG 2: Check how many rows were actually changed
+    error_log("Rows affected for ID $id: " . $affected);
+
+    // If 0 rows affected, it might not be an 'error' but the WHERE clause failed
+    return $affected >= 1; 
+} 
+
 
     /**
      * Get tickets count with filters
