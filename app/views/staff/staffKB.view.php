@@ -3,8 +3,9 @@
     <div class="pageHeader">
       <h1 class="pageTitle">Knowledge Base</h1>
   <p class="pageSubtitle">Access detailed guides, policies, and technical documentation.</p>
-    </div>
+</div>
 
+<div class="content-area">
     <div class="ticketsFilters kbFiltersRow">
       <div class="search">
         <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 22 21" fill="none">
@@ -14,7 +15,7 @@
       </div>
        <div class="ticket-action" style="width:250px; justify-content: center; align-items: center; display: flex; margin-left: auto; margin-right: auto; margin-top: 20px; margin-bottom: 20px;">
                 <button class="ticket-action-btn" onclick="window.location.href='/staff/createKB';">
-                    <span>Create New Resource</span>
+                    <span class="btnPrimaryText">Create New Resource</span>
                 </button>
     </div>
       <div class="filters">
@@ -31,12 +32,41 @@
       </div>
     </div>
 
+
     <section class="pageLayout kbLayout" aria-label="Knowledge base content">
       <div id="kbSections" class="kbSections" aria-live="polite"></div>
     </section>
   </div>
+  </div>
 </main>
 <style>
+  .main-content {
+    padding: 45px 84px;
+    
+}
+
+
+.page-header {
+    text-align: center;
+    margin-bottom: 30px;
+    align-items: center;
+    
+}
+
+.page-title {
+    font-size: 35px;
+    font-weight: 500;
+    margin: 0 0 6px 0;
+}
+
+.page-subtitle {
+    font-size: 25px;
+    font-weight: 400;
+    color: var(--color-text-body);
+    margin: 0;
+    letter-spacing: 0.5px;
+}
+
     .ticket-action {
   padding: 8px 16px;
   border: none;

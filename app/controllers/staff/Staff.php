@@ -1,6 +1,16 @@
 <?php
 
 class Staff extends Controller {
+
+private $faqModel;
+
+// In the __construct() method (add if not present, or update existing):
+public function __construct()
+{
+    require_once __DIR__ . '/../../models/staff/Faq.php';
+    // ... existing constructor code if any ...
+    $this->faqModel = new StaffFaqModel();
+}
     public function settings()
     {
             $this->requireLogin('staff');
@@ -547,15 +557,175 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     ]);
 }
 
- public function staffFAQ()
-    {
-        $this->requireLogin('staff');
-        $headContent = '<link rel="stylesheet" href="/css/staff/staffFAQ.css" />';
-        $this->view('staff/staffFAQ', [
-            'title' => 'Staff FAQs',
-            'head' => $headContent,
-        ]);
+// Replace the existing staffFAQ() method with this new faqs() method for management.
+// If you want a separate view-only page, keep staffFAQ() as-is and use faqs() for management.
+// I've assumed /staff/faqs routes to this for management (e.g., via routes.php).
+
+/**
+ * Staff FAQ Management Page (CRUD for FAQs)
+ */
+public function faqs()
+{
+    $this->requireLogin('staff');
+    $headContent = '
+        <link rel="stylesheet" href="/css/staff/staffFaqs.css"/>';
+    $this->view('staff/staffFaqs', ['title' => 'Manage FAQs', 'head' => $headContent]);
+}
+
+/**
+ * Return FAQs as JSON for the Staff FAQs page.
+ * { data: [ { id, question, answer, createdAt } ], meta: { page, perPage, total, totalPages } }
+ */
+public function faqsData()
+{
+    $this->requireLogin('staff');
+    header('Content-Type: application/json');
+    $page = isset($_GET['page']) ? max(1, (int)$_GET['page']) : 1;
+    $perPage = isset($_GET['perPage']) ? max(1, min(100, (int)$_GET['perPage'])) : 10;
+    $search = isset($_GET['search']) ? trim((string)$_GET['search']) : '';
+    $total = $this->faqModel->getFaqCount($search);
+    $totalPages = $perPage > 0 ? (int)max(1, ceil($total / $perPage)) : 1;
+    if ($page > $totalPages) { $page = $totalPages; }
+    $offset = ($page - 1) * $perPage;
+    $rows = $this->faqModel->getFaqs($search, $perPage, $offset);
+    $mapDate = function ($dt) {
+        if (!$dt) return '';
+        $ts = strtotime($dt);
+        if ($ts === false) return '';
+        return date('Y-m-d H:i:s', $ts);
+    };
+    $data = [];
+    foreach ($rows as $r) {
+        $data[] = [
+            'id' => (int)($r['id'] ?? 0),
+            'question' => (string)($r['question'] ?? ''),
+            'answer' => (string)($r['answer'] ?? ''),
+            'createdAt' => $mapDate($r['created_at'] ?? null),
+        ];
     }
+    echo json_encode([
+        'data' => $data,
+        'meta' => [
+            'page' => $page,
+            'perPage' => $perPage,
+            'total' => $total,
+            'totalPages' => $totalPages,
+        ],
+    ]);
+    exit;
+}
+
+/**
+ * Create a new FAQ (JSON response)
+ */
+public function faqCreate()
+{
+    $this->requireLogin('staff');
+    header('Content-Type: application/json');
+    $question = isset($_POST['question']) ? trim((string)$_POST['question']) : '';
+    $answer = isset($_POST['answer']) ? trim((string)$_POST['answer']) : '';
+    if ($question === '' || $answer === '') {
+        http_response_code(400);
+        echo json_encode(['error' => 'Question and answer are required']);
+        exit;
+    }
+    try {
+        $id = $this->faqModel->createFaq($question, $answer);
+        $row = $this->faqModel->getFaqById($id);
+        echo json_encode([
+            'id' => (int)($row['id'] ?? $id),
+            'question' => (string)($row['question'] ?? $question),
+            'answer' => (string)($row['answer'] ?? $answer),
+            'createdAt' => isset($row['created_at']) ? date('Y-m-d H:i:s', strtotime($row['created_at'])) : date('Y-m-d H:i:s'),
+        ]);
+    } catch (Exception $e) {
+        http_response_code(500);
+        echo json_encode(['error' => 'Create failed']);
+    }
+    exit;
+}
+
+/**
+ * Update an existing FAQ (JSON response)
+ */
+public function faqUpdate()
+{
+    $this->requireLogin('staff');
+    header('Content-Type: application/json');
+    $id = isset($_POST['id']) ? (int)$_POST['id'] : 0;
+    $question = isset($_POST['question']) ? trim((string)$_POST['question']) : '';
+    $answer = isset($_POST['answer']) ? trim((string)$_POST['answer']) : '';
+    if (!$id) {
+        http_response_code(400);
+        echo json_encode(['error' => 'Missing id']);
+        exit;
+    }
+    if ($question === '' || $answer === '') {
+        http_response_code(400);
+        echo json_encode(['error' => 'Question and answer are required']);
+        exit;
+    }
+    try {
+        $ok = $this->faqModel->updateFaq($id, $question, $answer);
+        if (!$ok) {
+            http_response_code(500);
+            echo json_encode(['error' => 'Update failed']);
+            exit;
+        }
+        $row = $this->faqModel->getFaqById($id);
+        echo json_encode([
+            'id' => (int)($row['id'] ?? $id),
+            'question' => (string)($row['question'] ?? $question),
+            'answer' => (string)($row['answer'] ?? $answer),
+            'createdAt' => isset($row['created_at']) ? date('Y-m-d H:i:s', strtotime($row['created_at'])) : '',
+        ]);
+    } catch (Exception $e) {
+        http_response_code(500);
+        echo json_encode(['error' => 'Update failed']);
+    }
+    exit;
+}
+
+/**
+ * Delete a FAQ (JSON response)
+ */
+public function faqDelete()
+{
+    $this->requireLogin('staff');
+    header('Content-Type: application/json');
+    $id = isset($_POST['id']) ? (int)$_POST['id'] : (isset($_GET['id']) ? (int)$_GET['id'] : 0);
+    if (!$id) {
+        http_response_code(400);
+        echo json_encode(['error' => 'Missing id']);
+        exit;
+    }
+    try {
+        $ok = $this->faqModel->deleteFaq($id);
+        if (!$ok) {
+            http_response_code(500);
+            echo json_encode(['error' => 'Delete failed']);
+            exit;
+        }
+        echo json_encode(['success' => true]);
+    } catch (Exception $e) {
+        http_response_code(500);
+        echo json_encode(['error' => 'Delete failed']);
+    }
+    exit;
+}
+
+// Optional: If you want to keep a simple view-only staffFAQ(), update it to fetch data via a new read-only method.
+// But for now, assuming faqs() handles management; add this if needed for viewing only.
+public function staffFAQ()
+{
+    $this->requireLogin('staff');
+    // Optionally load read-only data here if separate from management.
+    $headContent = '<link rel="stylesheet" href="/css/staff/staffFaqs.css" />';
+    $this->view('staff/staffFAQ', [
+        'title' => 'Staff FAQs',
+        'head' => $headContent,
+    ]);
+}
 
     public function staffForum()
     {
