@@ -1,8 +1,6 @@
 <main>
     <div class="fullPage">
         <div class="pageHeader">
-            <h2 class="pageTitle">Forum</h2>
-            <p class="pageSubtitle">Join the discussion — ask questions, share solutions, and get help from peers.</p>
         </div>
 
 
