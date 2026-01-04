@@ -2,9 +2,11 @@
 ?>
 <main id="main-content" class="main-content">
     <div class="page-header">
+        <div class="header-content">
       <h2 class="page-title">Assigned Tickets</h2>
       <p class="page-subtitle">Manage and respond to your assigned student issues</p>
     </div>
+</div>
     
       <div class="content-area">
         <?php if (!empty($error)): ?>
@@ -36,6 +38,47 @@
 </main>
 
 <style>
+ .page-header {
+        display: flex;
+        justify-content: space-between;
+        text-align: center;
+        align-items: center;
+        margin-bottom: 2rem;
+        padding: 1rem 0;
+        padding-top: 50px;
+     /* Light border for separation */
+        position:relative;
+    }
+
+    .header-content {
+        display: flex;
+        flex-direction: column;
+        gap: 0.25rem;
+        margin: 0 0 0 40px;
+        padding-top:50px;
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+    }
+
+    .page-title {
+        margin: 0;
+        font-size: 2rem;
+        font-weight: 600;
+        color: #111827; /* Dark gray for professional look */
+        line-height: 1.2;
+    }
+
+     .page-subtitle {
+    margin: 0;
+    font-size: 1rem;
+    color: #6b7280; /* Medium gray for subtitle */
+    font-weight: 400;
+    margin-bottom: 2rem;
+    padding: 1rem 0;
+    border-bottom: 1px solid #e5e7eb;
+  }
     /* New: Overdue pending colors (orange theme match) */
     .ticket-card.overdue-pending {
         border-left: 4px solid #f59e0b; /* Amber/orange border */

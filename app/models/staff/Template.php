@@ -89,5 +89,22 @@ class Template
         $conn->close();
         return $template ?: null;
     }
+
+     public function delete($template_id): bool
+    {
+        $conn = self :: getConnection();
+        $sql = "DELETE FROM templates WHERE id = ?";
+        $stmt = $conn->prepare($sql);
+        if (!$stmt) {
+            $err = $conn->error;
+            $conn->close();
+            throw new Exception('Prepare failed: ' . $err);
+        }
+        $stmt->bind_param("i", $template_id);
+        $result = $stmt->execute();
+        $stmt->close();
+        $conn->close();
+        return $result;
+    }
 }
 ?>
