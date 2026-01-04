@@ -30,7 +30,7 @@
         ['href' => '/staff/staffForum', 'label' => 'Forum', 'icon' => 'forum'],
         ['href' => '/staff/staffKB', 'label' => 'Knowledge Base', 'icon' => 'knowledgebase'],
         ['href' => '/staff/staffAnnoucements', 'label' => 'Announcement', 'icon' => 'announcements'],
-        ['href' => '/staff/createTemplate', 'label' => 'Create Templates', 'icon' => 'template'],
+        ['href' => '/staff/staffTemplate', 'label' => 'Templates', 'icon' => 'template'],
         
       ],
       'counselor' => [

@@ -1,8 +1,11 @@
 <main>
     <div class="fullPage">
-        <div class="pageHeader">
+        <div class="page-header">
+            <div class="header-content">
+                <h1 class="page-title">Staff Forum</h1>
+                <p class="page-subtitle">Manage and respond to forum posts</p>
+</div>
         </div>
-
 
         <div class="ticketsFilters">
             <div class="search">
@@ -11,30 +14,54 @@
                 </svg>
               <input id="ticketSearch" type="text" placeholder="Search forum...">
             </div>
-      <div class="filters">
-  <a id="newPostBtn" class="btnWSvg" href="/student/newForum">
-          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#ffffff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
-          <span class="btnPrimaryText">New Post</span>
-        </a>
-        <div class="filterGroup" role="radiogroup" aria-label="Type">
-          <label><input type="radio" name="type" value="all" checked /> All</label>
-          <label><input type="radio" name="type" value="my" /> My</label>
-        </div>
-                 <select id="categoryFilter" aria-label="Category filter"></select>
-                 <select id="statusFilter" aria-label="Status filter"></select>
-                 <select id="sortFilter" aria-label="Sort by"></select>
+            <div class="filters">
+                <div class="filterGroup" role="radiogroup" aria-label="Type">
+                    <label><input type="radio" name="type" value="all" checked /> All</label>
+                    <label><input type="radio" name="type" value="my" /> My</label>
+                </div>
+                <select id="categoryFilter" aria-label="Category filter"></select>
+                <select id="statusFilter" aria-label="Status filter"></select>
+                <select id="sortFilter" aria-label="Sort by"></select>
             </div>
         </div>
         <div class="tickets"></div>
-          <div class="ticketsPagination">
-            <div class="ticketsPageHolder">
-                </div>
-          </div>
+        <div class="ticketsPagination">
+            <div class="ticketsPageHolder"></div>
         </div>
     </div>
 </main>
 <style>
-     .layout-container {
+    .page-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 2rem;
+        padding: 1rem 0;
+        border-bottom: 1px solid #e5e7eb; /* Light border for separation */
+    }
+
+    .header-content {
+        display: flex;
+        flex-direction: column;
+        gap: 0.25rem;
+    }
+
+    .page-title {
+        margin: 0;
+        font-size: 2rem;
+        font-weight: 600;
+        color: #111827; /* Dark gray for professional look */
+        line-height: 1.2;
+    }
+
+    .page-subtitle {
+        margin: 0;
+        font-size: 1rem;
+        color: #6b7280; /* Medium gray for subtitle */
+        font-weight: 400;
+    }
+
+    .layout-container {
         display: flex;
         gap: 0;
         min-height: 70vh;
@@ -71,6 +98,29 @@
         padding: 20px;
         overflow-y: auto;
     }
-  </style>
+
+    /* Responsive adjustments */
+    @media (max-width: 768px) {
+        .page-header {
+            flex-direction: column;
+            align-items: flex-start;
+            gap: 1rem;
+        }
+
+        .ticketsFilters {
+            flex-direction: column;
+            align-items: stretch;
+        }
+
+        .search {
+            min-width: auto;
+            max-width: none;
+        }
+
+        .filters {
+            margin-top: 1rem;
+        }
+    }
+</style>
 
 <script src="/js/staff/staffForum.js"></script>

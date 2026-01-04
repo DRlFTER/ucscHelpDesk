@@ -1,20 +1,17 @@
 <?php
 ?>
 <main id="main-content" class="main-content">
-    <div class="page-header">
-        <h2 class="page-title">Announcements</h2>
-        <p class="page-subtitle">Latest updates and notices</p>
+ <div class="page-header">
+        <div class="header-content">
+            <h2 class="page-title">Announcements</h2>
+            <p class="page-subtitle">Latest updates and notices</p>
+        </div>
+        <button id="staffNewAnnBtn" class="btnWSvg" type="button" onclick="window.location.href='/staff/staffAnnCreate';">
+            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#ffffff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
+            <span class="btnPrimaryText">New Announcement</span>
+        </button>
     </div>
-
         <div class="content-area">
-
-            <div class="ticket-action" style="width:250px; justify-content: center; align-items: center; display: flex; margin-left: auto; margin-right: auto; margin-top: 20px; margin-bottom: 20px;">
-                <button class="ticket-action-btn" onclick="window.location.href='/staff/staffAnnCreate';">
-                    <span>Create New Announcement</span>
-                </button>
-            </div>
-
-
             <div class="tickets-container" id="announcements-root" data-announcements='<?php echo json_encode($announcements ?? []); ?>'>
 
             </div>
@@ -47,6 +44,46 @@ if (isset($_SESSION['success'])) {
     * {
         box-sizing: border-box;
     }
+    .page-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 2rem;
+        padding: 1rem 0;
+        border-bottom: 1px solid #e5e7eb; /* Light border for separation */
+    }
+
+    .header-content {
+        display: flex;
+        flex-direction: column;
+        gap: 0.25rem;
+        margin: 0 0 0 40px;
+    }
+
+    .page-title {
+        margin: 0;
+        font-size: 2rem;
+        font-weight: 600;
+        color: #111827; /* Dark gray for professional look */
+        line-height: 1.2;
+    }
+
+     .page-subtitle {
+    margin: 0;
+    font-size: 1rem;
+    color: #6b7280; /* Medium gray for subtitle */
+    font-weight: 400;
+  }
+  .btnWSvg {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    margin-right: 50px;
+  }
+
+  .btnPrimaryText {
+    font-size: 0.875rem;
+  }
 
 
     .status-badge {
@@ -123,56 +160,69 @@ if (isset($_SESSION['success'])) {
         overflow-x: hidden; /* Prevent horizontal overflow */
         overflow-y: auto; /* Vertical scroll on body for whole page */
     }
-          .tickets-container {
+  .tickets-container {
     background: rgba(255, 255, 255, 0.5);
-    border: 1px solid #f9f9f9;
+    border: 1px solid #8c8cf9;
     border-radius: 26px;
     padding: 15px;
     display: flex;
     flex-direction: column;
     gap: 15px;
-} 
+  }
 
-.ticket-card {
-    background-color: #f9f9f9; 
-    border: 1px solid #8c8cf9;
+  /* Template Card - Adapted from Ticket Card Theme */
+  .ticket-card {
+    background: linear-gradient(135deg, #ffffff 0%, #f8f9ff 100%);
+    border: 1px solid #e0e7ff;
     border-radius: 15px;
     padding: 15px;
     display: flex;
     flex-direction: column;
     gap: 10px;
-}
+    box-shadow: 0 2px 8px rgba(140, 140, 249, 0.1);
+    transition: all 0.3s ease;
+  }
 
-    .ticket-header {
-        display: flex;
-        justify-content: space-between;
-        align-items: flex-start;
-        gap: 10px;
-        border: 1px solid #f9f9f9;
-        padding: 10px;
-    }
+  .ticket-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(140, 140, 249, 0.15);
+    border-color: #8c8cf9;
+  }
 
-    .ticket-title-group {
-        display: flex;
-        flex-direction: column;
-        gap: 2px;
-    }
+  /* Header - Matching Ticket Header */
+  .ticket-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 10px;
+    border: 1px solid transparent;
+    padding: 10px;
+  }
 
-    .ticket-title {
-        font-size: 21px;
-        font-weight: 400;
-        letter-spacing: 0.42px;
-        margin: 0;
-    }
+  .ticket-title-group {
+    flex: 1;
+  }
 
-    .ticket-meta {
-        display: flex;
-        gap: 36px;
-        font-size: 13px;
-        color: var(--color-text-light);
-        letter-spacing: 0.26px;
-        flex-wrap: wrap;
-    }
+  .ticket-title {
+    margin: 0 0 0.5rem 0;
+    font-size: 1.25rem;
+    font-weight: 600;
+    color: #111827;
+    line-height: 1.3;
+  }
+
+  .ticket-meta {
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+  }
+
+  .meta-category,
+  .meta-date {
+    font-size: 0.875rem;
+    color: #6b7280;
+    font-weight: 400;
+  }
 
     /* Announcement Card Styles (if JS doesn't handle; fallback for static rendering) */
     .announcement-card {
