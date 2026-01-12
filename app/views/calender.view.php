@@ -1,6 +1,7 @@
 <?php
     $title = 'Calendar';
-    $head = '<link rel="stylesheet" href="/css/calender/calender.css">';
+    $head = '<link rel="stylesheet" href="/css/calender/calender.css">
+             <link rel="stylesheet" href="/css/calender/calender_model.css">';
 ?>
 
 <main>
@@ -18,14 +19,6 @@
                 <div class="todayEvents">
                     <div class="sectionTitle">Today</div>
                     <div class="noEvents" id="noEventsRow" style="display:none;">No events today</div>
-                    <div class="event">
-                        <h2>Team sync</h2>
-                        <p>All day</p>
-                    </div>
-                    <div class="event">
-                        <h2>Ticket review</h2>
-                        <p>All day</p>
-                    </div>
                 </div>
                 <div class="addEvent">
                     <input type="text" class="inputEvent" id="eventTitle" placeholder="Add event" />
@@ -58,13 +51,13 @@
         </div>
     </div>
 
-        <script>
-            (function(){
-                try {
-                    var role = (<?php echo json_encode(strtolower($_SESSION['user']['role'] ?? 'guest')); ?>) || 'guest';
-                    window.CALENDAR_CONFIG = { role: role };
-                } catch (e) { window.CALENDAR_CONFIG = { role: 'guest' }; }
-            })();
-        </script>
-        <script src="/js/calender/calender.js"></script>
+    <script>
+        (function(){
+            try {
+                var role = (<?php echo json_encode(strtolower($_SESSION['user']['role'] ?? 'guest')); ?>) || 'guest';
+                window.CALENDAR_CONFIG = { role: role };
+            } catch (e) { window.CALENDAR_CONFIG = { role: 'guest' }; }
+        })();
+    </script>
+    <script src="/js/calender/calender_crud.js"></script>
 </main>
