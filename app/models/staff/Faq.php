@@ -1,5 +1,4 @@
 <?php
-// models/staff/Faq.php
 // Note: This model reuses the exact same FAQ CRUD logic as AdminModel, since FAQs are shared across roles.
 // It extends Model and focuses only on FAQ methods for cleanliness.
 

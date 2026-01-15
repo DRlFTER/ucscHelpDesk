@@ -34,10 +34,10 @@
         
       ],
       'counselor' => [
-        ['href' => '/counselor/dashboard', 'label' => 'Dashboard', 'icon' => 'dashboard'],
+        ['href' => '/counselor/Dashboard', 'label' => 'Dashboard', 'icon' => 'dashboard'],
         ['href' => '/counselor/tickets', 'label' => 'Tickets', 'icon' => 'ticket'],
         ['href' => '/counselor/calender', 'label' => 'Calendar', 'icon' => 'calendar'],
-        ['href' => '/counselor/forum', 'label' => 'Forum', 'icon' => 'forum'],
+        ['href' => '/counselor/Forum', 'label' => 'Forum', 'icon' => 'forum'],
       ],
       'lecturer' => [
         ['href' => '/lecturer/dashboard', 'label' => 'Dashboard', 'icon' => 'dashboard'],
