@@ -1,6 +1,7 @@
 <?php
     $title = 'Calendar';
-    $head = '<link rel="stylesheet" href="/css/calender/calender.css">';
+    $head = '<link rel="stylesheet" href="/css/calender/calender.css">' .
+            '<link rel="stylesheet" href="/css/calender/calender_modal.css">';
 ?>
 
 <main>
@@ -64,5 +65,5 @@
                 } catch (e) { window.CALENDAR_CONFIG = { role: 'guest' }; }
             })();
         </script>
-        <script src="/js/calender/calender.js"></script>
+        <script src="/js/calender/calender_crud.js"></script>
 </main>
