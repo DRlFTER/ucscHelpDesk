@@ -526,10 +526,14 @@ class AdminModel extends Model
      */
     public function getTicketById(int $id): ?array
     {
-        $sql = "SELECT t.ticket_id, t.created_at, t.title, d.name AS category, t.status, t.priority, t.description, t.u_id, u.name AS student_name, t.meeting_requested
+        $sql = "SELECT t.ticket_id, t.created_at, t.title, d.name AS category, t.status, t.priority, t.description, t.u_id, u.name AS student_name, t.meeting_requested,
+                       sa.name AS staff_name, sh.position, sh.level
                 FROM tickets t
                 LEFT JOIN users u ON u.u_id = t.u_id
                 LEFT JOIN division d ON d.did = t.division
+                LEFT JOIN users sa ON sa.u_id = t.assigned_to
+                LEFT JOIN staff_division sd ON sd.u_id = t.assigned_to AND sd.did = t.division
+                LEFT JOIN staff_hierachy sh ON sh.h_id = sd.h_id
                 WHERE t.ticket_id = ?
                 LIMIT 1";
         $stmt = $this->db->prepare($sql);

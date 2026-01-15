@@ -423,10 +423,14 @@ class Counselor extends Controller
         }
 
         $idEsc = (int)$id;
-        $sql = "SELECT t.ticket_id, t.created_at, t.title, d.name AS category, t.status, t.priority, t.description, t.u_id, u.name AS student_name, t.meeting_requested
+        $sql = "SELECT t.ticket_id, t.created_at, t.title, d.name AS category, t.status, t.priority, t.description, t.u_id, u.name AS student_name, t.meeting_requested,
+                       sa.name AS staff_name, sh.position, sh.level
                 FROM tickets t
                 LEFT JOIN users u ON u.u_id = t.u_id
                 LEFT JOIN division d ON d.did = t.division
+                LEFT JOIN users sa ON sa.u_id = t.assigned_to
+                LEFT JOIN staff_division sd ON sd.u_id = t.assigned_to AND sd.did = t.division
+                LEFT JOIN staff_hierachy sh ON sh.h_id = sd.h_id
                 WHERE t.ticket_id = $idEsc AND LOWER(COALESCE(d.name,'')) LIKE 'counsel%'
                 LIMIT 1";
 
@@ -453,6 +457,56 @@ class Counselor extends Controller
         $createdPretty = '';
         if ($createdAt) { $ts = strtotime($createdAt); if ($ts !== false) $createdPretty = date('M d, Y \\a\\t g:i A', $ts); }
 
+        // --- Timeline Logic ---
+        $timeline = [];
+        $timeline[] = [ 'label' => 'Ticket created', 'time' => $createdPretty ?: '—', 'color' => 'green', 'pending' => false ];
+
+        $staffName = $row['staff_name'] ?? null;
+        $position = $row['position'] ?? null;
+        $level = $row['level'] ?? null;
+        
+        $assignLabel = 'Assigned';
+        $assignTime = 'Pending';
+        $assignColor = 'gray';
+        $assignPending = true;
+        if (!empty($staffName)) {
+            $assignLabel = "Assigned to {$staffName}";
+            if ($position) $assignLabel .= " ({$position})";
+            if ($level) $assignLabel .= " [Level {$level}]";
+            $assignTime = 'Done';
+            $assignColor = 'blue';
+            $assignPending = false;
+        }
+        $timeline[] = [ 'label' => $assignLabel, 'time' => $assignTime, 'color' => $assignColor, 'pending' => $assignPending ];
+
+        $reviewLabel = 'Under review';
+        $reviewTime = 'Pending';
+        $reviewColor = 'gray';
+        $reviewPending = true;
+        if (in_array($statusRaw, ['agent assigned', 'resolved', 'closed', 'agent-closed'])) {
+            $reviewLabel = 'Under review';
+            $reviewTime = 'In Progress';
+            $reviewColor = 'yellow';
+            $reviewPending = false;
+            if (in_array($statusRaw, ['resolved', 'closed', 'agent-closed'])) {
+                $reviewTime = 'Completed';
+                $reviewColor = 'green';
+            }
+        }
+        $timeline[] = [ 'label' => $reviewLabel, 'time' => $reviewTime, 'color' => $reviewColor, 'pending' => $reviewPending ];
+
+        $resolveLabel = 'Resolved';
+        $resolveTime = 'Pending';
+        $resolveColor = 'gray';
+        $resolvePending = true;
+        if (in_array($statusRaw, ['resolved', 'closed', 'agent-closed'])) {
+            $resolveTime = 'Completed';
+            $resolveColor = 'green';
+            $resolvePending = false;
+        }
+        $timeline[] = [ 'label' => $resolveLabel, 'time' => $resolveTime, 'color' => $resolveColor, 'pending' => $resolvePending ];
+        // ----------------------
+
         $meeting = 'none';
         $mr = strtolower(trim((string)($row['meeting_requested'] ?? '')));
         if ($mr === 'requested') $meeting = 'requested';
@@ -469,7 +523,8 @@ class Counselor extends Controller
             'createdOn' => $createdPretty,
             'meeting' => $meeting,
             'student' => [ 'id' => isset($row['u_id']) ? (int)$row['u_id'] : null, 'name' => (string)($row['student_name'] ?? '') ],
-            'assigned' => null,
+            'assigned' => !empty($staffName) ? ($position ? "$staffName ($position)" : $staffName) : null,
+            'timeline' => $timeline,
             'attachments' => $attachments,
         ]);
         exit;
