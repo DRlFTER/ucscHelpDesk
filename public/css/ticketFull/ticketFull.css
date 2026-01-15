@@ -84,3 +84,15 @@ select::-ms-expand {
     grid-template-columns: 1fr;
   }
 }
+
+/* Timeline time colors */
+.tlText .time.green {
+  color: #22c55e;
+}
+.tlText .time.blue {
+  color: #3b82f6;
+}
+.tlText .time.yellow {
+  color: #f59e0b;
+}
+

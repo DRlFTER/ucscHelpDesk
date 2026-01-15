@@ -761,27 +761,50 @@ class Admin extends Controller
         $staffName = $row['staff_name'] ?? null;
         $position = $row['position'] ?? null;
         $level = $row['level'] ?? null;
+        $assignedAt = $row['assigned_at'] ?? null;
         
-        $assignLabel = 'Assigned';
-        $assignTime = 'Pending';
+        $assignLabel = 'Assigned to staff';
+        $assignTime = '';
         $assignColor = 'gray';
         $assignPending = true;
-        if (!empty($staffName)) {
-            $assignLabel = "Assigned to {$staffName}";
-            if ($position) $assignLabel .= " ({$position})";
-            if ($level) $assignLabel .= " [Level {$level}]";
-            $assignTime = 'Done';
+        if (!empty($staffName) || in_array($statusRaw, ['agent assigned', 'resolved', 'closed', 'agent-closed'])) {
+            $assignLabel = "Assigned to staff";
+            if (!empty($staffName)) {
+                $assignLabel = "Assigned to {$staffName}";
+                if ($position) $assignLabel .= " ({$position})";
+                if ($level) $assignLabel .= " [Level {$level}]";
+            }
+            // Use assigned_at timestamp from ticket_timeline if available
+            if ($assignedAt && $assignedAt !== '0000-00-00 00:00:00') {
+                $ts = strtotime($assignedAt);
+                $assignTime = ($ts !== false) ? date('M d, Y \a\t g:i A', $ts) : 'Assigned';
+            } else {
+                $assignTime = 'Assigned'; // Fallback if no timestamp
+            }
             $assignColor = 'blue';
             $assignPending = false;
         }
         $timeline[] = [ 'label' => $assignLabel, 'time' => $assignTime, 'color' => $assignColor, 'pending' => $assignPending ];
 
+        // 3. Under Review
+        $underReviewAt = $row['under_review_at'] ?? null;
         $reviewLabel = 'Under review';
         $reviewTime = 'Pending';
         $reviewColor = 'gray';
         $reviewPending = true;
-        if (in_array($statusRaw, ['agent assigned', 'resolved', 'closed', 'agent-closed'])) {
-            $reviewLabel = 'Under review';
+        
+        // Check if under_review timestamp exists in ticket_timeline
+        if ($underReviewAt && $underReviewAt !== '0000-00-00 00:00:00') {
+            $ts = strtotime($underReviewAt);
+            $reviewTime = ($ts !== false) ? date('M d, Y \a\t g:i A', $ts) : 'In Progress';
+            $reviewColor = 'yellow';
+            $reviewPending = false;
+            // If resolved, mark review as completed
+            if (in_array($statusRaw, ['resolved', 'closed', 'agent-closed'])) {
+                $reviewColor = 'green';
+            }
+        } elseif (in_array($statusRaw, ['agent assigned', 'resolved', 'closed', 'agent-closed'])) {
+            // Fallback: if status indicates review but no timestamp
             $reviewTime = 'In Progress';
             $reviewColor = 'yellow';
             $reviewPending = false;
@@ -792,11 +815,21 @@ class Admin extends Controller
         }
         $timeline[] = [ 'label' => $reviewLabel, 'time' => $reviewTime, 'color' => $reviewColor, 'pending' => $reviewPending ];
 
+        // 4. Resolved
+        $resolvedAt = $row['resolved_at'] ?? null;
         $resolveLabel = 'Resolved';
         $resolveTime = 'Pending';
         $resolveColor = 'gray';
         $resolvePending = true;
-        if (in_array($statusRaw, ['resolved', 'closed', 'agent-closed'])) {
+        
+        // Check if resolved timestamp exists in ticket_timeline
+        if ($resolvedAt && $resolvedAt !== '0000-00-00 00:00:00') {
+            $ts = strtotime($resolvedAt);
+            $resolveTime = ($ts !== false) ? date('M d, Y \a\t g:i A', $ts) : 'Completed';
+            $resolveColor = 'green';
+            $resolvePending = false;
+        } elseif (in_array($statusRaw, ['resolved', 'closed', 'agent-closed'])) {
+            // Fallback: if status is resolved but no timestamp
             $resolveTime = 'Completed';
             $resolveColor = 'green';
             $resolvePending = false;
@@ -871,6 +904,10 @@ class Admin extends Controller
 
         try {
             $ok = $this->adminModel->resolveTicket($id);
+            if ($ok) {
+                // Also update the ticket_timeline resolved timestamp
+                $this->adminModel->resolveTicketTimeline($id);
+            }
             if (!$ok) {
                 http_response_code(500);
                 echo json_encode(['error' => 'Mark as resolved failed']);
