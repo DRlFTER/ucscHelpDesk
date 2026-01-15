@@ -754,6 +754,56 @@ class Admin extends Controller
             if ($ts !== false) $createdPretty = date('M d, Y \\a\\t g:i A', $ts);
         }
 
+        // --- Timeline Logic ---
+        $timeline = [];
+        $timeline[] = [ 'label' => 'Ticket created', 'time' => $createdPretty ?: '—', 'color' => 'green', 'pending' => false ];
+
+        $staffName = $row['staff_name'] ?? null;
+        $position = $row['position'] ?? null;
+        $level = $row['level'] ?? null;
+        
+        $assignLabel = 'Assigned';
+        $assignTime = 'Pending';
+        $assignColor = 'gray';
+        $assignPending = true;
+        if (!empty($staffName)) {
+            $assignLabel = "Assigned to {$staffName}";
+            if ($position) $assignLabel .= " ({$position})";
+            if ($level) $assignLabel .= " [Level {$level}]";
+            $assignTime = 'Done';
+            $assignColor = 'blue';
+            $assignPending = false;
+        }
+        $timeline[] = [ 'label' => $assignLabel, 'time' => $assignTime, 'color' => $assignColor, 'pending' => $assignPending ];
+
+        $reviewLabel = 'Under review';
+        $reviewTime = 'Pending';
+        $reviewColor = 'gray';
+        $reviewPending = true;
+        if (in_array($statusRaw, ['agent assigned', 'resolved', 'closed', 'agent-closed'])) {
+            $reviewLabel = 'Under review';
+            $reviewTime = 'In Progress';
+            $reviewColor = 'yellow';
+            $reviewPending = false;
+            if (in_array($statusRaw, ['resolved', 'closed', 'agent-closed'])) {
+                $reviewTime = 'Completed';
+                $reviewColor = 'green';
+            }
+        }
+        $timeline[] = [ 'label' => $reviewLabel, 'time' => $reviewTime, 'color' => $reviewColor, 'pending' => $reviewPending ];
+
+        $resolveLabel = 'Resolved';
+        $resolveTime = 'Pending';
+        $resolveColor = 'gray';
+        $resolvePending = true;
+        if (in_array($statusRaw, ['resolved', 'closed', 'agent-closed'])) {
+            $resolveTime = 'Completed';
+            $resolveColor = 'green';
+            $resolvePending = false;
+        }
+        $timeline[] = [ 'label' => $resolveLabel, 'time' => $resolveTime, 'color' => $resolveColor, 'pending' => $resolvePending ];
+        // ----------------------
+
         $mr = strtolower(trim((string)($row['meeting_requested'] ?? '')));
         $meeting = 'none';
         if ($mr === 'requested') $meeting = 'requested';
@@ -773,7 +823,8 @@ class Admin extends Controller
                 'id' => isset($row['u_id']) ? (int)$row['u_id'] : null,
                 'name' => (string)($row['student_name'] ?? ''),
             ],
-            'assigned' => null,
+            'assigned' => !empty($staffName) ? ($position ? "$staffName ($position)" : $staffName) : null,
+            'timeline' => $timeline,
             'attachments' => $attachments,
         ]);
         exit;
