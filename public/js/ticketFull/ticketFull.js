@@ -155,7 +155,7 @@ function renderTimeline() {
       <span class="tlDot ${t.color}"></span>
       <div class="tlText">
         <span class="label">${t.label}</span>
-        <span class="time">${t.time}</span>
+        <span class="time ${t.color}">${t.time}</span>
       </div>
     </li>`
     )
