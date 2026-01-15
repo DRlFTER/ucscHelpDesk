@@ -1336,24 +1336,31 @@ public function templates()
             'pending' => false
         ];
 
-        // 2. Assigned to staff - only colored if status is "agent assigned" or beyond
+        // 2. Assigned to staff
         $staffName = $ticket['staff_name'] ?? null;
         $position = $ticket['position'] ?? null;
         $level = $ticket['level'] ?? null;
+        $assignedAt = $ticket['assigned_at'] ?? null;
         
         $assignLabel = 'Assigned to staff';
-        $assignTime = 'Pending';
+        $assignTime = '';
         $assignColor = 'gray';
         $assignPending = true;
 
-        if ($statusRaw === 'agent assigned' || in_array($statusRaw, ['resolved', 'closed', 'agent-closed'])) {
+        if (!empty($staffName) || in_array($statusRaw, ['agent assigned', 'resolved', 'closed', 'agent-closed'])) {
             $assignLabel = "Assigned to staff";
             if (!empty($staffName)) {
                 $assignLabel = "Assigned to {$staffName}";
                 if ($position) $assignLabel .= " ({$position})";
                 if ($level) $assignLabel .= " [Level {$level}]";
             }
-            $assignTime = 'Assigned';
+            // Use assigned_at timestamp from ticket_timeline if available
+            if ($assignedAt && $assignedAt !== '0000-00-00 00:00:00') {
+                $ts = strtotime($assignedAt);
+                $assignTime = ($ts !== false) ? date('M d, Y \a\t g:i A', $ts) : 'Assigned';
+            } else {
+                $assignTime = 'Assigned'; // Fallback if no timestamp
+            }
             $assignColor = 'blue';
             $assignPending = false;
         }
