@@ -1,14 +1,6 @@
 <main>
   <div class="fullPage">
     <div class="pageLayout">
-      <section class="settingsLeft" aria-label="Dashboard navigation">
-        <nav class="verticalNav">
-          <a class="navItem active" href="/counselor/dashboard">Dashboard</a>
-          <a class="navItem" href="/counselor/tickets">Counseling Tickets</a>
-          <a class="navItem" href="/counselor/calender">Calender</a>
-          <a class="navItem" href="/counselor/forum">Forum</a>
-        </nav>
-      </section>
       <aside class="adminRight">
         <div class="dashboardContent">
           <div class="cardContainer grid-4">
