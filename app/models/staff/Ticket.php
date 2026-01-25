@@ -285,10 +285,6 @@ class StaffTicket
     $divisions = $this->getStaffDivisions($staff_id);
     $staff_level = $this->getStaffLevel($staff_id);
 
-    
-
-    
-    
     if (empty($divisions)) {
         throw new Exception('No division mapping found for your staff account. Please contact admin to assign your division.');
     }
@@ -330,41 +326,50 @@ if (!isset($_SESSION[$session_key])) {
         $didParams = array_map(fn($d) => (int)$d['did'], $divisions);
 
         // Base SELECT (unchanged: keeps is_overdue_pending flag for view styling)
-        $baseSelect = "SELECT t.ticket_id, t.created_at, t.title, u.name AS student_name, d.name AS category, t.status, t.priority, t.meeting_requested,
-                       COALESCE(sh.level, 99) AS assigned_level,
-                       CASE WHEN t.status = 'pending' AND t.created_at < DATE_SUB(NOW(), INTERVAL 3 DAY) THEN 1 ELSE 0 END AS is_overdue_pending,
-                       t.division, t.assigned_to
-                FROM tickets t
-                INNER JOIN users u ON t.u_id = u.u_id
-                LEFT JOIN division d ON d.did = t.division
-                LEFT JOIN staff_division sd ON sd.u_id = t.assigned_to
-                LEFT JOIN staff_hierachy sh ON sh.h_id = sd.h_id";
+       $baseSelect = "SELECT t.ticket_id, t.created_at, t.title, u.name AS student_name, d.name AS category, t.status, t.priority, t.meeting_requested,
+                           COALESCE(sh.level, 99) AS assigned_level,
+                           CASE WHEN t.status = 'pending' AND t.created_at < DATE_SUB(NOW(), INTERVAL 3 DAY) THEN 1 ELSE 0 END AS is_overdue_pending,
+                           t.division, t.assigned_to
+                    FROM tickets t
+                    INNER JOIN users u ON t.u_id = u.u_id
+                    LEFT JOIN division d ON d.did = t.division
+                    LEFT JOIN staff_division sd ON sd.u_id = t.assigned_to
+                    LEFT JOIN staff_hierachy sh ON sh.h_id = sd.h_id";
 
-        if ($staff_level !== null) {
-            if ($staff_level <= 2) {  // Levels 1-2: Division tickets, but ONLY non-overdue (<3 days old, pending or assigned)
-                // Filter: Division + (assigned to self OR not pending) + not overdue
-                $where = "t.division IN ($placeholders) AND t.created_at >= DATE_SUB(NOW(), INTERVAL 3 DAY) AND (t.assigned_to = ? OR t.status != 'pending')";
-                $sql = $baseSelect . " WHERE $where ORDER BY t.created_at DESC";
-                $allParams = array_merge($didParams, [$staff_id]);  // Divs + self ID
-                $types = str_repeat('i', count($allParams));
-                $stmt = $conn->prepare($sql);
-                if (!$stmt) {
-                    throw new Exception('Prepare failed: ' . $conn->error);
+            if ($staff_level !== null) {
+                if ($staff_level <= 2) {  // Levels 1-2: All tickets in division
+                    $where = "t.division IN ($placeholders)";
+                    $sql = $baseSelect . " WHERE $where ORDER BY t.created_at DESC";
+                    
+                    $stmt = $conn->prepare($sql);
+                    if (!$stmt) {
+                        throw new Exception('Prepare failed: ' . $conn->error);
+                    }
+                    $stmt->bind_param(str_repeat('i', count($didParams)), ...$didParams);
+                    
+                } elseif ($staff_level === 3) {  // Level 3: Assigned to self OR overdue pending in division
+                    $where = "(t.assigned_to = ?) OR (t.status = 'pending' AND t.created_at < DATE_SUB(NOW(), INTERVAL 3 DAY) AND t.division IN ($placeholders))";
+                    $sql = $baseSelect . " WHERE $where ORDER BY t.created_at DESC";
+                    
+                    $allParams = array_merge([$staff_id], $didParams);  // Staff ID + divs for overdue
+                    $types = str_repeat('i', count($allParams));
+                    $stmt = $conn->prepare($sql);
+                    if (!$stmt) {
+                        throw new Exception('Prepare failed: ' . $conn->error);
+                    }
+                    $stmt->bind_param($types, ...$allParams);
+                    
+                } else {
+                    // Fallback for higher/unknown levels: Only assigned to self
+                    $sql = $baseSelect . " WHERE t.assigned_to = ? ORDER BY t.created_at DESC";
+                    $stmt = $conn->prepare($sql);
+                    if (!$stmt) {
+                        throw new Exception('Prepare failed: ' . $conn->error);
+                    }
+                    $stmt->bind_param('i', $staff_id);
                 }
-                $stmt->bind_param($types, ...$allParams);
-                
-            } elseif ($staff_level === 3) {  // Level 3: Overdue pendings in division OR any assigned to self
-                $where = "(t.assigned_to = ?) OR (t.status = 'pending' AND t.created_at < DATE_SUB(NOW(), INTERVAL 3 DAY) AND t.division IN ($placeholders))";
-                $sql = $baseSelect . " WHERE $where ORDER BY t.created_at DESC";
-                $allParams = array_merge([$staff_id], $didParams);  // Self + divs for overdues
-                $types = str_repeat('i', count($allParams));
-                $stmt = $conn->prepare($sql);
-                if (!$stmt) {
-                    throw new Exception('Prepare failed: ' . $conn->error);
-                }
-                $stmt->bind_param($types, ...$allParams);
-                
-            } else {  // Higher levels: Only assigned to self (unchanged)
+            } else {
+                // No level? Fallback to assigned only
                 $sql = $baseSelect . " WHERE t.assigned_to = ? ORDER BY t.created_at DESC";
                 $stmt = $conn->prepare($sql);
                 if (!$stmt) {
@@ -372,16 +377,7 @@ if (!isset($_SESSION[$session_key])) {
                 }
                 $stmt->bind_param('i', $staff_id);
             }
-        } else {
-            // No level? Fallback to assigned only (unchanged)
-            $sql = $baseSelect . " WHERE t.assigned_to = ? ORDER BY t.created_at DESC";
-            $stmt = $conn->prepare($sql);
-            if (!$stmt) {
-                throw new Exception('Prepare failed: ' . $conn->error);
-            }
-            $stmt->bind_param('i', $staff_id);
-        }
-        
+            
         $stmt->execute();
         $result = $stmt->get_result();
         while ($row = $result->fetch_assoc()) {
