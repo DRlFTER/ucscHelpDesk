@@ -24,6 +24,7 @@ class Student extends Controller
         $openCount = 0;
         $lastActivity = null;
         $recentAnnouncements = [];
+        $upcomingEvents = [];
         try {
             $uId = (int)($_SESSION['user']['u_id'] ?? 0);
             $dashboardData = $ticketModel->getDashboardData($uId, 3);
@@ -42,6 +43,14 @@ class Student extends Controller
             $recentAnnouncements = [];
         }
 
+        try {
+            require_once __DIR__ . '/../../models/CalendarEvent.php';
+            $calModel = new CalendarEvent();
+            $upcomingEvents = $calModel->getUpcomingEvents($uId, 3);
+        } catch (Throwable $e) {
+            $upcomingEvents = [];
+        }
+
     $headContent = '
     <link rel="stylesheet" href="/css/student/studentDashboard.css"/>';
          $this->view('dashboardStudent', [
@@ -51,6 +60,7 @@ class Student extends Controller
                 'openCount' => $openCount,
                 'lastActivity' => $lastActivity,
                 'recentAnnouncements' => $recentAnnouncements,
+                'upcomingEvents' => $upcomingEvents,
         ]);
     }
 
