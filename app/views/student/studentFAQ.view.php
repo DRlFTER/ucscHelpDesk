@@ -27,7 +27,7 @@
     </section>
   </div>
 
-  <p class="faq-cta">Still need help? <a href="/student/ticket">Submit a ticket</a> or <a href="#" id="contact-support-link">contact support</a>.</p>
+  <p class="faq-cta">Still need help? <a href="/student/ticket">Submit a ticket</a></p>
 </main>
 
 <script src="/js/student/studentFAQ.js"></script>
