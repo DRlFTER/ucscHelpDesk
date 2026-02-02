@@ -2,7 +2,7 @@
     <div class="fullPage">
         <div class="pageHeader">
             <h2 class="pageTitle">Forum</h2>
-            <p class="pageSubtitle">Join the discussion — ask questions, share solutions, and get help from peers.</p>
+            <p class="pageSubtitle">Join the discussion - ask questions, share solutions, and get help from peers.</p>
         </div>
         <div class="ticketsFilters">
             <div class="search">
