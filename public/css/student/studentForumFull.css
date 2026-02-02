@@ -1,45 +1,143 @@
-/* Copied from studentTicketFull.css for forum full view */
-@import url('/css/student/studentTicketFull.css');
+/* Import same base styles as ticketFull for consistent layout */
+@import url("/css/admin/adminTicketFull.css");
 
-/* Forum thread specific tweaks (keeps existing components/hover states) */
-.modalOverlay .msgContainer { position: relative; z-index: 2; }
-.modalBackdropClose { z-index: 1; }
-.ticketFullPage { display: flex; flex-direction: column; min-height: 0; }
-.ticketLayout { align-items: stretch; }
-.ticketLeft, .ticketRight { align-self: stretch; }
 .ticketHeader {
 	display: flex;
-	align-items: center;
+	align-items: flex-start;
 	gap: 12px;
 }
-.ticketHeader .titleBlock {
-	display: flex;
-	align-items: center;
-	gap: 10px;
-}
+
 .ticketHeader .voteBox {
 	display: flex;
+	flex-direction: column;
 	align-items: center;
-	gap: 8px;
+	gap: 4px;
 }
+
 .voteCount {
 	min-width: 1.5rem;
 	text-align: center;
 	font-weight: 600;
+	font-size: 14px;
 	color: #374151;
 }
+
 .voteBtn.isActive {
 	background: #eef2ff;
 	border-color: #c7d2fe;
 }
+
+.voteBtn.isActive svg {
+	stroke: #6366f1;
+}
+
 .voteBtnDown.isActive {
 	background: #fef2f2;
 	border-color: #fecaca;
 }
-.messageActions {
-	display: flex;
-	gap: 6px;
-	margin-top: 6px;
+
+.voteBtnDown.isActive svg {
+	stroke: #ef4444;
 }
 
-/* Respect global status styles from components.css: .status.underReview, .status.inProgress, .status.resolved, .status.rejected */
+.ticketHeader .titleBlock {
+	flex: 1;
+	display: flex;
+	flex-direction: column;
+	gap: 8px;
+}
+
+.ticketHeader .titleBlock .ticketTitle {
+	flex: initial;
+}
+
+/* Resource links styling */
+.resourceList {
+	padding: 0;
+	margin: 0;
+}
+
+.resourceList a {
+	text-decoration: none;
+	color: inherit;
+}
+
+.resourceList a:hover .label {
+	color: #6366f1;
+}
+
+/* Chat message alignment */
+.message.student {
+	justify-content: flex-end;
+}
+
+.message.staff {
+	justify-content: flex-start;
+}
+
+.message.student .messageBubble {
+	background: #e7f1ff;
+	border-bottom-right-radius: 2px;
+	max-width: 80%;
+	flex: initial;
+}
+
+.message.staff .messageBubble {
+	background: #f3f4f6;
+	border-bottom-left-radius: 2px;
+	max-width: 80%;
+	flex: initial;
+}
+
+.messageHeader .name .staffLabel {
+	font-weight: 600;
+}
+
+.messageHeader .name .role {
+	font-size: 11px;
+	color: #6b7280;
+}
+
+/* Chat date separator */
+.chat-date-separator {
+	text-align: center;
+	margin: 20px 0;
+	position: relative;
+	display: flex;
+	justify-content: center;
+	width: 100%;
+}
+
+.chat-date-separator span {
+	background-color: #e5e7eb;
+	color: #4b5563;
+	padding: 4px 12px;
+	border-radius: 12px;
+	font-size: 12px;
+	font-weight: 500;
+	box-shadow: 0 1px 2px rgba(0,0,0,0.05);
+}
+
+/* Send button loading spinner */
+.btnSvg .spinner {
+	display: none;
+	border: 3px solid rgba(255, 255, 255, 0.3);
+	border-radius: 50%;
+	border-top: 3px solid #fff;
+	width: 18px;
+	height: 18px;
+	animation: spin 1s linear infinite;
+}
+
+.btnSvg.loading svg {
+	display: none;
+}
+
+.btnSvg.loading .spinner {
+	display: block;
+}
+
+@keyframes spin {
+	0% { transform: rotate(0deg); }
+	100% { transform: rotate(360deg); }
+}
