@@ -80,9 +80,13 @@
     </div>
 
    <?php
-     // Determine if we're on login or register pages (hide sidenav)
+     // Determine if we're on login, register, or 404 pages (hide sidenav)
      $currentPath = parse_url($_SERVER['REQUEST_URI'] ?? '/', PHP_URL_PATH) ?? '/';
-     $hideSidenav = preg_match('#^/(login|register|auth/login|auth/register)#i', $currentPath);
+     $hideSidenav = preg_match('#^/(login|register|auth/login|auth/register|_404)#i', $currentPath);
+     // Also hide sidenav if this is the 404 view
+     if (isset($title) && stripos($title, 'Page Not Found') !== false) {
+         $hideSidenav = true;
+     }
    ?>
 
    <?php if ($hideSidenav): ?>

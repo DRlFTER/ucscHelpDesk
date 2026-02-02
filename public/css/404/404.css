@@ -1,0 +1,133 @@
+/* 404 Page Styles */
+
+.error-page {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 100vh;
+  padding: 40px 20px;
+  text-align: center;
+}
+
+.error-container {
+  max-width: 480px;
+  width: 100%;
+  padding: 48px 32px;
+  background: rgba(255, 255, 255, 0.9);
+  border-radius: 16px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+}
+
+.error-404-text {
+  font-family: "Poppins", sans-serif;
+  font-size: 120px;
+  font-weight: 700;
+  line-height: 1;
+  color: #8c8cf9;
+  margin: 0 0 16px 0;
+}
+
+.error-title {
+  font-family: "Poppins", sans-serif;
+  font-size: 24px;
+  font-weight: 600;
+  color: #1f2937;
+  margin: 0 0 8px 0;
+}
+
+.error-message {
+  font-family: "SF Pro", sans-serif;
+  font-size: 15px;
+  color: #6b7280;
+  line-height: 1.5;
+  margin: 0 0 28px 0;
+}
+
+.error-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  align-items: center;
+}
+
+.error-btn-primary {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 12px 28px;
+  background: #8c8cf9;
+  color: #fff;
+  font-family: "Poppins", sans-serif;
+  font-size: 15px;
+  font-weight: 500;
+  text-decoration: none;
+  border: none;
+  border-radius: 10px;
+  cursor: pointer;
+  transition: background-color 0.25s ease, transform 0.15s ease, box-shadow 0.25s ease;
+}
+
+.error-btn-primary:hover {
+  background-color: #6a6af5;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+.error-btn-primary svg {
+  width: 18px;
+  height: 18px;
+}
+
+.error-btn-secondary {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 10px 20px;
+  background: transparent;
+  color: #6b7280;
+  font-family: "Poppins", sans-serif;
+  font-size: 14px;
+  font-weight: 400;
+  text-decoration: none;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: color 0.2s ease, background-color 0.2s ease;
+}
+
+.error-btn-secondary:hover {
+  color: #8c8cf9;
+  background: rgba(140, 140, 249, 0.08);
+}
+
+.error-btn-secondary svg {
+  width: 16px;
+  height: 16px;
+}
+
+/* Responsive Design */
+@media (max-width: 640px) {
+  .error-container {
+    padding: 36px 24px;
+    margin: 20px;
+  }
+
+  .error-404-text {
+    font-size: 90px;
+  }
+
+  .error-title {
+    font-size: 20px;
+  }
+
+  .error-message {
+    font-size: 14px;
+  }
+
+  .error-btn-primary {
+    width: 100%;
+  }
+}

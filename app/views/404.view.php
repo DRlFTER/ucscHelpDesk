@@ -1,3 +1,27 @@
-<?php
+<div class="error-page">
+  <div class="error-container">
+    <h1 class="error-404-text">404</h1>
+    <h2 class="error-title">Page Not Found</h2>
+    <p class="error-message">
+      The page you're looking for doesn't exist or has been moved.
+    </p>
 
-echo ("View File not Found");
+    <div class="error-actions">
+      <a href="<?= htmlspecialchars($homePage ?? '/') ?>" class="error-btn-primary">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/>
+          <polyline points="9 22 9 12 15 12 15 22"/>
+        </svg>
+        Go to Dashboard
+      </a>
+      
+      <button onclick="history.back()" class="error-btn-secondary">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <line x1="19" y1="12" x2="5" y2="12"/>
+          <polyline points="12 19 5 12 12 5"/>
+        </svg>
+        Go Back
+      </button>
+    </div>
+  </div>
+</div>
