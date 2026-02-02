@@ -1268,10 +1268,11 @@ public function templates()
     public function ticketFull()
     {
         $this->requireLogin('student');
-        $headContent = '<link rel="stylesheet" href="/css/student/studentTicketFull.css" />';
-        $this->view('student/studentTicketFull', [
+        $headContent = '<link rel="stylesheet" href="/css/ticketFull/ticketFull.css" />';
+        $this->view('ticketFull', [
             'title' => 'Ticket Details',
             'head' => $headContent,
+            'role' => 'student',
         ]);
     }
 

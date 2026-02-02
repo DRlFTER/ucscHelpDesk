@@ -96,3 +96,95 @@ select::-ms-expand {
   color: #f59e0b;
 }
 
+/* Chat message alignment */
+.message.student {
+  justify-content: flex-end;
+}
+
+.message.staff {
+  justify-content: flex-start;
+}
+
+.message.student .messageBubble {
+  background: #e7f1ff;
+  border-bottom-right-radius: 2px;
+  max-width: 80%;
+  flex: initial;
+}
+
+.message.staff .messageBubble {
+  background: #f3f4f6;
+  border-bottom-left-radius: 2px;
+  max-width: 80%;
+  flex: initial;
+}
+
+.messageHeader .name .staffLabel {
+  font-weight: 600;
+}
+
+.messageHeader .name .role {
+  font-size: 11px;
+  color: #6b7280;
+}
+
+/* Chat date separator */
+.chat-date-separator {
+  text-align: center;
+  margin: 20px 0;
+  position: relative;
+  display: flex;
+  justify-content: center;
+  width: 100%;
+}
+
+.chat-date-separator span {
+  background-color: #e5e7eb;
+  color: #4b5563;
+  padding: 4px 12px;
+  border-radius: 12px;
+  font-size: 12px;
+  font-weight: 500;
+  box-shadow: 0 1px 2px rgba(0,0,0,0.05);
+}
+
+/* Send button loading spinner */
+.btnSvg {
+  display: grid;
+  place-items: center;
+  width: 42px;
+  height: 42px;
+  border-radius: 50%;
+  border: none;
+  background: #8c8cf9;
+  cursor: pointer;
+  position: relative;
+}
+
+.btnSvg:hover {
+  background: #7070f6;
+}
+
+.btnSvg .spinner {
+  display: none;
+  border: 3px solid rgba(255, 255, 255, 0.3);
+  border-radius: 50%;
+  border-top: 3px solid #fff;
+  width: 18px;
+  height: 18px;
+  animation: spin 1s linear infinite;
+}
+
+.btnSvg.loading svg {
+  display: none;
+}
+
+.btnSvg.loading .spinner {
+  display: block;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
