@@ -20,6 +20,8 @@
         ['href' => '/student/calender', 'label' => 'Calendar', 'icon' => 'calendar'],
         ['href' => '/student/forum', 'label' => 'Forum', 'icon' => 'forum'],
         ['href' => '/student/FAQ', 'label' => 'FAQs', 'icon' => 'faq'],
+        ['href' => '/student/knowledgebase', 'label' => 'Knowledge Base', 'icon' => 'knowledgebase'],
+        ['href' => '/student/announcements', 'label' => 'Announcements', 'icon' => 'announcements'],
         ['href' => '/student/ticket', 'label' => 'New Ticket', 'icon' => 'plus', 'highlight' => true],
       ],
       'staff' => [

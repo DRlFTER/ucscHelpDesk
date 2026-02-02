@@ -137,15 +137,16 @@ public function __construct()
             $files = [];
         }
         
-        $headContent = '<link rel="stylesheet" href="/css/staff/staffTickets.css" />' . "\n" .
-                       '<link rel="stylesheet" href="/css/staff/an_view.css" />';
+        // Use globalized announcement full stylesheet
+        $headContent = '<link rel="stylesheet" href="/css/announcements/announcementFull.css" />';
         
-        $this->view('staff/anView', [
+        $this->view('announcementsFull', [
             'title' => 'Announcement Details',
             'head' => $headContent,
             'announcement' => $announcement,
             'files' => $files,
             'errors' => $errors,
+            'role' => 'staff',
         ]);
     }
 
@@ -327,15 +328,15 @@ public function __construct()
 
         $dbError = method_exists($ann, 'getLastError') ? $ann->getLastError() : null;
 
-        $headContent = "<link rel=\"stylesheet\" href=\"/css/staff/staffTickets.css\" />\n";
-        $headContent .= "<link rel=\"stylesheet\" href=\"/css/staff/announcements.css\" />\n";
-        $headContent .= "<script src=\"/js/staff/announcements.js\" defer></script>\n";
+        // Use globalized announcements stylesheet
+        $headContent = '<link rel="stylesheet" href="/css/announcements/announcements.css" />';
 
-        $this->view('staff/staffAnnoucements', [
+        $this->view('announcements', [
             'title' => 'Announcements',
             'head' => $headContent,
             'announcements' => $announcements,
             'dbError' => $dbError,
+            'role' => 'staff',
         ]);
     }
 
