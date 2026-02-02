@@ -1,3 +1,5 @@
+/* ===== ANNOUNCEMENTS LIST PAGE STYLES ===== */
+
 body {
   height: 100vh;
   display: flex;
@@ -19,6 +21,57 @@ body {
   color: #111827;
 }
 
+/* ===== PAGE HEADER (for staff/admin with create button) ===== */
+.pageHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1.5rem;
+  padding: 1rem 0;
+  border-bottom: 1px solid #e5e7eb;
+}
+
+.headerContent {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.pageTitle {
+  margin: 0;
+  font-size: 2rem;
+  font-weight: 600;
+  color: #111827;
+  line-height: 1.2;
+}
+
+.pageSubtitle {
+  margin: 0;
+  font-size: 1rem;
+  color: #6b7280;
+  font-weight: 400;
+}
+
+.btnWSvg {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 10px 18px;
+  background: var(--CTA, #8c8cf9);
+  color: white;
+  border: none;
+  border-radius: 30px;
+  cursor: pointer;
+  font-size: 0.875rem;
+  font-weight: 500;
+  transition: background-color 0.2s ease;
+}
+
+.btnWSvg:hover {
+  background: #7a7ae8;
+}
+
+/* ===== TICKETS CONTAINER (announcement list layout) ===== */
 .ticketsContainer {
   width: 100%;
   display: flex;
@@ -96,7 +149,7 @@ body {
   align-items: stretch;
 }
 
-/* Hide native selects when custom UI is rendered */
+/* ===== CUSTOM SELECT STYLES ===== */
 .selectHidden {
   position: absolute !important;
   opacity: 0 !important;
@@ -104,9 +157,11 @@ body {
   height: 0;
   width: 0;
 }
+
 .selectWrap {
   position: relative;
 }
+
 .selectButton {
   width: 100%;
   display: flex;
@@ -128,21 +183,26 @@ body {
   transition: border-color 0.2s ease, box-shadow 0.2s ease,
     background-color 0.2s ease;
 }
+
 .selectButton:hover {
   background-color: #f5f5f5ff;
 }
+
 .selectWrap.isOpen .selectButton {
   border-color: var(--CTA, #8c8cf9);
   box-shadow: 0 0 0 4px rgba(140, 140, 249, 0.15);
 }
+
 .selectChevron {
   display: grid;
   place-items: center;
   color: #6b7280;
 }
+
 .selectWrap.isOpen .selectChevron {
   color: var(--CTA, #8c8cf9);
 }
+
 .selectList {
   position: absolute;
   z-index: 10;
@@ -158,11 +218,13 @@ body {
   overflow: auto;
   display: none;
 }
+
 .selectWrap.isOpen .selectList {
   display: flex;
   flex-direction: column;
   gap: 6px;
 }
+
 .selectOption {
   list-style: none;
   padding: 10px 10px;
@@ -171,18 +233,22 @@ body {
   color: #111827;
   cursor: pointer;
 }
+
 .selectOption:hover {
   background: #f3f4f6;
 }
+
 .selectOption.isSelected {
   background: #eef2ff;
   color: #4338ca;
 }
+
 .selectOption.isDisabled {
   color: #9ca3af;
   cursor: not-allowed;
 }
 
+/* ===== TICKETS/ANNOUNCEMENTS LIST ===== */
 .tickets {
   display: flex;
   padding: 15px;
@@ -248,7 +314,7 @@ body {
   margin: 0;
 }
 
-/* Optional: smoother View Transition animation from list card */
+/* View Transition animation */
 ::view-transition-old(root),
 ::view-transition-new(root) {
   animation-duration: 220ms;
@@ -358,6 +424,7 @@ body {
   letter-spacing: 0.26px;
 }
 
+/* ===== PAGINATION ===== */
 .ticketsPagination {
   display: flex;
   padding: 8px;
@@ -417,7 +484,7 @@ body {
   letter-spacing: 0.42px;
 }
 
-/* Status badges for announcements - matching tickets design */
+/* ===== STATUS/DIVISION BADGES ===== */
 .status {
   display: flex;
   padding: 5px 10px;
@@ -452,7 +519,7 @@ body {
   color: #9d174d;
 }
 
-/* Loading and error states */
+/* ===== EMPTY/LOADING/ERROR STATES ===== */
 .ticketsLoading,
 .ticketsError {
   display: flex;
@@ -465,7 +532,6 @@ body {
   width: 100%;
 }
 
-/* Empty state */
 .ticketsEmpty {
   display: flex;
   flex-direction: column;
@@ -483,4 +549,51 @@ body {
   width: 48px;
   height: 48px;
   color: #9ca3af;
+}
+
+/* ===== RESPONSIVE ===== */
+@media (max-width: 992px) {
+  .ticketsFilters {
+    flex-direction: column;
+    gap: 15px;
+  }
+
+  .search {
+    width: 100%;
+  }
+
+  .filters {
+    width: 100%;
+    justify-content: flex-start;
+  }
+
+  .ticketRow2 {
+    flex-direction: column;
+    gap: 15px;
+  }
+
+  .ticketDetails {
+    padding-right: 0;
+    border-right: none;
+    border-bottom: 1px solid #c5c5c5;
+    padding-bottom: 15px;
+    width: 100%;
+  }
+
+  .pageHeader {
+    flex-direction: column;
+    gap: 15px;
+    align-items: flex-start;
+  }
+}
+
+@media (max-width: 768px) {
+  .ticketsContainer {
+    padding: 20px;
+  }
+
+  .ticketInfo {
+    flex-wrap: wrap;
+    gap: 10px;
+  }
 }

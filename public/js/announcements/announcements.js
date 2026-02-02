@@ -1,6 +1,13 @@
 (function () {
-  // Configuration
-  const ANNOUNCEMENT_URL_BASE = '/student/announcement';
+  // Configuration - uses global config from PHP
+  const config = window.ANNOUNCEMENTS_CONFIG || {
+    role: 'student',
+    announcementUrlBase: '/student/announcement',
+    canCreate: false,
+    canDelete: false
+  };
+
+  const ANNOUNCEMENT_URL_BASE = config.announcementUrlBase;
   const perPage = 10;
 
   // Division options for filter
@@ -89,7 +96,7 @@
     });
   }
 
-  // Build custom select UI (matching tickets.js)
+  // Build custom select UI
   function buildCustomSelect(nativeSelect) {
     if (!nativeSelect) return;
 
@@ -195,7 +202,7 @@
     page = 1;
   }
 
-  // Render announcements (matching tickets layout)
+  // Render announcements
   function renderAnnouncements() {
     if (!root) return;
 
@@ -281,7 +288,7 @@
     renderPagination();
   }
 
-  // Render pagination (matching tickets.js)
+  // Render pagination
   function renderPagination() {
     if (!paginationHolder) return;
     paginationHolder.innerHTML = '';

@@ -532,9 +532,9 @@ public function templates()
     {
         $this->requireLogin('student');
 
-    // Load all announcements from student model (no dependency on staff files)
-    require_once __DIR__ . '/../../models/student/Announcement.php';
-    $annModel = new StudentAnnouncement();
+        // Load all announcements from student model (no dependency on staff files)
+        require_once __DIR__ . '/../../models/student/Announcement.php';
+        $annModel = new StudentAnnouncement();
         $announcements = [];
         try {
             $announcements = $annModel->getAll();
@@ -544,13 +544,14 @@ public function templates()
         }
         $dbError = method_exists($annModel, 'getLastError') ? $annModel->getLastError() : null;
 
-    // Only use the student announcements stylesheet (self-contained)
-    $headContent = '<link rel="stylesheet" href="/css/student/studentAnnouncements.css" />';
-        $this->view('student/studentAnnouncements', [
+        // Use globalized announcements stylesheet
+        $headContent = '<link rel="stylesheet" href="/css/announcements/announcements.css" />';
+        $this->view('announcements', [
             'title' => 'Announcements',
             'head' => $headContent,
             'announcements' => $announcements,
             'dbError' => $dbError,
+            'role' => 'student',
         ]);
     }
 
@@ -580,13 +581,14 @@ public function templates()
         }
         try { $files = $model->getFiles($announcement_id); } catch (Throwable $e) { $files = []; }
 
-    $headContent = '<link rel="stylesheet" href="/css/student/studentAnnouncements.css" />' . "\n" .
-               '<link rel="stylesheet" href="/css/student/studentAnnouncementFull.css" />';
-        $this->view('student/studentAnnouncementFull', [
+        // Use globalized announcement full stylesheet
+        $headContent = '<link rel="stylesheet" href="/css/announcements/announcementFull.css" />';
+        $this->view('announcementsFull', [
             'title' => 'Announcement Details',
             'head' => $headContent,
             'announcement' => $announcement,
             'files' => $files,
+            'role' => 'student',
         ]);
     }
 
