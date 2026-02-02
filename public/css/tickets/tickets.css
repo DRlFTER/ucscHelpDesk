@@ -411,3 +411,14 @@ body {
   line-height: normal;
   letter-spacing: 0.42px;
 }
+
+/* Public/Private visibility indicators (student only) */
+.visibility-public {
+  color: #155724;
+  background: #D4EDDA;
+}
+
+.visibility-private {
+  color: #B50000;
+  background: #FFD8D8;
+}
