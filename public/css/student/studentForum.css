@@ -96,12 +96,10 @@ body {
   align-items: stretch;
 }
 
-/* remove underline on button-like links inside filters */
 .filters a#newPostBtn {
   text-decoration: none;
 }
 
-/* Filter group (copied from Lost & Found styles) */
 .filterGroup {
   display: flex;
   gap: 5px;
@@ -149,7 +147,6 @@ body {
   accent-color: #6366f1;
 }
 
-/* Hide native selects when custom UI is rendered */
 .selectHidden {
   position: absolute !important;
   opacity: 0 !important;
@@ -157,9 +154,11 @@ body {
   height: 0;
   width: 0;
 }
+
 .selectWrap {
   position: relative;
 }
+
 .selectButton {
   width: 100%;
   display: flex;
