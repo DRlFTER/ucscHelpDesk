@@ -330,6 +330,16 @@
           ? `${TICKET_URL_BASE}?code=${encodeURIComponent(code)}`
           : "#";
         const vt = `ticket-${esc(id || code)}`;
+
+        // Public/Private visibility indicator (student only)
+        let visibilityHtml = '';
+        if (ROLE === 'student') {
+          const visibility = (t.visibility || 'private').toLowerCase();
+          const visLabel = visibility.charAt(0).toUpperCase() + visibility.slice(1);
+          const visClass = visibility === 'public' ? 'visibility-public' : 'visibility-private';
+          visibilityHtml = `<div class="status ${visClass}">${esc(visLabel)}</div>`;
+        }
+
         const inner = `
         <div class="ticketRow1">
           <div class="ticketName">
@@ -340,7 +350,10 @@
               <p>${esc(t.student?.name || "")}</p>
             </div>
           </div>
-          <div class="status ${status.cls}">${esc(status.label)}</div>
+          <div style="display:flex; gap:10px; align-items:center;">
+            ${visibilityHtml}
+            <div class="status ${status.cls}">${esc(status.label)}</div>
+          </div>
         </div>
         <div class="ticketRow2">
           <div class="ticketDetails">

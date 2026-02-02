@@ -1116,14 +1116,15 @@ public function templates()
 
         echo 'ok';
     }
-    // Student tickets list (same UI as admin tickets page)
+    // Student tickets list (using global tickets view)
     public function tickets()
     {
         $this->requireLogin('student');
-        $headContent = '<link rel="stylesheet" href="/css/student/studentTickets.css" />';
-        $this->view('student/studentTickets', [
+        $headContent = '<link rel="stylesheet" href="/css/tickets/tickets.css" />';
+        $this->view('tickets', [
             'title' => 'Tickets',
             'head' => $headContent,
+            'role' => 'student',
         ]);
     }
 
