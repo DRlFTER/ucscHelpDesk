@@ -27,7 +27,7 @@ h3 {
 
 .adminRight {
   flex: 1;
-  bgcolor: #f3f4f6;
+  bg-color: #f3f4f6;
   display: flex;
   flex-direction: column;
   gap: 16px;

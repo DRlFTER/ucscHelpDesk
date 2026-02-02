@@ -79,19 +79,19 @@
 						<h3 class="sectionTitle">Helpful Resources</h3>
 						<ul class="timelineList resourceList">
 							<li class="timelineItem">
-								<a href="/<?= htmlspecialchars($role) ?>/announcements" class="tlText">
+								<a href="/<?= htmlspecialchars($role) ?>/announcements" class="resourceLink">
 									<span class="label">Announcements</span>
 									<span class="time">View latest updates</span>
 								</a>
 							</li>
 							<li class="timelineItem">
-								<a href="/<?= htmlspecialchars($role) ?>/faq" class="tlText">
+								<a href="/<?= htmlspecialchars($role) ?>/faq" class="resourceLink">
 									<span class="label">FAQs</span>
 									<span class="time">Common questions</span>
 								</a>
 							</li>
 							<li class="timelineItem">
-								<a href="/<?= htmlspecialchars($role) ?>/forum" class="tlText">
+								<a href="/<?= htmlspecialchars($role) ?>/forum" class="resourceLink">
 									<span class="label">Browse Posts</span>
 									<span class="time">View all discussions</span>
 								</a>

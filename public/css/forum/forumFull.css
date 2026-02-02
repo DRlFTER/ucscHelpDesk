@@ -354,23 +354,13 @@ body.modal-open main {
   align-items: center;
   gap: 10px;
 }
+
 .tlDot {
   width: 10px;
   height: 10px;
   border-radius: 50%;
 }
-.tlDot.green {
-  background: #22c55e;
-}
-.tlDot.blue {
-  background: #3b82f6;
-}
-.tlDot.yellow {
-  background: #f59e0b;
-}
-.tlDot.gray {
-  background: #9ca3af;
-}
+
 .tlText {
   display: flex;
   flex-direction: column;
@@ -454,15 +444,40 @@ body.modal-open main {
 .resourceList {
 	padding: 0;
 	margin: 0;
+	display: flex;
+	flex-direction: column;
+	gap: 10px;
+}
+
+.timelineItem {
+    list-style: none;
 }
 
 .resourceList a {
+	display: flex;
+	flex-direction: column;
+	padding: 12px;
+	border-radius: 8px;
 	text-decoration: none;
+	transition: all 0.2s ease;
 	color: inherit;
+    flex: 1;
 }
 
-.resourceList a:hover .label {
-	color: #6366f1;
+.resourceList a .label {
+	font-weight: 600;
+	color: #1f2937;
+	margin-bottom: 2px;
+}
+
+.resourceList a .time {
+	font-size: 0.875rem;
+	color: #6b7280;
+}
+
+.resourceList a:hover {
+	border-color: #3b82f6;
+	background-color: #efefef;
 }
 
 /* Chat message alignment */
