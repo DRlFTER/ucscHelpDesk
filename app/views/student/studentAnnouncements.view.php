@@ -1,248 +1,30 @@
-<?php
-?>
+<main>
+    <div class="fullPage">
+        <div class="pageLayout">
+            <div class="ticketsFilters">
+                <div class="search">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 22 21" fill="none">
+                        <path d="M17.65 18.375L12.1375 12.8625C11.7 13.2125 11.1969 13.4896 10.6281 13.6938C10.0594 13.8979 9.45417 14 8.8125 14C7.22292 14 5.8776 13.4495 4.77656 12.3484C3.67552 11.2474 3.125 9.90208 3.125 8.3125C3.125 6.72292 3.67552 5.3776 4.77656 4.27656C5.8776 3.17552 7.22292 2.625 8.8125 2.625C10.4021 2.625 11.7474 3.17552 12.8484 4.27656C13.9495 5.3776 14.5 6.72292 14.5 8.3125C14.5 8.95417 14.3979 9.55937 14.1938 10.1281C13.9896 10.6969 13.7125 11.2 13.3625 11.6375L18.875 17.15L17.65 18.375ZM8.8125 12.25C9.90625 12.25 10.8359 11.8672 11.6016 11.1016C12.3672 10.3359 12.75 9.40625 12.75 8.3125C12.75 7.21875 12.3672 6.28906 11.6016 5.52344C10.8359 4.75781 9.90625 4.375 8.8125 4.375C7.71875 4.375 6.78906 4.75781 6.02344 5.52344C5.25781 6.28906 4.875 7.21875 4.875 8.3125C4.875 9.40625 5.25781 10.3359 6.02344 11.1016C6.78906 11.8672 7.71875 12.25 8.8125 12.25Z" fill="#808080"/>
+                    </svg>
+                    <input id="ticketSearch" type="text" placeholder="Search announcements...">
+                </div>
+                <div class="filters">
+                    <select id="divisionFilter" aria-label="Division filter"></select>
+                    <select id="sortFilter" aria-label="Sort filter"></select>
+                </div>
+            </div>
+            <div class="tickets" id="announcements-root" data-announcements='<?php echo json_encode($announcements ?? []); ?>'></div>
+            <div class="ticketsPagination">
+                <div class="ticketsPageHolder"></div>
+            </div>
 
-<main id="main-content" class="main-content">
-	<div class="page-header">
-		<h2 class="page-title">Announcements</h2>
-		<p class="page-subtitle">Latest updates and notices</p>
-	</div>
-		<div class="content-area">
-			<div class="tickets-container" id="announcements-root" data-announcements='<?php echo json_encode($announcements ?? []); ?>'>
-			</div>
-
-			<?php if (defined('DEBUG') && DEBUG && !empty($dbError)): ?>
-				<div class="debug" style="max-width:900px; margin:12px auto; padding:10px; background:#fee; border:1px solid #fbb; color:#600;">
-					<strong>DB Error:</strong> <?php echo htmlspecialchars($dbError); ?>
-				</div>
-			<?php endif; ?>
-		</div>
-	</div>
+            <?php if (defined('DEBUG') && DEBUG && !empty($dbError)): ?>
+                <div class="debug" style="max-width:900px; margin:12px auto; padding:10px; background:#fee; border:1px solid #fbb; color:#600;">
+                    <strong>DB Error:</strong> <?php echo htmlspecialchars($dbError); ?>
+                </div>
+            <?php endif; ?>
+        </div>
+    </div>
 </main>
 
-<style>
-	* {
-		box-sizing: border-box;
-	}
-
-	.status-badge {
-		padding: 5px 10px;
-		border-radius: 17px;
-		font-size: 12px;
-		font-weight: 500;
-		letter-spacing: 0.24px;
-		white-space: nowrap;
-	}
-
-	.status-badge.status-pending { background-color: #fff68f; color: #844d0f; }
-	.status-badge.status-resolved { background-color: #9effbc; color: #166434; }
-	.status-badge.status-closed { background-color: #9effbc; color: #166434; }
-	.status-badge.status-agent-assigned { background-color: #badbff; color: #3300ff; }
-	.status-badge.status-agent-closed { background-color: #9effbc; color: #166434; }
-
-	.layout-container {
-		display: flex;
-		gap: 0;
-		width: 100%; /* Ensure full width without overflow */
-		position: relative; /* Relative positioning for better flow control */
-	}
-
-	.navMenu {
-		flex: 0 0 250px; /* Fixed sidebar width */
-		background: #f8f9fa;
-		border-right: 1px solid #dee2e6;
-		/* No fixed height or overflow - sidebar grows/shrinks with content */
-	}
-
-	.sideNav {
-		display: flex;
-		flex-direction: column;
-		gap: 8px;
-		padding: 20px 15px;
-		/* Allows sidebar to expand naturally */
-	}
-
-	.nav-link {
-		display: block;
-		padding: 12px 15px;
-		color: #495057;
-		text-decoration: none;
-		border-radius: 6px;
-		font-weight: 500;
-		transition: all 0.2s ease;
-	}
-
-	.nav-link:hover,
-	.nav-link.active {
-		background: #007bff;
-		color: white;
-	}
-
-	.content-area {
-		flex: 1;
-		padding: 20px;
-		min-width: 0; /* Prevents flex item from overflowing */
-		/* No overflow property - relies on body scroll for the whole page */
-	}
-
-	html {
-		height: auto; /* Natural height */
-		overflow-x: hidden; /* No horizontal scroll */
-	}
-
-	body {
-		margin: 0;
-		padding: 0;
-		height: auto; /* Allows body to grow with content */
-		overflow-x: hidden; /* Prevent horizontal overflow */
-		overflow-y: auto; /* Vertical scroll on body for whole page */
-	}
-		  .tickets-container {
-	background: rgba(255, 255, 255, 0.5);
-	border: 1px solid #f9f9f9;
-	border-radius: 26px;
-	padding: 15px;
-	display: flex;
-	flex-direction: column;
-	gap: 15px;
-} 
-
-.ticket-card {
-	background-color: #f9f9f9; 
-	border: 1px solid #8c8cf9;
-	border-radius: 15px;
-	padding: 15px;
-	display: flex;
-	flex-direction: column;
-	gap: 10px;
-}
-
-	.ticket-header {
-		display: flex;
-		justify-content: space-between;
-		align-items: flex-start;
-		gap: 10px;
-		border: 1px solid #f9f9f9;
-		padding: 10px;
-	}
-
-	.ticket-title-group {
-		display: flex;
-		flex-direction: column;
-		gap: 2px;
-	}
-
-	.ticket-title {
-		font-size: 21px;
-		font-weight: 400;
-		letter-spacing: 0.42px;
-		margin: 0;
-	}
-
-	.ticket-meta {
-		display: flex;
-		gap: 36px;
-		font-size: 13px;
-		color: var(--color-text-light);
-		letter-spacing: 0.26px;
-		flex-wrap: wrap;
-	}
-
-	.announcement-card {
-		background: white;
-		border: 1px solid #e0e0e0;
-		border-radius: 8px;
-		padding: 15px;
-		margin-bottom: 15px;
-		box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-	}
-
-	.announcement-header {
-		display: flex;
-		justify-content: space-between;
-		align-items: center;
-		margin-bottom: 10px;
-	}
-
-	.announcement-title {
-		font-size: 18px;
-		font-weight: 500;
-		margin: 0;
-	}
-
-	.announcement-meta {
-		font-size: 12px;
-		color: #666;
-	}
-
-	.announcement-body {
-		margin-bottom: 10px;
-		color: #444;
-	}
-
-	.view-btn {
-		background: #4a90e2;
-		color: white;
-		border: none;
-		padding: 8px 16px;
-		border-radius: 4px;
-		cursor: pointer;
-		text-decoration: none;
-		display: inline-block;
-		font-size: 14px;
-	}
-
-	.view-btn:hover {
-		background: #357abd;
-	}
-
-	@media (max-width: 992px) {
-		.layout-container {
-			flex-direction: column;
-			width: 100%;
-		}
-		.navMenu {
-			flex: none;
-			border-right: none;
-			border-bottom: 1px solid #dee2e6;
-			order: -1; /* Sidebar on top on mobile */
-		}
-		.content-area {
-			padding: 10px;
-			order: 1;
-		}
-	}
-</style>
-
-<script>
-document.addEventListener('DOMContentLoaded', function() {
-	const root = document.getElementById('announcements-root');
-	const announcementsData = JSON.parse(root.dataset.announcements || '[]');
-    
-	if (announcementsData.length === 0) {
-		root.innerHTML = '<p style="text-align: center; color: #666; padding: 40px;">No announcements available.</p>';
-		return;
-	}
-
-	let html = '';
-	announcementsData.forEach(function(ann) {
-		html += `
-			<article class="announcement-card">
-				<div class="announcement-header">
-					<div>
-						<h3 class="announcement-title">${ann.topic || 'Untitled'}</h3>
-						<div class="announcement-meta">
-							By ${ann.staff_name || 'Unknown'} • ${ann.division_name || 'Unknown Division'} • ${new Date(ann.date_time).toLocaleString()}
-						</div>
-					</div>
-					<a href="/student/announcement?id=${ann.id}" class="view-btn">View Announcement</a>
-				</div>
-				<div class="announcement-body">
-					${ann.content ? (ann.content.length > 200 ? ann.content.substring(0, 200) + '...' : ann.content) : 'No content available.'}
-				</div>
-			</article>
-		`;
-	});
-	root.innerHTML = html;
-});
-</script>
 <script src="/js/student/studentAnnouncements.js"></script>
