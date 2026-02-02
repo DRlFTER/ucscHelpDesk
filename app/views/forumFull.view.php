@@ -1,6 +1,10 @@
 <?php
 	$title = 'Forum Post';
-	$head = '<link rel="stylesheet" href="/css/student/studentForumFull.css">';
+	$head = '<link rel="stylesheet" href="/css/forum/forumFull.css">';
+	
+	// Detect role from session for dynamic links
+	$sessionUser = $_SESSION['user'] ?? null;
+	$role = strtolower($sessionUser['role'] ?? 'student');
 ?>
 
 <main>
@@ -75,19 +79,19 @@
 						<h3 class="sectionTitle">Helpful Resources</h3>
 						<ul class="timelineList resourceList">
 							<li class="timelineItem">
-								<a href="/student/announcements" class="tlText">
+								<a href="/<?= htmlspecialchars($role) ?>/announcements" class="tlText">
 									<span class="label">Announcements</span>
 									<span class="time">View latest updates</span>
 								</a>
 							</li>
 							<li class="timelineItem">
-								<a href="/student/faq" class="tlText">
+								<a href="/<?= htmlspecialchars($role) ?>/faq" class="tlText">
 									<span class="label">FAQs</span>
 									<span class="time">Common questions</span>
 								</a>
 							</li>
 							<li class="timelineItem">
-								<a href="/student/forum" class="tlText">
+								<a href="/<?= htmlspecialchars($role) ?>/forum" class="tlText">
 									<span class="label">Browse Posts</span>
 									<span class="time">View all discussions</span>
 								</a>
@@ -132,4 +136,4 @@
 	<button type="button" class="modalBackdropClose" aria-label="Close"></button>
 </div>
 
-<script src="/js/student/studentForumFull.js"></script>
+<script src="/js/forum/forumFull.js"></script>

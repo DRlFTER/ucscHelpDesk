@@ -699,12 +699,12 @@ public function templates()
         ]);
     }
 
-    // Student forum page (UI identical to Tickets for now)
+    // Student forum page (using global forum view)
     public function forum()
     {
         $this->requireLogin('student');
-        $headContent = '<link rel="stylesheet" href="/css/student/studentForum.css" />';
-        $this->view('student/studentForum', [
+        $headContent = '<link rel="stylesheet" href="/css/forum/forum.css" />';
+        $this->view('forum', [
             'title' => 'Forum',
             'head' => $headContent,
         ]);
@@ -713,8 +713,8 @@ public function templates()
     public function forumFull()
     {
         $this->requireLogin('student');
-        $headContent = '<link rel="stylesheet" href="/css/student/studentForumFull.css" />';
-        $this->view('student/studentForumFull', [
+        $headContent = '<link rel="stylesheet" href="/css/forum/forumFull.css" />';
+        $this->view('forumFull', [
             'title' => 'Forum Post',
             'head' => $headContent,
         ]);
@@ -1116,6 +1116,15 @@ public function templates()
 
         echo 'ok';
     }
+
+    // Placeholder for vote endpoint
+    public function forumVote()
+    {
+        $this->requireLogin('student');
+        header('Content-Type: application/json');
+        echo json_encode(['ok' => true]);
+    }
+
     // Student tickets list (using global tickets view)
     public function tickets()
     {

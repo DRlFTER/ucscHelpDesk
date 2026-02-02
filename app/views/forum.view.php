@@ -1,3 +1,8 @@
+<?php
+	// Detect role from session for dynamic links
+	$sessionUser = $_SESSION['user'] ?? null;
+	$role = strtolower($sessionUser['role'] ?? 'student');
+?>
 <main>
     <div class="fullPage">
         <div class="pageLayout">
@@ -9,7 +14,7 @@
                     <input id="ticketSearch" type="text" placeholder="Search forum...">
                 </div>
                 <div class="filters">
-                    <a id="newPostBtn" class="btnWSvg" href="/student/newForum">
+                    <a id="newPostBtn" class="btnWSvg" href="/<?= htmlspecialchars($role) ?>/newForum">
                         <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#ffffff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
                         <span class="btnPrimaryText">New Post</span>
                     </a>
@@ -31,4 +36,4 @@
     </div>
 </main>
 
-<script src="/js/student/studentForum.js"></script>
+<script src="/js/forum/forum.js"></script>
