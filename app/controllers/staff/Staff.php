@@ -909,21 +909,33 @@ public function staffFAQ()
     public function staffForum()
     {
         $this->requireLogin('staff');
-        $headContent = '<link rel="stylesheet" href="/css/student/studentForum.css" />';
-        $this->view('staff/staffForum', [
+        $headContent = '<link rel="stylesheet" href="/css/forum/forum.css" />';
+        $this->view('forum', [
             'title' => 'Forum',
             'head' => $headContent,
         ]);
     }
 
+    // Alias for global URL routing
+    public function forum()
+    {
+        return $this->staffForum();
+    }
+
     public function staffForumFull()
     {
         $this->requireLogin('staff');
-        $headContent = '<link rel="stylesheet" href="/css/student/studentForumFull.css" />';
-        $this->view('staff/staffForumFull', [
+        $headContent = '<link rel="stylesheet" href="/css/forum/forumFull.css" />';
+        $this->view('forumFull', [
             'title' => 'Forum Post',
             'head' => $headContent,
         ]);
+    }
+
+    // Alias for global URL routing
+    public function forumFull()
+    {
+        return $this->staffForumFull();
     }
 
     // Create new forum post
@@ -1208,7 +1220,7 @@ public function staffFAQ()
     // Single forum post data from forum_q
     public function staffForumPostData()
     {
-        $this->requireLogin('student');
+        $this->requireLogin('staff');
         header('Content-Type: application/json');
 
         $db = Database::getInstance();
@@ -1280,9 +1292,60 @@ public function staffFAQ()
         echo json_encode($payload);
     }
 
+    // Delete a forum post (Staff can delete own posts only)
+    public function staffForumDelete()
+    {
+        $this->requireLogin('staff');
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+            http_response_code(405);
+            echo 'method_not_allowed';
+            return;
+        }
+
+        $uId = (int)($_SESSION['user']['u_id'] ?? 0);
+        $id = isset($_POST['id']) ? (int)$_POST['id'] : 0;
+        if ($id <= 0 || $uId <= 0) {
+            http_response_code(400);
+            echo 'bad_request';
+            return;
+        }
+
+        $db = Database::getInstance();
+        try {
+            $stmt = $db->prepare("DELETE FROM forum_q WHERE q_id = ? AND u_id = ? LIMIT 1");
+            if (!$stmt) throw new Exception('prepare_failed');
+            $stmt->bind_param('ii', $id, $uId);
+            if (!$stmt->execute()) {
+                $err = $stmt->error;
+                $stmt->close();
+                throw new Exception('execute_failed: ' . $err);
+            }
+            $affected = $stmt->affected_rows;
+            $stmt->close();
+            if ($affected <= 0) {
+                http_response_code(403);
+                echo 'not_allowed';
+                return;
+            }
+            echo 'ok';
+        } catch (Throwable $e) {
+            http_response_code(500);
+            echo 'server_error';
+        }
+    }
+
+    // Placeholder for vote endpoint
+    public function staffForumVote()
+    {
+        $this->requireLogin('staff');
+        header('Content-Type: application/json');
+        echo json_encode(['ok' => true]);
+    }
+
    public function calender() {
         $this->requireLogin('staff');
         $headContent = '\n        <link rel="stylesheet" href="/css/calender/calender.css"/>';
+
         $this->view('calender', [
             'title' => 'Calendar',
             'head' => $headContent,
@@ -1788,5 +1851,39 @@ public function staffReports()
         'level' => $level
     ]);
 }
+
+    // ============ ALIASED FORUM METHODS FOR GLOBAL JS ============
+    // These non-prefixed methods simply delegate to the existing prefixed methods
+    // This allows the global forum.js and forumFull.js to work with staff role
+
+    public function forumData()
+    {
+        return $this->staffForumData();
+    }
+
+    public function forumPostData()
+    {
+        return $this->staffForumPostData();
+    }
+
+    public function forumToggleVisibility()
+    {
+        return $this->staffForumToggleVisibility();
+    }
+
+    public function forumToggleStatus()
+    {
+        return $this->staffForumToggleStatus();
+    }
+
+    public function forumDelete()
+    {
+        return $this->staffForumDelete();
+    }
+
+    public function forumVote()
+    {
+        return $this->staffForumVote();
+    }
 
 }

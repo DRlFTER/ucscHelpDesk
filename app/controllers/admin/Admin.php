@@ -89,8 +89,15 @@ class Admin extends Controller
     public function forum() {
         $this->requireLogin('admin');
         $headContent = '
-        <link rel="stylesheet" href="/css/student/studentForum.css"/>';
-        $this->view('adminForum', ['title' => 'Forum', 'head' => $headContent]);
+        <link rel="stylesheet" href="/css/forum/forum.css"/>';
+        $this->view('forum', ['title' => 'Forum', 'head' => $headContent]);
+    }
+
+    public function forumFull() {
+        $this->requireLogin('admin');
+        $headContent = '
+        <link rel="stylesheet" href="/css/forum/forumFull.css"/>';
+        $this->view('forumFull', ['title' => 'Forum Post', 'head' => $headContent]);
     }
 
     /**
@@ -1022,5 +1029,199 @@ class Admin extends Controller
         if ($diff < 3600) return (int)floor($diff / 60) . 'm ago';
         if ($diff < 86400) return (int)floor($diff / 3600) . 'h ago';
         return (int)floor($diff / 86400) . 'd ago';
+    }
+
+    // Single forum post data
+    public function forumPostData()
+    {
+        $this->requireLogin('admin');
+        header('Content-Type: application/json');
+
+        $db = Database::getInstance();
+        $uId = (int)($_SESSION['user']['u_id'] ?? 0);
+        $id = isset($_GET['id']) ? (int)$_GET['id'] : 0;
+        if ($uId <= 0 || $id <= 0) {
+            http_response_code(400);
+            echo json_encode(['error' => 'bad_request']);
+            return;
+        }
+
+        $idEsc = (int)$id;
+        // Admin can see all posts
+        $sql = "SELECT f.q_id, f.created_at, f.title, f.topic, f.status, f.description, f.u_id, f.is_Public, u.name AS student_name
+                FROM forum_q f
+                LEFT JOIN users u ON u.u_id = f.u_id
+                WHERE f.q_id = $idEsc
+                LIMIT 1";
+
+        $row = null;
+        if ($res = $db->query($sql)) {
+            $row = $res->fetch_assoc();
+            $res->free();
+        }
+        if (!$row) {
+            http_response_code(404);
+            echo json_encode(['error' => 'not_found']);
+            return;
+        }
+
+        $createdAt = $row['created_at'] ?? null;
+        $createdPretty = '';
+        if ($createdAt) {
+            $ts = strtotime($createdAt);
+            if ($ts !== false) $createdPretty = date('M d, Y \\a\\t g:i A', $ts);
+        }
+
+        $createdAgo = '';
+        if ($createdAt) {
+            $ts = strtotime($createdAt);
+            if ($ts !== false) {
+                $diff = time() - $ts;
+                if ($diff < 60) $createdAgo = $diff . ' seconds ago';
+                elseif ($diff < 3600) { $m = (int)floor($diff/60); $createdAgo = $m . ' minute' . ($m>1?'s':'') . ' ago'; }
+                elseif ($diff < 86400) { $h = (int)floor($diff/3600); $createdAgo = $h . ' hour' . ($h>1?'s':'') . ' ago'; }
+                else { $d = (int)floor($diff/86400); $createdAgo = $d . ' day' . ($d>1?'s':'') . ' ago'; }
+            }
+        }
+
+        $statusUi = strtolower((string)($row['status'] ?? 'open')) === 'answered' ? 'Answered' : 'Open';
+
+        $payload = [
+            'id' => (int)($row['q_id'] ?? 0),
+            'code' => 'FRM-' . (int)($row['q_id'] ?? 0),
+            'title' => (string)($row['title'] ?? 'Post'),
+            'description' => (string)($row['description'] ?? ''),
+            'topic' => (string)($row['topic'] ?? ''),
+            'status' => $statusUi,
+            'createdAt' => (string)($row['created_at'] ?? ''),
+            'createdOn' => $createdPretty,
+            'createdAgo' => $createdAgo,
+            'is_Public' => (int)($row['is_Public'] ?? 0),
+            'student' => [ 'id' => (int)($row['u_id'] ?? 0), 'name' => (string)($row['student_name'] ?? 'Student') ],
+            'attachments' => [],
+            'commentsCount' => 0,
+            'votes' => 0,
+        ];
+
+        echo json_encode($payload);
+    }
+
+    // Toggle forum post visibility (Admin can change any post)
+    public function forumToggleVisibility()
+    {
+        $this->requireLogin('admin');
+        header('Content-Type: application/json');
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+            http_response_code(405);
+            echo json_encode(['error' => 'method_not_allowed']);
+            return;
+        }
+
+        $id = isset($_POST['id']) ? (int)$_POST['id'] : 0;
+        $state = isset($_POST['state']) ? trim((string)$_POST['state']) : '';
+        if ($id <= 0 || ($state !== 'public' && $state !== 'private')) {
+            http_response_code(400);
+            echo json_encode(['error' => 'bad_request']);
+            return;
+        }
+
+        $isPublic = ($state === 'public') ? 1 : 0;
+
+        try {
+            $db = Database::getInstance();
+            $stmt = $db->prepare("UPDATE forum_q SET is_Public = ? WHERE q_id = ? LIMIT 1");
+            if (!$stmt) throw new Exception('prepare_failed');
+            $stmt->bind_param('ii', $isPublic, $id);
+            if (!$stmt->execute()) {
+                $err = $stmt->error;
+                $stmt->close();
+                throw new Exception('execute_failed: ' . $err);
+            }
+            $stmt->close();
+            echo json_encode(['ok' => true, 'is_Public' => $isPublic]);
+        } catch (Throwable $e) {
+            http_response_code(500);
+            echo json_encode(['error' => 'server_error']);
+        }
+    }
+
+    // Toggle forum post status (Admin can change any post)
+    public function forumToggleStatus()
+    {
+        $this->requireLogin('admin');
+        header('Content-Type: application/json');
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+            http_response_code(405);
+            echo json_encode(['error' => 'method_not_allowed']);
+            return;
+        }
+
+        $id = isset($_POST['id']) ? (int)$_POST['id'] : 0;
+        $status = isset($_POST['status']) ? strtolower(trim((string)$_POST['status'])) : '';
+        if ($id <= 0 || ($status !== 'open' && $status !== 'answered')) {
+            http_response_code(400);
+            echo json_encode(['error' => 'bad_request']);
+            return;
+        }
+
+        try {
+            $db = Database::getInstance();
+            $stmt = $db->prepare("UPDATE forum_q SET status = ? WHERE q_id = ? LIMIT 1");
+            if (!$stmt) throw new Exception('prepare_failed');
+            $stmt->bind_param('si', $status, $id);
+            if (!$stmt->execute()) {
+                $err = $stmt->error;
+                $stmt->close();
+                throw new Exception('execute_failed: ' . $err);
+            }
+            $stmt->close();
+            echo json_encode(['ok' => true, 'status' => $status]);
+        } catch (Throwable $e) {
+            http_response_code(500);
+            echo json_encode(['error' => 'server_error']);
+        }
+    }
+
+    // Delete a forum post (Admin can delete any post)
+    public function forumDelete()
+    {
+        $this->requireLogin('admin');
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+            http_response_code(405);
+            echo 'method_not_allowed';
+            return;
+        }
+
+        $id = isset($_POST['id']) ? (int)$_POST['id'] : 0;
+        if ($id <= 0) {
+            http_response_code(400);
+            echo 'bad_request';
+            return;
+        }
+
+        $db = Database::getInstance();
+        try {
+            $stmt = $db->prepare("DELETE FROM forum_q WHERE q_id = ? LIMIT 1");
+            if (!$stmt) throw new Exception('prepare_failed');
+            $stmt->bind_param('i', $id);
+            if (!$stmt->execute()) {
+                $err = $stmt->error;
+                $stmt->close();
+                throw new Exception('execute_failed: ' . $err);
+            }
+            $stmt->close();
+            echo 'ok';
+        } catch (Throwable $e) {
+            http_response_code(500);
+            echo 'server_error';
+        }
+    }
+
+    // Placeholder for vote endpoint
+    public function forumVote()
+    {
+        $this->requireLogin('admin');
+        header('Content-Type: application/json');
+        echo json_encode(['ok' => true]);
     }
 }

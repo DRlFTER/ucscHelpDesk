@@ -1,8 +1,20 @@
-// Copied from studentTickets.js for student forum view; keeping behavior identical for now.
-window.studentTicketsData = [];
+// Global Forum JS - works for all roles (student, admin, staff, counselor)
+window.forumPostsData = [];
 
 (function () {
   const CACHE_TTL_MS = 5 * 60 * 1000; // 5 minutes
+
+  // Detect current role from URL path
+  function getCurrentRole() {
+    const path = window.location.pathname;
+    if (path.startsWith('/admin')) return 'admin';
+    if (path.startsWith('/staff')) return 'staff';
+    if (path.startsWith('/counselor')) return 'counselor';
+    if (path.startsWith('/student')) return 'student';
+    return 'student'; // default
+  }
+
+  const currentRole = getCurrentRole();
 
   function getCache(key) {
     try {
@@ -84,7 +96,7 @@ window.studentTicketsData = [];
     search: (urlParams.get("search") || "").trim(),
     category: urlParams.get("category") || "",
     status: urlParams.get("status") || "",
-  sort: urlParams.get("sort") || (sortSelect?.value || "votes"),
+    sort: urlParams.get("sort") || (sortSelect?.value || "votes"),
     page: (() => {
       const p = parseInt(urlParams.get("page"), 10);
       return Number.isFinite(p) && p > 0 ? p : 1;
@@ -214,7 +226,7 @@ window.studentTicketsData = [];
     if (p.search) params.set("search", p.search);
     if (p.category) params.set("category", p.category);
     if (p.status) params.set("status", p.status);
-  if (p.sort) params.set("sort", p.sort);
+    if (p.sort) params.set("sort", p.sort);
     params.set("page", String(page));
     const qs = params.toString();
     const newUrl = `${window.location.pathname}${qs ? `?${qs}` : ""}`;
@@ -251,31 +263,29 @@ window.studentTicketsData = [];
     return { cls: "", label: esc(status || "") };
   }
 
-  // Meeting/priority removed for forum; votes/comments used instead
-
-  function openTicket(el) {
+  function openPost(el) {
     const id = el.getAttribute("data-id");
     const code = el.getAttribute("data-code");
-      if (id) {
-        window.location.assign(`/student/forumFull?id=${encodeURIComponent(id)}`);
-      } else if (code) {
-        window.location.assign(`/student/forumFull?code=${encodeURIComponent(code)}`);
+    if (id) {
+      window.location.assign(`/${currentRole}/forumFull?id=${encodeURIComponent(id)}`);
+    } else if (code) {
+      window.location.assign(`/${currentRole}/forumFull?code=${encodeURIComponent(code)}`);
     }
   }
 
-  function renderTickets(data) {
+  function renderPosts(data) {
     const container = document.querySelector(".tickets");
     if (!container) return;
     const html = (data || [])
       .map((t) => {
-  const status = getStatusMeta((t && t.status) || "");
-  const vis = t && typeof t.is_Public !== 'undefined' ? (t.is_Public ? 'public' : 'private') : 'public';
-  const votesUp = Number.isFinite(t?.votesUp) ? t.votesUp : 0;
-  const votesDown = Number.isFinite(t?.votesDown) ? t.votesDown : 0;
-  const comments = Number.isFinite(t?.comments) ? t.comments : 0;
+        const status = getStatusMeta((t && t.status) || "");
+        const vis = t && typeof t.is_Public !== 'undefined' ? (t.is_Public ? 'public' : 'private') : 'public';
+        const votesUp = Number.isFinite(t?.votesUp) ? t.votesUp : 0;
+        const votesDown = Number.isFinite(t?.votesDown) ? t.votesDown : 0;
+        const comments = Number.isFinite(t?.comments) ? t.comments : 0;
 
         return `
-      <div class="ticket" tabindex="0" role="link" aria-label="Open ticket ${esc(
+      <div class="ticket" tabindex="0" role="link" aria-label="Open post ${esc(
         t.title
       )}" data-id="${esc(t.id)}" data-code="${esc(t.code)}">
                 <div class="ticketRow1">
@@ -339,7 +349,7 @@ window.studentTicketsData = [];
           return;
         }
         const card = e.target.closest(".ticket");
-        if (card && container.contains(card)) openTicket(card);
+        if (card && container.contains(card)) openPost(card);
       });
 
       container.addEventListener("keydown", (e) => {
@@ -347,7 +357,7 @@ window.studentTicketsData = [];
         if (!card) return;
         if (e.key === "Enter" || e.key === " ") {
           e.preventDefault();
-          openTicket(card);
+          openPost(card);
         }
       });
 
@@ -378,7 +388,7 @@ window.studentTicketsData = [];
       d.addEventListener("click", () => {
         if (num >= 1 && num <= totalPages && num !== page) {
           page = num;
-          loadTickets(page);
+          loadPosts(page);
         }
       });
       return d;
@@ -409,7 +419,7 @@ window.studentTicketsData = [];
     }
   }
 
-  async function loadTickets(nextPage) {
+  async function loadPosts(nextPage) {
     if (typeof nextPage === "number") page = nextPage;
     syncUrlState();
     const container = document.querySelector(".tickets");
@@ -429,13 +439,13 @@ window.studentTicketsData = [];
         type: p.type,
       });
 
-  const CACHE_KEY = `student_forum_${qs.toString()}`;
+      const CACHE_KEY = `forum_${currentRole}_${qs.toString()}`;
 
       let forceBypass = false;
       try {
-        if (localStorage.getItem("student_tickets_bust")) {
+        if (localStorage.getItem("forum_cache_bust")) {
           forceBypass = true;
-          localStorage.removeItem("student_tickets_bust");
+          localStorage.removeItem("forum_cache_bust");
         }
       } catch {}
 
@@ -443,43 +453,44 @@ window.studentTicketsData = [];
       if (cached) {
         const data = Array.isArray(cached?.data) ? cached.data : [];
         meta = cached?.meta || { total: data.length, totalPages: 1 };
-        window.studentTicketsData = data;
-        renderTickets(window.studentTicketsData);
+        window.forumPostsData = data;
+        renderPosts(window.forumPostsData);
         renderPagination();
 
-  fetch(`/student/forumData?${qs.toString()}`, { credentials: "include" })
+        // Background refresh
+        fetch(`/${currentRole}/forumData?${qs.toString()}`, { credentials: "include" })
           .then((res) => (res.ok ? res.json() : Promise.reject(new Error("Bad response"))))
           .then((fresh) => {
             setCache(CACHE_KEY, fresh);
             const newData = Array.isArray(fresh?.data) ? fresh.data : [];
             meta = fresh?.meta || { total: newData.length, totalPages: 1 };
-            window.studentTicketsData = newData;
-            renderTickets(window.studentTicketsData);
+            window.forumPostsData = newData;
+            renderPosts(window.forumPostsData);
             renderPagination();
           })
           .catch((e) => {
-            console.warn("Tickets background refresh failed", e);
+            console.warn("Forum background refresh failed", e);
           });
         return;
       }
 
-      const res = await fetch(`/student/forumData?${qs.toString()}`, {
+      const res = await fetch(`/${currentRole}/forumData?${qs.toString()}`, {
         credentials: "include",
       });
-      if (!res.ok) throw new Error("Failed to load tickets");
+      if (!res.ok) throw new Error("Failed to load posts");
       const payload = await res.json();
       setCache(CACHE_KEY, payload);
       const data = Array.isArray(payload?.data) ? payload.data : [];
       meta = payload?.meta || { total: data.length, totalPages: 1 };
-      window.studentTicketsData = data;
-      renderTickets(window.studentTicketsData);
+      window.forumPostsData = data;
+      renderPosts(window.forumPostsData);
       renderPagination();
     } catch (err) {
       if (container) {
         container.innerHTML =
           '<div class="ticketsError">Unable to load posts. Please try again.</div>';
       }
-      console.error("Tickets load error:", err);
+      console.error("Forum load error:", err);
     }
   }
 
@@ -488,7 +499,7 @@ window.studentTicketsData = [];
       "input",
       debounce(() => {
         page = 1;
-        loadTickets(page);
+        loadPosts(page);
       }, 300)
     );
   }
@@ -496,7 +507,7 @@ window.studentTicketsData = [];
     if (!sel) return;
     sel.addEventListener("change", () => {
       page = 1;
-      loadTickets(page);
+      loadPosts(page);
     });
   });
 
@@ -504,9 +515,9 @@ window.studentTicketsData = [];
   document.querySelectorAll('.filterGroup input[name="type"]').forEach((el) => {
     el.addEventListener('change', () => {
       page = 1;
-      loadTickets(page);
+      loadPosts(page);
     });
   });
 
-  loadTickets(page);
+  loadPosts(page);
 })();

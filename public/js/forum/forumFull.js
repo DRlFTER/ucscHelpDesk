@@ -1,4 +1,4 @@
-// Forum full view JS copied from studentTicketFull.js; endpoints kept same for now
+// Global Forum Full view JS - works for all roles (student, admin, staff, counselor)
 (function () {
   function setNavbarVar() {
     const nav = document.querySelector(".navbar");
@@ -18,6 +18,17 @@
   }
 })();
 
+// Detect current role from URL path
+function getCurrentRole() {
+  const path = window.location.pathname;
+  if (path.startsWith('/admin')) return 'admin';
+  if (path.startsWith('/staff')) return 'staff';
+  if (path.startsWith('/counselor')) return 'counselor';
+  if (path.startsWith('/student')) return 'student';
+  return 'student'; // default
+}
+
+const currentRole = getCurrentRole();
 let ticketData = null;
 
 // Forum interactions
@@ -178,8 +189,7 @@ function wireActions() {
       voteBtn.setAttribute("aria-pressed", voteState.voted ? "true" : "false");
       voteBtn.classList.toggle("isActive", voteState.voted);
       try {
-        // placeholder endpoint; replace with real forum vote API
-        await fetch(`/student/forumVote?id=${encodeURIComponent(ticketData.id)}&voted=${voteState.voted ? 1 : 0}`, { credentials: "include" });
+        await fetch(`/${currentRole}/forumVote?id=${encodeURIComponent(ticketData.id)}&voted=${voteState.voted ? 1 : 0}`, { credentials: "include" });
       } catch (e) {
         // revert on failure
         voteState.voted = !voteState.voted;
@@ -203,7 +213,7 @@ function wireActions() {
       voteState.count = Math.max(0, voteState.count - 1);
       document.getElementById("voteCount").textContent = String(voteState.count);
       try {
-        await fetch(`/student/forumVote?id=${encodeURIComponent(ticketData.id)}&voted=0&down=1`, { credentials: "include" });
+        await fetch(`/${currentRole}/forumVote?id=${encodeURIComponent(ticketData.id)}&voted=0&down=1`, { credentials: "include" });
       } catch (e) {
         // revert on failure (best-effort)
         voteState.count += 1;
@@ -237,7 +247,6 @@ function wireActions() {
 
   // Edit post (placeholder only)
   document.getElementById("editPostBtn")?.addEventListener("click", () => {
-    // No functionality for now; reserved for future implementation
     alert("Edit post coming soon.");
   });
 
@@ -245,14 +254,11 @@ function wireActions() {
   const toggleBtn = document.getElementById("toggleVisibilityBtn");
   if (toggleBtn) {
     const applyLabel = (state) => {
-      // state here means current visibility after toggle trigger: 'public' => button shows Make Private; 'private' => Make Public
       const text = state === 'public' ? 'Make Private' : 'Make Public';
       toggleBtn.querySelector('.btnSecondaryText').textContent = text;
       toggleBtn.dataset.state = state;
-      // colorize by action: Make Private => green, Make Public => red
       toggleBtn.style.background = state === 'public' ? '#dcfce7' : '#fee2e2';
     };
-    // Initialize from ticketData if available
     if (ticketData && typeof ticketData.is_Public !== 'undefined') {
       applyLabel(ticketData.is_Public ? 'public' : 'private');
     }
@@ -260,19 +266,17 @@ function wireActions() {
       if (!ticketData || !ticketData.id) return;
       const current = toggleBtn.dataset.state === 'public' ? 'public' : 'private';
       const next = current === 'public' ? 'private' : 'public';
-      // optimistic label change
       applyLabel(next);
       try {
         const form = new FormData();
         form.append('id', String(ticketData.id));
         form.append('state', next);
-        const res = await fetch('/student/forumToggleVisibility', { method: 'POST', credentials: 'include', body: form });
+        const res = await fetch(`/${currentRole}/forumToggleVisibility`, { method: 'POST', credentials: 'include', body: form });
         if (!res.ok) throw new Error('toggle_failed');
         const payload = await res.json();
         if (!payload.ok) throw new Error('toggle_failed');
         ticketData.is_Public = payload.is_Public ? 1 : 0;
       } catch (e) {
-        // revert label on failure
         applyLabel(current);
         alert('Failed to update visibility.');
       }
@@ -283,32 +287,28 @@ function wireActions() {
   const toggleStatusBtn = document.getElementById('toggleStatusBtn');
   if (toggleStatusBtn) {
     const applyStatusButton = (statusNow) => {
-      // statusNow is current post status after change; if open -> button shows Make Answered (green), if answered -> Make Open (yellow)
       const isAnswered = (statusNow || '').toLowerCase() === 'answered';
       const label = isAnswered ? 'Make Open' : 'Make Answered';
       toggleStatusBtn.querySelector('.btnSecondaryText').textContent = label;
       toggleStatusBtn.dataset.status = isAnswered ? 'answered' : 'open';
       toggleStatusBtn.style.background = isAnswered ? '#fef9c3' : '#dcfce7';
     };
-    // init from ticketData
     if (ticketData && ticketData.status) {
       applyStatusButton(ticketData.status);
     }
     toggleStatusBtn.addEventListener('click', async () => {
       if (!ticketData || !ticketData.id) return;
-      const currentUi = (ticketData.status || '').toLowerCase(); // 'open' | 'answered' in UI casing
+      const currentUi = (ticketData.status || '').toLowerCase();
       const next = currentUi === 'answered' ? 'open' : 'answered';
-      // optimistic button swap
       applyStatusButton(next);
       try {
         const form = new FormData();
         form.append('id', String(ticketData.id));
         form.append('status', next);
-        const res = await fetch('/student/forumToggleStatus', { method: 'POST', credentials: 'include', body: form });
+        const res = await fetch(`/${currentRole}/forumToggleStatus`, { method: 'POST', credentials: 'include', body: form });
         if (!res.ok) throw new Error('toggle_failed');
         const payload = await res.json();
         if (!payload.ok) throw new Error('toggle_failed');
-        // update UI status badge
         ticketData.status = next === 'answered' ? 'Answered' : 'Open';
         const statusEl = document.getElementById('ticketStatus');
         if (statusEl) {
@@ -316,7 +316,6 @@ function wireActions() {
           statusEl.textContent = ticketData.status;
         }
       } catch (e) {
-        // revert on error
         const revert = currentUi;
         applyStatusButton(revert);
         alert('Failed to update status.');
@@ -326,7 +325,7 @@ function wireActions() {
 }
 
 const CACHE_TTL_MS = 5 * 60 * 1000;
-function cacheKeyFor(id) { return `student_post_${id}`; }
+function cacheKeyFor(id) { return `forum_post_${currentRole}_${id}`; }
 function loadFromCache(id) {
   try {
     const str = localStorage.getItem(cacheKeyFor(id));
@@ -351,7 +350,7 @@ function getPostIdFromUrl() {
 }
 
 async function fetchPost(id) {
-  const res = await fetch(`/student/forumPostData?id=${encodeURIComponent(id)}`, { credentials: "include" });
+  const res = await fetch(`/${currentRole}/forumPostData?id=${encodeURIComponent(id)}`, { credentials: "include" });
   if (!res.ok) throw new Error("Failed to fetch post");
   return res.json();
 }
@@ -404,7 +403,7 @@ function openDeleteModal() {
     e && e.preventDefault();
     try {
       if (!ticketData || !ticketData.id) throw new Error("missing_id");
-      const res = await fetch("/student/forumDelete", {
+      const res = await fetch(`/${currentRole}/forumDelete`, {
         method: "POST",
         headers: { "Content-Type": "application/x-www-form-urlencoded" },
         body: `id=${encodeURIComponent(ticketData.id)}`,
@@ -413,8 +412,8 @@ function openDeleteModal() {
       if (!res.ok) throw new Error("delete_failed");
       // Clear cached post and bust list cache once
       try { localStorage.removeItem(cacheKeyFor(ticketData.id)); } catch {}
-      try { localStorage.setItem("student_tickets_bust", String(Date.now())); } catch {}
-      window.location.href = "/student/forum";
+      try { localStorage.setItem("forum_cache_bust", String(Date.now())); } catch {}
+      window.location.href = `/${currentRole}/forum`;
     } catch (e) {
       console.error(e);
       alert("Failed to delete the post.");
