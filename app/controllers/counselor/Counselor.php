@@ -394,7 +394,7 @@ class Counselor extends Controller
         exit;
     }
 
-    public function ticket()
+    public function ticketFull()
     {
         $this->requireLogin('counselor');
         $headContent = '       <link rel="stylesheet" href="/css/ticketFull/ticketFull.css"/>';
