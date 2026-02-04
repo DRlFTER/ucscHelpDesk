@@ -11,18 +11,49 @@ document.addEventListener("DOMContentLoaded", () => {
     return;
   }
 
-  // Map over tickets and create HTML for each
-  container.innerHTML = tickets.map(ticket => {
-    // Default status to "pending" if null or undefined, and ensure it's a string
-    const status = ticket.status || "pending";
-    const displayStatus = typeof status === "string" ? status.charAt(0).toUpperCase() + status.slice(1) : "Pending";
-    const priority = ticket.priority || "medium"; // Default priority if null
+  function renderTickets(list) {
+    if (!Array.isArray(list) || list.length === 0) {
+      container.innerHTML = `<p style="color:#6b7280;">No tickets found for your division(s).</p>`;
+      return;
+    }
 
-    // Normalize status for CSS class (replace spaces with hyphens, lowercase)
-    const statusClass = status.toLowerCase().replace(/\s+/g, '-');
+    container.innerHTML = list.map(ticket => {
+      const status = ticket.status || "pending";
+      const displayStatus = typeof status === "string" ? status.charAt(0).toUpperCase() + status.slice(1) : "Pending";
+      const priority = ticket.priority || "medium";
+      const statusClass = status.toLowerCase().replace(/\s+/g, '-');
+      
+      // New: Overdue pending styling
+      let cardClass = "ticket-card";
+      let overdueBadge = "";
+      const isOverdue = ticket.is_overdue_pending === 1; // Flag from model
+      if (isOverdue) {
+        cardClass += " overdue-pending";
+        overdueBadge = `
+          <div class="detail-item">
+            <span class="status-badge overdue-badge">
+              Overdue (Pending)
+            </span>
+          </div>
+        `;
+      }
 
-    return `
-      <article class="ticket-card">
+      // Existing: Level-based (for future escalation; optional)
+      let escalationBadge = "";
+      const level = ticket.assigned_level || 99;
+      if (level <= 2) {
+        cardClass += ` level-${level}`;
+        escalationBadge = `
+          <div class="detail-item">
+            <span class="status-badge escalated-badge" style="background:${level === 1 ? '#dc2626' : '#ea580c'}; color:white;">
+              Escalated (Level ${level})
+            </span>
+          </div>
+        `;
+      }
+
+      return `
+      <article class="${cardClass}">
         <div class="ticket-header">
           <div class="ticket-title-group">
             <h3 class="ticket-title">${ticket.title || "No Title"}</h3>
@@ -31,9 +62,6 @@ document.addEventListener("DOMContentLoaded", () => {
               <span>${ticket.created_at ? new Date(ticket.created_at).toLocaleString() : "N/A"}</span>
             </div>
           </div>
-          <span class="status-badge status-${statusClass}">
-            ${displayStatus}
-          </span>
           <div class="ticket-action">
             <button class="ticket-action-btn" onclick="window.location.href='/index.php?url=staff/ticketDetails&ticket_id=${ticket.ticket_id || 0}'">
               <span>See Ticket</span>
@@ -52,22 +80,58 @@ document.addEventListener("DOMContentLoaded", () => {
             </div>
           </div>
           <div class="details-group separator">
-            ${ticket.meeting_requested ? `
-              <div class="detail-item">
-                <span class="detail-label">Meeting:</span>
-                <span class="detail-value-box value-requested">${ticket.meeting_requested}</span>
-              </div>` : ""}
+          </div>
+          <div class="details-group">
             <div class="detail-item">
-              <span class="detail-label">Priority:</span>
-              <span class="detail-value-box value-priority-${priority.toLowerCase()}">
-                ${priority.charAt(0).toUpperCase() + priority.slice(1)}
+              <span class="status-badge status-${statusClass}">
+                ${displayStatus}
               </span>
             </div>
+            ${overdueBadge}${escalationBadge} <!-- Overdue first, then level -->
           </div>
         </div>
       </article>
     `;
-  }).join("");
+    }).join("");
+  }
+
+  // Initial render
+  renderTickets(tickets);
+
+  // Status filter
+  const statusSelect = document.getElementById('status-filter');
+  if (statusSelect) {
+    statusSelect.addEventListener('change', () => {
+      const sel = statusSelect.value || '';
+      const normSel = sel.toString().toLowerCase().trim().replace(/\s+/g, '-');
+      if (!normSel) {
+        renderTickets(tickets);
+        return;
+      }
+      const filtered = tickets.filter(t => {
+        const st = (t.status || 'pending').toString().toLowerCase().trim().replace(/\s+/g, '-');
+        return st === normSel;
+      });
+      renderTickets(filtered);
+    });
+  }
+
+  // Search
+  const searchInput = document.getElementById('faq-search');
+  if (searchInput) {
+    searchInput.addEventListener('input', (e) => {
+      const searchTerm = e.target.value.toLowerCase().trim();
+      if (!searchTerm) {
+        renderTickets(tickets);
+        return;
+      }
+      const filtered = tickets.filter(t => {
+        const title = (t.title || '').toLowerCase().trim();
+        return title.includes(searchTerm);
+      });
+      renderTickets(filtered);
+    });
+  }
 
   // Debug: Log tickets to console
   console.log("Tickets:", tickets);

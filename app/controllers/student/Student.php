@@ -24,6 +24,7 @@ class Student extends Controller
         $openCount = 0;
         $lastActivity = null;
         $recentAnnouncements = [];
+        $upcomingEvents = [];
         try {
             $uId = (int)($_SESSION['user']['u_id'] ?? 0);
             $dashboardData = $ticketModel->getDashboardData($uId, 3);
@@ -34,13 +35,20 @@ class Student extends Controller
             $recent = [];
         }
 
-        // Load latest announcements (limit 2) for dashboard sidebar
         try {
             require_once __DIR__ . '/../../models/student/Announcement.php';
             $annModel = new StudentAnnouncement();
             $recentAnnouncements = $annModel->getRecent(2);
         } catch (Throwable $e) {
             $recentAnnouncements = [];
+        }
+
+        try {
+            require_once __DIR__ . '/../../models/CalendarEvent.php';
+            $calModel = new CalendarEvent();
+            $upcomingEvents = $calModel->getUpcomingEvents($uId, 3);
+        } catch (Throwable $e) {
+            $upcomingEvents = [];
         }
 
     $headContent = '
@@ -52,6 +60,7 @@ class Student extends Controller
                 'openCount' => $openCount,
                 'lastActivity' => $lastActivity,
                 'recentAnnouncements' => $recentAnnouncements,
+                'upcomingEvents' => $upcomingEvents,
         ]);
     }
 
@@ -60,24 +69,19 @@ class Student extends Controller
         $this->requireLogin('student');
 
         if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-            // Basic validation and persistence
             $title = trim($_POST['title'] ?? '');
-            // category is now provided via hidden input populated from subcategory selection
             $category = trim($_POST['category'] ?? '');
             $when = trim($_POST['when'] ?? '');
             $details = trim($_POST['details'] ?? '');
-            // Priority defaults to 'Medium' when not provided
             $priority = trim($_POST['priority'] ?? 'Medium');
-
+            $t_type = trim($_POST['ticketType'] ?? 'private');
             $errors = [];
             if ($title === '') { $errors[] = 'Title is required.'; }
             if ($category === '') { $errors[] = 'Category is required.'; }
-            // optional: priority defaults to 'Medium' if not provided
             if ($details === '') { $errors[] = 'Details are required.'; }
 
             if (empty($errors)) {
                 try {
-                    // Load student ticket model from organized path
                     require_once __DIR__ . '/../../models/student/Ticket.php';
                     $ticketModel = new StudentTicket();
                     $meetingRequested = isset($_POST['meeting_requested']) && $_POST['meeting_requested'] ? 'Requested' : null;
@@ -89,11 +93,8 @@ class Student extends Controller
                         'status' => 'pending',
                         'description' => $details,
                         'meeting_requested' => $meetingRequested,
+                        'type' => $t_type,
                     ]);
-
-                    // TODO: handle attachments in a follow-up
-
-                    // Show success popup then redirect via JS from view
                     $flash = ['type' => 'success', 'message' => 'Ticket submitted successfully. Redirecting to your dashboard...'];
                 } catch (Throwable $e) {
                     $flash = ['type' => 'error', 'message' => 'Ticket submission failed: ' . $e->getMessage()];
@@ -136,37 +137,148 @@ class Student extends Controller
         ]);
     }
 
-    public function templates()
-    {
-        $this->requireLogin('student');
+   // Updated templates() method in controllers/student.php
+// Replace the existing templates() method with this:
 
-        // Load available templates created by staff
+public function templates()
+{
+    $this->requireLogin('student');
+
+    $templates = [];
+    $errors = [];
+    $success = '';
+
+    require_once __DIR__ . '/../../models/staff/Template.php';
+    require_once __DIR__ . '/../../models/student/Ticket.php';
+    $tplModel = new Template();
+    $ticketModel = new StudentTicket();
+
+    try {
+        $allTemplates = $tplModel->getAll();
+        foreach ($allTemplates as &$tpl) {
+            if (isset($tpl['fields']) && is_string($tpl['fields'])) {
+                $decoded = json_decode($tpl['fields'], true);
+                $tpl['fields'] = is_array($decoded) ? $decoded : [];
+            }
+        }
+        $templates = $allTemplates;
+        unset($tpl);
+    } catch (Throwable $e) {
+        error_log('Failed to load templates: ' . $e->getMessage());
         $templates = [];
-        try {
-            require_once __DIR__ . '/../../models/staff/Template.php';
-            $tplModel = new Template();
-            $templates = $tplModel->getAll();
-            // Decode fields JSON for view consumption if needed
-            foreach ($templates as &$tpl) {
-                if (isset($tpl['fields']) && is_string($tpl['fields'])) {
-                    $decoded = json_decode($tpl['fields'], true);
-                    $tpl['fields'] = is_array($decoded) ? $decoded : [];
+    }
+
+    if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['template_id'])) {
+        $template_id = (int)$_POST['template_id'];
+        $u_id = (int)($_SESSION['user']['u_id'] ?? 0);
+
+        if (!$u_id || !$template_id) {
+            $errors[] = 'Invalid submission.';
+        } else {
+            // Fetch specific template for validation and data
+            $template = null;
+            try {
+                $template = $tplModel->getById($template_id);
+                if ($template && isset($template['fields']) && is_string($template['fields'])) {
+                    $decoded = json_decode($template['fields'], true);
+                    $template['fields'] = is_array($decoded) ? $decoded : [];
+                }
+            } catch (Throwable $e) {
+                error_log('Failed to load template: ' . $e->getMessage());
+                $template = null;
+            }
+
+            if (!$template || empty($template['fields'])) {
+                $errors[] = 'Invalid template selected.';
+            } else {
+                // Validate required fields
+                $field_values = [];
+                foreach ($template['fields'] as $field) {
+                    $value = trim($_POST[$field] ?? '');
+                    if (empty($value)) {
+                        $errors[] = ucfirst(str_replace('_', ' ', $field)) . ' is required.';
+                    }
+                    $field_values[$field] = $value;
+                }
+
+                // Handle file upload (optional)
+                $file_path = null;
+                $upload_dir = __DIR__ . '/../../../uploads/tickets/';
+                if (!is_dir($upload_dir)) {
+                    mkdir($upload_dir, 0777, true);
+                }
+                $allowed_types = ['pdf', 'jpg', 'jpeg', 'png', 'doc', 'docx'];
+                $max_size = 5 * 1024 * 1024; // 5MB
+
+                $file = $_FILES['file'] ?? null;
+                if ($file && $file['error'] === UPLOAD_ERR_OK) {
+                    $ext = strtolower(pathinfo($file['name'], PATHINFO_EXTENSION));
+                    if (!in_array($ext, $allowed_types)) {
+                        $errors[] = 'Invalid file type. Allowed: PDF, JPG, JPEG, PNG, DOC, DOCX.';
+                    } elseif ($file['size'] > $max_size) {
+                        $errors[] = 'File size exceeds 5MB limit.';
+                    } else {
+                        $filename = uniqid() . '.' . $ext;
+                        $full_path = $upload_dir . $filename;
+                        if (move_uploaded_file($file['tmp_name'], $full_path)) {
+                            $file_path = '/uploads/tickets/' . $filename;
+                        } else {
+                            $errors[] = 'Failed to upload file.';
+                        }
+                    }
+                } elseif ($file && $file['error'] !== UPLOAD_ERR_NO_FILE) {
+                    $errors[] = 'File upload error: ' . $file['error'];
+                }
+                if (empty($errors)) {
+                    // Build numbered description from fields
+                    $description = '';
+                    $counter = 1;
+                    foreach ($field_values as $field => $value) {
+                        $label = ucfirst(str_replace('_', ' ', $field));
+                        $description .= '['.$counter .']'. '. ' . $label . ': ' . $value . "\n";
+                        $counter++;
+                    }
+
+                    // Prepare ticket data
+                    $data = [
+                        'title' => $template['name'],
+                        'u_id' => $u_id,
+                        'category' => $template['category'], // Division name for mapping
+                        'priority' => 'Medium', // Default
+                        'status' => 'pending',
+                        'description' => $description,
+                        'meeting_requested' => null, // No request in template
+                        'type' => 'template',
+                    ];
+
+                    try {
+                        $ticket_id = $ticketModel->create($data);
+
+                        // Add file if uploaded
+                        if ($file_path) {
+                            $ticketModel->addFile($ticket_id, $file_path, $_FILES['file']['name']);
+                        }
+
+                        $success = 'Ticket submitted successfully using template "' . htmlspecialchars($template['name']) . '". Ticket ID: TKT-' . str_pad($ticket_id, 4, '0', STR_PAD_LEFT);
+                    } catch (Throwable $e) {
+                        error_log('Failed to create ticket from template: ' . $e->getMessage());
+                        $errors[] = 'Failed to submit ticket: ' . $e->getMessage();
+                    }
                 }
             }
-            unset($tpl);
-        } catch (Throwable $e) {
-            $templates = [];
         }
-
-        $headContent = '<link rel="stylesheet" href="/css/student/studentTemplate.view.css" />';
-
-        $this->view('studentTemplate', [
-            'title' => 'Use Template',
-            'head' => $headContent,
-            'templates' => $templates,
-            // success/errors/generation handled by future POST flow
-        ]);
     }
+
+    $headContent = '<link rel="stylesheet" href="/css/student/studentTemplate.view.css" />';
+
+    $this->view('studentTemplate', [
+        'title' => 'Use Template',
+        'head' => $headContent,
+        'templates' => $templates,
+        'errors' => $errors,
+        'success' => $success,
+    ]);
+}
 
     public function delete($id = null)
     {
@@ -181,7 +293,6 @@ class Student extends Controller
         try {
             $model->deleteByIdForUser((int)$id, (int)($_SESSION['user']['u_id'] ?? 0));
         } catch (Throwable $e) {
-            // swallow error and redirect; could add flash messaging later
         }
         header('Location: /student/dashboard');
         exit;
@@ -205,18 +316,45 @@ class Student extends Controller
             $claimed = [];
         }
 
-        // Merge and sort all items by newest (q_id desc) for a single unified list
         $items = array_merge($found, $lost, $claimed);
         usort($items, function($a, $b){
             return (int)($b['q_id'] ?? 0) <=> (int)($a['q_id'] ?? 0);
         });
 
-        $headContent = '<link rel="stylesheet" href="/css/student/studentLostFound.css" />';
+        try {
+            $uIds = [];
+            foreach ($items as $row) {
+                if (!empty($row['u_id'])) { $uIds[] = (int)$row['u_id']; }
+            }
+            $uIds = array_values(array_unique(array_filter($uIds)));
+            if (!empty($uIds)) {
+                $db = Database::getInstance();
+                $in = implode(',', array_map('intval', $uIds));
+                $map = [];
+                if ($res = $db->query("SELECT u_id, name FROM users WHERE u_id IN ($in)")) {
+                    while ($r = $res->fetch_assoc()) {
+                        $map[(int)$r['u_id']] = (string)($r['name'] ?? '');
+                    }
+                    $res->free();
+                }
+                foreach ($items as &$row) {
+                    $uid = (int)($row['u_id'] ?? 0);
+                    if ($uid && isset($map[$uid])) {
+                        $row['owner_name'] = $map[$uid];
+                    }
+                }
+                unset($row);
+            }
+        } catch (Throwable $e) {
+        }
+
+    $headContent = '<link rel="stylesheet" href="/css/student/studentTickets.css" />' . "\n" .
+               '<link rel="stylesheet" href="/css/student/studentLostFound.css" />';
         $this->view('student/lostFound', [
             'title' => 'Lost & Found',
             'head' => $headContent,
             'items' => $items,
-            'lostItems' => $lost, // kept for compatibility if needed elsewhere in the view
+            'lostItems' => $lost,
             'foundItems' => $found,
             'claimedItems' => $claimed,
             'flash' => $_SESSION['lf_flash'] ?? null,
@@ -231,7 +369,6 @@ class Student extends Controller
         if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $title = trim($_POST['title'] ?? '');
             $category = trim($_POST['category'] ?? '');
-            // when replaced priority: read datetime-local input
             $when = trim($_POST['when'] ?? '');
             $details = trim($_POST['details'] ?? '');
             $contact_mobile = trim($_POST['contact_mobile'] ?? '');
@@ -333,7 +470,6 @@ class Student extends Controller
         ]);
     }
 
-    // Mark a Lost & Found entry as found (owner only)
     public function lostfound_markfound($id = null)
     {
         $this->requireLogin('student');
@@ -396,9 +532,9 @@ class Student extends Controller
     {
         $this->requireLogin('student');
 
-    // Load all announcements from student model (no dependency on staff files)
-    require_once __DIR__ . '/../../models/student/Announcement.php';
-    $annModel = new StudentAnnouncement();
+        // Load all announcements from student model (no dependency on staff files)
+        require_once __DIR__ . '/../../models/student/Announcement.php';
+        $annModel = new StudentAnnouncement();
         $announcements = [];
         try {
             $announcements = $annModel->getAll();
@@ -408,13 +544,14 @@ class Student extends Controller
         }
         $dbError = method_exists($annModel, 'getLastError') ? $annModel->getLastError() : null;
 
-    // Only use the student announcements stylesheet (self-contained)
-    $headContent = '<link rel="stylesheet" href="/css/student/studentAnnouncements.css" />';
-        $this->view('student/studentAnnouncements', [
+        // Use globalized announcements stylesheet
+        $headContent = '<link rel="stylesheet" href="/css/announcements/announcements.css" />';
+        $this->view('announcements', [
             'title' => 'Announcements',
             'head' => $headContent,
             'announcements' => $announcements,
             'dbError' => $dbError,
+            'role' => 'student',
         ]);
     }
 
@@ -444,13 +581,14 @@ class Student extends Controller
         }
         try { $files = $model->getFiles($announcement_id); } catch (Throwable $e) { $files = []; }
 
-    $headContent = '<link rel="stylesheet" href="/css/student/studentAnnouncements.css" />' . "\n" .
-               '<link rel="stylesheet" href="/css/student/studentAnnouncementFull.css" />';
-        $this->view('student/studentAnnouncementFull', [
+        // Use globalized announcement full stylesheet
+        $headContent = '<link rel="stylesheet" href="/css/announcements/announcementFull.css" />';
+        $this->view('announcementsFull', [
             'title' => 'Announcement Details',
             'head' => $headContent,
             'announcement' => $announcement,
             'files' => $files,
+            'role' => 'student',
         ]);
     }
 
@@ -458,10 +596,18 @@ class Student extends Controller
     public function faq()
     {
         $this->requireLogin('student');
+        
+        // Fetch FAQs from database
+        require_once __DIR__ . '/../../models/staff/Faq.php';
+        $faqModel = new StaffFaqModel();
+        // Get all FAQs (limit 100 for now)
+        $faqs = $faqModel->getFaqs('', 100, 0);
+
         $headContent = '<link rel="stylesheet" href="/css/student/studentFAQ.css" />';
         $this->view('student/studentFAQ', [
             'title' => 'FAQs',
             'head' => $headContent,
+            'faqs' => $faqs
         ]);
     }
 
@@ -474,6 +620,71 @@ class Student extends Controller
             'title' => 'Knowledge Base',
             'head' => $headContent,
         ]);
+    }
+
+    // Knowledge Base data (JSON)
+    public function knowledgebaseData()
+    {
+        $this->requireLogin('student');
+        header('Content-Type: application/json');
+
+        require_once __DIR__ . '/../../models/staff/KB.php';
+        $kbModel = new KB();
+        $articles = [];
+        try {
+            $articles = $kbModel->getAllArticles();
+        } catch (Throwable $e) {
+            $articles = [];
+        }
+
+        // Group by section
+        $grouped = [];
+        foreach ($articles as $row) {
+            $sec = $row['section'] ?? 'Other';
+            if (!isset($grouped[$sec])) {
+                $grouped[$sec] = [
+                    'section' => $sec,
+                    'items' => []
+                ];
+            }
+            
+            // Format date
+            $updated = $row['updated'] ?? '';
+            if ($updated) {
+                $ts = strtotime($updated);
+                if ($ts) $updated = date('F Y', $ts);
+            }
+
+            // Determine color based on type
+            $type = $row['type'] ?? 'Guide';
+            $color = 'blue';
+            if (stripos($type, 'schedule') !== false) $color = 'green';
+            
+            // Get files
+            $files = $kbModel->getFilesByArticle($row['base_id']);
+            $fileUrl = null;
+            if (!empty($files)) {
+                // Use the first file
+                $fileUrl = $files[0]['file_path'] ?? null;
+                // Ensure path starts with / if relative
+                if ($fileUrl && $fileUrl[0] !== '/') {
+                    $fileUrl = '/' . $fileUrl;
+                }
+            }
+
+            $grouped[$sec]['items'][] = [
+                'id' => (int)$row['base_id'],
+                'title' => $row['topic'],
+                'updated' => $updated,
+                'type' => $type,
+                'desc' => $row['description'],
+                'color' => $color,
+                'fileUrl' => $fileUrl
+            ];
+        }
+
+        echo json_encode(array_values($grouped));
+        exit;
     }
 
     // Student Calendar page
@@ -490,12 +701,12 @@ class Student extends Controller
         ]);
     }
 
-    // Student forum page (UI identical to Tickets for now)
+    // Student forum page (using global forum view)
     public function forum()
     {
         $this->requireLogin('student');
-        $headContent = '<link rel="stylesheet" href="/css/student/studentForum.css" />';
-        $this->view('student/studentForum', [
+        $headContent = '<link rel="stylesheet" href="/css/forum/forum.css" />';
+        $this->view('forum', [
             'title' => 'Forum',
             'head' => $headContent,
         ]);
@@ -504,8 +715,8 @@ class Student extends Controller
     public function forumFull()
     {
         $this->requireLogin('student');
-        $headContent = '<link rel="stylesheet" href="/css/student/studentForumFull.css" />';
-        $this->view('student/studentForumFull', [
+        $headContent = '<link rel="stylesheet" href="/css/forum/forumFull.css" />';
+        $this->view('forumFull', [
             'title' => 'Forum Post',
             'head' => $headContent,
         ]);
@@ -907,14 +1118,24 @@ class Student extends Controller
 
         echo 'ok';
     }
-    // Student tickets list (same UI as admin tickets page)
+
+    // Placeholder for vote endpoint
+    public function forumVote()
+    {
+        $this->requireLogin('student');
+        header('Content-Type: application/json');
+        echo json_encode(['ok' => true]);
+    }
+
+    // Student tickets list (using global tickets view)
     public function tickets()
     {
         $this->requireLogin('student');
-        $headContent = '<link rel="stylesheet" href="/css/student/studentTickets.css" />';
-        $this->view('student/studentTickets', [
+        $headContent = '<link rel="stylesheet" href="/css/tickets/tickets.css" />';
+        $this->view('tickets', [
             'title' => 'Tickets',
             'head' => $headContent,
+            'role' => 'student',
         ]);
     }
 
@@ -944,8 +1165,8 @@ class Student extends Controller
         $priority= isset($_GET['priority']) ? trim((string)$_GET['priority']) : '';
 
         $where = [];
-        // Scope to current user
-        $where[] = "t.u_id = $uId";
+        // Scope to current user OR public tickets
+        $where[] = "(t.u_id = $uId OR t.t_type = 'public')";
 
         if ($search !== '') {
             $s = $db->real_escape_string($search);
@@ -987,9 +1208,10 @@ class Student extends Controller
         if ($page > $totalPages) { $page = $totalPages; }
         $offset = ($page - 1) * $perPage;
 
-    $sql = "SELECT t.ticket_id, t.created_at, t.title, d.name AS division_name, t.status, t.priority, t.meeting_requested
+    $sql = "SELECT t.ticket_id, t.created_at, t.title, d.name AS division_name, t.status, t.priority, t.meeting_requested, t.t_type, u.name AS student_name, u.u_id AS student_id
         FROM tickets t
         LEFT JOIN division d ON d.did = t.division
+        LEFT JOIN users u ON u.u_id = t.u_id
                 $whereSql
                 ORDER BY t.created_at DESC
                 LIMIT $perPage OFFSET $offset";
@@ -1033,11 +1255,12 @@ class Student extends Controller
                 'code' => 'TKT-' . (string)($r['ticket_id'] ?? ''),
                 'createdAt' => $mapDate($r['created_at'] ?? null),
                 'title' => (string)($r['title'] ?? ''),
-                'student' => [ 'id' => $uId, 'name' => $_SESSION['user']['name'] ?? 'You' ],
+                'student' => [ 'id' => (int)($r['student_id'] ?? 0), 'name' => (string)($r['student_name'] ?? 'Unknown') ],
                 'category' => (string)($r['division_name'] ?? ''),
                 'status' => $mapStatus($r['status'] ?? ''),
                 'meeting' => $mapMeeting($r['meeting_requested'] ?? ''),
                 'priority' => strtolower((string)($r['priority'] ?? '')),
+                'visibility' => (string)($r['t_type'] ?? 'private'),
             ];
         }
 
@@ -1057,10 +1280,11 @@ class Student extends Controller
     public function ticketFull()
     {
         $this->requireLogin('student');
-        $headContent = '<link rel="stylesheet" href="/css/student/studentTicketFull.css" />';
-        $this->view('student/studentTicketFull', [
+        $headContent = '<link rel="stylesheet" href="/css/ticketFull/ticketFull.css" />';
+        $this->view('ticketFull', [
             'title' => 'Ticket Details',
             'head' => $headContent,
+            'role' => 'student',
         ]);
     }
 
@@ -1079,12 +1303,17 @@ class Student extends Controller
         }
 
         $idEsc = (int)$id;
-    $sql = "SELECT t.ticket_id, t.created_at, t.title, d.name AS division_name, t.status, t.priority, t.description, t.u_id, u.name AS student_name
+    $sql = "SELECT t.ticket_id, t.created_at, t.title, d.name AS division_name, t.status, t.priority, t.description, t.u_id, u.name AS student_name,
+               sa.name AS staff_name, sh.position, sh.level, tl.assigned AS assigned_at, tl.under_review AS under_review_at, tl.resolved AS resolved_at
         FROM tickets t
         LEFT JOIN users u ON u.u_id = t.u_id
         LEFT JOIN division d ON d.did = t.division
-                WHERE t.ticket_id = $idEsc AND t.u_id = $studentId
-                LIMIT 1";
+        LEFT JOIN users sa ON sa.u_id = t.assigned_to
+        LEFT JOIN staff_division sd ON sd.u_id = t.assigned_to AND sd.did = t.division
+        LEFT JOIN staff_hierachy sh ON sh.h_id = sd.h_id
+        LEFT JOIN ticket_timeline tl ON tl.ticket_id = t.ticket_id
+        WHERE t.ticket_id = $idEsc AND t.u_id = $studentId
+        LIMIT 1";
 
         $ticket = null;
         if ($res = $db->query($sql)) {
@@ -1119,6 +1348,113 @@ class Student extends Controller
             $ts = strtotime($createdAt);
             if ($ts !== false) $createdPretty = date('M d, Y \\a\\t g:i A', $ts);
         }
+
+        // --- Timeline Logic ---
+        $timeline = [];
+        // 1. Created
+        $timeline[] = [
+            'label' => 'Ticket created',
+            'time' => $createdPretty ?: '—',
+            'color' => 'green',
+            'pending' => false
+        ];
+
+        // 2. Assigned to staff
+        $staffName = $ticket['staff_name'] ?? null;
+        $position = $ticket['position'] ?? null;
+        $level = $ticket['level'] ?? null;
+        $assignedAt = $ticket['assigned_at'] ?? null;
+        
+        $assignLabel = 'Assigned to staff';
+        $assignTime = '';
+        $assignColor = 'gray';
+        $assignPending = true;
+
+        if (!empty($staffName) || in_array($statusRaw, ['agent assigned', 'resolved', 'closed', 'agent-closed'])) {
+            $assignLabel = "Assigned to staff";
+            if (!empty($staffName)) {
+                $assignLabel = "Assigned to {$staffName}";
+                if ($position) $assignLabel .= " ({$position})";
+                if ($level) $assignLabel .= " [Level {$level}]";
+            }
+            // Use assigned_at timestamp from ticket_timeline if available
+            if ($assignedAt && $assignedAt !== '0000-00-00 00:00:00') {
+                $ts = strtotime($assignedAt);
+                $assignTime = ($ts !== false) ? date('M d, Y \a\t g:i A', $ts) : 'Assigned';
+            } else {
+                $assignTime = 'Assigned'; // Fallback if no timestamp
+            }
+            $assignColor = 'blue';
+            $assignPending = false;
+        }
+
+        $timeline[] = [
+            'label' => $assignLabel,
+            'time' => $assignTime,
+            'color' => $assignColor,
+            'pending' => $assignPending
+        ];
+
+        // 3. Under Review
+        $underReviewAt = $ticket['under_review_at'] ?? null;
+        $reviewLabel = 'Under review';
+        $reviewTime = 'Pending';
+        $reviewColor = 'gray';
+        $reviewPending = true;
+
+        // Check if under_review timestamp exists in ticket_timeline
+        if ($underReviewAt && $underReviewAt !== '0000-00-00 00:00:00') {
+            $ts = strtotime($underReviewAt);
+            $reviewTime = ($ts !== false) ? date('M d, Y \a\t g:i A', $ts) : 'In Progress';
+            $reviewColor = 'yellow';
+            $reviewPending = false;
+            // If resolved, mark review as completed
+            if (in_array($statusRaw, ['resolved', 'closed', 'agent-closed'])) {
+                $reviewColor = 'green';
+            }
+        } elseif (in_array($statusRaw, ['agent assigned', 'resolved', 'closed', 'agent-closed'])) {
+            // Fallback: if status indicates review but no timestamp
+            $reviewTime = 'In Progress';
+            $reviewColor = 'yellow';
+            $reviewPending = false;
+            if (in_array($statusRaw, ['resolved', 'closed', 'agent-closed'])) {
+                $reviewTime = 'Completed';
+                $reviewColor = 'green';
+            }
+        }
+        $timeline[] = [
+            'label' => $reviewLabel,
+            'time' => $reviewTime,
+            'color' => $reviewColor,
+            'pending' => $reviewPending
+        ];
+
+        // 4. Resolved
+        $resolvedAt = $ticket['resolved_at'] ?? null;
+        $resolveLabel = 'Resolved';
+        $resolveTime = 'Pending';
+        $resolveColor = 'gray';
+        $resolvePending = true;
+
+        // Check if resolved timestamp exists in ticket_timeline
+        if ($resolvedAt && $resolvedAt !== '0000-00-00 00:00:00') {
+            $ts = strtotime($resolvedAt);
+            $resolveTime = ($ts !== false) ? date('M d, Y \a\t g:i A', $ts) : 'Completed';
+            $resolveColor = 'green';
+            $resolvePending = false;
+        } elseif (in_array($statusRaw, ['resolved', 'closed', 'agent-closed'])) {
+            // Fallback: if status is resolved but no timestamp
+            $resolveTime = 'Completed';
+            $resolveColor = 'green';
+            $resolvePending = false;
+        }
+        $timeline[] = [
+            'label' => $resolveLabel,
+            'time' => $resolveTime,
+            'color' => $resolveColor,
+            'pending' => $resolvePending
+        ];
+        // ----------------------
 
         // Fetch staff responses for conversation
         $messages = [];
@@ -1156,7 +1492,8 @@ class Student extends Controller
             'description' => (string)($ticket['description'] ?? ''),
             'category' => (string)($ticket['division_name'] ?? ''),
             'priority' => ucfirst((string)($ticket['priority'] ?? '')),
-            'assigned' => null,
+            'assigned' => !empty($staffName) ? ($position ? "$staffName ($position)" : $staffName) : null,
+            'timeline' => $timeline,
             'attachments' => $attachments,
             'messages' => $messages,
             'allowReply' => true,
@@ -1244,6 +1581,9 @@ class Student extends Controller
             return;
         }
 
+        // Update ticket_timeline resolved timestamp
+        $db->query("UPDATE ticket_timeline SET resolved = CURRENT_TIMESTAMP WHERE ticket_id = $idEsc");
+
         echo 'ok';
     }
 
@@ -1271,5 +1611,100 @@ class Student extends Controller
 
         header('Location: /student/lostfound');
         exit;
+    }
+
+    public function chatMessages()
+    {
+        $this->requireLogin('student');
+        header('Content-Type: application/json');
+
+        $ticketId = isset($_GET['ticket_id']) ? (int)$_GET['ticket_id'] : 0;
+        if ($ticketId <= 0) {
+            echo json_encode(['error' => 'missing ticket_id']);
+            return;
+        }
+
+        require_once __DIR__ . '/../../models/TicketChat.php';
+        $chatModel = new TicketChat();
+        
+        // Verify ticket ownership
+        $db = Database::getInstance();
+        $studentId = (int)($_SESSION['user']['u_id'] ?? 0);
+        $checkSql = "SELECT u_id FROM tickets WHERE ticket_id = $ticketId AND u_id = $studentId";
+        $res = $db->query($checkSql);
+        if (!$res || $res->num_rows === 0) {
+             echo json_encode(['error' => 'access_denied']);
+             return;
+        }
+
+        $chat = $chatModel->getChatByTicketId($ticketId);
+        $messages = [];
+        
+        if ($chat) {
+            $messages = $chatModel->getMessages($chat['chat_id']);
+            // Mark messages as read
+            $chatModel->markMessagesAsRead($chat['chat_id'], $studentId);
+        }
+
+        echo json_encode(['messages' => $messages]);
+    }
+
+    public function sendMessage()
+    {
+        $this->requireLogin('student');
+        header('Content-Type: application/json');
+
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+            echo json_encode(['error' => 'invalid_method']);
+            return;
+        }
+
+        $input = json_decode(file_get_contents('php://input'), true);
+        $ticketId = isset($input['ticket_id']) ? (int)$input['ticket_id'] : 0;
+        $message = isset($input['message']) ? trim($input['message']) : '';
+
+        if ($ticketId <= 0 || empty($message)) {
+            echo json_encode(['error' => 'missing_data']);
+            return;
+        }
+
+        require_once __DIR__ . '/../../models/TicketChat.php';
+        $chatModel = new TicketChat();
+        
+        // Verify ticket ownership and get assigned staff
+        $db = Database::getInstance();
+        $studentId = (int)($_SESSION['user']['u_id'] ?? 0);
+        $checkSql = "SELECT u_id, assigned_to FROM tickets WHERE ticket_id = $ticketId AND u_id = $studentId";
+        $res = $db->query($checkSql);
+        if (!$res || $res->num_rows === 0) {
+             echo json_encode(['error' => 'access_denied']);
+             return;
+        }
+        $ticket = $res->fetch_assoc();
+        $assignedTo = $ticket['assigned_to'];
+
+        $chat = $chatModel->getChatByTicketId($ticketId);
+        $chatId = 0;
+
+        if (!$chat) {
+            if (!$assignedTo) {
+                 echo json_encode(['error' => 'no_agent_assigned']);
+                 return;
+            }
+            $chatId = $chatModel->createChat($ticketId, $studentId, $assignedTo);
+        } else {
+            $chatId = $chat['chat_id'];
+        }
+
+        if ($chatId) {
+            $success = $chatModel->sendMessage($chatId, $studentId, $message);
+            if ($success) {
+                echo json_encode(['success' => true]);
+            } else {
+                echo json_encode(['error' => 'send_failed']);
+            }
+        } else {
+            echo json_encode(['error' => 'chat_creation_failed']);
+        }
     }
 }

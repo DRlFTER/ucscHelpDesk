@@ -10,17 +10,10 @@ class Guest extends Controller
          $this->view('dashboardGuest', ['title' => 'Guest Dashboard', 'head' => $headContent]);
     }
 
-    /**
-     * Return public-only data for the guest dashboard as JSON.
-     * - Announcements (all) via StudentAnnouncement model
-     * - Recent tickets (anonymized, limited fields)
-     * - Simple cards and platform status
-     */
     public function publicData()
     {
         header('Content-Type: application/json');
 
-        // Announcements via student model
         require_once __DIR__ . '/../../models/student/Announcement.php';
         $annModel = new StudentAnnouncement();
         $announcements = [];
@@ -30,7 +23,6 @@ class Guest extends Controller
             $announcements = [];
         }
 
-        // Recent tickets (anonymized): show last 6 by created_at with only title/category/priority/time
         $db = Database::getInstance();
     $recentTickets = [];
     $sqlRecent = "SELECT t.ticket_id, t.title, t.created_at, t.priority, d.name AS category
@@ -50,7 +42,6 @@ class Guest extends Controller
             $res->free_result();
         }
 
-        // Cards: summarize counts only
         $totalTickets = 0;
         $openTickets = 0;
         $annCount = is_array($announcements) ? count($announcements) : 0;
@@ -75,7 +66,6 @@ class Guest extends Controller
             [ 'name' => 'Announcements', 'status' => 'Operational' ],
         ];
 
-        // Project a minimal, safe announcement list for guests (trim content)
         $recentAnnouncements = [];
         foreach (array_slice($announcements, 0, 6) as $a) {
             $recentAnnouncements[] = [

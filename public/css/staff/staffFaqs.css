@@ -1,0 +1,14 @@
+@import url("/css/tickets/tickets.css");
+.faqCard .faqActions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.faqAnswerText {
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+.faqCard .btnAttach {
+  padding: 8px 12px;
+}

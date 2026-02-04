@@ -192,7 +192,11 @@ document.addEventListener('DOMContentLoaded', () => {
             card.classList.add('found');
             const badge = card.querySelector('.state');
             if (badge) { badge.classList.remove('lost'); badge.classList.remove('found'); badge.classList.add('claimed'); badge.textContent = 'Claimed'; }
+            // Re-apply filters in case current view hides claimed/found
+            render();
           }
+          // Ensure server state/order reflected – lightweight reload
+          setTimeout(() => { try { window.location.reload(); } catch {} }, 250);
         }
       } catch (err) {
         if (btn) { btn.disabled = false; btn.textContent = 'Mark as claimed'; }
@@ -223,10 +227,52 @@ document.addEventListener('DOMContentLoaded', () => {
             card.classList.add('found');
             const badge = card.querySelector('.state');
             if (badge) { badge.classList.remove('lost'); badge.classList.remove('found'); badge.classList.add('claimed'); badge.textContent = 'Claimed'; }
+            render();
           }
+          setTimeout(() => { try { window.location.reload(); } catch {} }, 250);
         }
       } catch (err) {
         if (btn) { btn.disabled = false; btn.textContent = 'Mark as claimed'; }
+        form.submit();
+      }
+    });
+  });
+
+  // AJAX delete to avoid full page refresh; remove card from list on success
+  document.querySelectorAll('form[action^="/student/lostfound_delete/"]').forEach(form => {
+    form.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      // Respect confirm if present in markup
+      const msg = form.getAttribute('onsubmit')?.match(/confirm\('([^']*)'\)/)?.[1];
+      if (msg && !window.confirm(msg)) return;
+
+      const btn = form.querySelector('button[type="submit"]');
+      const original = btn ? btn.textContent : '';
+      if (btn) { btn.disabled = true; btn.textContent = 'Deleting…'; }
+      try {
+        const resp = await fetch(form.action, { method: 'POST', credentials: 'same-origin' });
+        if (!resp.ok) throw new Error('Request failed');
+        const card = form.closest('.lfCard');
+        if (card) {
+          card.style.transition = 'opacity .22s ease, transform .22s ease';
+          card.style.opacity = '0';
+          card.style.transform = 'scale(.98)';
+          setTimeout(() => { card.remove(); render();
+            setTimeout(() => { try { window.location.reload(); } catch {} }, 120);
+          }, 220);
+        }
+        // Optional: lightweight toast
+        try {
+          const el = document.createElement('div');
+          el.textContent = 'Deleted.';
+          el.style.position='fixed'; el.style.right='20px'; el.style.top='20px';
+          el.style.background='#ef4444'; el.style.color='#fff'; el.style.padding='10px 12px'; el.style.borderRadius='10px'; el.style.boxShadow='0 8px 30px rgba(0,0,0,.12)'; el.style.zIndex='9999';
+          document.body.appendChild(el);
+          setTimeout(()=>{ el.style.transition='opacity .3s'; el.style.opacity='0'; setTimeout(()=>el.remove(), 300); }, 1400);
+        } catch {}
+      } catch (err) {
+        if (btn) { btn.disabled = false; btn.textContent = original || 'Delete'; }
+        // Fallback to normal navigation
         form.submit();
       }
     });

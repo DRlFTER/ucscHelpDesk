@@ -1,5 +1,4 @@
 <?php
-// Helper to render relative "time ago" strings from a datetime value
 function time_ago_label($datetime)
 {
   if (empty($datetime)) return 'recent';
@@ -20,7 +19,6 @@ function time_ago_label($datetime)
     $d = floor($diff / 86400);
     return $d . ' day' . ($d > 1 ? 's' : '') . ' ago';
   }
-  // older than a week — show a short date
   $format = date('Y', $ts) === date('Y') ? 'M j' : 'M j, Y';
   return date($format, $ts);
 }
@@ -58,63 +56,117 @@ function time_ago_label($datetime)
     </div>
 
       <section class="sectionCard">
-        <div class="lfList" data-current-user="<?= (int)($_SESSION['user']['u_id'] ?? 0) ?>">
+        <div class="lfList tickets" data-current-user="<?= (int)($_SESSION['user']['u_id'] ?? 0) ?>">
         <?php if (!empty($items)): ?>
           <?php foreach ($items as $it): ?>
             <?php $statusLower = strtolower($it['status'] ?? ''); $isResolved = ($statusLower === 'found' || $statusLower === 'claimed'); ?>
-            <article class="lfCard <?= $isResolved ? 'found' : 'lost' ?>" data-u-id="<?= (int)($it['u_id'] ?? 0) ?>">
-              <h3><span class="state <?= $statusLower === 'claimed' ? 'claimed' : ($isResolved ? 'found' : 'lost') ?>"><?= $isResolved ? ($statusLower === 'claimed' ? 'Claimed' : 'Found') : 'Lost' ?></span> <?= htmlspecialchars($it['item_title']) ?></h3>
-              <p><?= nl2br(htmlspecialchars($it['item_details'])) ?></p>
-              <ul class="meta">
-                <?php if (!empty($it['category'])): ?><li>Category: <?= htmlspecialchars(ucfirst($it['category'])) ?></li><?php endif; ?>
-                <?php if (!empty($it['when'])):
-                    $whenTs = strtotime($it['when']);
-                    $whenDisplay = $whenTs ? date('Y-m-d H:i', $whenTs) : $it['when'];
-                ?>
-                  <li>Date &amp; Time: <?= htmlspecialchars($whenDisplay) ?></li>
-                <?php endif; ?>
-                <?php if (!empty($it['contact_mobile'])): ?><li>Contact: <?= htmlspecialchars($it['contact_mobile']) ?></li><?php endif; ?>
-                <?php if (!empty($it['contact_email'])): ?><li>Email: <?= htmlspecialchars($it['contact_email']) ?></li><?php endif; ?>
-              </ul>
-              <div class="lfFooter">
-                <span>Request No #<?= (int)$it['q_id'] ?></span>
-                <?php $currentUserId = (int)($_SESSION['user']['u_id'] ?? 0); ?>
-                <?php if ($currentUserId && $currentUserId === (int)($it['u_id'] ?? 0)): ?>
-                  <?php if (!$isResolved): ?>
-                  <form method="POST" action="/student/lostfound_markfound/<?= (int)$it['q_id'] ?>" style="margin-left:12px;">
-                    <button type="submit" class="btnWSvg" data-mark-found-btn style="padding:6px 10px; border-radius:8px; background:#dcfce7; color:#166534; border:1px solid #bbf7d0; cursor:pointer;">
-                      Mark as claimed
-                    </button>
-                  </form>
-                  <?php elseif ($statusLower === 'found'): ?>
-                  <form method="POST" action="/student/lostfound_claim/<?= (int)$it['q_id'] ?>" style="margin-left:12px;">
-                    <button type="submit" class="btnWSvg" data-claim-btn style="padding:6px 10px; border-radius:8px; background:#dcfce7; color:#166534; border:1px solid #bbf7d0; cursor:pointer;">
-                      Mark as claimed
-                    </button>
-                  </form>
-                  <?php else: ?>
-                    <button type="button" class="btnWSvg" disabled style="margin-left:12px; padding:6px 10px; border-radius:8px; background:#e5e7eb; color:#374151; border:1px solid #d1d5db; cursor:not-allowed;">
-                      Item claimed
-                    </button>
-                  <?php endif; ?>
-                  <form method="POST" action="/student/lostfound_delete/<?= (int)$it['q_id'] ?>" onsubmit="return confirm('Delete this submission? This cannot be undone.');" style="margin-left:12px;">
-                    <button type="submit" class="btnWSvg btnDangerText" style="padding:6px 10px; border-radius:8px; background:#fee2e2; color:#b91c1c; border:1px solid #fecaca; cursor:pointer;">
-                      Delete
-                    </button>
-                  </form>
-                <?php elseif ($currentUserId): ?>
-                  <?php if ($statusLower === 'found'): ?>
-                    <form method="POST" action="/student/lostfound_claim/<?= (int)$it['q_id'] ?>" style="margin-left:12px;">
-                      <button type="submit" class="btnWSvg" data-claim-btn style="padding:6px 10px; border-radius:8px; background:#dcfce7; color:#166534; border:1px solid #bbf7d0; cursor:pointer;">
-                        Mark as claimed
-                      </button>
-                    </form>
-                  <?php endif; ?>
-                <?php endif; ?>
-                <span class="time"><?=
-                    isset($it['created_at']) ? htmlspecialchars(time_ago_label($it['created_at'])) : 'recent'
-                ?></span>
+            <?php
+              $statusClass = 'underReview';
+              if ($statusLower === 'found' || $statusLower === 'claimed') {
+                $statusClass = 'resolved';
+              }
+              $statusLabel = $isResolved ? ($statusLower === 'claimed' ? 'Claimed' : 'Found') : 'Lost';
+
+              $whenTs = !empty($it['when']) ? strtotime($it['when']) : null;
+              $whenDisplay = $whenTs ? date('Y-m-d', $whenTs) : '';
+              $createdAgo = isset($it['created_at']) ? time_ago_label($it['created_at']) : 'recent';
+              $code = 'LF-' . (int)($it['q_id'] ?? 0);
+              $currentUserId = (int)($_SESSION['user']['u_id'] ?? 0);
+              $ownerId = (int)($it['u_id'] ?? 0);
+              if ($currentUserId && $currentUserId === $ownerId) {
+                $ownerLabel = 'You';
+              } else if (!empty($it['owner_name'])) {
+                $ownerLabel = $it['owner_name'];
+              } else if (!empty($it['contact_email'])) {
+                $ownerLabel = $it['contact_email'];
+              } else {
+                $ownerLabel = '—';
+              }
+              $typeLabel = ucfirst($statusLower === 'lost' ? 'Lost' : 'Found');
+              $categoryLabel = !empty($it['category']) ? ucfirst($it['category']) : '—';
+            ?>
+
+            <article class="lfCard ticket <?= $isResolved ? 'found' : 'lost' ?>" data-u-id="<?= $ownerId ?>">
+              <div class="ticketRow1">
+                <div class="ticketName">
+                  <h2><?= htmlspecialchars($it['item_title']) ?></h2>
+                   <?php if (!empty($it['item_details'])): ?>
+                   <p class="lfDetailsText" style="margin: 6px 0 10px 0; color:#374151; align-self: stretch;">
+                     <?= nl2br(htmlspecialchars($it['item_details'])) ?>
+                   </p>
+                   <?php endif; ?>
+                  <div class="ticketInfo">
+                    <p><?= htmlspecialchars($code) ?></p>
+                    <p><?= htmlspecialchars($createdAgo) ?></p>
+                    <p><?= htmlspecialchars($ownerLabel) ?></p>
+                  </div>
+                </div>
+                <div class="status <?= htmlspecialchars($statusClass) ?>"><?= htmlspecialchars($statusLabel) ?></div>
               </div>
+
+              <div class="ticketRow2">
+                <div class="ticketDetails" style="border-right:none;">
+                  <div class="ticketDetail">
+                    <h2>Type:</h2>
+                    <div class="ticketDetailHolder"><?= htmlspecialchars($typeLabel) ?></div>
+                  </div>
+                  <div class="ticketDetail">
+                    <h2>Status:</h2>
+                    <div class="ticketDetailHolder" style="background:#eef2ff; color:#4338ca;">
+                      <?= htmlspecialchars($statusLabel) ?>
+                    </div>
+                  </div>
+                  <div class="ticketDetail">
+                    <h2>Category:</h2>
+                    <div class="ticketDetailHolder"><?= htmlspecialchars($categoryLabel) ?></div>
+                  </div>
+                  <div class="ticketDetail">
+                    <h2>When:</h2>
+                    <div class="ticketDetailHolder"><?php
+                      if ($whenTs) {
+                        echo htmlspecialchars(date('Y-m-d H:i', $whenTs));
+                      } else {
+                        echo '—';
+                      }
+                    ?></div>
+                  </div>
+                  <div class="ticketDetail">
+                    <h2>Contact:</h2>
+                    <div class="ticketDetailHolder"><?php
+                      $contactPieces = [];
+                      if (!empty($it['contact_mobile'])) { $contactPieces[] = htmlspecialchars($it['contact_mobile']); }
+                      if (!empty($it['contact_email'])) { $contactPieces[] = htmlspecialchars($it['contact_email']); }
+                      echo !empty($contactPieces) ? implode(' • ', $contactPieces) : '—';
+                    ?></div>
+                  </div>
+                </div>
+                <div style="display:flex; align-items:center; gap:8px; margin-left:auto; flex-wrap:wrap;">
+                  <?php if ($currentUserId && $currentUserId === $ownerId): ?>
+                    <?php if (!$isResolved): ?>
+                      <form method="POST" action="/student/lostfound_markfound/<?= (int)$it['q_id'] ?>">
+                        <button type="submit" class="btnWSvg" data-mark-found-btn style="padding:10px 16px; font-size:14px; border-radius:10px; background:#dcfce7; color:#166534; border:1px solid #bbf7d0; cursor:pointer;">Mark as claimed</button>
+                      </form>
+                    <?php elseif ($statusLower === 'found'): ?>
+                      <form method="POST" action="/student/lostfound_claim/<?= (int)$it['q_id'] ?>">
+                        <button type="submit" class="btnWSvg" data-claim-btn style="padding:10px 16px; font-size:14px; border-radius:10px; background:#dcfce7; color:#166534; border:1px solid #bbf7d0; cursor:pointer;">Mark as claimed</button>
+                      </form>
+                    <?php else: ?>
+                      <button type="button" class="btnWSvg" disabled style="padding:10px 16px; font-size:14px; border-radius:10px; background:#e5e7eb; color:#374151; border:1px solid #d1d5db; cursor:not-allowed;">Item claimed</button>
+                    <?php endif; ?>
+                    <form method="POST" action="/student/lostfound_delete/<?= (int)$it['q_id'] ?>" onsubmit="return confirm('Delete this submission? This cannot be undone.');">
+                      <button type="submit" class="btnWSvg btnDangerText" style="padding:10px 16px; font-size:14px; border-radius:10px; background:#fee2e2; color:#b91c1c; border:1px solid #fecaca; cursor:pointer;">Delete</button>
+                    </form>
+                  <?php elseif ($currentUserId): ?>
+                    <?php if ($statusLower === 'found'): ?>
+                      <form method="POST" action="/student/lostfound_claim/<?= (int)$it['q_id'] ?>">
+                        <button type="submit" class="btnWSvg" data-claim-btn style="padding:10px 16px; font-size:14px; border-radius:10px; background:#dcfce7; color:#166534; border:1px solid #bbf7d0; cursor:pointer;">Mark as claimed</button>
+                      </form>
+                    <?php endif; ?>
+                  <?php endif; ?>
+                </div>
+              </div>
+
+              <span class="state <?= $statusLower === 'claimed' ? 'claimed' : ($isResolved ? 'found' : 'lost') ?>" style="display:none;">&nbsp;</span>
             </article>
           <?php endforeach; ?>
         <?php else: ?>
@@ -143,7 +195,6 @@ function time_ago_label($datetime)
 <script src="/js/student/studentLostFound.js"></script>
 <?php if (!empty($flash) && ($flash['type'] ?? '') === 'success'): ?>
 <script>
-  // Minimal success popup. You can replace with your existing toast component if available.
   (function(){
     const msg = <?= json_encode($flash['message'] ?? 'Submitted successfully.') ?>;
     const el = document.createElement('div');

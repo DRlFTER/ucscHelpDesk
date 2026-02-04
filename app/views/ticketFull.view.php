@@ -9,13 +9,17 @@
 ?>
 <main>
   <div class="fullPage">
-    <div class="pageHeader">
-      <h1 class="pageTitle">Ticket status</h1>
-      <p class="pageSubtitle">Track the progress and responses for this ticket</p>
-    </div>
-
     <div class="pageLayout">
-      <section class="ticketLeft">
+      <div class="pageHeader">
+        <button type="button" class="backBtn" onclick="history.back()" aria-label="Go back">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5"></path><path d="M12 19l-7-7 7-7"></path></svg>
+        </button>
+        <div class="pageHeaderContent">
+          <h1 class="pageTitle">Ticket status</h1>
+        </div>
+      </div>
+      <div class="pageContent">
+        <section class="ticketLeft">
         <div class="card ticketSummary" id="ticketSummaryCard" <?= $__vt ? ('style="view-transition-name: ' . htmlspecialchars($__vt) . '"') : '' ?> >
           <div class="ticketHeader">
             <h2 id="ticketTitle" class="ticketTitle"></h2>
@@ -47,6 +51,7 @@
               </button>
               <button id="sendBtn" class="btnSvg" type="button" aria-label="Send">
                 <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="2" x2="11" y2="13"></line><polygon points="22 2 15 22 11 13 2 9 22 2"></polygon></svg>
+                <div class="spinner"></div>
               </button>
             </div>
           </div>
@@ -77,9 +82,27 @@
           </div>
         </div>
       </aside>
+      </div>
     </div>
   </div>
 </main>
+
+<!-- Mark resolved confirmation modal (admin, student only; hidden for others) -->
+<div id="resolveModal" class="modalOverlay" aria-hidden="true">
+  <div class="msgHolder">
+    <div class="msgContainer" role="dialog" aria-modal="true" aria-labelledby="resolveModalTitle">
+      <div class="msgContent">
+        <h3 id="resolveModalTitle" class="msgTitle">Mark this ticket as resolved?</h3>
+        <p class="msgText">This action is permanent and cannot be undone.</p>
+        <div class="msgActions">
+          <button id="cancelResolveBtn" type="button" class="btnSecondary"><span class="btnSecondaryText">Cancel</span></button>
+          <button id="confirmResolveBtn" type="button" class="btnPrimary"><span class="btnPrimaryText">Mark</span></button>
+        </div>
+      </div>
+    </div>
+  </div>
+  <button type="button" class="modalBackdropClose" aria-label="Close"></button>
+</div>
 
 <!-- Delete confirmation modal (admin only; hidden for others) -->
 <div id="deleteModal" class="modalOverlay" aria-hidden="true">
@@ -96,8 +119,107 @@
     </div>
   </div>
   <button type="button" class="modalBackdropClose" aria-label="Close"></button>
-  
 </div>
+
+<!-- Delete message confirmation modal (admin only) -->
+<div id="deleteMessageModal" class="modalOverlay" aria-hidden="true">
+  <div class="msgHolder">
+    <div class="msgContainer" role="dialog" aria-modal="true" aria-labelledby="deleteMessageModalTitle">
+      <div class="msgContent">
+        <h3 id="deleteMessageModalTitle" class="msgTitle">Delete this message?</h3>
+        <p class="msgText">This message will be permanently removed from the conversation.</p>
+        <div class="msgActions">
+          <button id="cancelDeleteMsgBtn" type="button" class="btnSecondary"><span class="btnSecondaryText">Cancel</span></button>
+          <button id="confirmDeleteMsgBtn" type="button" class="btnPrimary btnDanger"><span class="btnPrimaryText">Delete</span></button>
+        </div>
+      </div>
+    </div>
+  </div>
+  <button type="button" class="modalBackdropClose" aria-label="Close"></button>
+</div>
+
+<!-- Schedule meeting modal (counselor) -->
+<div id="scheduleModal" class="modalOverlay" aria-hidden="true">
+  <div class="msgHolder">
+    <div class="msgContainer scheduleModalBox" role="dialog" aria-modal="true" aria-labelledby="scheduleModalTitle">
+      <div class="msgContent">
+        <h3 id="scheduleModalTitle" class="msgTitle">Schedule meeting</h3>
+        <form id="scheduleForm" class="formGrid scheduleForm" onsubmit="return false;">
+          <label>
+            <span>Date</span>
+            <input type="date" id="meetingDate" name="date" required />
+          </label>
+          <label>
+            <span>Start time</span>
+            <input type="time" id="meetingStart" name="start" required />
+          </label>
+          <label>
+            <span>Duration</span>
+            <select id="meetingDuration" name="duration">
+              <option value="15">15 minutes</option>
+              <option value="30">30 minutes</option>
+              <option value="45">45 minutes</option>
+              <option value="60" selected>60 minutes</option>
+              <option value="90">90 minutes</option>
+            </select>
+          </label>
+          <label>
+            <span>Mode</span>
+            <select id="meetingMode" name="mode">
+              <option value="online" selected>Online</option>
+              <option value="in-person">In person</option>
+            </select>
+          </label>
+          <label class="col-2">
+            <span>Location/Room</span>
+            <input type="text" id="meetingLocation" name="location" placeholder="e.g., Counseling Room A" />
+          </label>
+          <label class="col-2">
+            <span>Meeting link (URL)</span>
+            <input type="url" id="meetingLink" name="link" placeholder="https://…" />
+          </label>
+          <label class="col-2">
+            <span>Notes</span>
+            <textarea id="meetingNotes" name="notes" rows="3" placeholder="Optional notes for the meeting"></textarea>
+          </label>
+          <div class="msgActions">
+            <button type="button" id="cancelScheduleBtn" class="btnSecondary"><span class="btnSecondaryText">Cancel</span></button>
+            <button type="submit" id="saveScheduleBtn" class="btnPrimary"><span class="btnPrimaryText">Schedule</span></button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+  <button type="button" class="modalBackdropClose" aria-label="Close"></button>
+</div>
+
+<script>
+  (function () {
+    const openBtn = document.getElementById('scheduleBtn');
+    const modal = document.getElementById('scheduleModal');
+    if (!openBtn || !modal) return;
+
+    const cancelBtn = document.getElementById('cancelScheduleBtn');
+    const backdropBtn = modal.querySelector('.modalBackdropClose');
+
+    const open = () => {
+      modal.classList.add('open');
+      modal.setAttribute('aria-hidden', 'false');
+      document.body.classList.add('modal-open');
+      if (cancelBtn) cancelBtn.focus();
+    };
+    const close = () => {
+      modal.classList.remove('open');
+      modal.setAttribute('aria-hidden', 'true');
+      document.body.classList.remove('modal-open');
+      if (openBtn) openBtn.focus();
+    };
+
+    openBtn.addEventListener('click', open);
+    if (cancelBtn) cancelBtn.addEventListener('click', close);
+    if (backdropBtn) backdropBtn.addEventListener('click', close);
+  })();
+</script>
 
 <script>
   window.TICKET_FULL_CONFIG = {

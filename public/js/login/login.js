@@ -9,6 +9,14 @@
         icon: `<svg xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 -960 960 960" width="24px" fill="#000000"><path d="M480-280q17 0 28.5-11.5T520-320q0-17-11.5-28.5T480-360q-17 0-28.5 11.5T440-320q0 17 11.5 28.5T480-280Zm0-160q17 0 28.5-11.5T520-480v-160q0-17-11.5-28.5T480-680q-17 0-28.5 11.5T440-640v160q0 17 11.5 28.5T480-440Zm0 360q-83 0-156-31.5T197-197q-54-54-85.5-127T80-480q0-83 31.5-156T197-763q54-54 127-85.5T480-880q83 0 156 31.5T763-763q54 54 85.5 127T880-480q0 83-31.5 156T763-197q-54 54-127 85.5T480-80Zm0-80q134 0 227-93t93-227q0-134-93-227t-227-93q-134 0-227 93t-93 227q0 134 93 227t227 93Zm0-320Z"/></svg>`,
         text: "Invalid login attempt. Please check your credentials.",
       },
+      deleted: {
+        icon: `<svg xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 -960 960 960" width="24px" fill="#000000"><path d="M480-280q17 0 28.5-11.5T520-320q0-17-11.5-28.5T480-360q-17 0-28.5 11.5T440-320q0 17 11.5 28.5T480-280Zm0-160q17 0 28.5-11.5T520-480v-160q0-17-11.5-28.5T480-680q-17 0-28.5 11.5T440-640v160q0 17 11.5 28.5T480-440Zm0 360q-83 0-156-31.5T197-197q-54-54-85.5-127T80-480q0-83 31.5-156T197-763q54-54 127-85.5T480-880q83 0 156 31.5T763-763q54 54 85.5 127T880-480q0 83-31.5 156T763-197q-54 54-127 85.5T480-80Zm0-80q134 0 227-93t93-227q0-134-93-227t-227-93q-134 0-227 93t-93 227q0 134 93 227t227 93Zm0-320Z"/></svg>`,
+        text: "This account has been deleted.",
+      },
+      suspended: {
+        icon: `<svg xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 -960 960 960" width="24px" fill="#000000"><path d="M480-280q17 0 28.5-11.5T520-320q0-17-11.5-28.5T480-360q-17 0-28.5 11.5T440-320q0 17 11.5 28.5T480-280Zm0-160q17 0 28.5-11.5T520-480v-160q0-17-11.5-28.5T480-680q-17 0-28.5 11.5T440-640v160q0 17 11.5 28.5T480-440Zm0 360q-83 0-156-31.5T197-197q-54-54-85.5-127T80-480q0-83 31.5-156T197-763q54-54 127-85.5T480-880q83 0 156 31.5T763-763q54 54 85.5 127T880-480q0 83-31.5 156T763-197q-54 54-127 85.5T480-80Zm0-80q134 0 227-93t93-227q0-134-93-227t-227-93q-134 0-227 93t-93 227q0 134 93 227t227 93Zm0-320Z"/></svg>`,
+        text: "This account has been suspended.",
+      },
     };
 
     const params = new URLSearchParams(window.location.search);
@@ -23,6 +31,15 @@
     // invalid
     if (params.has("invalid")) {
       activeMessages.push(messages.invalid);
+    }
+
+    // deleted
+    if (params.has("deleted")) {
+      activeMessages.push(messages.deleted);
+    }
+
+    if (params.has("suspended")) {
+      activeMessages.push(messages.suspended);
     }
 
     // denied (could be "1" for no login, or a role name)
@@ -66,14 +83,12 @@
 
     imgEl.draggable = false;
 
-    // Texts for the three positions (left, center, right)
     const texts = [
       "Welcome to UCSC HelpDesk",
       "Get support fast",
-      "Lorem ipsum",
+      "We're here to help you",
     ];
 
-    // Use existing pills if present, else create 3
     let pills = Array.from(pillsWrap.querySelectorAll(".pill"));
     if (pills.length !== 3) {
       pillsWrap.innerHTML = "";
@@ -85,24 +100,21 @@
       });
     }
 
-    // Geometry and state
-    let positions = [0, 0, 0]; // x offsets for left, center, right (px)
-    let current = 0; // 0: left, 1: center, 2: right
-    let dir = 1; // direction across states: 1 forward, -1 backward
+    let positions = [0, 0, 0];
+    let current = 0;
+    let dir = 1;
     let animId = 0;
     let timerId = 0;
     let paused = false;
 
-    // Animation config
-    const stepMs = 16; // fallback when RAF not available
-    const animDuration = 600; // ms per transition
-    const autoInterval = 4000; // ms between transitions
+    const stepMs = 16;
+    const animDuration = 600;
+    const autoInterval = 4000;
 
     function computePositions() {
       const cWidth = carousel.clientWidth;
       const cHeight = carousel.clientHeight;
 
-      // Estimate displayed image width when height is constrained to container height
       let imgDisplayWidth;
       if (imgEl.naturalWidth && imgEl.naturalHeight && cHeight) {
         imgDisplayWidth = (imgEl.naturalWidth * cHeight) / imgEl.naturalHeight;
@@ -116,7 +128,6 @@
       const center = Math.round((left + right) / 2);
       positions = [left, center, right];
 
-      // Snap to current state's position when recomputing
       applyTransform(positions[current]);
     }
 

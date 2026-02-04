@@ -19,36 +19,16 @@
 
 let ticketData = null;
 
-// Demo placeholders; these can be swapped for real conversation/timeline later
-const conversation = [
-  {
-    name: "Support Agent",
-    role: "Staff",
-    time: "4 hours ago",
-    text: "Thanks, we are looking into this now.",
-    authorType: "staff",
-  },
-  {
-    name: "You",
-    role: "",
-    time: "3 hours ago",
-    text: "Great, thanks!",
-    authorType: "student",
-  },
-];
-const timeline = [
-  { label: "Ticket created", time: "—", color: "green", pending: false },
-  { label: "Assigned", time: "—", color: "blue", pending: false },
-  { label: "Under review", time: "—", color: "yellow", pending: false },
-  { label: "Resolved", time: "Pending", color: "gray", pending: true },
-];
+// Conversation messages array (populated from API)
+const conversation = [];
 
 const CFG = window.TICKET_FULL_CONFIG || {
-  role: "guest",
+  role: "admin",
   apiBase: "/admin/ticketData",
   deleteEndpoint: "/admin/ticketDelete",
+  resolveEndpoint: "/admin/ticketResolve",
 };
-const ROLE = (CFG.role || "guest").toLowerCase();
+const ROLE = (CFG.role || "admin").toLowerCase();
 
 function statusClass(status) {
   const normalized = (status || "").toLowerCase().replace(/\s+/g, "");
@@ -110,24 +90,67 @@ function renderAttachments() {
     .join("");
 }
 
+// Date/time formatting helpers for chat
+function formatDate(dateString) {
+  if (!dateString) return '';
+  const date = new Date(dateString.replace(/-/g, '/'));
+  const today = new Date();
+  const yesterday = new Date(today);
+  yesterday.setDate(yesterday.getDate() - 1);
+
+  if (date.toDateString() === today.toDateString()) {
+    return 'Today';
+  } else if (date.toDateString() === yesterday.toDateString()) {
+    return 'Yesterday';
+  } else {
+    return date.toLocaleDateString(undefined, { year: 'numeric', month: 'long', day: 'numeric' });
+  }
+}
+
+function formatTime(dateString) {
+  if (!dateString) return '';
+  const date = new Date(dateString.replace(/-/g, '/'));
+  return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: false });
+}
+
 function renderMessages() {
   const m = document.getElementById("messages");
+  let lastDate = null;
+
   m.innerHTML = conversation
     .map((msg) => {
-      const typeClass = msg.authorType === "staff" ? "staff" : "student";
+      const isStaff = msg.authorType === "staff";
+      const typeClass = isStaff ? "staff" : "student";
+      const division = (msg.role || "").trim();
+      const headerTitle = isStaff
+        ? `<span class="name"><span class="staffLabel">Staff</span>${division ? ` <span class="role">(${division})</span>` : ""}</span>`
+        : `<span class="name">${msg.name || "You"}</span>`;
+      
+      const dateStr = formatDate(msg.time);
+      const timeStr = formatTime(msg.time);
+      
+      let dateHeader = '';
+      if (dateStr !== lastDate) {
+        dateHeader = `<div class="chat-date-separator"><span>${dateStr}</span></div>`;
+        lastDate = dateStr;
+      }
+
       return `
-      <div class="message">
-        <div class="messageBubble ${typeClass}">
+      ${dateHeader}
+      <div class="message ${typeClass}">
+        <div class="messageBubble">
           <div class="messageHeader">
-            <span class="name">${msg.name}</span>
-            ${msg.role ? `<span class="role">${msg.role}</span>` : ""}
-            <span class="time">${msg.time}</span>
+            ${headerTitle}
+            <span class="time">${timeStr}</span>
           </div>
           <div class="messageText">${msg.text}</div>
         </div>
       </div>`;
     })
     .join("");
+  
+  // Auto-scroll to bottom of messages
+  m.scrollTop = m.scrollHeight;
 }
 
 function renderInfo() {
@@ -150,14 +173,17 @@ function renderInfo() {
 }
 
 function renderTimeline() {
-  document.getElementById("timelineList").innerHTML = timeline
+  const tl = ticketData.timeline || [];
+  const tlEl = document.getElementById("timelineList");
+  if (!tlEl) return;
+  tlEl.innerHTML = tl
     .map(
       (t) => `
     <li class="timelineItem">
       <span class="tlDot ${t.color}"></span>
       <div class="tlText">
         <span class="label">${t.label}</span>
-        <span class="time">${t.time}</span>
+        <span class="time ${t.color}">${t.time}</span>
       </div>
     </li>`
     )
@@ -167,55 +193,103 @@ function renderTimeline() {
 function toggleActionButtons() {
   const del = document.getElementById("deleteBtn");
   const sched = document.getElementById("scheduleBtn");
-  // Defaults: show delete for admin only
+  const resolveBtn = document.getElementById("resolveBtn");
+  const statusNorm = (ticketData.status || "").toLowerCase();
+  const isResolved = statusNorm === "resolved" || statusNorm === "closed";
+
+  // Admin: show delete and resolve (if not resolved)
   if (ROLE === "admin") {
     if (del) del.style.display = "";
+    if (resolveBtn) resolveBtn.style.display = isResolved ? "none" : "";
     if (sched) sched.style.display = "none";
     return;
   }
-  if (ROLE === "counselor") {
-    // Show Schedule button only if meeting is requested
-    const meeting = (ticketData.meeting || "").toLowerCase();
-    if (meeting === "requested") {
-      if (sched) sched.style.display = "";
-    } else {
-      if (sched) sched.style.display = "none";
-    }
-    if (del) del.style.display = "none";
-  } else {
-    // Other roles: hide both
+
+  // Student: show resolve button (if not resolved), hide delete and schedule
+  if (ROLE === "student") {
     if (del) del.style.display = "none";
     if (sched) sched.style.display = "none";
+    if (resolveBtn) resolveBtn.style.display = isResolved ? "none" : "";
+    return;
   }
+
+  // Counselor: show schedule button if meeting requested, hide others
+  if (ROLE === "counselor") {
+    const meeting = (ticketData.meeting || "").toLowerCase();
+    if (sched) sched.style.display = meeting === "requested" ? "" : "none";
+    if (del) del.style.display = "none";
+    if (resolveBtn) resolveBtn.style.display = "none";
+    return;
+  }
+
+  // Other roles: hide all action buttons
+  if (del) del.style.display = "none";
+  if (sched) sched.style.display = "none";
+  if (resolveBtn) resolveBtn.style.display = "none";
 }
 
 function wireActions() {
-  document.getElementById("sendBtn").addEventListener("click", () => {
-    const input = document.getElementById("replyInput");
-    const text = input.value.trim();
-    if (!text) return;
-    conversation.push({
-      name: "You",
-      role: "",
-      time: "Just now",
-      text,
-      authorType: "student",
-    });
-    input.value = "";
-    renderMessages();
-  });
+  const sendBtn = document.getElementById("sendBtn");
+  if (sendBtn) {
+    sendBtn.addEventListener("click", async () => {
+      const input = document.getElementById("replyInput");
+      const text = input.value.trim();
+      if (!text) return;
 
-  document.getElementById("resolveBtn").addEventListener("click", () => {
-    ticketData.status = "Resolved";
-    timeline[timeline.length - 1] = {
-      label: "Resolved",
-      time: "Just now",
-      color: "green",
-      pending: false,
-    };
-    renderHeader();
-    renderTimeline();
-  });
+      const ticketId = getTicketIdFromUrl();
+      if (!ticketId) return;
+
+      // Show loading state
+      sendBtn.classList.add("loading");
+      sendBtn.disabled = true;
+
+      try {
+        const res = await fetch(`/${ROLE}/sendMessage`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({
+            ticket_id: ticketId,
+            message: text
+          }),
+          credentials: "include"
+        });
+        
+        const data = await res.json();
+        if (data.success) {
+          input.value = "";
+          await fetchMessages(ticketId); // Refresh messages
+        } else {
+          alert("Failed to send message: " + (data.error || "Unknown error"));
+        }
+      } catch (e) {
+        console.error("Error sending message:", e);
+        alert("Error sending message");
+      } finally {
+        // Hide loading state
+        sendBtn.classList.remove("loading");
+        sendBtn.disabled = false;
+      }
+    });
+  }
+
+  // Also allow sending with Enter key
+  const replyInput = document.getElementById("replyInput");
+  if (replyInput) {
+    replyInput.addEventListener("keypress", (e) => {
+      if (e.key === "Enter" && !e.shiftKey) {
+        e.preventDefault();
+        const sendBtn = document.getElementById("sendBtn");
+        if (sendBtn && !sendBtn.disabled) sendBtn.click();
+      }
+    });
+  }
+
+  const resolveBtn = document.getElementById("resolveBtn");
+  if (resolveBtn) {
+    resolveBtn.addEventListener("click", () => openResolveModal());
+  }
 
   const deleteBtn = document.getElementById("deleteBtn");
   if (deleteBtn) {
@@ -225,8 +299,8 @@ function wireActions() {
   const scheduleBtn = document.getElementById("scheduleBtn");
   if (scheduleBtn) {
     scheduleBtn.addEventListener("click", () => {
-      // Placeholder: open scheduling flow/modal; can be wired to real endpoint later
-      alert("Open scheduling dialog for ticket #" + ticketData.id);
+      // Open the custom schedule meeting modal (UI only)
+      openScheduleModal();
     });
   }
 }
@@ -276,6 +350,32 @@ async function fetchTicket(id) {
   return res.json();
 }
 
+// Fetch chat messages from the server
+async function fetchMessages(id) {
+  try {
+    const res = await fetch(`/${ROLE}/chatMessages?ticket_id=${encodeURIComponent(id)}`, { 
+      credentials: "include" 
+    });
+    if (!res.ok) throw new Error("Failed to fetch messages");
+    const data = await res.json();
+    if (data.messages) {
+      conversation.length = 0;
+      data.messages.forEach(msg => {
+        conversation.push({
+          name: msg.sender_name,
+          role: msg.sender_role,
+          time: msg.created_at,
+          text: msg.message,
+          authorType: msg.sender_role === 'student' ? 'student' : 'staff'
+        });
+      });
+      renderMessages();
+    }
+  } catch (e) {
+    console.error("Error fetching messages:", e);
+  }
+}
+
 (async function init() {
   const id = getTicketIdFromUrl();
   if (id) {
@@ -290,7 +390,23 @@ async function fetchTicket(id) {
     } else {
       fetchTicket(id)
         .then((fresh) => {
-          saveToCache(id, fresh);
+          // If data changed materially, re-render
+          const oldStr = JSON.stringify(ticketData);
+          const newStr = JSON.stringify(fresh);
+          if (oldStr !== newStr) {
+            ticketData = fresh;
+            saveToCache(id, fresh);
+            // Re-render components that depend on data
+            renderHeader();
+            renderDescription();
+            renderAttachments();
+            renderMessages();
+            renderInfo();
+            renderTimeline();
+            toggleActionButtons();
+          } else {
+             saveToCache(id, fresh); // just update timestamp
+          }
         })
         .catch(() => {});
     }
@@ -324,11 +440,19 @@ async function fetchTicket(id) {
   renderHeader();
   renderDescription();
   renderAttachments();
-  renderMessages();
   renderInfo();
   renderTimeline();
   toggleActionButtons();
   wireActions();
+
+  // Fetch chat messages from server
+  if (id) {
+    fetchMessages(id);
+    // Poll for new messages every 10 seconds
+    setInterval(() => fetchMessages(id), 10000);
+  } else {
+    renderMessages();
+  }
 })();
 
 // Modal helpers (admin only)
@@ -363,6 +487,11 @@ function openDeleteModal() {
         body: `id=${encodeURIComponent(ticketData.id)}`,
         credentials: "include",
       });
+      if (res.url.includes("/login")) {
+        alert("Session expired. Please log in again.");
+        window.location.href = "/login";
+        return;
+      }
       if (!res.ok) throw new Error("Delete failed");
       try {
         localStorage.setItem("admin_tickets_bust", String(Date.now()));
@@ -379,4 +508,114 @@ function openDeleteModal() {
   cancelBtn && cancelBtn.addEventListener("click", onCancel);
   confirmBtn && confirmBtn.addEventListener("click", onConfirm);
   backdropBtn && backdropBtn.addEventListener("click", onCancel);
+}
+
+// ... (top of file)
+
+function openResolveModal() {
+  // Allow admin and student to resolve tickets
+  if (ROLE !== "admin" && ROLE !== "student") return;
+  const overlay = document.getElementById("resolveModal");
+  if (!overlay) return;
+
+  overlay.classList.add("open");
+  // Fix the aria-hidden console warning
+  overlay.removeAttribute("aria-hidden");
+  document.body.classList.add("modal-open");
+
+  const cancelBtn = document.getElementById("cancelResolveBtn");
+  const confirmBtn = document.getElementById("confirmResolveBtn");
+  const backdropBtn = overlay.querySelector(".modalBackdropClose");
+
+  const close = () => {
+    overlay.classList.remove("open");
+    overlay.setAttribute("aria-hidden", "true");
+    document.body.classList.remove("modal-open");
+    // Use {once: true} or manual removal to prevent multiple listeners
+  };
+
+  const onConfirm = async (e) => {
+    e && e.preventDefault();
+
+    // Use role-based endpoint: /student/ticketResolve or /admin/ticketResolve
+    const endpoint = CFG.resolveEndpoint || `/${ROLE}/ticketResolve`;
+    console.log("Resolved Endpoint Path:", endpoint);
+
+    try {
+      const res = await fetch(endpoint, {
+        method: "POST",
+        headers: { "Content-Type": "application/x-www-form-urlencoded" },
+        body: `id=${encodeURIComponent(ticketData.id)}`,
+        credentials: "include",
+      });
+
+      // Capture as text first to avoid "Unexpected token <" crash
+      const rawText = await res.text();
+
+      let data;
+      try {
+        data = JSON.parse(rawText);
+      } catch (jsonErr) {
+        throw new Error(
+          "Server returned non-JSON response. Check PHP error logs."
+        );
+      }
+
+      if (!res.ok) throw new Error(data.error || "Mark as resolved failed");
+
+      ticketData.status = "Resolved";
+
+      renderHeader();
+      renderInfo();
+      renderTimeline();
+      toggleActionButtons();
+
+      // Clear cache so it doesn't revert on manual refresh
+      try {
+        localStorage.removeItem(cacheKeyFor(ticketData.id));
+      } catch (e) {}
+
+      alert("Ticket marked as resolved.");
+      close();
+    } catch (err) {
+      console.error("RESOLVE ERROR:", err);
+      alert("Error: " + err.message);
+    }
+  };
+
+  // Ensure listeners are only attached once
+  confirmBtn.onclick = onConfirm;
+  cancelBtn.onclick = (e) => {
+    e.preventDefault();
+    close();
+  };
+  if (backdropBtn) {
+    backdropBtn.onclick = (e) => {
+      e.preventDefault();
+      close();
+    };
+  }
+}
+
+// Modal helper: counselor schedule meeting (UI only)
+function openScheduleModal() {
+  const overlay = document.getElementById("scheduleModal");
+  if (!overlay) return;
+
+  overlay.classList.add("open");
+  document.body.classList.add("modal-open");
+
+  const cancelBtn = document.getElementById("cancelScheduleBtn");
+  const backdropBtn = overlay.querySelector(".modalBackdropClose");
+
+  const close = (e) => {
+    e && e.preventDefault();
+    overlay.classList.remove("open");
+    document.body.classList.remove("modal-open");
+    cancelBtn && cancelBtn.removeEventListener("click", close);
+    backdropBtn && backdropBtn.removeEventListener("click", close);
+  };
+
+  cancelBtn && cancelBtn.addEventListener("click", close);
+  backdropBtn && backdropBtn.addEventListener("click", close);
 }

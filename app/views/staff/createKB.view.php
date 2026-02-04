@@ -1,225 +1,421 @@
 <?php
-// views/staff/createKB.view.php (fixed button styling - no nested colors)
 ?>
 <main id="main-content" class="main-content">
     <div class="page-header">
         <h2 class="page-title">Add Knowledge Base Resource</h2>
         <p class="page-subtitle">Create a new guide, policy, or document for the Knowledge Base</p>
     </div>
-    
-   
-
-        <!-- Main Content Area -->
-        <div class="content-area">
-            <div class="tickets-container">
-                <article class="ticket-card">
-                    <div class="ticket-header">
-                        <div class="ticket-title-group">
-                            <h3 class="ticket-title">New Resource</h3>
-                            <div class="ticket-meta">
-                                <span>Created by: <?php echo htmlspecialchars($staff_id ?? ''); ?></span>
-                                <span>Date: <?php echo date('Y-m-d H:i:s'); ?></span>
-                            </div>
+    <div class="content-area">
+        <div class="tickets-container">
+            <article class="ticket-card">
+                <div class="ticket-header">
+                    <div class="ticket-title-group">
+                        <h3 class="ticket-title">New Resource</h3>
+                        <div class="ticket-meta">
+                            <span>Created by: <?php echo htmlspecialchars($staff_id ?? ''); ?></span>
+                            <span>Date: <?php echo date('Y-m-d H:i:s'); ?></span>
                         </div>
                     </div>
-                    <div class="ticket-body">
-                        <?php if (!empty($success)): ?>
-                            <div class="success"><?php echo htmlspecialchars($success); ?></div>
-                        <?php endif; ?>
-                        
-                        <?php if (!empty($errors)): ?>
-                            <?php foreach ($errors as $error): ?>
-                                <div class="error"><?php echo htmlspecialchars($error); ?></div>
-                            <?php endforeach; ?>
-                        <?php endif; ?>
+                </div>
+                <div class="ticket-body">
+                    <?php if (!empty($success)): ?>
+                        <div class="success"><?php echo htmlspecialchars($success); ?></div>
+                    <?php endif; ?>
 
-                        <form method="POST" action="" enctype="multipart/form-data" class="kb-form">
-                            <input type="hidden" name="staff_id" value="<?php echo htmlspecialchars($staff_id ?? ''); ?>">
-                            <div class="details-group">
-                                <div class="detail-item">
-                                    <span class="detail-label">Title:</span>
-                                    <div class="detail-value-box">
-                                        <input type="text" name="title" placeholder="Enter resource title (e.g., 'UCSC Wi-Fi Setup Guide')" value="<?php echo isset($post_data['title']) ? htmlspecialchars($post_data['title']) : ''; ?>" maxlength="200" required>
-                                    </div>
-                                </div>
-                                <div class="detail-item">
-                                    <span class="detail-label">Category:</span>
-                                    <div class="detail-value-box">
-                                        <input type="text" name="category" placeholder="Enter category (e.g., Technical Support)" value="<?php echo isset($post_data['category']) ? htmlspecialchars($post_data['category']) : ''; ?>" maxlength="50">
-                                    </div>
-                                </div>
-                                <div class="detail-item">
-                                    <span class="detail-label">Description:</span>
-                                    <div class="detail-value-box">
-                                        <textarea name="description" placeholder="Enter detailed description or content" maxlength="5000" rows="6"><?php echo isset($post_data['description']) ? htmlspecialchars($post_data['description']) : ''; ?></textarea>
-                                    </div>
-                                </div>
-                                <div class="detail-item">
-                                    <span class="detail-label">Upload Resource File:</span>
-                                    <div class="detail-value-box">
-                                        <input type="file" name="resource_file" accept=".pdf,.doc,.docx,.jpg,.png,.txt">
-                                        <small style="color: #666; font-size: 12px; display: block; margin-top: 5px;">Supported: PDF, DOC, DOCX, JPG, PNG, TXT (Max 10MB)</small>
-                                    </div>
-                                </div>
-                                <div class="detail-item">
-                                    <span class="detail-label">Tags (optional):</span>
-                                    <div class="detail-value-box">
-                                        <input type="text" name="tags" placeholder="Enter comma-separated tags (e.g., wifi, setup, guide)" value="<?php echo isset($post_data['tags']) ? htmlspecialchars($post_data['tags']) : ''; ?>" maxlength="100">
-                                    </div>
+                    <?php if (!empty($errors)): ?>
+                        <?php foreach ($errors as $error): ?>
+                            <div class="error"><?php echo htmlspecialchars($error); ?></div>
+                        <?php endforeach; ?>
+                    <?php endif; ?>
+
+                    <form method="POST" action="" enctype="multipart/form-data" class="kb-form">
+                        <input type="hidden" name="staff_id" value="<?php echo htmlspecialchars($staff_id ?? ''); ?>">
+                        <div class="details-group">
+                            <div class="detail-item">
+                                <span class="detail-label">Topic:</span>
+                                <div class="detail-value-box">
+                                    <input type="text" name="topic"
+                                        placeholder="Enter resource title (e.g., 'UCSC Wi-Fi Setup Guide')"
+                                        value="<?php echo isset($post_data['topic']) ? htmlspecialchars($post_data['topic']) : ''; ?>"
+                                        maxlength="200" required>
                                 </div>
                             </div>
-                          
-                                <button type="submit" class="kb-save-btn">Save Resource</button>
-                                <a href="/staff/staffKB" class="kb-cancel-btn">Cancel</a>
-                            
-                        </form>
-                    </div>
-                </article>
-            </div>
+                            <div class="detail-item">
+                                <span class="detail-label">Section:</span>
+                                <div class="detail-value-box">
+                                    <select id="section" name="section" required>
+                                        <option value=''>Select a section</option>
+                                        <option value='General Documents' <?php echo (isset($post_data['section']) && $post_data['section'] === 'General Documents') ? 'selected' : ''; ?>>General
+                                            Documents</option>
+                                        <option value='Policies and rules' <?php echo (isset($post_data['section']) && $post_data['section'] === 'Policies and rules') ? 'selected' : ''; ?>>Policies
+                                            and rules</option>
+                                        <option value='Academic resources' <?php echo (isset($post_data['section']) && $post_data['section'] === 'Academic resources') ? 'selected' : ''; ?>>Academic
+                                            resources</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="detail-item">
+                                <span class="detail-label">Description:</span>
+                                <div class="detail-value-box">
+                                    <textarea class="description" name="description"
+                                        placeholder="Enter detailed description or content" maxlength="5000"
+                                        rows="6"><?php echo isset($post_data['description']) ? htmlspecialchars($post_data['description']) : ''; ?></textarea>
+                                </div>
+                            </div>
+                            <div class="detail-item">
+                                <span class="detail-label">Upload Resource File:</span>
+                                <div class="detail-value-box">
+                                    <input class="resource-file" type="file" name="resource_file"
+                                        accept=".pdf,.doc,.docx,.jpg,.png,.txt">
+                                    <small
+                                        style="color: #666; font-size: 12px; display: block; margin-top: 5px;">Supported:
+                                        PDF, DOC, DOCX, JPG, PNG, TXT (Max 10MB)</small>
+                                </div>
+                            </div>
+                            <div class="detail-item">
+                                <span class="detail-label">Type:</span>
+                                <div class="detail-value-box">
+                                    <select id="type" name="type" required>
+                                        <option value=''>Select a type</option>
+                                        <option value='Guide' <?php echo (isset($post_data['type']) && $post_data['type'] === 'Guide') ? 'selected' : ''; ?>>Guide</option>
+                                        <option value='Schedule' <?php echo (isset($post_data['type']) && $post_data['type'] === 'Schedule') ? 'selected' : ''; ?>>Schedule</option>
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="ticket-action">
+                            <button type="submit" class="ticket-action-btn">Add the Document</button>
+                            <form method="POST" action="" style="display: contents;">  <!-- Nested form with display: contents to inline without breaking flex -->
+                                <input type="hidden" name="action" value="reject">
+                                <button type="submit" class="action-btn reject-btn" onclick="window.history.back(); return false;">Close</button>
+                            </form>
+                        </div>
+                    </form>
+                </div>
+            </article>
         </div>
     </div>
 </main>
-
 <style>
-    /* Form Styles - Fixed Alignment & Widths */
-    .kb-form {
-        width: 100%;
+    .main-content {
+        padding: 40px 20px;
+        max-width: 900px;
+        margin: 0 auto;
+        min-height: 100vh;
     }
 
+    .page-header {
+        text-align: center;
+        margin-bottom: 40px;
+    }
+
+    .page-title {
+        font-size: 32px;
+        font-weight: 600;
+        color: #2d3748;
+        margin: 0 0 8px 0;
+        letter-spacing: -0.025em;
+    }
+
+    .page-subtitle {
+        font-size: 18px;
+        color: #718096;
+        margin: 0;
+        font-weight: 400;
+    }
+
+    .content-area {
+        padding: 0;
+    }
+
+    /* Card Styling */
+    .tickets-container {
+        padding: 0;
+        border-color: #8c8cf9;
+    }
+
+    .description {
+        width: 100%;
+        padding: 12px 16px;
+        border: 1px solid #e2e8f0;
+        border-radius: 8px;
+        font-size: 15px;
+        background: transparent;
+        transition: border-color 0.2s ease;
+        box-sizing: border-box;
+        font-family: "Poppins", sans-serif;
+    }
+
+    .ticket-card {
+        background: #ffffff;
+        border-radius: 16px;
+        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.06);
+        border: 1px solid #e2e8f0;
+        overflow: hidden;
+        margin-bottom: 0;
+    }
+
+    .ticket-header {
+        background: #f7fafc;
+        color: #4a5568;
+        padding: 24px 32px;
+        margin: 0;
+        border-bottom: 1px solid #e2e8f0;
+    }
+
+    .ticket-title-group {
+        flex-grow: 1;
+    }
+
+    .ticket-title {
+        font-size: 24px;
+        font-weight: 600;
+        margin: 0 0 4px 0;
+        letter-spacing: -0.01em;
+        color: #2d3748;
+    }
+
+    .ticket-meta {
+        display: flex;
+        gap: 16px;
+        font-size: 14px;
+        color: #a0aec0;
+    }
+
+    .ticket-body {
+        padding: 32px;
+    }
+
+    /* Success/Error Messages */
+    .success,
+    .error {
+        padding: 16px 20px;
+        border-radius: 10px;
+        margin-bottom: 20px;
+        font-weight: 500;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+    }
+
+    .success {
+        background: #f0fff4;
+        color: #38a169;
+        border-left: 4px solid #48bb78;
+    }
+
+    .error {
+        background: #fff5f5;
+        color: #e53e3e;
+        border-left: 4px solid #f56565;
+    }
+
+    /* Form Details Group */
     .details-group {
         display: flex;
         flex-direction: column;
-        gap: 20px;
+        gap: 28px;
+        margin-bottom: 0;
     }
 
     .detail-item {
         display: flex;
-        align-items: flex-start;
-        gap: 15px;
-        flex-wrap: wrap;
+        flex-direction: column;
+        gap: 8px;
     }
 
     .detail-label {
-        font-weight: bold;
-        color: #444;
-        min-width: 140px;
-        flex-shrink: 0;
-        margin-top: 8px;
-        font-size: 14px;
+        font-size: 15px;
+        font-weight: 600;
+        color: #4a5568;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+        margin: 0;
     }
 
     .detail-value-box {
-        flex: 1;
-        padding: 8px;
-        border: 1px solid #e0e0e0;
-        border-radius: 4px;
-        background: #f9f9f9;
+        padding: 24px;
+        background: #ffffff;
+        border-radius: 12px;
+        border: 1px solid #e2e8f0;
+        transition: all 0.2s ease;
+        min-height: 80px;
         width: 100%;
-        min-width: 0;
-        box-sizing: border-box;
+        display: flex;
+        align-items: center;
+    }
+
+    .detail-value-box:hover {
+        background: #fafbfc;
+        border-color: #cbd5e0;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
     }
 
     .detail-value-box input,
-    .detail-value-box textarea,
     .detail-value-box select {
         width: 100%;
-        padding: 8px;
-        border: 1px solid #ccc;
-        border-radius: 4px;
-        font-size: 14px;
-        box-sizing: border-box;
+        padding: 12px 16px;
+        border: 1px solid #e2e8f0;
+        border-radius: 8px;
+        font-size: 15px;
         background: transparent;
-        border: none;
-        resize: vertical;
+        transition: border-color 0.2s ease;
+        box-sizing: border-box;
     }
 
-    .detail-value-box textarea {
-        min-height: 100px;
+    .detail-value-box input:focus,
+    .detail-value-box select:focus {
+        outline: none;
+        border-color: #4299e1;
+        box-shadow: 0 0 0 3px rgba(66, 153, 225, 0.1);
     }
 
-    /* File Input Styling */
-    .detail-value-box input[type="file"] {
+    .resource-file {
+        font-size: 15px;
+        font-family: "Poppins", sans-serif;
+    }
+
+    /* Fields Container */
+    #fields-container {
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
+        padding: 24px;
+        background: #fafbfc;
+        border-radius: 8px;
+        border: 1px solid #e2e8f0;
+        min-height: 200px;
+    }
+
+    #fields-container .field-input {
+        padding: 12px 16px;
+        border: 1px solid #e2e8f0;
+        border-radius: 8px;
+        font-size: 15px;
+        transition: border-color 0.2s ease;
         background: white;
+    }
+
+    #fields-container .field-input:focus {
+        outline: none;
+        border-color: #4299e1;
+        box-shadow: 0 0 0 3px rgba(66, 153, 225, 0.1);
+    }
+
+    .add-field-btn {
+        background: #4299e1;
+        color: white;
         border: none;
-        padding: 5px;
-        width: 100%;
+        padding: 12px 20px;
+        border-radius: 10px;
+        cursor: pointer;
+        font-weight: 500;
+        font-size: 15px;
+        transition: all 0.3s ease;
+        align-self: flex-start;
+        margin-top: 8px;
     }
 
-    .detail-value-box small {
-        display: block;
-        margin-top: 5px;
-        color: #666;
-        font-size: 12px;
+    .add-field-btn:hover {
+        background: #3182ce;
+        transform: translateY(-1px);
+        box-shadow: 0 4px 12px rgba(66, 153, 225, 0.3);
     }
 
-    /* Button Row Alignment - Fixed No Nested Colors */
+    /* Checkbox */
+    .detail-value-box input[type="checkbox"] {
+        width: auto;
+        margin-right: 8px;
+        transform: scale(1.2);
+    }
+
+    /* Ticket Action */
     .ticket-action {
         display: flex;
         justify-content: flex-end;
-        gap: 10px;
-        margin-top: 20px;
-        background: none; /* Remove outer purple background */
-        padding: 0; /* No padding */
+        gap: 12px;  /* Space between buttons */
+        margin-top: 32px;
+        padding-top: 20px;
+        border-top: 1px solid #e2e8f0;
     }
 
-    .kb-save-btn, .kb-cancel-btn {
-        display: inline-block;
-        padding: 8px 16px;
-        font-size: 14px;
-        border-radius: 4px;
-        text-decoration: none;
-        cursor: pointer;
-        white-space: nowrap;
-        min-width: auto;
-        border: none; /* No border for clean look */
-        transition: background 0.2s ease;
-    }
-
-    .kb-save-btn {
-        background: #4a90e2; /* Solid blue - outer color you like */
-        color: white;
-    }
-
-    .kb-save-btn:hover {
-        background: #357abd;
-    }
-
-    .kb-cancel-btn {
-        background: #6c757d; /* Gray for cancel */
-        color: white;
-    }
-
-    .kb-cancel-btn:hover {
-        background: #5a6268;
-    }
-
-    /* Override ticket-action-btn from staffTickets.css - no nesting effect */
     .ticket-action-btn {
-        background: none !important; /* Remove any inherited none */
-        padding: 8px 16px !important; /* Fixed padding */
-        border: none !important;
-        border-radius: 4px !important;
+        padding: 12px 24px;  /* Match reject-btn padding for alignment */
+        border: none;
+        border-radius: 10px;  /* Match reject-btn radius */
+        background: #8c8cf9;
+        color: #fff;
+        font-family: "Poppins", sans-serif;
+        font-size: 15px;  /* Match reject-btn size */
+        font-weight:400;  /* Match reject-btn weight */
+        cursor: pointer;
+        transition: all 0.3s ease;
+        box-shadow: 0 2px 8px rgba(140, 140, 249, 0.2);  /* Purple shadow like reject's red */
     }
 
-    /* Layout Styles */
-    .layout-container { display: flex; gap: 0; }
-    .navMenu { flex: 0 0 250px; background: #f8f9fa; border-right: 1px solid #dee2e6; }
-    .sideNav { display: flex; flex-direction: column; gap: 8px; padding: 20px 15px; }
-    .nav-link { display: block; padding: 12px 15px; color: #495057; text-decoration: none; border-radius: 6px; font-weight: 500; transition: all 0.2s ease; }
-    .nav-link:hover, .nav-link.active { background: #007bff; color: white; }
-    .content-area { flex: 1; padding: 20px; }
-
-    /* Scrolling Fix (full page) */
-    .content-area { overflow: visible !important; height: auto !important; }
-    .layout-container { height: auto !important; overflow: visible !important; }
-    html, body { height: auto !important; overflow-y: auto !important; overflow-x: hidden !important; }
+    .ticket-action-btn:hover {
+        background-color: #6a6af5;
+        transform: translateY(-1px);
+        box-shadow: 0 4px 12px rgba(106, 110, 245, 0.3);  /* Intensified purple shadow */
+    }
 
     /* Responsive */
     @media (max-width: 768px) {
-        .detail-item { flex-direction: column; gap: 5px; }
-        .detail-label { min-width: auto; width: 100%; text-align: left; }
-        .detail-value-box { min-width: auto; width: 100%; }
-        .ticket-action { flex-direction: column; gap: 10px; }
-        .kb-save-btn, .kb-cancel-btn { width: 100%; }
+        .main-content {
+            padding: 20px 16px;
+        }
+
+        .content-area {
+            padding: 0;
+        }
+
+        .ticket-body {
+            padding: 24px;
+        }
+
+        .details-group {
+            gap: 20px;
+        }
+
+        .detail-label {
+            width: auto;
+        }
+
+        .ticket-action {
+            justify-content: center;
+            flex-direction: column;  /* Stack on mobile */
+            align-items: stretch;
+        }
+
+        .ticket-action-btn,
+        .action-btn.reject-btn {
+            width: 100%;
+            max-width: 300px;
+            margin: 0 auto 8px auto;  /* Center and space on mobile */
+        }
+    }
+
+    .action-btn.reject-btn {
+        background: #fee2e2;
+        color: #dc2626;
+        padding: 12px 24px;
+        border: 1px solid #f87171;
+        border-radius: 10px;
+        cursor: pointer;
+        font-weight: 600;
+        font-size: 15px;
+        transition: all 0.3s ease;
+        box-shadow: 0 2px 8px rgba(239, 68, 68, 0.2);
+        margin: 0;  /* Remove old margin-top */
+        display: inline-flex;  /* Keep for button content alignment */
+    }
+
+    .action-btn.reject-btn:hover {
+        background: #fecaca;
+        transform: translateY(-1px);
+        box-shadow: 0 4px 12px rgba(239, 68, 68, 0.3);
+        border-color: #ef4444;
     }
 </style>

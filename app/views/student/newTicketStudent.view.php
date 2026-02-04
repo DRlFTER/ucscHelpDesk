@@ -16,11 +16,9 @@ include_once(__DIR__ . "/../../views/common/navbar.php");
 		</div>
 
 		<div class="ticketGrid">
-			<!-- Ticket form -->
 			<section class="ticketCard">
 				<form id="ticketForm" action="/student/ticket" method="POST" enctype="multipart/form-data">
 
-					<!-- Ticket type toggle -->
 					<div class="field">
 						<label class="label">Ticket Type</label>
 						<div class="ticketToggle" role="group" aria-label="Ticket type">
@@ -36,7 +34,6 @@ include_once(__DIR__ . "/../../views/common/navbar.php");
 						<input type="hidden" name="ticketType" id="ticketType" value="private">
 					</div>
 
-					<!-- Title -->
 					<div class="field">
 						<label class="label" for="title">Title/Subject <span style="color:#ef4444; margin-left:2px">*</span></label>
 						<input id="title" name="title" type="text" placeholder="Briefly describe your issue..." required>
@@ -45,7 +42,6 @@ include_once(__DIR__ . "/../../views/common/navbar.php");
 					<div class="row2">
 						<div class="field full-width">
 							<label class="label" for="subcategory">Request Type <span style="color:#ef4444; margin-left:2px">*</span></label>
-							<!-- hidden field that will contain the MAIN category sent to backend -->
 							<input type="hidden" name="category" id="mainCategory" value="">
 							<select id="subcategory" name="subcategory" required>
 								<option value="" disabled selected>Select type</option>
@@ -76,13 +72,11 @@ include_once(__DIR__ . "/../../views/common/navbar.php");
 						</div>
 					</div>
 
-					<!-- Issue details -->
 					<div class="field">
 						<label class="label" for="details">Issue Details <span style="color:#ef4444; margin-left:2px">*</span></label>
 						<textarea id="details" name="details" rows="6" placeholder="Describe your issue in detail. Include any error messages, steps to reproduce, or relevant information." required></textarea>
 					</div>
 
-					<!-- Request Meeting (only for Counselling) -->
 					<div class="field" id="meetingField" style="display:none;">
 						<label class="label">Request Meeting</label>
 						<label style="display:flex; align-items:center; gap:10px; cursor:pointer; user-select:none;">
@@ -91,7 +85,6 @@ include_once(__DIR__ . "/../../views/common/navbar.php");
 						</label>
 					</div>
 
-					<!-- Attachments -->
 					<div class="field">
 						<label class="label">Attachments</label>
 						<div id="dropzone" class="dropzone">
@@ -113,7 +106,6 @@ include_once(__DIR__ . "/../../views/common/navbar.php");
 				</form>
 			</section>
 
-			<!-- Right: Sidebar -->
 			<aside class="sidebar">
 				<section class="sideCard">
 					<h3>Tips for Better Support</h3>
@@ -173,7 +165,6 @@ include_once(__DIR__ . "/../../views/common/navbar.php");
 <script src="/js/student/studentNewTicket.js"></script>
 
 <script>
-// Show meeting request only when 'Counselling' is selected
 document.addEventListener('DOMContentLoaded', function () {
 	const select = document.getElementById('subcategory');
 	const meetingField = document.getElementById('meetingField');

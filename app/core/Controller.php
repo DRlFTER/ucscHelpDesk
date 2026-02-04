@@ -7,10 +7,8 @@ class Controller
     {
         extract($data);
 
-        // Base views directory
         $baseDir = __DIR__ . "/../views/";
 
-        // Resolve the view path (supports explicit subpaths and fallback recursive lookup)
         $viewPath = $this->resolveViewPath($baseDir, $view);
         if (!$viewPath || !file_exists($viewPath)) {
             $pretty = rtrim(str_replace(['.', '\\'], '/', $view), '/');
@@ -24,27 +22,17 @@ class Controller
         require($baseDir . "layouts/main.php");
     }
 
-    /**
-     * Resolve a view file path.
-     * - Accepts explicit subpaths like "admin/adminDashboard" or "admin.adminDashboard".
-     * - If only a bare name is provided (e.g., "adminDashboard"), searches recursively
-     *   under the views directory for a matching "<name>.view.php" and returns the first match.
-     */
     private function resolveViewPath(string $baseDir, string $view): ?string
     {
-        // Normalize incoming view spec
         $normalized = trim(str_replace(['.', '\\'], '/', $view), '/');
 
-        // 1) Try explicit/relative path first
         $candidate = $baseDir . $normalized . '.view.php';
         if (file_exists($candidate)) {
             return $candidate;
         }
 
-        // 2) Fallback: search by filename anywhere under views
         $target = basename($normalized) . '.view.php';
 
-        // Use SPL iterators for a lightweight recursive search
         if (class_exists('RecursiveDirectoryIterator')) {
             $flags = \FilesystemIterator::SKIP_DOTS;
             $dirIter = new \RecursiveDirectoryIterator($baseDir, $flags);
@@ -78,10 +66,31 @@ class Controller
         exit();
      }
 
-    // if role mismatch
      if (strtolower($_SESSION['user']['role'] ?? '') !== strtolower($role)) {
         header("Location: " . ROOT . "login?denied=$role");
         exit();
+     }
+
+     // Check if user status changed mid-session (deleted or suspended)
+     try {
+        $userModel = $this->model('User');
+        $status = $userModel->getUserStatus((int)$_SESSION['user']['u_id']);
+        
+        if (!$status || !empty($status['is_deleted']) || !empty($status['is_suspended'])) {
+           // Kill session - user has been deleted or suspended
+           $_SESSION = [];
+           if (ini_get('session.use_cookies')) {
+              $params = session_get_cookie_params();
+              setcookie(session_name(), '', time() - 42000, $params['path'], $params['domain'], $params['secure'], $params['httponly']);
+           }
+           session_destroy();
+           
+           $reason = !$status ? 'invalid' : (!empty($status['is_deleted']) ? 'deleted' : 'suspended');
+           header("Location: " . ROOT . "login?{$reason}=1");
+           exit();
+        }
+     } catch (Throwable $e) {
+        // On error, allow access but log if possible
      }
     }
     

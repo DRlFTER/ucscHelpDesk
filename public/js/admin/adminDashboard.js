@@ -1,6 +1,4 @@
-// Admin Dashboard client-side rendering with caching and graceful errors
 (function () {
-  // Defer fetch until DOM is ready
   if (document.readyState === "loading") {
     document.addEventListener("DOMContentLoaded", init);
   } else {
@@ -8,9 +6,9 @@
   }
 
   const CACHE_KEY = "admin_dashboard_data";
-  const CACHE_TTL_MS = 5 * 60 * 1000; // 5 minutes
-  let currentMode = "analytics"; // 'analytics' | 'tickets'
-  let dataRef = null; // cached last payload used for rendering
+  const CACHE_TTL_MS = 5 * 60 * 1000;
+  let currentMode = "analytics";
+  let dataRef = null;
 
   function getCache() {
     try {
@@ -51,7 +49,6 @@
   }
 
   function skeleton() {
-    // Optional: add simple placeholders
     const cardContainer = document.getElementById("cardContainer");
     if (cardContainer) {
       cardContainer.innerHTML = Array.from({ length: 4 })
@@ -88,6 +85,12 @@
         icon: '<svg xmlns="http://www.w3.org/2000/svg" height="20px" viewBox="0 -960 960 960" width="20px" fill="#000000"><path d="M180.31-212q-26.53 0-45.42-18.85T116-276.17v-95.87q0-8.73 5.08-15.73 5.09-7 13.65-9.61 24.35-11.62 38.81-33.21Q188-452.19 188-480.02t-14.46-49.4q-14.46-21.58-38.81-33.16-8.56-2.61-13.65-9.58-5.08-6.96-5.08-15.92v-95.8q0-26.45 18.89-45.28Q153.78-748 180.31-748h599.38q26.53 0 45.42 18.85T844-683.83v95.87q0 8.73-5.08 15.73-5.09 7-13.65 9.61-24.35 11.62-38.81 33.21Q772-507.81 772-479.98t14.46 49.4q14.46 21.58 38.81 33.16 8.56 2.61 13.65 9.58 5.08 6.96 5.08 15.92v95.8q0 26.45-18.89 45.28Q806.22-212 779.69-212H180.31Zm0-52h599.38q5.39 0 8.85-3.46t3.46-8.85V-355q-32-19-52-52t-20-73q0-40 20-73t52-52v-78.69q0-5.39-3.46-8.85t-8.85-3.46H180.31q-5.39 0-8.85 3.46t-3.46 8.85V-605q32 19 52 52t20 73q0 40-20 73t-52 52v78.69q0 5.39 3.46 8.85t8.85 3.46Zm299.49-61.85q10.97 0 18.58-7.42 7.62-7.41 7.62-18.38 0-10.97-7.42-18.58-7.42-7.62-18.38-7.62-10.97 0-18.58 7.42-7.62 7.42-7.62 18.39 0 10.96 7.42 18.58 7.42 7.61 18.38 7.61Zm0-128.15q10.97 0 18.58-7.42 7.62-7.42 7.62-18.38 0-10.97-7.42-18.58-7.42-7.62-18.38-7.62-10.97 0-18.58 7.42-7.62 7.42-7.62 18.38 0 10.97 7.42 18.58 7.42 7.61 18.38 7.61Zm0-128.15q10.97 0 18.58-7.42 7.62-7.42 7.62-18.39 0-10.96-7.42-18.58-7.42-7.61-18.38-7.61-10.97 0-18.58 7.42-7.62 7.41-7.62 18.38 0 10.97 7.42 18.58 7.42 7.61 18.38 7.61ZM480-480Z"/></svg>',
       },
       {
+        id: "faqs",
+        name: "Manage FAQs",
+        link: "/admin/faqs",
+        icon: '<svg xmlns="http://www.w3.org/2000/svg" height="20px" viewBox="0 -960 960 960" width="20px" fill="#000000ff"><path d="M479.79-360q15.21 0 25.71-10.29t10.5-25.5q0-15.21-10.29-25.71t-25.5-10.5q-15.21 0-25.71 10.29t-10.5 25.5q0 15.21 10.29 25.71t25.5 10.5Zm0-120q15.21 0 25.71-10.35T516-516v-192q0-15.3-10.29-25.65Q495.42-744 480.21-744t-25.71 10.35Q444-723.3 444-708v192q0 15.3 10.29 25.65Q464.58-480 479.79-480ZM240-240l-82.88 82.88Q140-140 118-149.41q-22-9.4-22-33.59v-609q0-29.7 21.15-50.85Q138.3-864 168-864h624q29.7 0 50.85 21.15Q864-821.7 864-792v480q0 29.7-21.15 50.85Q821.7-240 792-240H240Zm-30-72h582v-480H168v522l42-42Zm-42 0v-480 480Z"/></svg>',
+      },
+      {
         id: "users",
         name: "User Management",
         link: "/admin/users",
@@ -101,7 +104,6 @@
       },
     ];
 
-    // Use same container class as settings for unified look
     const container = document.querySelector(".settingsLeft");
     if (!container) return;
     container.innerHTML = menuItems
@@ -115,7 +117,6 @@
       )
       .join("");
 
-    // Click handling: treat 'analytics' and 'tickets' as in-page tabs.
     container.addEventListener("click", (e) => {
       const btn = e.target.closest(".settingsNavBtn");
       if (!btn || !container.contains(btn)) return;
@@ -221,9 +222,7 @@
       .join("")}\n    </table>\n  `;
   }
 
-  // Group many raw categories into 4 clear buckets for the pie chart
   function groupCategories(categories) {
-    // Define the four buckets with keyword hints
     const buckets = [
       {
         name: "IT & Access",
@@ -420,7 +419,6 @@
         plugins: { legend: { position: "bottom" } },
       };
 
-      // Group raw categories into 4 buckets for clarity
       const grouped = groupCategories(categories);
       const pieData = {
         labels: grouped.labels,
@@ -461,7 +459,6 @@
       }
     };
 
-    // Defer heavy chart work until the browser is idle to improve TTI
     if (typeof window.requestIdleCallback === "function") {
       requestIdleCallback(run, { timeout: 300 });
     } else {
@@ -484,9 +481,104 @@
         btn._bound = true;
       }
     } else {
-      tb.style.display = "none";
-      tb.innerHTML = "";
+      tb.style.display = "flex";
+      tb.innerHTML =
+        '<div class="manageTicketsBtnContainer"><button id="generateTicketsBtn" class="btnPrimary btnPrimaryText">Generate report</button></div>';
+      const btn = document.getElementById("generateTicketsBtn");
+      if (btn && !btn._bound) {
+        btn.addEventListener("click", openReportModal);
+        btn._bound = true;
+      }
     }
+  }
+
+  function getReportModalEl() {
+    return document.getElementById("reportModal");
+  }
+
+  function openReportModal() {
+    const overlay = getReportModalEl();
+    if (!overlay) return;
+    overlay.classList.add("open");
+    document.body.classList.add("modal-open");
+
+    const backdropBtn = overlay.querySelector(".modalBackdropClose");
+    const onCancel = (e) => {
+      e && e.preventDefault();
+      closeReportModal();
+    };
+    backdropBtn &&
+      backdropBtn.addEventListener("click", onCancel, { once: true });
+
+    const genBtn = document.getElementById("reportGenerateBtn");
+    const pdfBtn = document.getElementById("reportExportBtn");
+    genBtn &&
+      genBtn.addEventListener("click", onGenerateReport, { once: true });
+    pdfBtn && pdfBtn.addEventListener("click", onExportPdf, { once: true });
+  }
+
+  function closeReportModal() {
+    const overlay = getReportModalEl();
+    if (!overlay) return;
+    overlay.classList.remove("open");
+    document.body.classList.remove("modal-open");
+  }
+
+  function readReportForm() {
+    const start = document.getElementById("reportStartDate");
+    const end = document.getElementById("reportEndDate");
+    const type = document.getElementById("reportType");
+    const startVal = (start && start.value) || "";
+    const endVal = (end && end.value) || "";
+    const typeVal = (type && type.value) || "summary";
+    return { start: startVal, end: endVal, type: typeVal };
+  }
+
+  function validateDateRange(start, end) {
+    if (!start || !end) return true;
+    try {
+      const s = new Date(start);
+      const e = new Date(end);
+      if (isNaN(s.getTime()) || isNaN(e.getTime())) return false;
+      return s.getTime() <= e.getTime();
+    } catch {
+      return false;
+    }
+  }
+
+  function onGenerateReport(e) {
+    e && e.preventDefault();
+    const { start, end, type } = readReportForm();
+    if (!validateDateRange(start, end)) {
+      alert(
+        "Invalid date range: Start date must be before or equal to End date."
+      );
+      return;
+    }
+    const params = new URLSearchParams();
+    if (start) params.set("start", start);
+    if (end) params.set("end", end);
+    if (type) params.set("type", type);
+    window.location.href = "/admin/report?" + params.toString();
+    closeReportModal();
+  }
+
+  function onExportPdf(e) {
+    e && e.preventDefault();
+    const { start, end, type } = readReportForm();
+    if (!validateDateRange(start, end)) {
+      alert(
+        "Invalid date range: Start date must be before or equal to End date."
+      );
+      return;
+    }
+    const params = new URLSearchParams();
+    if (start) params.set("start", start);
+    if (end) params.set("end", end);
+    if (type) params.set("type", type);
+    params.set("format", "pdf");
+    window.location.href = "/admin/report?" + params.toString();
+    closeReportModal();
   }
 
   function setMode(mode) {
@@ -510,7 +602,6 @@
   }
 
   function renderTicketsOverview(data) {
-    // Reorder and retitle cards to emphasize ticket KPIs
     const cd = Array.isArray(data.cardsData) ? data.cardsData : [];
     const ticketCards = [
       { title: "Open Tickets", value: cd[1]?.value ?? 0, change: "" },
@@ -519,28 +610,18 @@
       { title: "Total Tickets", value: cd[0]?.value ?? 0, change: "" },
     ];
     renderCards(ticketCards);
-
-    // Hide platform status in tickets overview
     const ps = document.getElementById("platformStatus");
     if (ps) ps.innerHTML = "";
-
-    // Keep recent tickets focused
     renderRecentTickets(data.recentTickets);
-
-    // Charts remain the same (tickets trends/category)
     renderCharts(data.trends, data.categories);
   }
 
   async function init() {
     renderMenu();
-
-    // Use cache immediately if available
     const cached = getCache();
     if (cached) {
       hideError();
-      // Hydrate quickly without skeletons if we already have cache
       hydrate(cached);
-      // SWR: refresh in background
       fetchData()
         .then((fresh) => {
           setCache(fresh);
@@ -551,10 +632,7 @@
         });
       return;
     }
-
-    // No cache, fetch now
     try {
-      // Only show skeletons when we have no cached content
       skeleton();
       const data = await fetchData();
       setCache(data);
@@ -571,7 +649,7 @@
   function hydrate(data, isRefresh = false) {
     if (!data || typeof data !== "object") return;
     dataRef = data;
-    // Default to analytics tab on load
+    renderToolbar(currentMode);
     if (currentMode === "tickets") {
       renderTicketsOverview(data);
     } else {

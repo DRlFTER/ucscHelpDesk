@@ -11,7 +11,6 @@ class Calender extends Controller
 			exit;
 		}
 
-		// Fallback when not logged in
 		$headContent = '\n        <link rel="stylesheet" href="/css/calender/calender.css"/>';
 		$this->view('calender', [
 			'title' => 'Calendar',

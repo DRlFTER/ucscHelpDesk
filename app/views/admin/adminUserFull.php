@@ -1,5 +1,4 @@
 <?php
-	// Compute a stable shared element name before first paint so cross-document View Transitions can match
 	$__vt = '';
 	if (isset($_GET['id']) && $_GET['id'] !== '') {
 		$__vt = 'ticket-' . preg_replace('/[^A-Za-z0-9_-]/', '', (string)$_GET['id']);
@@ -15,7 +14,6 @@
 		</div>
 
 		<div class="pageLayout">
-			<!-- Left content -->
 			<section class="ticketLeft">
 				<div class="card ticketSummary" id="ticketSummaryCard" <?= $__vt ? ('style="view-transition-name: ' . htmlspecialchars($__vt) . '"') : '' ?> >
 					<div class="ticketHeader">
@@ -54,7 +52,6 @@
 				</div>
 			</section>
 
-			<!-- Right sidebar -->
 			<aside class="ticketRight">
 				<div class="card ticketInfo">
 					<h3 class="sectionTitle">Ticket information</h3>
@@ -79,8 +76,6 @@
 		</div>
 	</div>
 </main>
-
-<!-- Delete confirmation modal -->
 <div id="deleteModal" class="modalOverlay" aria-hidden="true">
 	<div class="msgHolder">
 		<div class="msgContainer" role="dialog" aria-modal="true" aria-labelledby="deleteModalTitle">
@@ -94,7 +89,6 @@
 			</div>
 		</div>
 	</div>
-	<!-- clicking outside container closes modal via JS -->
 	<button type="button" class="modalBackdropClose" aria-label="Close"></button>
   
 </div>

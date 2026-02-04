@@ -1,19 +1,9 @@
 <main>
   <div class="fullPage">
     <div class="pageLayout">
-      <section class="settingsLeft" aria-label="Dashboard navigation">
-        <nav class="verticalNav">
-          <a class="navItem active" href="/counselor/dashboard">Dashboard</a>
-          <!-- Optional future links
-          <a class="navItem" href="/counselor/tickets">Tickets</a>
-          <a class="navItem" href="/counselor/meetings">Meetings</a>
-          -->
-        </nav>
-      </section>
       <aside class="adminRight">
         <div class="dashboardContent">
-          <!-- Cards -->
-          <div class="cardContainer" style="display:grid;grid-template-columns:repeat(4, minmax(180px,1fr));gap:12px;margin-top:16px;">
+          <div class="cardContainer grid-4">
             <div class="cardBox">
               <div class="cardTitle">Open Counseling Tickets</div>
               <div class="cardValue"><?= (int)($cards['open'] ?? 0) ?></div>
@@ -32,10 +22,9 @@
             </div>
           </div>
 
-          <!-- Rows -->
-          <div class="contentRow" style="display:grid;grid-template-columns:2fr 2fr;gap:12px;margin-top:16px;">
+          <div class="contentRow grid-2">
             <div class="cardBox">
-              <div class="cardHeader" style="display:flex;align-items:center;justify-content:space-between;">
+              <div class="cardHeader">
                 <h3 style="margin:0;">Your Queue</h3>
                 <span class="muted">Recent assigned</span>
               </div>
@@ -65,7 +54,7 @@
             </div>
 
             <div class="cardBox">
-              <div class="cardHeader" style="display:flex;align-items:center;justify-content:space-between;">
+              <div class="cardHeader">
                 <h3 style="margin:0;">New Counseling Tickets</h3>
                 <span class="muted">Unresolved (latest)</span>
               </div>
@@ -99,9 +88,9 @@
             </div>
           </div>
 
-          <div class="contentRow" style="display:grid;grid-template-columns:1fr;gap:12px;margin-top:16px;">
+          <div class="contentRow grid-1">
             <div class="cardBox">
-              <div class="cardHeader" style="display:flex;align-items:center;justify-content:space-between;">
+              <div class="cardHeader">
                 <h3 style="margin:0;">Meeting Requests</h3>
                 <span class="muted">Requested or Scheduled</span>
               </div>
@@ -117,7 +106,7 @@
                         <span><?= CounselorDashboard::relativeTime($t['created_at'] ?? null) ?></span>
                       </div>
                     </div>
-                    <div class="itemRight" style="display:flex;gap:8px;align-items:center;">
+                    <div class="itemRight">
                       <span class="badge meeting <?= strtolower((string)($t['meeting_requested'] ?? '')) ?>"><?= ucfirst((string)($t['meeting_requested'] ?? '')) ?></span>
                       <?php if (!empty($t['assigned_to']) && isset($_SESSION['user']['u_id']) && (int)$t['assigned_to'] === (int)$_SESSION['user']['u_id']): ?>
                         <span class="badge assigned">Assigned to You</span>

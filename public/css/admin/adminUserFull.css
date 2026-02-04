@@ -1,7 +1,4 @@
-/* Reuse the ticket full layout and components for consistent design */
 @import url("/css/admin/adminTicketFull.css");
-
-/* Minor overrides for labels if needed */
 .formGrid {
   display: grid;
   grid-template-columns: 1fr 1fr;
@@ -20,14 +17,31 @@
   background: #fff;
   color: #111827;
   outline: none;
-  z-index: 3; /* ensure above backdrop */
+  z-index: 3;
 }
 .btnSecondary.isSuspended {
   background: #fef3c7;
   border-color: #f59e0b;
 }
-
-/* Ensure modal content can be interacted with across the entire card area */
+/* Deleted status styling */
+.status.deleted {
+  background: #fee2e2;
+  color: #991b1b;
+}
+/* Suspended status styling */
+.status.suspended {
+  background: #fef3c7;
+  color: #92400e;
+}
+/* Full width delete/restore buttons */
+#deleteHolder,
+#restoreHolder {
+  width: 100%;
+}
+#deleteBtn,
+#restoreBtn {
+  width: 100%;
+}
 #editModal .msgContainer,
 #editModal .msgContent,
 #editModal input,

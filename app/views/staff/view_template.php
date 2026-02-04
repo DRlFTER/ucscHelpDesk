@@ -15,10 +15,8 @@ if ($conn->connect_error) {
     die("DB Connection failed: " . $conn->connect_error);
 }
 
-// Get logged-in student ID (replace with actual session logic)
-$student_id = isset($_SESSION['student_id']) ? (int)$_SESSION['student_id'] : 1; // Placeholder
+$student_id = isset($_SESSION['student_id']) ? (int)$_SESSION['student_id'] : 1; 
 
-// Fetch templates
 $sql = "SELECT id, name, category, fields, process, outcome, letter_required FROM templates ORDER BY name";
 $result = $conn->query($sql);
 $templates = [];
@@ -57,7 +55,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         }
 
         if (empty($errors)) {
-            // Generate letter if required
+
             $letter_path = '';
             if ($template['letter_required']) {
                 $html = '<html><body><h1>' . htmlspecialchars($template['name']) . '</h1>';
@@ -76,13 +74,12 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                 file_put_contents($letter_path, $html);
             }
 
-            // Create ticket
             $title = $template['name'] . ' Submission';
             $category = $template['category'];
             $status = 'open';
-            $priority = 'medium'; // Default
-            $student_name = 'Student Name'; // Fetch from students table or session
-            $meeting_requested = 'No'; // Default
+            $priority = 'medium'; 
+            $student_name = 'Student Name'; 
+            $meeting_requested = 'No'; 
 
             $sql = "INSERT INTO tickets (created_at, title, student_name, category, status, priority, meeting_requested) VALUES (NOW(), ?, ?, ?, ?, ?, ?)";
             $stmt = $conn->prepare($sql);
@@ -90,7 +87,6 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             if ($stmt->execute()) {
                 $ticket_id = $conn->insert_id;
 
-                // Store submission
                 $data_json = json_encode($data);
                 $sql = "INSERT INTO template_submissions (template_id, student_id, data, generated_letter, ticket_id) VALUES (?, ?, ?, ?, ?)";
                 $stmt = $conn->prepare($sql);
@@ -111,7 +107,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
 $conn->close();
 
 $pageTitle = "Use Template";
-include_once("./staff_nabar.html"); // Assume student navbar
+include_once("./staff_nabar.html"); 
 ?>
 
 <!DOCTYPE html>

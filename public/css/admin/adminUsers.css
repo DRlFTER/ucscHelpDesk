@@ -1,6 +1,4 @@
-@import url("/css/admin/adminTickets.css");
-
-/* Role status pill color examples (reusing .status class from tickets markup) */
+@import url("/css/tickets/tickets.css");
 .status.admin {
   background: #e7f0ff;
   color: #174ea6;
@@ -31,8 +29,42 @@
   padding: 6px 10px;
   border-radius: 17px;
 }
-
-/* Adjust search placeholder text for users if needed */
+/* Deleted user indicator */
+.status.deleted {
+  background: #fee2e2;
+  color: #991b1b;
+  padding: 6px 10px;
+  border-radius: 17px;
+}
+.ticket.isDeleted {
+  opacity: 0.7;
+  background-color: #ffcbcbff;
+}
+.ticket.isDeleted .ticketName h2 {
+  text-decoration: line-through;
+  color: #6b7280;
+}
+/* Suspended user indicator */
+.status.suspended {
+  background: #fef3c7;
+  color: #92400e;
+  padding: 6px 10px;
+  border-radius: 17px;
+}
+.ticket.isSuspended {
+  opacity: 0.85;
+  background-color: #fef9c3;
+}
+.ticket.isSuspended .ticketName h2 {
+  text-decoration: line-through;
+  color: #92400e;
+}
+.statusHolder {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  flex-wrap: wrap;
+}
 .search input::placeholder {
   color: #808080;
 }

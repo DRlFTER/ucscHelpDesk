@@ -1,2 +1,3 @@
 app/core/config.php
+app/core/r2.php
 app/cache/admin_dashboard.json

@@ -1,4 +1,3 @@
-// Navbar height variable helper to keep page height correct under the navbar
 (function () {
   function setNavbarVar() {
     const nav = document.querySelector(".navbar");
@@ -18,7 +17,6 @@
   }
 })();
 
-// Ticket data will be fetched and cached per ID
 let ticketData = null;
 
 const conversation = [
@@ -67,7 +65,6 @@ const timeline = [
   { label: "Resolved", time: "Pending", color: "gray", pending: true },
 ];
 
-// Utility to map status text to classes defined in components.css
 function statusClass(status) {
   const normalized = status.toLowerCase().replace(/\s+/g, "");
   switch (normalized) {
@@ -219,8 +216,7 @@ function wireActions() {
   }
 }
 
-// Cache helpers (simple TTL cache)
-const CACHE_TTL_MS = 5 * 60 * 1000; // 5 minutes
+const CACHE_TTL_MS = 5 * 60 * 1000;
 function cacheKeyFor(id) {
   return `admin_ticket_${id}`;
 }
@@ -277,7 +273,6 @@ async function fetchTicket(id) {
         console.error(e);
       }
     } else {
-      // Optional refresh in background (stale-while-revalidate)
       fetchTicket(id)
         .then((fresh) => {
           saveToCache(id, fresh);
@@ -299,7 +294,6 @@ async function fetchTicket(id) {
       assigned: "",
     };
   }
-  // Set destination transition names to match the origin card
   try {
     const vtName = ticketData.id
       ? `ticket-${ticketData.id}`
@@ -320,7 +314,6 @@ async function fetchTicket(id) {
   wireActions();
 })();
 
-// Modal helpers
 function openDeleteModal() {
   const overlay = document.getElementById("deleteModal");
   if (!overlay) return;

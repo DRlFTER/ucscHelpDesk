@@ -2,9 +2,7 @@ main {
   width: 100%;
   display: flex;
   justify-content: center;
-  min-height: calc(
-    100dvh - var(--navbar-height, 64px)
-  ); /* Fill the remaining viewport space after the navbar height */
+  min-height: calc(100dvh - var(--navbar-height, 64px));
 }
 body {
   font-family: "SF Pro", sans-serif;
@@ -13,7 +11,6 @@ body {
   color: #111827;
 }
 
-/* View Transition tuning for destination page */
 ::view-transition-old(root),
 ::view-transition-new(root) {
   animation-duration: 220ms;
@@ -35,14 +32,12 @@ body {
 }
 
 .todayDate h2:first-child {
-  /* Day number */
   font-size: 40px;
   line-height: 1;
   font-weight: 700;
 }
 
 .todayDate h2:last-child {
-  /* Weekday */
   font-size: 16px;
   color: #6b7280;
 }
@@ -117,6 +112,24 @@ body {
   font-size: 12px;
 }
 
+.todayEvents .ctaButton {
+  margin-left: auto;
+  border: none;
+  border-radius: 999px;
+  padding: 8px 12px;
+  background: var(--CTA, #8c8cf9);
+  color: #fff;
+  font-size: 12.5px;
+  cursor: pointer;
+  text-decoration: none;
+  display: inline-flex;
+  align-items: center;
+}
+.todayEvents .ctaButton:hover {
+  background: #6a6af5;
+  text-decoration: none;
+}
+
 .addEvent {
   display: flex;
   align-items: center;
@@ -127,14 +140,13 @@ body {
   border: 1px solid rgba(255, 255, 255, 0.1);
   background: rgba(255, 255, 255, 0.7);
   backdrop-filter: blur(20px);
-  /* Keep the add bar visible when scrolling long lists */
   position: sticky;
   bottom: 0;
   z-index: 1;
 }
 
 .inputEvent {
-  flex: 1;
+  width: 100%;
   height: 42px;
   padding: 0 12px;
   outline: none;
@@ -151,13 +163,11 @@ body {
   color: #9ca3af;
 }
 
-/* Make the left column scrollable while keeping overall layout consistent */
 .settingsLeft {
   gap: 12px;
   overflow: auto;
 }
 
-/* Calendar pane styles keep the right side consistent with admin cards */
 .calendarContainer {
   flex: 1;
   display: flex;
@@ -260,6 +270,8 @@ body {
   border-radius: 8px;
   background: #f3f4f6;
 }
+
+
 
 .dayCell.today {
   outline: 2px solid rgba(140, 140, 249, 0.6);

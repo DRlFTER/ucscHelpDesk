@@ -17,11 +17,9 @@ $head = '<link rel="stylesheet" href="/css/student/studentNewForum.css">';
 		</div>
 
 		<div class="ticketGrid">
-			<!-- Post form (copied from ticket form) -->
 			<section class="ticketCard">
 				<form id="ticketForm" action="/student/newForum" method="POST" enctype="multipart/form-data">
 
-					<!-- Ticket type toggle -->
 					<div class="field">
 						<label class="label">Post Options</label>
 						<div class="ticketToggle" role="group" aria-label="Post visibility">
@@ -59,13 +57,11 @@ $head = '<link rel="stylesheet" href="/css/student/studentNewForum.css">';
 						</div>
 					</div>
 
-					<!-- Details -->
 					<div class="field">
 						<label class="label" for="details">Description <span style="color:#ef4444; margin-left:2px">*</span></label>
 						<textarea id="details" name="details" rows="6" placeholder="Write your question or discussion details here." required></textarea>
 					</div>
 
-					<!-- Attachments -->
 					<div class="field">
 						<label class="label">Attachments</label>
 						<div id="dropzone" class="dropzone">
@@ -87,7 +83,6 @@ $head = '<link rel="stylesheet" href="/css/student/studentNewForum.css">';
 				</form>
 			</section>
 
-			<!-- Right: Sidebar (copied) -->
 			<aside class="sidebar">
 				<section class="sideCard">
 					<h3>Tips for Better Posts</h3>
