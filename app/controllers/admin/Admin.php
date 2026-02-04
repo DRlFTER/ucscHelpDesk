@@ -46,7 +46,7 @@ class Admin extends Controller
         ]);
     }
 
-    public function ticket() {
+    public function ticketFull() {
         $this->requireLogin('admin');
         $headContent = '
         <link rel="stylesheet" href="/css/ticketFull/ticketFull.css"/>';
