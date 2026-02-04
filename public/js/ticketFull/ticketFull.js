@@ -36,12 +36,6 @@ const conversation = [
     authorType: "student",
   },
 ];
-const timeline = [
-  { label: "Ticket created", time: "—", color: "green", pending: false },
-  { label: "Assigned", time: "—", color: "blue", pending: false },
-  { label: "Under review", time: "—", color: "yellow", pending: false },
-  { label: "Resolved", time: "Pending", color: "gray", pending: true },
-];
 
 const CFG = window.TICKET_FULL_CONFIG || {
   role: "admin",
@@ -151,14 +145,17 @@ function renderInfo() {
 }
 
 function renderTimeline() {
-  document.getElementById("timelineList").innerHTML = timeline
+  const tl = ticketData.timeline || [];
+  const tlEl = document.getElementById("timelineList");
+  if (!tlEl) return;
+  tlEl.innerHTML = tl
     .map(
       (t) => `
     <li class="timelineItem">
       <span class="tlDot ${t.color}"></span>
       <div class="tlText">
         <span class="label">${t.label}</span>
-        <span class="time">${t.time}</span>
+        <span class="time ${t.color}">${t.time}</span>
       </div>
     </li>`
     )
@@ -288,7 +285,23 @@ async function fetchTicket(id) {
     } else {
       fetchTicket(id)
         .then((fresh) => {
-          saveToCache(id, fresh);
+          // If data changed materially, re-render
+          const oldStr = JSON.stringify(ticketData);
+          const newStr = JSON.stringify(fresh);
+          if (oldStr !== newStr) {
+            ticketData = fresh;
+            saveToCache(id, fresh);
+            // Re-render components that depend on data
+            renderHeader();
+            renderDescription();
+            renderAttachments();
+            renderMessages();
+            renderInfo();
+            renderTimeline();
+            toggleActionButtons();
+          } else {
+             saveToCache(id, fresh); // just update timestamp
+          }
         })
         .catch(() => {});
     }

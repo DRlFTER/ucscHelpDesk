@@ -584,10 +584,18 @@ public function templates()
     public function faq()
     {
         $this->requireLogin('student');
+        
+        // Fetch FAQs from database
+        require_once __DIR__ . '/../../models/staff/Faq.php';
+        $faqModel = new StaffFaqModel();
+        // Get all FAQs (limit 100 for now)
+        $faqs = $faqModel->getFaqs('', 100, 0);
+
         $headContent = '<link rel="stylesheet" href="/css/student/studentFAQ.css" />';
         $this->view('student/studentFAQ', [
             'title' => 'FAQs',
             'head' => $headContent,
+            'faqs' => $faqs
         ]);
     }
 
@@ -1272,12 +1280,17 @@ public function templates()
         }
 
         $idEsc = (int)$id;
-    $sql = "SELECT t.ticket_id, t.created_at, t.title, d.name AS division_name, t.status, t.priority, t.description, t.u_id, u.name AS student_name
+    $sql = "SELECT t.ticket_id, t.created_at, t.title, d.name AS division_name, t.status, t.priority, t.description, t.u_id, u.name AS student_name,
+               sa.name AS staff_name, sh.position, sh.level, tl.assigned AS assigned_at, tl.under_review AS under_review_at, tl.resolved AS resolved_at
         FROM tickets t
         LEFT JOIN users u ON u.u_id = t.u_id
         LEFT JOIN division d ON d.did = t.division
-                WHERE t.ticket_id = $idEsc AND t.u_id = $studentId
-                LIMIT 1";
+        LEFT JOIN users sa ON sa.u_id = t.assigned_to
+        LEFT JOIN staff_division sd ON sd.u_id = t.assigned_to AND sd.did = t.division
+        LEFT JOIN staff_hierachy sh ON sh.h_id = sd.h_id
+        LEFT JOIN ticket_timeline tl ON tl.ticket_id = t.ticket_id
+        WHERE t.ticket_id = $idEsc AND t.u_id = $studentId
+        LIMIT 1";
 
         $ticket = null;
         if ($res = $db->query($sql)) {
@@ -1312,6 +1325,113 @@ public function templates()
             $ts = strtotime($createdAt);
             if ($ts !== false) $createdPretty = date('M d, Y \\a\\t g:i A', $ts);
         }
+
+        // --- Timeline Logic ---
+        $timeline = [];
+        // 1. Created
+        $timeline[] = [
+            'label' => 'Ticket created',
+            'time' => $createdPretty ?: '—',
+            'color' => 'green',
+            'pending' => false
+        ];
+
+        // 2. Assigned to staff
+        $staffName = $ticket['staff_name'] ?? null;
+        $position = $ticket['position'] ?? null;
+        $level = $ticket['level'] ?? null;
+        $assignedAt = $ticket['assigned_at'] ?? null;
+        
+        $assignLabel = 'Assigned to staff';
+        $assignTime = '';
+        $assignColor = 'gray';
+        $assignPending = true;
+
+        if (!empty($staffName) || in_array($statusRaw, ['agent assigned', 'resolved', 'closed', 'agent-closed'])) {
+            $assignLabel = "Assigned to staff";
+            if (!empty($staffName)) {
+                $assignLabel = "Assigned to {$staffName}";
+                if ($position) $assignLabel .= " ({$position})";
+                if ($level) $assignLabel .= " [Level {$level}]";
+            }
+            // Use assigned_at timestamp from ticket_timeline if available
+            if ($assignedAt && $assignedAt !== '0000-00-00 00:00:00') {
+                $ts = strtotime($assignedAt);
+                $assignTime = ($ts !== false) ? date('M d, Y \a\t g:i A', $ts) : 'Assigned';
+            } else {
+                $assignTime = 'Assigned'; // Fallback if no timestamp
+            }
+            $assignColor = 'blue';
+            $assignPending = false;
+        }
+
+        $timeline[] = [
+            'label' => $assignLabel,
+            'time' => $assignTime,
+            'color' => $assignColor,
+            'pending' => $assignPending
+        ];
+
+        // 3. Under Review
+        $underReviewAt = $ticket['under_review_at'] ?? null;
+        $reviewLabel = 'Under review';
+        $reviewTime = 'Pending';
+        $reviewColor = 'gray';
+        $reviewPending = true;
+
+        // Check if under_review timestamp exists in ticket_timeline
+        if ($underReviewAt && $underReviewAt !== '0000-00-00 00:00:00') {
+            $ts = strtotime($underReviewAt);
+            $reviewTime = ($ts !== false) ? date('M d, Y \a\t g:i A', $ts) : 'In Progress';
+            $reviewColor = 'yellow';
+            $reviewPending = false;
+            // If resolved, mark review as completed
+            if (in_array($statusRaw, ['resolved', 'closed', 'agent-closed'])) {
+                $reviewColor = 'green';
+            }
+        } elseif (in_array($statusRaw, ['agent assigned', 'resolved', 'closed', 'agent-closed'])) {
+            // Fallback: if status indicates review but no timestamp
+            $reviewTime = 'In Progress';
+            $reviewColor = 'yellow';
+            $reviewPending = false;
+            if (in_array($statusRaw, ['resolved', 'closed', 'agent-closed'])) {
+                $reviewTime = 'Completed';
+                $reviewColor = 'green';
+            }
+        }
+        $timeline[] = [
+            'label' => $reviewLabel,
+            'time' => $reviewTime,
+            'color' => $reviewColor,
+            'pending' => $reviewPending
+        ];
+
+        // 4. Resolved
+        $resolvedAt = $ticket['resolved_at'] ?? null;
+        $resolveLabel = 'Resolved';
+        $resolveTime = 'Pending';
+        $resolveColor = 'gray';
+        $resolvePending = true;
+
+        // Check if resolved timestamp exists in ticket_timeline
+        if ($resolvedAt && $resolvedAt !== '0000-00-00 00:00:00') {
+            $ts = strtotime($resolvedAt);
+            $resolveTime = ($ts !== false) ? date('M d, Y \a\t g:i A', $ts) : 'Completed';
+            $resolveColor = 'green';
+            $resolvePending = false;
+        } elseif (in_array($statusRaw, ['resolved', 'closed', 'agent-closed'])) {
+            // Fallback: if status is resolved but no timestamp
+            $resolveTime = 'Completed';
+            $resolveColor = 'green';
+            $resolvePending = false;
+        }
+        $timeline[] = [
+            'label' => $resolveLabel,
+            'time' => $resolveTime,
+            'color' => $resolveColor,
+            'pending' => $resolvePending
+        ];
+        // ----------------------
 
         // Fetch staff responses for conversation
         $messages = [];
@@ -1349,7 +1469,8 @@ public function templates()
             'description' => (string)($ticket['description'] ?? ''),
             'category' => (string)($ticket['division_name'] ?? ''),
             'priority' => ucfirst((string)($ticket['priority'] ?? '')),
-            'assigned' => null,
+            'assigned' => !empty($staffName) ? ($position ? "$staffName ($position)" : $staffName) : null,
+            'timeline' => $timeline,
             'attachments' => $attachments,
             'messages' => $messages,
             'allowReply' => true,
@@ -1436,6 +1557,9 @@ public function templates()
             echo 'update_failed';
             return;
         }
+
+        // Update ticket_timeline resolved timestamp
+        $db->query("UPDATE ticket_timeline SET resolved = CURRENT_TIMESTAMP WHERE ticket_id = $idEsc");
 
         echo 'ok';
     }

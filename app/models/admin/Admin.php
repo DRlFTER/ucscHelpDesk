@@ -526,10 +526,15 @@ class AdminModel extends Model
      */
     public function getTicketById(int $id): ?array
     {
-        $sql = "SELECT t.ticket_id, t.created_at, t.title, d.name AS category, t.status, t.priority, t.description, t.u_id, u.name AS student_name, t.meeting_requested
+        $sql = "SELECT t.ticket_id, t.created_at, t.title, d.name AS category, t.status, t.priority, t.description, t.u_id, u.name AS student_name, t.meeting_requested,
+                       sa.name AS staff_name, sh.position, sh.level, tl.assigned AS assigned_at, tl.under_review AS under_review_at, tl.resolved AS resolved_at
                 FROM tickets t
                 LEFT JOIN users u ON u.u_id = t.u_id
                 LEFT JOIN division d ON d.did = t.division
+                LEFT JOIN users sa ON sa.u_id = t.assigned_to
+                LEFT JOIN staff_division sd ON sd.u_id = t.assigned_to AND sd.did = t.division
+                LEFT JOIN staff_hierachy sh ON sh.h_id = sd.h_id
+                LEFT JOIN ticket_timeline tl ON tl.ticket_id = t.ticket_id
                 WHERE t.ticket_id = ?
                 LIMIT 1";
         $stmt = $this->db->prepare($sql);
@@ -621,6 +626,22 @@ class AdminModel extends Model
     return $affected >= 1; 
 } 
 
+    /**
+     * Update ticket_timeline resolved timestamp when admin resolves a ticket.
+     */
+    public function resolveTicketTimeline(int $id): bool
+    {
+        $sql = "UPDATE ticket_timeline SET resolved = CURRENT_TIMESTAMP WHERE ticket_id = ?";
+        $stmt = $this->db->prepare($sql);
+        if (!$stmt) {
+            error_log("Prepare failed for timeline update: " . $this->db->error);
+            return false;
+        }
+        $stmt->bind_param('i', $id);
+        $result = $stmt->execute();
+        $stmt->close();
+        return $result;
+    }
 
     /**
      * Get tickets count with filters

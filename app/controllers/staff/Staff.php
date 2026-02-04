@@ -151,6 +151,7 @@ public function __construct()
 
     public function staffTickets()
 {
+    unset($_SESSION['overdues_checked']);
     $this->requireLogin('staff');
 
     require_once __DIR__ . '/../../models/staff/Ticket.php';
