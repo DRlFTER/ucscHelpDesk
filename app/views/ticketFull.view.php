@@ -200,24 +200,102 @@
     if (!openBtn || !modal) return;
 
     const cancelBtn = document.getElementById('cancelScheduleBtn');
+    const saveBtn = document.getElementById('saveScheduleBtn');
     const backdropBtn = modal.querySelector('.modalBackdropClose');
+    const form = document.getElementById('scheduleForm');
 
     const open = () => {
       modal.classList.add('open');
       modal.setAttribute('aria-hidden', 'false');
       document.body.classList.add('modal-open');
       if (cancelBtn) cancelBtn.focus();
+      
+      // Set minimum date to today
+      const today = new Date().toISOString().split('T')[0];
+      const dateInput = document.getElementById('meetingDate');
+      if (dateInput) dateInput.min = today;
     };
+    
     const close = () => {
       modal.classList.remove('open');
       modal.setAttribute('aria-hidden', 'true');
       document.body.classList.remove('modal-open');
       if (openBtn) openBtn.focus();
+      // Reset form
+      if (form) form.reset();
+    };
+
+    const submitMeeting = async (e) => {
+      e.preventDefault();
+      
+      // Validate form
+      if (!form.checkValidity()) {
+        form.reportValidity();
+        return;
+      }
+
+      // Get ticket data
+      const ticketId = window.ticketData ? window.ticketData.id : null;
+      const studentId = window.ticketData && window.ticketData.student ? window.ticketData.student.id : null;
+
+      // Collect form data
+      const meetingData = {
+        ticket_id: ticketId,
+        student_id: studentId,
+        meeting_date: document.getElementById('meetingDate').value,
+        start_time: document.getElementById('meetingStart').value + ':00',
+        duration: parseInt(document.getElementById('meetingDuration').value),
+        mode: document.getElementById('meetingMode').value,
+        room_location: document.getElementById('meetingLocation').value,
+        meeting_link: document.getElementById('meetingLink').value,
+        notes: document.getElementById('meetingNotes').value
+      };
+
+      console.log('Submitting meeting data:', meetingData);
+
+      // Show loading state
+      const originalText = saveBtn.querySelector('.btnPrimaryText').textContent;
+      saveBtn.disabled = true;
+      saveBtn.querySelector('.btnPrimaryText').textContent = 'Scheduling...';
+
+      try {
+        const response = await fetch('/meetingscheduler/scheduleMeeting', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify(meetingData),
+          credentials: 'include'
+        });
+
+        const data = await response.json();
+        console.log('Server response:', data);
+
+        if (data.success) {
+          alert('Meeting scheduled successfully!');
+          close();
+          
+          // Reload page to show updated status
+          setTimeout(() => {
+            location.reload();
+          }, 500);
+        } else {
+          alert('Error: ' + (data.error || 'Failed to schedule meeting'));
+          saveBtn.disabled = false;
+          saveBtn.querySelector('.btnPrimaryText').textContent = originalText;
+        }
+      } catch (error) {
+        console.error('Error scheduling meeting:', error);
+        alert('Failed to schedule meeting. Please check your connection and try again.');
+        saveBtn.disabled = false;
+        saveBtn.querySelector('.btnPrimaryText').textContent = originalText;
+      }
     };
 
     openBtn.addEventListener('click', open);
     if (cancelBtn) cancelBtn.addEventListener('click', close);
     if (backdropBtn) backdropBtn.addEventListener('click', close);
+    if (form) form.addEventListener('submit', submitMeeting);
   })();
 </script>
 
