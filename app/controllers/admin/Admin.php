@@ -1224,4 +1224,229 @@ class Admin extends Controller
         header('Content-Type: application/json');
         echo json_encode(['ok' => true]);
     }
+
+    // ==================== Reports ====================
+    
+    private $reportsModel;
+
+    private function getReportsModel()
+    {
+        if (!$this->reportsModel) {
+            require_once __DIR__ . '/../../models/admin/Reports.php';
+            $this->reportsModel = new AdminReportModel();
+        }
+        return $this->reportsModel;
+    }
+
+    /**
+     * Reports page view
+     */
+    public function reports()
+    {
+        $this->requireLogin('admin');
+        $headContent = '
+        <link rel="stylesheet" href="/css/admin/adminReports.css"/>';
+        $this->view('adminReports', [
+            'title' => 'Reports',
+            'head' => $headContent,
+        ]);
+    }
+
+    /**
+     * Get filter data for reports (divisions, staff, etc.)
+     */
+    public function reportsFilters()
+    {
+        $this->requireLogin('admin');
+        header('Content-Type: application/json');
+
+        try {
+            $model = $this->getReportsModel();
+            echo json_encode([
+                'divisions' => $model->getDivisions(),
+                'staff' => $model->getStaffMembers(),
+                'statuses' => $model->getTicketStatuses(),
+                'priorities' => $model->getTicketPriorities(),
+                'roles' => $model->getUserRoles()
+            ]);
+        } catch (Exception $e) {
+            http_response_code(500);
+            echo json_encode(['error' => 'Failed to load filter data']);
+        }
+    }
+
+    /**
+     * Generate quick reports
+     */
+    public function reportsQuick()
+    {
+        $this->requireLogin('admin');
+        header('Content-Type: application/json');
+
+        $reportType = $_GET['report_type'] ?? '';
+        $startDate = $_GET['start_date'] ?? '';
+        $endDate = $_GET['end_date'] ?? '';
+        $division = $_GET['division'] ?? '';
+        $groupBy = $_GET['group_by'] ?? 'category';
+        $period = $_GET['period'] ?? 'daily';
+
+        try {
+            $model = $this->getReportsModel();
+            $data = [];
+            $summary = [];
+            $columns = [];
+            $chartData = null;
+
+            switch ($reportType) {
+                case 'tickets-by-status':
+                    $data = $model->getTicketsByStatus($startDate, $endDate, $division);
+                    $summary = $model->getTicketsByStatusSummary($startDate, $endDate, $division);
+                    $columns = ['status', 'count', 'division_name'];
+                    $chartData = [
+                        'type' => 'doughnut',
+                        'labels' => array_column($data, 'status'),
+                        'values' => array_map('intval', array_column($data, 'count')),
+                        'label' => 'Tickets'
+                    ];
+                    break;
+
+                case 'tickets-by-category':
+                    $data = $model->getTicketsByCategory($startDate, $endDate);
+                    $columns = ['category', 'count'];
+                    $chartData = [
+                        'type' => 'bar',
+                        'labels' => array_column($data, 'category'),
+                        'values' => array_map('intval', array_column($data, 'count')),
+                        'label' => 'Tickets'
+                    ];
+                    break;
+
+                case 'tickets-by-role':
+                    $data = $model->getTicketsByRole($startDate, $endDate);
+                    $columns = ['role', 'count'];
+                    $chartData = [
+                        'type' => 'pie',
+                        'labels' => array_map('ucfirst', array_column($data, 'role')),
+                        'values' => array_map('intval', array_column($data, 'count')),
+                        'label' => 'Tickets'
+                    ];
+                    break;
+
+                case 'resolution-time':
+                    $data = $model->getResolutionTimeReport($startDate, $endDate, $groupBy);
+                    $columns = ['group_name', 'avg_hours', 'ticket_count'];
+                    $chartData = [
+                        'type' => 'bar',
+                        'labels' => array_column($data, 'group_name'),
+                        'values' => array_map('floatval', array_column($data, 'avg_hours')),
+                        'label' => 'Average Hours'
+                    ];
+                    break;
+
+                case 'staff-performance':
+                    $data = $model->getStaffPerformanceReport($startDate, $endDate);
+                    $columns = ['staff_name', 'department', 'assigned_tickets', 'resolved_tickets', 'closed_tickets', 'avg_response_hours'];
+                    $totalAssigned = array_sum(array_column($data, 'assigned_tickets'));
+                    $totalResolved = array_sum(array_column($data, 'resolved_tickets'));
+                    $summary = [
+                        'total_staff' => count($data),
+                        'total_assigned' => $totalAssigned,
+                        'total_resolved' => $totalResolved,
+                        'resolution_rate' => $totalAssigned > 0 ? round(($totalResolved / $totalAssigned) * 100, 1) . '%' : '0%'
+                    ];
+                    break;
+
+                case 'most-active-users':
+                    $data = $model->getMostActiveUsersReport($startDate, $endDate, 20);
+                    $columns = ['name', 'email', 'role', 'ticket_count'];
+                    $summary = [
+                        'total_users' => count($data),
+                        'total_tickets' => array_sum(array_column($data, 'ticket_count'))
+                    ];
+                    break;
+
+                case 'ticket-volume-trend':
+                    $data = $model->getTicketVolumeTrend($startDate, $endDate, $period);
+                    $columns = ['period', 'count'];
+                    $chartData = [
+                        'type' => 'line',
+                        'labels' => array_column($data, 'period'),
+                        'values' => array_map('intval', array_column($data, 'count')),
+                        'label' => 'Tickets'
+                    ];
+                    $summary = [
+                        'total_tickets' => array_sum(array_column($data, 'count')),
+                        'avg_per_period' => count($data) > 0 ? round(array_sum(array_column($data, 'count')) / count($data), 1) : 0,
+                        'peak' => count($data) > 0 ? max(array_column($data, 'count')) : 0
+                    ];
+                    break;
+
+                case 'unresolved-backlog':
+                    $data = $model->getUnresolvedTicketsReport($startDate, $endDate);
+                    $columns = ['date', 'unresolved_count', 'avg_days_pending'];
+                    $chartData = [
+                        'type' => 'line',
+                        'labels' => array_column($data, 'date'),
+                        'values' => array_map('intval', array_column($data, 'unresolved_count')),
+                        'label' => 'Unresolved Tickets'
+                    ];
+                    break;
+
+                default:
+                    http_response_code(400);
+                    echo json_encode(['error' => 'Invalid report type']);
+                    return;
+            }
+
+            echo json_encode([
+                'data' => $data,
+                'summary' => $summary,
+                'columns' => $columns,
+                'chartData' => $chartData
+            ]);
+
+        } catch (Exception $e) {
+            http_response_code(500);
+            echo json_encode(['error' => 'Failed to generate report: ' . $e->getMessage()]);
+        }
+    }
+
+    /**
+     * Generate custom reports with advanced filters
+     */
+    public function reportsCustom()
+    {
+        $this->requireLogin('admin');
+        header('Content-Type: application/json');
+
+        $filters = [
+            'start_date' => $_GET['start_date'] ?? '',
+            'end_date' => $_GET['end_date'] ?? '',
+            'status' => $_GET['status'] ?? '',
+            'category' => $_GET['category'] ?? '',
+            'priority' => $_GET['priority'] ?? '',
+            'assigned_to' => $_GET['assigned_to'] ?? '',
+            'user_role' => $_GET['user_role'] ?? '',
+            'limit' => $_GET['limit'] ?? 100
+        ];
+
+        try {
+            $model = $this->getReportsModel();
+            $data = $model->getCustomReport($filters);
+            $summary = $model->getCustomReportSummary($filters);
+
+            $columns = ['ticket_id', 'title', 'status', 'priority', 'category', 'submitted_by', 'user_role', 'assigned_staff', 'created_at'];
+
+            echo json_encode([
+                'data' => $data,
+                'summary' => $summary,
+                'columns' => $columns,
+                'chartData' => null
+            ]);
+
+        } catch (Exception $e) {
+            http_response_code(500);
+            echo json_encode(['error' => 'Failed to generate custom report: ' . $e->getMessage()]);
+        }
+    }
 }
