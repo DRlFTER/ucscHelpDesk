@@ -7,10 +7,11 @@ window.forumPostsData = [];
   // Detect current role from URL path
   function getCurrentRole() {
     const path = window.location.pathname;
-    if (path.startsWith('/admin')) return 'admin';
-    if (path.startsWith('/staff')) return 'staff';
-    if (path.startsWith('/counselor')) return 'counselor';
-    if (path.startsWith('/student')) return 'student';
+    const parts = path.split('/');
+    if (parts.includes('admin')) return 'admin';
+    if (parts.includes('staff')) return 'staff';
+    if (parts.includes('counselor')) return 'counselor';
+    if (parts.includes('student')) return 'student';
     return 'student'; // default
   }
 
@@ -267,9 +268,9 @@ window.forumPostsData = [];
     const id = el.getAttribute("data-id");
     const code = el.getAttribute("data-code");
     if (id) {
-      window.location.assign(`/${currentRole}/forumFull?id=${encodeURIComponent(id)}`);
+      window.location.assign(`forumFull?id=${encodeURIComponent(id)}`);
     } else if (code) {
-      window.location.assign(`/${currentRole}/forumFull?code=${encodeURIComponent(code)}`);
+      window.location.assign(`forumFull?code=${encodeURIComponent(code)}`);
     }
   }
 
@@ -280,8 +281,7 @@ window.forumPostsData = [];
       .map((t) => {
         const status = getStatusMeta((t && t.status) || "");
         const vis = t && typeof t.is_Public !== 'undefined' ? (t.is_Public ? 'public' : 'private') : 'public';
-        const votesUp = Number.isFinite(t?.votesUp) ? t.votesUp : 0;
-        const votesDown = Number.isFinite(t?.votesDown) ? t.votesDown : 0;
+        const votes = Number.isFinite(t?.votes) ? t.votes : 0;
         const comments = Number.isFinite(t?.comments) ? t.comments : 0;
 
         return `
@@ -313,11 +313,7 @@ window.forumPostsData = [];
             <div class="ticketDetail">
               <h2>Votes:</h2>
               <div class="ticketDataHolder votesHolder" data-id="${esc(t.id)}">
-                <button type="button" class="voteBtn up" aria-label="Upvote post ${esc(t.title)}">▲</button>
-                <span class="voteUpCount">${esc(votesUp)}</span>
-                <span style="display:inline-block; width:10px;"></span>
-                <button type="button" class="voteBtn down" aria-label="Downvote post ${esc(t.title)}">▼</button>
-                <span class="voteDownCount">${esc(votesDown)}</span>
+                <span class="voteCount">${esc(votes)}</span>
               </div>
             </div>
                         <div class="ticketDetail">
@@ -458,7 +454,7 @@ window.forumPostsData = [];
         renderPagination();
 
         // Background refresh
-        fetch(`/${currentRole}/forumData?${qs.toString()}`, { credentials: "include" })
+        fetch(`forumData?${qs.toString()}`, { credentials: "include" })
           .then((res) => (res.ok ? res.json() : Promise.reject(new Error("Bad response"))))
           .then((fresh) => {
             setCache(CACHE_KEY, fresh);
@@ -474,7 +470,7 @@ window.forumPostsData = [];
         return;
       }
 
-      const res = await fetch(`/${currentRole}/forumData?${qs.toString()}`, {
+      const res = await fetch(`forumData?${qs.toString()}`, {
         credentials: "include",
       });
       if (!res.ok) throw new Error("Failed to load posts");

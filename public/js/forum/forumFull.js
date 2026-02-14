@@ -21,10 +21,11 @@
 // Detect current role from URL path
 function getCurrentRole() {
   const path = window.location.pathname;
-  if (path.startsWith('/admin')) return 'admin';
-  if (path.startsWith('/staff')) return 'staff';
-  if (path.startsWith('/counselor')) return 'counselor';
-  if (path.startsWith('/student')) return 'student';
+  const parts = path.split('/');
+  if (parts.includes('admin')) return 'admin';
+  if (parts.includes('staff')) return 'staff';
+  if (parts.includes('counselor')) return 'counselor';
+  if (parts.includes('student')) return 'student';
   return 'student'; // default
 }
 
@@ -44,6 +45,31 @@ function statusClass(status) {
       return "status underReview";
     default:
       return "status";
+  }
+}
+
+function applyPermissions() {
+  const isOwner = Boolean(ticketData.isOwner);
+  const editBtn = document.getElementById("editPostBtn");
+  const delBtn = document.getElementById("deleteBtn");
+  const visBtn = document.getElementById("toggleVisibilityBtn");
+  const statusBtn = document.getElementById("toggleStatusBtn");
+  
+  if (editBtn) {
+     const holder = editBtn.closest('.btnHolder');
+     if (holder) holder.style.display = isOwner ? '' : 'none';
+  }
+  if (delBtn) {
+     const holder = delBtn.closest('.btnHolder');
+     if (holder) holder.style.display = isOwner ? '' : 'none';
+  }
+  if (visBtn) {
+     const holder = visBtn.closest('.btnHolder');
+     if (holder) holder.style.display = isOwner ? '' : 'none';
+  }
+  if (statusBtn) {
+     const holder = statusBtn.closest('.btnHolder');
+     if (holder) holder.style.display = isOwner ? '' : 'none';
   }
 }
 
@@ -78,14 +104,21 @@ function renderHeader() {
     .join("");
 
   // votes
-  voteState.count = Number(ticketData.votes || 0) || 0;
-  voteState.voted = Boolean(ticketData.voted || false);
+  voteState.count = Number(ticketData.votes || 0);
+  voteState.voted = Number(ticketData.voted || 0);
   const voteCountEl = document.getElementById("voteCount");
   if (voteCountEl) voteCountEl.textContent = String(voteState.count);
   const voteBtn = document.getElementById("voteBtn");
   if (voteBtn) {
-    voteBtn.setAttribute("aria-pressed", voteState.voted ? "true" : "false");
-    voteBtn.classList.toggle("isActive", voteState.voted);
+    const isUp = voteState.voted === 1;
+    voteBtn.setAttribute("aria-pressed", isUp ? "true" : "false");
+    voteBtn.classList.toggle("isActive", isUp);
+  }
+  const voteDownBtn = document.getElementById("voteDownBtn");
+  if (voteDownBtn) {
+    const isDown = voteState.voted === -1;
+    voteDownBtn.setAttribute("aria-pressed", isDown ? "true" : "false");
+    voteDownBtn.classList.toggle("isActive", isDown);
   }
 }
 
@@ -180,47 +213,39 @@ function wireActions() {
 
   const voteBtn = document.getElementById("voteBtn");
   const voteDownBtn = document.getElementById("voteDownBtn");
-  if (voteBtn) {
-    voteBtn.addEventListener("click", async () => {
-      // optimistic toggle
-      voteState.voted = !voteState.voted;
-      voteState.count += voteState.voted ? 1 : -1;
-      document.getElementById("voteCount").textContent = String(voteState.count);
-      voteBtn.setAttribute("aria-pressed", voteState.voted ? "true" : "false");
-      voteBtn.classList.toggle("isActive", voteState.voted);
-      try {
-        await fetch(`/${currentRole}/forumVote?id=${encodeURIComponent(ticketData.id)}&voted=${voteState.voted ? 1 : 0}`, { credentials: "include" });
-      } catch (e) {
-        // revert on failure
-        voteState.voted = !voteState.voted;
-        voteState.count += voteState.voted ? 1 : -1;
-        document.getElementById("voteCount").textContent = String(voteState.count);
-        voteBtn.setAttribute("aria-pressed", voteState.voted ? "true" : "false");
-        voteBtn.classList.toggle("isActive", voteState.voted);
-      }
-    });
-  }
-  if (voteDownBtn) {
-    voteDownBtn.addEventListener("click", async () => {
-      // optimistic downvote reduces count; if already upvoted, first neutralize
-      if (voteState.voted) {
-        voteState.voted = false;
-        const up = document.getElementById("voteBtn");
-        up?.setAttribute("aria-pressed", "false");
-        up?.classList.remove("isActive");
-        voteState.count -= 1;
-      }
-      voteState.count = Math.max(0, voteState.count - 1);
-      document.getElementById("voteCount").textContent = String(voteState.count);
-      try {
-        await fetch(`/${currentRole}/forumVote?id=${encodeURIComponent(ticketData.id)}&voted=0&down=1`, { credentials: "include" });
-      } catch (e) {
-        // revert on failure (best-effort)
-        voteState.count += 1;
-        document.getElementById("voteCount").textContent = String(voteState.count);
-      }
-    });
-  }
+  
+  const handleVote = async (type) => {
+    try {
+        const form = new FormData();
+        form.append('id', String(ticketData.id));
+        form.append('type', type);
+        
+        const res = await fetch(`forumVote`, { method: 'POST', credentials: 'include', body: form });
+        const json = await res.json();
+        
+        if (json.ok) {
+            voteState.count = json.votes;
+            voteState.voted = json.voted;
+            
+            document.getElementById("voteCount").textContent = String(voteState.count);
+            if (voteBtn) {
+                const isUp = voteState.voted === 1;
+                voteBtn.setAttribute("aria-pressed", isUp ? "true" : "false");
+                voteBtn.classList.toggle("isActive", isUp);
+            }
+            if (voteDownBtn) {
+                const isDown = voteState.voted === -1;
+                voteDownBtn.setAttribute("aria-pressed", isDown ? "true" : "false");
+                voteDownBtn.classList.toggle("isActive", isDown);
+            }
+        }
+    } catch (e) {
+        console.error("Vote failed", e);
+    }
+  };
+
+  if (voteBtn) voteBtn.addEventListener("click", () => handleVote('up'));
+  if (voteDownBtn) voteDownBtn.addEventListener("click", () => handleVote('down'));
 
   // Comment actions (upvote/reply) via event delegation
   const messagesEl = document.getElementById("messages");
@@ -271,7 +296,7 @@ function wireActions() {
         const form = new FormData();
         form.append('id', String(ticketData.id));
         form.append('state', next);
-        const res = await fetch(`/${currentRole}/forumToggleVisibility`, { method: 'POST', credentials: 'include', body: form });
+        const res = await fetch(`forumToggleVisibility`, { method: 'POST', credentials: 'include', body: form });
         if (!res.ok) throw new Error('toggle_failed');
         const payload = await res.json();
         if (!payload.ok) throw new Error('toggle_failed');
@@ -375,6 +400,7 @@ async function fetchPost(id) {
   renderMessages();
   renderInfo();
   renderTimeline();
+  applyPermissions();
   wireActions();
 })();
 // end
