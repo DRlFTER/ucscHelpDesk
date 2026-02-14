@@ -34,7 +34,21 @@ let ticketData = null;
 
 // Forum interactions
 let voteState = { voted: false, count: 0 };
-const conversation = [];
+let conversation = [];
+
+async function loadComments() {
+    if (!ticketData || !ticketData.id) return;
+    try {
+        const res = await fetch(`forumComments?id=${ticketData.id}`, { credentials: 'include' });
+        if (res.ok) {
+            conversation = await res.json();
+            renderMessages();
+            // update header count
+            ticketData.commentsCount = conversation.length;
+            renderHeader();
+        }
+    } catch (e) { console.error(e); }
+}
 
 function statusClass(status) {
   const normalized = (status || "").toLowerCase().replace(/\s+/g, "");
@@ -143,12 +157,30 @@ function renderAttachments() {
 
 function renderMessages() {
   const m = document.getElementById("messages");
-  m.innerHTML = conversation
-    .map((msg) => {
-      const typeClass = msg.authorType === "staff" ? "staff" : "student";
-      return `
-      <div class="message">
-        <div class="messageBubble ${typeClass}">
+  // Build tree
+  const map = {};
+  const roots = [];
+  conversation.forEach(c => {
+      c.children = [];
+      map[c.id] = c;
+      if (c.parentId) {
+          if (map[c.parentId]) map[c.parentId].children.push(c);
+          else roots.push(c); // Orphan fallback
+      } else {
+          roots.push(c);
+      }
+  });
+
+  // Recursive render
+  const renderList = (list, depth = 0) => {
+      return list.map(msg => {
+          const typeClass = msg.authorType === "staff" ? "staff" : "student";
+          // Indentation for replies
+          const style = depth > 0 ? `margin-left: ${Math.min(depth * 30, 90)}px; border-left: 2px solid #e5e7eb; padding-left: 10px;` : '';
+          
+          return `
+      <div class="message" style="${style}" data-id="${msg.id}">
+        <div class="messageBubble ${typeClass}" style="width:100%">
           <div class="messageHeader">
             <span class="name">${msg.name}</span>
             ${msg.role ? `<span class="role">${msg.role}</span>` : ""}
@@ -156,14 +188,27 @@ function renderMessages() {
           </div>
           <div class="messageText">${msg.text}</div>
           <div class="messageActions">
-            <button class="btnAttachRound msgUpvote" type="button" title="Upvote comment" aria-pressed="false"><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#374151" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="18 15 12 9 6 15"></polyline></svg></button>
-            <button class="btnAttachRound msgDownvote" type="button" title="Downvote comment" aria-pressed="false"><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#374151" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"></polyline></svg></button>
-            <button class="btnAttachRound msgReply" type="button" title="Reply"><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#374151" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 10 4 15 9 20"></polyline><path d="M20 4v7a4 4 0 0 1-4 4H4"></path></svg></button>
+            <!-- Votes removed for now per requirement
+            <button class="btnAttachRound msgUpvote" type="button" title="Upvote comment"><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#374151" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="18 15 12 9 6 15"></polyline></svg></button>
+            <button class="btnAttachRound msgDownvote" type="button" title="Downvote comment"><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#374151" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"></polyline></svg></button>
+            -->
+            <button class="btnReplyText msgReply" type="button" title="Reply"><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 10 4 15 9 20"></polyline><path d="M20 4v7a4 4 0 0 1-4 4H4"></path></svg> Reply</button>
+          </div>
+          <div class="replyBox" style="display:none; margin-top:8px;">
+            <textarea class="replyInput" placeholder="Write a reply..." rows="2" style="width:100%; border:1px solid #ccc; border-radius:6px; padding:6px; font-size:13px;"></textarea>
+            <div style="text-align:right; margin-top:4px;">
+                <button class="btnPrimary btnSmall sendReplyBtn">Send</button>
+                <button class="btnSecondary btnSmall cancelReplyBtn">Cancel</button>
+            </div>
           </div>
         </div>
-      </div>`;
-    })
-    .join("");
+      </div>
+      ${msg.children.length > 0 ? renderList(msg.children, depth + 1) : ''}
+      `;
+      }).join("");
+  };
+
+  m.innerHTML = renderList(roots);
 }
 
 function renderInfo() {
@@ -190,16 +235,30 @@ function renderTimeline() {}
 function wireActions() {
   const sendBtn = document.getElementById("sendBtn");
   if (sendBtn) {
-    sendBtn.addEventListener("click", () => {
+    sendBtn.addEventListener("click", async () => {
       const input = document.getElementById("replyInput");
       const text = input.value.trim();
       if (!text) return;
-      conversation.push({ name: "You", role: "", time: "Just now", text, authorType: "student" });
-      input.value = "";
-      renderMessages();
-      // update comments meta
-      ticketData.commentsCount = (ticketData.commentsCount || 0) + 1;
-      renderHeader();
+      
+      try {
+          const form = new FormData();
+          form.append('id', String(ticketData.id));
+          form.append('text', text);
+          
+          sendBtn.disabled = true;
+          const res = await fetch(`forumAddComment`, { method: 'POST', credentials: 'include', body: form });
+          sendBtn.disabled = false;
+          if (res.ok) {
+              const json = await res.json();
+              if (json.ok && json.comment) {
+                  conversation.push(json.comment); // Will be root 
+                  input.value = "";
+                  renderMessages();
+                  ticketData.commentsCount = (ticketData.commentsCount || 0) + 1;
+                  renderHeader();
+              }
+          }
+      } catch(e) { console.error(e); sendBtn.disabled=false; }
     });
   }
 
@@ -239,9 +298,7 @@ function wireActions() {
                 voteDownBtn.classList.toggle("isActive", isDown);
             }
         }
-    } catch (e) {
-        console.error("Vote failed", e);
-    }
+    } catch(e) { console.error(e); }
   };
 
   if (voteBtn) voteBtn.addEventListener("click", () => handleVote('up'));
@@ -250,15 +307,64 @@ function wireActions() {
   // Comment actions (upvote/reply) via event delegation
   const messagesEl = document.getElementById("messages");
   if (messagesEl) {
-    messagesEl.addEventListener("click", (e) => {
-      const up = e.target.closest(".msgUpvote");
-      if (up) { up.classList.toggle("isActive"); return; }
-      const down = e.target.closest(".msgDownvote");
-      if (down) { down.classList.toggle("isActive"); return; }
+    messagesEl.addEventListener("click", async (e) => {
+    //   const up = e.target.closest(".msgUpvote");
+    //   if (up) { up.classList.toggle("isActive"); return; }
+      
       const rep = e.target.closest(".msgReply");
-      if (rep) { document.getElementById("replyInput")?.focus(); }
+      if (rep) { 
+          const bubble = rep.closest('.messageBubble');
+          const box = bubble.querySelector('.replyBox');
+          if (box) {
+              box.style.display = box.style.display === 'none' ? 'block' : 'none';
+              if (box.style.display === 'block') box.querySelector('textarea').focus();
+          }
+          return;
+      }
+      
+      const cancel = e.target.closest(".cancelReplyBtn");
+      if (cancel) {
+          const box = cancel.closest('.replyBox');
+          if (box) box.style.display = 'none';
+          return;
+      }
+      
+      const send = e.target.closest(".sendReplyBtn");
+      if (send) {
+          const bubble = send.closest('.messageBubble');
+          const msgEl = send.closest('.message');
+          const parentId = msgEl.getAttribute('data-id');
+          const box = send.closest('.replyBox');
+          const input = box.querySelector('textarea');
+          const text = input.value.trim();
+          
+          if (!text) return;
+          
+          try {
+              const form = new FormData();
+              form.append('id', String(ticketData.id));
+              form.append('text', text);
+              form.append('parentId', parentId);
+              
+              send.disabled = true;
+              const res = await fetch(`forumAddComment`, { method: 'POST', credentials: 'include', body: form });
+              send.disabled = false;
+              if (res.ok) {
+                  const json = await res.json();
+                  if (json.ok && json.comment) {
+                      conversation.push(json.comment);
+                      input.value = "";
+                      box.style.display = 'none'; // hide reply box
+                      renderMessages();
+                      ticketData.commentsCount = (ticketData.commentsCount || 0) + 1;
+                      renderHeader();
+                  }
+              }
+          } catch(e) { console.error(e); send.disabled=false; }
+        }
     });
   }
+
 
   // Quick actions
   document.getElementById("copyLinkBtn")?.addEventListener("click", () => {
@@ -397,6 +503,12 @@ async function fetchPost(id) {
   renderHeader();
   renderDescription();
   renderAttachments();
+  
+  // Fetch comments
+  if (ticketData.id) {
+      loadComments();
+  }
+
   renderMessages();
   renderInfo();
   renderTimeline();
@@ -437,8 +549,8 @@ function openDeleteModal() {
       });
       if (!res.ok) throw new Error("delete_failed");
       // Clear cached post and bust list cache once
-      try { localStorage.removeItem(cacheKeyFor(ticketData.id)); } catch {}
-      try { localStorage.setItem("forum_cache_bust", String(Date.now())); } catch {}
+      try { localStorage.removeItem(cacheKeyFor(ticketData.id)); } catch (e) {}
+      try { localStorage.setItem("forum_cache_bust", String(Date.now())); } catch (e) {}
       window.location.href = `/${currentRole}/forum`;
     } catch (e) {
       console.error(e);

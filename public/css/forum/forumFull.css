@@ -555,3 +555,37 @@ body.modal-open main {
 	0% { transform: rotate(0deg); }
 	100% { transform: rotate(360deg); }
 }
+
+.btnReplyText {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: transparent;
+  border: none;
+  font-family: inherit;
+  font-size: 13px;
+  font-weight: 500;
+  color: #6b7280;
+  cursor: pointer;
+  padding: 4px 0; /* Just vertical padding */
+  transition: opacity 0.2s ease, color 0.2s ease;
+  opacity: 0.75;
+}
+
+.btnReplyText:hover {
+  opacity: 1;
+  color: #374151;
+}
+
+.btnReplyText svg {
+  width: 14px;
+  height: 14px;
+  stroke: currentColor; /* Inherit text color */
+}
+
+.messageActions {
+  margin-top: 6px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
