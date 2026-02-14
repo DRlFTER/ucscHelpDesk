@@ -984,10 +984,7 @@ public function staffFAQ()
             }
         }
 
-        $headContent = '<link rel="stylesheet" href="/css/student/studentNewForum.css" />';
-        $this->view('student/studentNewForum', [
-            'title' => 'New Forum Post',
-            'head' => $headContent,
+        $this->view('newForum', [
             'flash' => $flash ?? null,
         ]);
     }
@@ -1558,10 +1555,7 @@ public function staffFAQ()
             $kb_data = [];
         }
 
-        $headContent = '<link rel="stylesheet" href="/css/staff/staffKB.css" />';
-        $this->view('staff/staffKB', [
-            'title' => 'Knowledge Base',
-            'head' => $headContent,
+        $this->view('knowledgeBase', [
             'kb_data' => $kb_data,
         ]);
 }

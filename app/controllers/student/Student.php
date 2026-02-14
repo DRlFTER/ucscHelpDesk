@@ -615,18 +615,6 @@ public function templates()
     public function knowledgebase()
     {
         $this->requireLogin('student');
-        $headContent = '<link rel="stylesheet" href="/css/student/studentKnowledgeBase.css" />';
-        $this->view('student/studentKnowledgeBase', [
-            'title' => 'Knowledge Base',
-            'head' => $headContent,
-        ]);
-    }
-
-    // Knowledge Base data (JSON)
-    public function knowledgebaseData()
-    {
-        $this->requireLogin('student');
-        header('Content-Type: application/json');
 
         require_once __DIR__ . '/../../models/staff/KB.php';
         $kbModel = new KB();
@@ -683,8 +671,9 @@ public function templates()
             ];
         }
 
-        echo json_encode(array_values($grouped));
-        exit;
+        $this->view('knowledgeBase', [
+            'kb_data' => array_values($grouped)
+        ]);
     }
 
     // Student Calendar page
@@ -767,10 +756,7 @@ public function templates()
             }
         }
 
-        $headContent = '<link rel="stylesheet" href="/css/student/studentNewForum.css" />';
-        $this->view('student/studentNewForum', [
-            'title' => 'New Forum Post',
-            'head' => $headContent,
+        $this->view('newForum', [
             'flash' => $flash ?? null,
         ]);
     }
