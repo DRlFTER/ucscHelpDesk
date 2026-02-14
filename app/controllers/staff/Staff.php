@@ -1074,10 +1074,14 @@ public function staffFAQ()
         $srt = strtolower($sort);
         if ($srt === 'oldest') {
             $orderSql = 'ORDER BY f.created_at ASC';
+        } elseif ($srt === 'votes') {
+             $orderSql = 'ORDER BY (SELECT COALESCE(SUM(vote_type), 0) FROM forum_votes WHERE post_id = f.q_id) DESC, f.created_at DESC';
         }
-        // 'votes' and 'comments' default to created_at for now
+        // 'comments' default to created_at for now
 
-    $sql = "SELECT f.q_id, f.created_at, f.title, f.topic, f.status, f.u_id, f.is_Public, u.name AS student_name
+    $sql = "SELECT f.q_id, f.created_at, f.title, f.topic, f.status, f.u_id, f.is_Public, u.name AS student_name,
+                (SELECT COALESCE(SUM(vote_type), 0) FROM forum_votes WHERE post_id = f.q_id) as vote_count,
+                 (SELECT vote_type FROM forum_votes WHERE post_id = f.q_id AND u_id = $uId LIMIT 1) as my_vote
                 FROM forum_q f
                 LEFT JOIN users u ON u.u_id = f.u_id
                 $whereSql
@@ -1110,8 +1114,8 @@ public function staffFAQ()
                 'topic' => (string)($r['topic'] ?? ''),
                 'status' => strtolower((string)($r['status'] ?? 'open')),
                 'is_Public' => isset($r['is_Public']) ? (int)$r['is_Public'] : 0,
-                'votesUp' => 0,
-                'votesDown' => 0,
+                'votes' => (int)($r['vote_count'] ?? 0),
+                'voted' => (int)($r['my_vote'] ?? 0),
                 'comments' => 0,
             ];
         }
@@ -1234,7 +1238,9 @@ public function staffFAQ()
         }
 
         $idEsc = (int)$id;
-        $sql = "SELECT f.q_id, f.created_at, f.title, f.topic, f.status, f.description, f.u_id, f.is_Public, u.name AS student_name
+        $sql = "SELECT f.q_id, f.created_at, f.title, f.topic, f.status, f.description, f.u_id, f.is_Public, u.name AS student_name,
+                (SELECT COALESCE(SUM(vote_type), 0) FROM forum_votes WHERE post_id = f.q_id) as vote_count,
+                (SELECT vote_type FROM forum_votes WHERE post_id = f.q_id AND u_id = $uId LIMIT 1) as my_vote
                 FROM forum_q f
                 LEFT JOIN users u ON u.u_id = f.u_id
                 WHERE f.q_id = $idEsc AND (f.is_Public = 1 OR f.u_id = $uId)
@@ -1287,10 +1293,64 @@ public function staffFAQ()
             'student' => [ 'id' => (int)($row['u_id'] ?? 0), 'name' => (string)($row['student_name'] ?? 'Student') ],
             'attachments' => [],
             'commentsCount' => 0,
-            'votes' => 0,
+            'votes' => (int)($row['vote_count'] ?? 0),
+            'voted' => (int)($row['my_vote'] ?? 0),
+            'isOwner' => ((int)$row['u_id'] === $uId),
         ];
 
         echo json_encode($payload);
+    }
+
+    public function staffForumVote()
+    {
+        $this->requireLogin('staff');
+        header('Content-Type: application/json');
+
+        $db = Database::getInstance();
+        $uId = (int)($_SESSION['user']['u_id'] ?? 0);
+        $id = isset($_POST['id']) ? (int)$_POST['id'] : 0;
+        $type = isset($_POST['type']) ? $_POST['type'] : '';
+
+        if ($uId <= 0 || $id <= 0 || !in_array($type, ['up', 'down'])) {
+            http_response_code(400);
+            echo json_encode(['error' => 'bad_request']);
+            return;
+        }
+
+        $voteVal = ($type === 'up') ? 1 : -1;
+
+        $check = $db->query("SELECT q_id FROM forum_q WHERE q_id = $id AND (is_Public = 1 OR u_id = $uId)");
+        if (!$check || $check->num_rows === 0) {
+            http_response_code(404);
+            echo json_encode(['error' => 'not_found']);
+            return;
+        }
+
+        $existing = 0;
+        $checkVote = $db->query("SELECT vote_type FROM forum_votes WHERE post_id = $id AND u_id = $uId");
+        if ($checkVote && $row = $checkVote->fetch_assoc()) {
+            $existing = (int)$row['vote_type'];
+        }
+
+        if ($existing === $voteVal) {
+            $db->query("DELETE FROM forum_votes WHERE post_id = $id AND u_id = $uId");
+            $newVote = 0;
+        } else {
+            $stmt = $db->prepare("INSERT INTO forum_votes (post_id, u_id, vote_type) VALUES (?, ?, ?) ON DUPLICATE KEY UPDATE vote_type = ?");
+             if ($stmt) {
+                $stmt->bind_param("iiii", $id, $uId, $voteVal, $voteVal);
+                $stmt->execute();
+            }
+            $newVote = $voteVal;
+        }
+
+        $totalRes = $db->query("SELECT COALESCE(SUM(vote_type), 0) as cnt FROM forum_votes WHERE post_id = $id");
+        $total = 0;
+        if ($totalRes && $r = $totalRes->fetch_assoc()) {
+            $total = (int)$r['cnt'];
+        }
+
+        echo json_encode(['ok' => true, 'votes' => $total, 'voted' => $newVote]);
     }
 
     // Delete a forum post (Staff can delete own posts only)
@@ -1335,13 +1395,7 @@ public function staffFAQ()
         }
     }
 
-    // Placeholder for vote endpoint
-    public function staffForumVote()
-    {
-        $this->requireLogin('staff');
-        header('Content-Type: application/json');
-        echo json_encode(['ok' => true]);
-    }
+
 
    public function calender() {
         $this->requireLogin('staff');
