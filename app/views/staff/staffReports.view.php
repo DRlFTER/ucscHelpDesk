@@ -121,18 +121,21 @@
         .filter-item input,
         .filter-item select {
             padding: 10px 15px;
-            border: 1px solid var(--color-border-medium);
+            border: 1px solid #e0e7ff;
             border-radius: 8px;
             background: var(--color-bg-filter);
             font-size: 14px;
             color: var(--color-text-dark);
             transition: border-color 0.2s ease, box-shadow 0.2s ease;
+            background: linear-gradient(135deg, #ffffff 0%, #f8f9ff 100%);
         }
         .filter-item input:focus,
         .filter-item select:focus {
             outline: none;
-            border-color: var(--color-primary);
+            border: 1px solid #e0e7ff;
+            border-radius: 8px;
             box-shadow: 0 0 0 3px rgba(140, 140, 249, 0.1);
+            background: linear-gradient(135deg, #ffffff 0%, #f8f9ff 100%);
         }
         .generate-btn {
             padding: 10px 20px;
@@ -151,6 +154,9 @@
         .generate-btn:hover {
             background: #6a6af5;
             transform: translateY(-1px);
+        }
+        .filter-item input:hover {
+            border: 1px solid #6a6af5;
         }
         .hidden {
             display: none !important;
@@ -471,6 +477,48 @@
             .report-table { font-size: 12px; }
             .report-table th, .report-table td { padding: 8px 6px; }
         }
+        /* ============================================= */
+/*              PRINT OPTIMIZATIONS              */
+/* ============================================= */
+
+@media print {
+    /* Hide global navigation/sidebar elements */
+    nav,
+    header,
+    .sidebar,
+    .side-nav,
+    .global-navigation,
+    aside,
+    .navbar,
+    .topbar,
+    footer,
+    .sidenavWrapper,
+    .no-print {
+        display: none !important;
+        visibility: hidden !important;
+    }
+
+    /* Ensure main content uses full page width */
+    .main-content,
+    .content-area,
+    #main-content {
+        margin: 0 !important;
+        padding: 8px !important;
+        width: 100% !important;
+        box-shadow: none !important;
+        border: none !important;
+    }
+
+    body {
+        margin: 0 !important;
+        padding: 0 !important;
+        background: white !important;
+    }
+
+    @page {
+        margin: 0.7cm 0.5cm !important;
+    }
+}
     </style>
 </head>
 <body>
@@ -607,11 +655,15 @@
                     <?php
                     $pending_count = $summary['pending_count'] ?? 0;
                     $resolved_count = $summary['resolved_count'] ?? 0;
-                    $other_count = ($summary['total_tickets'] ?? 0) - $pending_count - $resolved_count;
+                    $agent_assigned_count = $summary['agent_assigned_count'] ?? 0;
+                    $agent_closed_count = $summary['agent_closed_count'] ?? 0;
+                    $closed_count = $summary['closed_count'] ?? 0;
                     $total = $summary['total_tickets'] ?? 0;
                     $pending_pct = $total ? round(($pending_count / $total) * 100, 1) : 0;
                     $resolved_pct = $total ? round(($resolved_count / $total) * 100, 1) : 0;
-                    $other_pct = 100 - $pending_pct - $resolved_pct;
+                    $agent_assigned_pct = $total ? round(($agent_assigned_count / $total) * 100, 1) : 0;
+                    $agent_closed_pct = $total ? round(($agent_closed_count / $total) * 100, 1) : 0;
+                    $closed_pct = $total ? round(($closed_count / $total) * 100, 1) : 0;
                     ?>
                     <div class="chart-container">
                         <h6 style="margin: 0 0 10px 0; color: var(--color-text-body);">Status Breakdown (Pie Chart)</h6>
@@ -779,7 +831,7 @@
                 cell.style.border = '1px solid black !important';
                 cell.style.padding = '2px !important';
                 cell.style.wordBreak = 'break-word !important';
-                cell.style.lineHeight = '1.0 !important';
+                cell.style.lFneHeight = '1.0 !important';
                 cell.style.color = 'black !important';
                 cell.style.fontSize = '8px !important';
             });
@@ -805,10 +857,10 @@
                 window.statusChart = new Chart(ctxStatus, {
                     type: 'pie',
                     data: {
-                        labels: ['Pending (<?= $pending_pct ?>%)', 'Resolved (<?= $resolved_pct ?>%)', 'Other (<?= $other_pct ?>%)'],
+                        labels: ['Pending (<?= $pending_pct ?>%)', 'Resolved (<?= $resolved_pct ?>%)', 'Agent Assigned (<?= $agent_assigned_pct ?>%)', 'Agent Closed (<?= $agent_closed_pct ?>%)', 'Closed (<?= $closed_pct ?>%)'],
                         datasets: [{
-                            data: [<?= $pending_count ?>, <?= $resolved_count ?>, <?= $other_count ?>],
-                            backgroundColor: ['#fff68f', '#9effbc', '#badbff']
+                            data: [<?= $pending_count ?>, <?= $resolved_count ?>, <?= $agent_assigned_count ?>, <?= $agent_closed_count ?>, <?= $closed_count ?>],
+                            backgroundColor: ['#78290Fbc', '#15616Dc9', '#FF7D00c9', '#C0C0C0c9', '#4B4B4Bc9']
                         }]
                     },
                     options: { responsive: true, maintainAspectRatio: false }

@@ -34,7 +34,7 @@
         ['href' => '/staff/staffKB', 'label' => 'Knowledge Base', 'icon' => 'knowledgebase'],
         ['href' => '/staff/staffAnnoucements', 'label' => 'Announcement', 'icon' => 'announcements'],
         ['href' => '/staff/staffTemplate', 'label' => 'Templates', 'icon' => 'template'],
-        ['href' => '/staff/staffReports', 'label' => 'Reports', 'icon' => 'template'],
+        ['href' => '/staff/staffReports', 'label' => 'Reports', 'icon' => 'reports'],
         
       ],
       'counselor' => [
