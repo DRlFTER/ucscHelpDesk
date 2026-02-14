@@ -1,6 +1,9 @@
 <?php
-include_once(__DIR__ . "/../../views/common/navbar.php");
-$head = '<link rel="stylesheet" href="/css/student/studentNewForum.css">';
+$head = '<link rel="stylesheet" href="/css/forum/newForum.css">';
+
+// Get user role for form action
+$sessionUser = $_SESSION['user'] ?? null;
+$role = strtolower($sessionUser['role'] ?? 'student');
 ?>
 
 <main>
@@ -18,7 +21,7 @@ $head = '<link rel="stylesheet" href="/css/student/studentNewForum.css">';
 
 		<div class="ticketGrid">
 			<section class="ticketCard">
-				<form id="ticketForm" action="/student/newForum" method="POST" enctype="multipart/form-data">
+				<form id="ticketForm" action="/<?= htmlspecialchars($role) ?>/newForum" method="POST" enctype="multipart/form-data">
 
 					<div class="field">
 						<label class="label">Post Options</label>
@@ -89,7 +92,7 @@ $head = '<link rel="stylesheet" href="/css/student/studentNewForum.css">';
 					<div class="tipsList">
 						<div class="tipLine">
 							<svg class="tipIcon" xmlns="http://www.w3.org/2000/svg" viewBox="0 -960 960 960" width="20" height="20"><path d="M382-240 154-468l57-57 171 171 367-367 57 57-424 424Z"/></svg>
-							<span>Provide context and what you’ve tried</span>
+							<span>Provide context and what you've tried</span>
 						</div>
 						<div class="tipLine">
 							<svg class="tipIcon" xmlns="http://www.w3.org/2000/svg" viewBox="0 -960 960 960" width="20" height="20"><path d="M382-240 154-468l57-57 171 171 367-367 57 57-424 424Z"/></svg>
@@ -114,8 +117,7 @@ $head = '<link rel="stylesheet" href="/css/student/studentNewForum.css">';
 	</div>
 </main>
 
-<script src="/js/student/student.ticket.js"></script>
-<script src="/js/student/studentNewForum.js"></script>
+<script src="/js/forum/newForum.js"></script>
 
 <?php if (!empty($flash) && ($flash['type'] ?? '') === 'success'): ?>
 	<div class="toast" role="status" aria-live="polite">
@@ -123,6 +125,6 @@ $head = '<link rel="stylesheet" href="/css/student/studentNewForum.css">';
 		<span><?= htmlspecialchars($flash['message'] ?? 'Saved successfully.') ?></span>
 	</div>
 	<script>
-		setTimeout(() => { window.location.href = '/student/forum'; }, 1500);
+		setTimeout(() => { window.location.href = '/<?= htmlspecialchars($role) ?>/forum'; }, 1500);
 	</script>
 <?php endif; ?>

@@ -1,13 +1,16 @@
 <?php
-  $title = 'Knowledge Base';
-  $head = '<link rel="stylesheet" href="/css/student/studentKnowledgeBase.css">';
+$title = 'Knowledge Base';
+$head = '<link rel="stylesheet" href="/css/knowledgeBase/knowledgeBase.css">';
+
+// Get user role for conditional features
+$sessionUser = $_SESSION['user'] ?? null;
+$role = strtolower($sessionUser['role'] ?? 'student');
+$canCreate = in_array($role, ['staff', 'admin']);
 ?>
 
 <main>
   <div class="fullPage kbPage">
     <div class="pageHeader">
-      <h1 class="pageTitle">Knowledge Base</h1>
-  <p class="pageSubtitle">Access detailed guides, policies, and technical documentation.</p>
     </div>
 
     <div class="ticketsFilters kbFiltersRow">
@@ -18,6 +21,12 @@
         <input id="kbSearchInput" type="text" placeholder="Search documents..." aria-label="Search knowledge base" />
       </div>
       <div class="filters">
+      <?php if ($canCreate): ?>
+        <button class="btnWSvg" onclick="window.location.href='/<?= htmlspecialchars($role) ?>/createKB';" type="button">
+          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#ffffff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
+          <span class="btnPrimaryText">Create New Resource</span>
+        </button>
+      <?php endif; ?>
         <div class="selectWrap" id="kbCategoryWrap">
           <button class="selectButton" type="button" aria-haspopup="listbox" aria-expanded="false" aria-controls="kbCategoryList">
             <span id="kbCategoryLabel">All categories</span>
@@ -37,4 +46,10 @@
   </div>
 </main>
 
-<script src="/js/student/studentKnowledgeBase.js"></script>
+<script>
+  // Pass KB data and user role to JavaScript
+  window.KB_DATA = <?php echo json_encode($kb_data ?? []); ?>;
+  window.USER_ROLE = '<?= htmlspecialchars($role) ?>';
+  window.CAN_MANAGE_KB = <?= $canCreate ? 'true' : 'false' ?>;
+</script>
+<script src="/js/knowledgeBase/knowledgeBase.js" defer></script>
