@@ -134,6 +134,9 @@ class StaffReport
                     COUNT(*) AS total_tickets,
                     COUNT(CASE WHEN status = 'pending' THEN 1 END) AS pending_count,
                     COUNT(CASE WHEN status = 'resolved' THEN 1 END) AS resolved_count,
+                    COUNT(CASE WHEN status = 'agent-closed' THEN 1 END) AS agent_closed_count,
+                    COUNT(CASE WHEN status = 'closed' THEN 1 END) AS closed_count,
+                    COUNT(CASE WHEN status = 'agent assigned' THEN 1 END) AS agent_assigned_count,
                     AVG(DATEDIFF(NOW(), created_at)) AS avg_age_days
                 FROM tickets t
                 WHERE t.division = ?";
@@ -173,6 +176,9 @@ class StaffReport
         $summary = $result->fetch_assoc() ?: [];
         $summary['pending_pct'] = $summary['total_tickets'] ? round(($summary['pending_count'] / $summary['total_tickets']) * 100, 1) : 0;
         $summary['resolved_pct'] = $summary['total_tickets'] ? round(($summary['resolved_count'] / $summary['total_tickets']) * 100, 1) : 0;
+        $summary['agent_assigned_pct'] = $summary['total_tickets'] ? round(($summary['agent_assigned_count'] / $summary['total_tickets']) * 100, 1) : 0;
+        $summary['agent_closed_pct'] = $summary['total_tickets'] ? round(($summary['agent_closed_count'] / $summary['total_tickets']) * 100, 1) : 0;
+        $summary['closed_pct'] = $summary['total_tickets'] ? round(($summary['closed_count'] / $summary['total_tickets']) * 100, 1) : 0;
         $stmt->close();
         $conn->close();
         return $summary;
@@ -311,8 +317,7 @@ public function getStaffAssignmentReport(string $start_date = '', string $end_da
     $sql = "SELECT u.name AS staff_name, u.email, COUNT(t.ticket_id) AS ticket_count, 
             COALESCE(MAX(t.status), 'unassigned') AS status
             FROM users u
-            LEFT JOIN tickets t ON t.assigned_to = u.u_id AND u.role = 'staff'
-            WHERE t.division IN (" . implode(',', array_map(fn($d) => $d['did'], $divisions)) . ")  ";
+            LEFT JOIN tickets t ON t.assigned_to = u.u_id AND u.role = 'staff'";
     $params = [];
     $types = '';
     if ($start_date) {
@@ -507,5 +512,99 @@ public function getStaffAssignmentReport(string $start_date = '', string $end_da
         $conn->close();
         return $divisions;
     }
+
+
+/**
+ * Report: Ticket Volume & Trends (monthly/quarterly grouping)
+ * 
+ * Returns ticket counts grouped by time period (month or quarter) 
+ * and optionally by category/division.
+ * Useful for spotting seasonal peaks and trends.
+ */
+public function getTicketVolumeTrendsReport(
+    string $start_date = '',
+    string $end_date = '',
+    string $group_by = 'month',      // 'month' or 'quarter'
+    int $division_id = 0,             // optional specific division filter
+    string $category_name = ''        // optional exact category name filter
+): array {
+    $conn = self::getConnection();
+    $staff_id = $_SESSION['user']['u_id'];
+    $divisions = $this->getStaffDivisions($staff_id);
+    $allowed_dids = array_column($divisions, 'did');
+
+    // Build safe IN clause for divisions staff has access to
+    $div_in = implode(',', array_fill(0, count($allowed_dids), '?'));
+
+    $sql = "
+        SELECT 
+            DATE_FORMAT(t.created_at, '%Y-%m') AS period,
+            d.name AS category,
+            COUNT(t.ticket_id) AS ticket_count
+        FROM tickets t
+        LEFT JOIN division d ON d.did = t.division
+        WHERE t.division IN ($div_in)
+    ";
+    $params = $allowed_dids;
+    $types = str_repeat('i', count($allowed_dids));
+
+    if ($start_date) {
+        $sql .= " AND t.created_at >= ?";
+        $params[] = $start_date . ' 00:00:00';
+        $types .= 's';
+    }
+    if ($end_date) {
+        $sql .= " AND t.created_at <= ?";
+        $params[] = $end_date . ' 23:59:59';
+        $types .= 's';
+    }
+    if ($division_id > 0 && in_array($division_id, $allowed_dids)) {
+        $sql .= " AND t.division = ?";
+        $params[] = $division_id;
+        $types .= 'i';
+    }
+    if ($category_name !== '') {
+        $sql .= " AND d.name = ?";
+        $params[] = $category_name;
+        $types .= 's';
+    }
+
+    // Group by period (and category if not filtering to one)
+    if ($group_by === 'quarter') {
+        $sql .= " GROUP BY YEAR(t.created_at), QUARTER(t.created_at), d.name";
+        $sql = str_replace(
+            "DATE_FORMAT(t.created_at, '%Y-%m') AS period",
+            "CONCAT(YEAR(t.created_at), '-Q', QUARTER(t.created_at)) AS period",
+            $sql
+        );
+    } else {
+        // default: monthly
+        $sql .= " GROUP BY DATE_FORMAT(t.created_at, '%Y-%m'), d.name";
+    }
+
+    $sql .= " ORDER BY period ASC, ticket_count DESC";
+
+    $stmt = $conn->prepare($sql);
+    if (!$stmt) {
+        throw new Exception('Prepare failed: ' . $conn->error);
+    }
+    if (!empty($params)) {
+        $stmt->bind_param($types, ...$params);
+    }
+    $stmt->execute();
+    $result = $stmt->get_result();
+
+    $reports = [];
+    while ($row = $result->fetch_assoc()) {
+        $reports[] = $row;
+    }
+
+    $stmt->close();
+    $conn->close();
+    return $reports;
+    }
 }
+
+
+
 ?>
