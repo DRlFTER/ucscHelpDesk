@@ -188,7 +188,7 @@ public function create(array $data, ?array $file = null): bool
         $server_file_path = $staff_upload_dir . $file_name;  // Server path for move_uploaded_file()
         
         if (move_uploaded_file($file['tmp_name'], $server_file_path)) {
-            // NEW: Compute web-relative path for DB (e.g., 'uploads/announcements/1/filename.pdf')
+            // Compute web-relative path for DB (e.g., 'uploads/announcements/1/filename.pdf')
             $web_file_path = 'uploads/announcements/' . $staff_id . '/' . $file_name;
             
             // Insert web-relative path into DB

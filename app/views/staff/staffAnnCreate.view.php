@@ -52,7 +52,21 @@
                 <?php endforeach; ?>
               </select>
             </div>
-
+            <!-- My practise session . 
+ <span class="detail-label">Priority (*)</span>
+             <div class="detail-value-box">
+              <select id="priority" name="priority" required>
+                <?php if($division['name']=="Examination and Registration"): ?>
+                  <option value="Low">Low</option> 
+                  
+                <?php else: ?>
+                  <option value="Low">Low</option> 
+                  <option value="Medium" selected>Medium</option>
+                  <option value="High">High</option>
+                <?php endif; ?>
+              </select>
+            </div>
+                -->
             <span class="detail-label">File (Optional)</span>
             <div class="detail-value-box">
               <input type="file" id="file" name="file" accept=".pdf,.jpg,.jpeg,.png,.doc,.docx">

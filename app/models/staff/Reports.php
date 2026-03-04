@@ -401,11 +401,14 @@ public function getStaffAssignmentReport(string $start_date = '', string $end_da
     public function getEscalationReport(string $start_date = '', string $end_date = '', int $level = 0): array
     {
         $conn = self::getConnection();
+        $staff_id = $_SESSION['user']['u_id'];
+        $divisions = $this->getStaffDivisions($staff_id);
+
         $sql = "SELECT t.ticket_id, t.title, t.created_at AS ticket_date, tt.level_1, tt.level_2, tt.level_3, u.name AS student_name
                 FROM tickets t
                 INNER JOIN ticket_timeline tt ON t.ticket_id = tt.ticket_id
                 INNER JOIN users u ON t.u_id = u.u_id
-                WHERE 1=1";
+                WHERE 1=1 AND t.division IN (" . implode(',', array_map(fn($d) => $d['did'], $divisions)) . ")";
         $params = [];
         $types = '';
 
