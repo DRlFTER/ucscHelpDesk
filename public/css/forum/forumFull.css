@@ -1,3 +1,4 @@
+/* Global Forum Full View CSS */
 main {
   width: 100%;
   display: flex;
@@ -353,23 +354,13 @@ body.modal-open main {
   align-items: center;
   gap: 10px;
 }
+
 .tlDot {
   width: 10px;
   height: 10px;
   border-radius: 50%;
 }
-.tlDot.green {
-  background: #22c55e;
-}
-.tlDot.blue {
-  background: #3b82f6;
-}
-.tlDot.yellow {
-  background: #f59e0b;
-}
-.tlDot.gray {
-  background: #9ca3af;
-}
+
 .tlText {
   display: flex;
   flex-direction: column;
@@ -396,192 +387,205 @@ body.modal-open main {
     flex: 1 1 auto;
   }
 }
+/* End of copied styles */
 
 
-.scheduleModalBox {
-  max-width: 760px;
+.ticketHeader {
+	display: flex;
+	align-items: flex-start;
+	gap: 12px;
 }
 
-.scheduleForm {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 12px 14px;
-  margin-top: 6px;
+.ticketHeader .voteBox {
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	gap: 4px;
 }
 
-.scheduleForm label {
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
+.voteCount {
+	min-width: 1.5rem;
+	text-align: center;
+	font-weight: 600;
+	font-size: 14px;
+	color: #374151;
 }
 
-.scheduleForm label > span {
-  font-size: 13px;
-  color: #374151;
+.voteBtn.isActive {
+	background: #eef2ff;
+	border-color: #c7d2fe;
 }
 
-.scheduleForm input,
-.scheduleForm select,
-.scheduleForm textarea {
-  width: 100%;
-  border: 1px solid #e5e7eb;
-  border-radius: 10px;
-  background: #fff;
-  color: #111827;
-  padding: 10px 12px;
-  font: inherit;
+.voteBtn.isActive svg {
+	stroke: #6366f1;
 }
 
-/* Dropdowns styled like student new ticket selects */
-.scheduleForm select {
-  -webkit-appearance: none;
-  -moz-appearance: none;
-  appearance: none;
-  background-color: #fff;
-  background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%236b7280' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'><polyline points='6 9 12 15 18 9'/></svg>");
-  background-repeat: no-repeat;
-  background-position: right 12px center;
-  background-size: 16px 16px;
-  padding-right: 42px; /* space for chevron */
-  box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.03);
-  transition: border-color 0.2s ease, box-shadow 0.2s ease,
-    background-color 0.2s ease;
-  cursor: pointer;
+.voteBtnDown.isActive {
+	background: #fef2f2;
+	border-color: #fecaca;
 }
 
-.scheduleForm select:hover {
-  background-color: #fcfcfc;
-}
-.scheduleForm select:focus {
-  outline: none;
-  border-color: var(--CTA, #8c8cf9);
-  box-shadow: 0 0 0 4px rgba(140, 140, 249, 0.15);
-  background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%238c8cf9' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'><polyline points='6 9 12 15 18 9'/></svg>");
+.voteBtnDown.isActive svg {
+	stroke: #ef4444;
 }
 
-select::-ms-expand {
-  display: none;
+.ticketHeader .titleBlock {
+	flex: 1;
+	display: flex;
+	flex-direction: column;
+	gap: 8px;
 }
 
-.scheduleForm textarea {
-  min-height: 96px;
-  resize: vertical;
+.ticketHeader .titleBlock .ticketTitle {
+	flex: initial;
 }
 
-.scheduleForm .col-2 {
-  grid-column: 1 / -1;
+/* Resource links styling */
+.resourceList {
+	padding: 0;
+	margin: 0;
+	display: flex;
+	flex-direction: column;
+	gap: 10px;
 }
 
-.scheduleModalBox .msgActions {
-  grid-column: 1 / -1;
+.timelineItem {
+    list-style: none;
 }
 
-@media (max-width: 680px) {
-  .scheduleForm {
-    grid-template-columns: 1fr;
-  }
+.resourceList a {
+	display: flex;
+	flex-direction: column;
+	padding: 12px;
+	border-radius: 8px;
+	text-decoration: none;
+	transition: all 0.2s ease;
+	color: inherit;
+    flex: 1;
 }
 
-/* Timeline time colors */
-.tlText .time.green {
-  color: #22c55e;
+.resourceList a .label {
+	font-weight: 600;
+	color: #1f2937;
+	margin-bottom: 2px;
 }
-.tlText .time.blue {
-  color: #3b82f6;
+
+.resourceList a .time {
+	font-size: 0.875rem;
+	color: #6b7280;
 }
-.tlText .time.yellow {
-  color: #f59e0b;
+
+.resourceList a:hover {
+	border-color: #3b82f6;
+	background-color: #efefef;
 }
 
 /* Chat message alignment */
 .message.student {
-  justify-content: flex-end;
+	justify-content: flex-end;
 }
 
 .message.staff {
-  justify-content: flex-start;
+	justify-content: flex-start;
 }
 
 .message.student .messageBubble {
-  background: #e7f1ff;
-  border-bottom-right-radius: 2px;
-  max-width: 80%;
-  flex: initial;
+	background: #e7f1ff;
+	border-bottom-right-radius: 2px;
+	max-width: 80%;
+	flex: initial;
 }
 
 .message.staff .messageBubble {
-  background: #f3f4f6;
-  border-bottom-left-radius: 2px;
-  max-width: 80%;
-  flex: initial;
+	background: #f3f4f6;
+	border-bottom-left-radius: 2px;
+	max-width: 80%;
+	flex: initial;
 }
 
 .messageHeader .name .staffLabel {
-  font-weight: 600;
+	font-weight: 600;
 }
 
 .messageHeader .name .role {
-  font-size: 11px;
-  color: #6b7280;
+	font-size: 11px;
+	color: #6b7280;
 }
 
 /* Chat date separator */
 .chat-date-separator {
-  text-align: center;
-  margin: 20px 0;
-  position: relative;
-  display: flex;
-  justify-content: center;
-  width: 100%;
+	text-align: center;
+	margin: 20px 0;
+	position: relative;
+	display: flex;
+	justify-content: center;
+	width: 100%;
 }
 
 .chat-date-separator span {
-  background-color: #e5e7eb;
-  color: #4b5563;
-  padding: 4px 12px;
-  border-radius: 12px;
-  font-size: 12px;
-  font-weight: 500;
-  box-shadow: 0 1px 2px rgba(0,0,0,0.05);
+	background-color: #e5e7eb;
+	color: #4b5563;
+	padding: 4px 12px;
+	border-radius: 12px;
+	font-size: 12px;
+	font-weight: 500;
+	box-shadow: 0 1px 2px rgba(0,0,0,0.05);
 }
 
 /* Send button loading spinner */
-.btnSvg {
-  display: grid;
-  place-items: center;
-  width: 42px;
-  height: 42px;
-  border-radius: 50%;
-  border: none;
-  background: #8c8cf9;
-  cursor: pointer;
-  position: relative;
-}
-
-.btnSvg:hover {
-  background: #7070f6;
-}
-
 .btnSvg .spinner {
-  display: none;
-  border: 3px solid rgba(255, 255, 255, 0.3);
-  border-radius: 50%;
-  border-top: 3px solid #fff;
-  width: 18px;
-  height: 18px;
-  animation: spin 1s linear infinite;
+	display: none;
+	border: 3px solid rgba(255, 255, 255, 0.3);
+	border-radius: 50%;
+	border-top: 3px solid #fff;
+	width: 18px;
+	height: 18px;
+	animation: spin 1s linear infinite;
 }
 
 .btnSvg.loading svg {
-  display: none;
+	display: none;
 }
 
 .btnSvg.loading .spinner {
-  display: block;
+	display: block;
 }
 
 @keyframes spin {
-  0% { transform: rotate(0deg); }
-  100% { transform: rotate(360deg); }
+	0% { transform: rotate(0deg); }
+	100% { transform: rotate(360deg); }
 }
 
+.btnReplyText {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: transparent;
+  border: none;
+  font-family: inherit;
+  font-size: 13px;
+  font-weight: 500;
+  color: #6b7280;
+  cursor: pointer;
+  padding: 4px 0; /* Just vertical padding */
+  transition: opacity 0.2s ease, color 0.2s ease;
+  opacity: 0.75;
+}
+
+.btnReplyText:hover {
+  opacity: 1;
+  color: #374151;
+}
+
+.btnReplyText svg {
+  width: 14px;
+  height: 14px;
+  stroke: currentColor; /* Inherit text color */
+}
+
+.messageActions {
+  margin-top: 6px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}

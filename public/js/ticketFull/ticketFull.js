@@ -19,23 +19,8 @@
 
 let ticketData = null;
 
-// Demo placeholders; these can be swapped for real conversation/timeline later
-const conversation = [
-  {
-    name: "Support Agent",
-    role: "Staff",
-    time: "4 hours ago",
-    text: "Thanks, we are looking into this now.",
-    authorType: "staff",
-  },
-  {
-    name: "You",
-    role: "",
-    time: "3 hours ago",
-    text: "Great, thanks!",
-    authorType: "student",
-  },
-];
+// Conversation messages array (populated from API)
+const conversation = [];
 
 const CFG = window.TICKET_FULL_CONFIG || {
   role: "admin",
@@ -105,24 +90,67 @@ function renderAttachments() {
     .join("");
 }
 
+// Date/time formatting helpers for chat
+function formatDate(dateString) {
+  if (!dateString) return '';
+  const date = new Date(dateString.replace(/-/g, '/'));
+  const today = new Date();
+  const yesterday = new Date(today);
+  yesterday.setDate(yesterday.getDate() - 1);
+
+  if (date.toDateString() === today.toDateString()) {
+    return 'Today';
+  } else if (date.toDateString() === yesterday.toDateString()) {
+    return 'Yesterday';
+  } else {
+    return date.toLocaleDateString(undefined, { year: 'numeric', month: 'long', day: 'numeric' });
+  }
+}
+
+function formatTime(dateString) {
+  if (!dateString) return '';
+  const date = new Date(dateString.replace(/-/g, '/'));
+  return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: false });
+}
+
 function renderMessages() {
   const m = document.getElementById("messages");
+  let lastDate = null;
+
   m.innerHTML = conversation
     .map((msg) => {
-      const typeClass = msg.authorType === "staff" ? "staff" : "student";
+      const isStaff = msg.authorType === "staff";
+      const typeClass = isStaff ? "staff" : "student";
+      const division = (msg.role || "").trim();
+      const headerTitle = isStaff
+        ? `<span class="name"><span class="staffLabel">Staff</span>${division ? ` <span class="role">(${division})</span>` : ""}</span>`
+        : `<span class="name">${msg.name || "You"}</span>`;
+      
+      const dateStr = formatDate(msg.time);
+      const timeStr = formatTime(msg.time);
+      
+      let dateHeader = '';
+      if (dateStr !== lastDate) {
+        dateHeader = `<div class="chat-date-separator"><span>${dateStr}</span></div>`;
+        lastDate = dateStr;
+      }
+
       return `
-      <div class="message">
-        <div class="messageBubble ${typeClass}">
+      ${dateHeader}
+      <div class="message ${typeClass}">
+        <div class="messageBubble">
           <div class="messageHeader">
-            <span class="name">${msg.name}</span>
-            ${msg.role ? `<span class="role">${msg.role}</span>` : ""}
-            <span class="time">${msg.time}</span>
+            ${headerTitle}
+            <span class="time">${timeStr}</span>
           </div>
           <div class="messageText">${msg.text}</div>
         </div>
       </div>`;
     })
     .join("");
+  
+  // Auto-scroll to bottom of messages
+  m.scrollTop = m.scrollHeight;
 }
 
 function renderInfo() {
@@ -166,52 +194,97 @@ function toggleActionButtons() {
   const del = document.getElementById("deleteBtn");
   const sched = document.getElementById("scheduleBtn");
   const resolveBtn = document.getElementById("resolveBtn");
-  // Defaults: show delete for admin only
+  const statusNorm = (ticketData.status || "").toLowerCase();
+  const isResolved = statusNorm === "resolved" || statusNorm === "closed";
+
+  // Admin: show delete and resolve (if not resolved)
   if (ROLE === "admin") {
     if (del) del.style.display = "";
-    if (resolveBtn) {
-      if (ticketData.status === "Resolved") {
-        resolveBtn.style.display = "none";
-      } else {
-        resolveBtn.style.display = "";
-      }
-    }
+    if (resolveBtn) resolveBtn.style.display = isResolved ? "none" : "";
     if (sched) sched.style.display = "none";
     return;
   }
-  if (ROLE === "counselor") {
-    // Show Schedule button only if meeting is requested
-    const meeting = (ticketData.meeting || "").toLowerCase();
-    if (meeting === "requested") {
-      if (sched) sched.style.display = "";
-    } else {
-      if (sched) sched.style.display = "none";
-    }
-    if (del) del.style.display = "none";
-    if (resolveBtn) resolveBtn.style.display = "none";
-  } else {
-    // Other roles: hide both
+
+  // Student: show resolve button (if not resolved), hide delete and schedule
+  if (ROLE === "student") {
     if (del) del.style.display = "none";
     if (sched) sched.style.display = "none";
-    if (resolveBtn) resolveBtn.style.display = "none";
+    if (resolveBtn) resolveBtn.style.display = isResolved ? "none" : "";
+    return;
   }
+
+  // Counselor: show schedule button if meeting requested, hide others
+  if (ROLE === "counselor") {
+    const meeting = (ticketData.meeting || "").toLowerCase();
+    if (sched) sched.style.display = meeting === "requested" ? "" : "none";
+    if (del) del.style.display = "none";
+    if (resolveBtn) resolveBtn.style.display = "none";
+    return;
+  }
+
+  // Other roles: hide all action buttons
+  if (del) del.style.display = "none";
+  if (sched) sched.style.display = "none";
+  if (resolveBtn) resolveBtn.style.display = "none";
 }
 
 function wireActions() {
-  document.getElementById("sendBtn").addEventListener("click", () => {
-    const input = document.getElementById("replyInput");
-    const text = input.value.trim();
-    if (!text) return;
-    conversation.push({
-      name: "You",
-      role: "",
-      time: "Just now",
-      text,
-      authorType: "student",
+  const sendBtn = document.getElementById("sendBtn");
+  if (sendBtn) {
+    sendBtn.addEventListener("click", async () => {
+      const input = document.getElementById("replyInput");
+      const text = input.value.trim();
+      if (!text) return;
+
+      const ticketId = getTicketIdFromUrl();
+      if (!ticketId) return;
+
+      // Show loading state
+      sendBtn.classList.add("loading");
+      sendBtn.disabled = true;
+
+      try {
+        const res = await fetch(`/${ROLE}/sendMessage`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({
+            ticket_id: ticketId,
+            message: text
+          }),
+          credentials: "include"
+        });
+        
+        const data = await res.json();
+        if (data.success) {
+          input.value = "";
+          await fetchMessages(ticketId); // Refresh messages
+        } else {
+          alert("Failed to send message: " + (data.error || "Unknown error"));
+        }
+      } catch (e) {
+        console.error("Error sending message:", e);
+        alert("Error sending message");
+      } finally {
+        // Hide loading state
+        sendBtn.classList.remove("loading");
+        sendBtn.disabled = false;
+      }
     });
-    input.value = "";
-    renderMessages();
-  });
+  }
+
+  // Also allow sending with Enter key
+  const replyInput = document.getElementById("replyInput");
+  if (replyInput) {
+    replyInput.addEventListener("keypress", (e) => {
+      if (e.key === "Enter" && !e.shiftKey) {
+        e.preventDefault();
+        const sendBtn = document.getElementById("sendBtn");
+        if (sendBtn && !sendBtn.disabled) sendBtn.click();
+      }
+    });
+  }
 
   const resolveBtn = document.getElementById("resolveBtn");
   if (resolveBtn) {
@@ -269,6 +342,32 @@ async function fetchTicket(id) {
   });
   if (!res.ok) throw new Error("Failed to fetch ticket");
   return res.json();
+}
+
+// Fetch chat messages from the server
+async function fetchMessages(id) {
+  try {
+    const res = await fetch(`/${ROLE}/chatMessages?ticket_id=${encodeURIComponent(id)}`, { 
+      credentials: "include" 
+    });
+    if (!res.ok) throw new Error("Failed to fetch messages");
+    const data = await res.json();
+    if (data.messages) {
+      conversation.length = 0;
+      data.messages.forEach(msg => {
+        conversation.push({
+          name: msg.sender_name,
+          role: msg.sender_role,
+          time: msg.created_at,
+          text: msg.message,
+          authorType: msg.sender_role === 'student' ? 'student' : 'staff'
+        });
+      });
+      renderMessages();
+    }
+  } catch (e) {
+    console.error("Error fetching messages:", e);
+  }
 }
 
 (async function init() {
@@ -338,11 +437,19 @@ async function fetchTicket(id) {
   renderHeader();
   renderDescription();
   renderAttachments();
-  renderMessages();
   renderInfo();
   renderTimeline();
   toggleActionButtons();
   wireActions();
+
+  // Fetch chat messages from server
+  if (id) {
+    fetchMessages(id);
+    // Poll for new messages every 10 seconds
+    setInterval(() => fetchMessages(id), 10000);
+  } else {
+    renderMessages();
+  }
 })();
 
 // Modal helpers (admin only)
@@ -403,7 +510,8 @@ function openDeleteModal() {
 // ... (top of file)
 
 function openResolveModal() {
-  if (ROLE !== "admin") return;
+  // Allow admin and student to resolve tickets
+  if (ROLE !== "admin" && ROLE !== "student") return;
   const overlay = document.getElementById("resolveModal");
   if (!overlay) return;
 
@@ -426,8 +534,8 @@ function openResolveModal() {
   const onConfirm = async (e) => {
     e && e.preventDefault();
 
-    // Manual fallback if the variable is magically disappearing
-    const endpoint = CFG.resolveEndpoint || "/admin/ticketResolve";
+    // Use role-based endpoint: /student/ticketResolve or /admin/ticketResolve
+    const endpoint = CFG.resolveEndpoint || `/${ROLE}/ticketResolve`;
     console.log("Resolved Endpoint Path:", endpoint);
 
     try {
@@ -456,6 +564,7 @@ function openResolveModal() {
 
       renderHeader();
       renderInfo();
+      renderTimeline();
       toggleActionButtons();
 
       // Clear cache so it doesn't revert on manual refresh
@@ -477,6 +586,12 @@ function openResolveModal() {
     e.preventDefault();
     close();
   };
+  if (backdropBtn) {
+    backdropBtn.onclick = (e) => {
+      e.preventDefault();
+      close();
+    };
+  }
 }
 
 // Schedule modal is handled by inline script in the view file

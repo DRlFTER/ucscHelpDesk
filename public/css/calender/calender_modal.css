@@ -17,8 +17,12 @@
 }
 
 @keyframes fadeIn {
-  from { opacity: 0; }
-  to { opacity: 1; }
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
 }
 
 .event-modal {
@@ -78,7 +82,9 @@
   align-items: center;
   justify-content: center;
   border-radius: 8px;
-  transition: background-color 0.12s ease, color 0.12s ease;
+  transition:
+    background-color 0.12s ease,
+    color 0.12s ease;
   will-change: background-color;
 }
 
@@ -123,7 +129,9 @@
   font-size: 15px;
   color: #111827;
   background: #ffffff;
-  transition: border-color 0.12s ease, box-shadow 0.12s ease;
+  transition:
+    border-color 0.12s ease,
+    box-shadow 0.12s ease;
   font-family: inherit;
   will-change: border-color, box-shadow;
 }
@@ -206,7 +214,9 @@
   font-size: 14px;
   font-weight: 600;
   cursor: pointer;
-  transition: transform 0.15s cubic-bezier(0.4, 0, 0.2, 1), box-shadow 0.15s ease;
+  transition:
+    transform 0.15s cubic-bezier(0.4, 0, 0.2, 1),
+    box-shadow 0.15s ease;
   border: none;
   font-family: inherit;
   position: relative;
@@ -225,7 +235,7 @@
 }
 
 .btn-primary::before {
-  content: '';
+  content: "";
   position: absolute;
   top: 0;
   left: 0;
@@ -278,7 +288,7 @@
 }
 
 .btn-delete::before {
-  content: '';
+  content: "";
   position: absolute;
   top: 0;
   left: 0;
@@ -309,7 +319,7 @@
 }
 
 .dayCell::after {
-  content: '+';
+  content: "+";
   position: absolute;
   top: 50%;
   left: 50%;
@@ -363,3 +373,97 @@
   }
 }
 
+/* Confirmation Modal */
+.confirm-modal-overlay {
+  z-index: 10000;
+}
+
+.confirm-modal {
+  max-width: 400px;
+}
+
+.confirm-icon {
+  margin-bottom: 16px;
+}
+
+.confirm-message {
+  font-size: 16px;
+  color: #374151;
+  margin: 0;
+  line-height: 1.5;
+}
+
+/* Input error state */
+.input-error {
+  border-color: #dc2626 !important;
+  box-shadow: 0 0 0 3px rgba(220, 38, 38, 0.1) !important;
+  animation: shake 0.4s ease;
+}
+
+@keyframes shake {
+  0%,
+  100% {
+    transform: translateX(0);
+  }
+  20%,
+  60% {
+    transform: translateX(-4px);
+  }
+  40%,
+  80% {
+    transform: translateX(4px);
+  }
+}
+
+/* Smart Input Wrapper for highlighting */
+.smart-input-wrapper {
+  position: relative;
+  display: flex;
+  align-items: center;
+  flex: 1;
+}
+
+.smart-input-highlights {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  padding: 12px 16px;
+  font-size: 14px;
+  font-family: inherit;
+  color: transparent;
+  white-space: nowrap;
+  overflow: hidden;
+  pointer-events: none;
+  background: transparent;
+  border-radius: 12px;
+}
+
+.smart-input-wrapper .inputEvent {
+  position: relative;
+  background: transparent;
+  z-index: 1;
+}
+
+/* Highlight marks */
+.smart-input-highlights mark {
+  color: transparent;
+  border-radius: 3px;
+  padding: 2px 0;
+}
+
+.smart-input-highlights .highlight-date {
+  background: rgba(34, 197, 94, 0.3);
+  box-shadow: 0 0 0 2px rgba(34, 197, 94, 0.2);
+}
+
+.smart-input-highlights .highlight-time {
+  background: rgba(59, 130, 246, 0.3);
+  box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.2);
+}
+
+.smart-input-highlights .highlight-duration {
+  background: rgba(168, 85, 247, 0.3);
+  box-shadow: 0 0 0 2px rgba(168, 85, 247, 0.2);
+}

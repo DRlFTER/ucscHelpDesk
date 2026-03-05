@@ -148,11 +148,22 @@
 
             <div class="card calendar sectionCard">
           <h3>Calendar</h3>
-          <a href="/student/calender" class="event">
-            <div>June 28</div>
-            <div>Meeting with Mr. Prasad at W003</div>
-            <div>5:00 PM</div>
-          </a>
+          <?php if (!empty($upcomingEvents)): ?>
+            <?php foreach ($upcomingEvents as $e): ?>
+                <?php
+                    $d = new DateTime($e['event_date']);
+                    $dateStr = $d->format('M j');
+                    $timeStr = ((int)$e['is_all_day'] === 1) ? 'All Day' : date('g:i A', strtotime($e['start_time']));
+                ?>
+              <a href="/student/calender" class="event">
+                <div><?= htmlspecialchars($dateStr) ?></div>
+                <div class="eventTitle"><?= htmlspecialchars($e['title']) ?></div>
+                <div class="eventTime"><?= htmlspecialchars($timeStr) ?></div>
+              </a>
+            <?php endforeach; ?>
+          <?php else: ?>
+             <p class="mutedText">No upcoming events.</p>
+          <?php endif; ?>
             </div>
 
             <div class="card account sectionCard">

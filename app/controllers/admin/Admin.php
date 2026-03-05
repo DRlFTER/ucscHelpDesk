@@ -46,7 +46,7 @@ class Admin extends Controller
         ]);
     }
 
-    public function ticket() {
+    public function ticketFull() {
         $this->requireLogin('admin');
         $headContent = '
         <link rel="stylesheet" href="/css/ticketFull/ticketFull.css"/>';
@@ -89,8 +89,15 @@ class Admin extends Controller
     public function forum() {
         $this->requireLogin('admin');
         $headContent = '
-        <link rel="stylesheet" href="/css/student/studentForum.css"/>';
-        $this->view('adminForum', ['title' => 'Forum', 'head' => $headContent]);
+        <link rel="stylesheet" href="/css/forum/forum.css"/>';
+        $this->view('forum', ['title' => 'Forum', 'head' => $headContent]);
+    }
+
+    public function forumFull() {
+        $this->requireLogin('admin');
+        $headContent = '
+        <link rel="stylesheet" href="/css/forum/forumFull.css"/>';
+        $this->view('forumFull', ['title' => 'Forum Post', 'head' => $headContent]);
     }
 
     /**
@@ -300,8 +307,8 @@ class Admin extends Controller
                 'topic' => (string)($r['topic'] ?? ''),
                 'status' => strtolower((string)($r['status'] ?? 'open')),
                 'is_Public' => isset($r['is_Public']) ? (int)$r['is_Public'] : 0,
-                'votesUp' => 0,
-                'votesDown' => 0,
+                'votes' => (int)($r['vote_count'] ?? 0),
+                'voted' => (int)($r['my_vote'] ?? 0),
                 'comments' => 0,
             ];
         }
@@ -1022,5 +1029,586 @@ class Admin extends Controller
         if ($diff < 3600) return (int)floor($diff / 60) . 'm ago';
         if ($diff < 86400) return (int)floor($diff / 3600) . 'h ago';
         return (int)floor($diff / 86400) . 'd ago';
+    }
+
+    // Single forum post data
+    public function forumPostData()
+    {
+        $this->requireLogin('admin');
+        header('Content-Type: application/json');
+
+        $db = Database::getInstance();
+        $uId = (int)($_SESSION['user']['u_id'] ?? 0);
+        $id = isset($_GET['id']) ? (int)$_GET['id'] : 0;
+        if ($uId <= 0 || $id <= 0) {
+            http_response_code(400);
+            echo json_encode(['error' => 'bad_request']);
+            return;
+        }
+
+        $idEsc = (int)$id;
+        // Admin can see all posts
+        $sql = "SELECT f.q_id, f.created_at, f.title, f.topic, f.status, f.description, f.u_id, f.is_Public, u.name AS student_name,
+                (SELECT COALESCE(SUM(vote_type), 0) FROM forum_votes WHERE post_id = f.q_id) as vote_count,
+                (SELECT vote_type FROM forum_votes WHERE post_id = f.q_id AND u_id = $uId LIMIT 1) as my_vote
+                FROM forum_q f
+                LEFT JOIN users u ON u.u_id = f.u_id
+                WHERE f.q_id = $idEsc
+                LIMIT 1";
+
+        $row = null;
+        if ($res = $db->query($sql)) {
+            $row = $res->fetch_assoc();
+            $res->free();
+        }
+        if (!$row) {
+            http_response_code(404);
+            echo json_encode(['error' => 'not_found']);
+            return;
+        }
+
+        $createdAt = $row['created_at'] ?? null;
+        $createdPretty = '';
+        if ($createdAt) {
+            $ts = strtotime($createdAt);
+            if ($ts !== false) $createdPretty = date('M d, Y \\a\\t g:i A', $ts);
+        }
+
+        $createdAgo = '';
+        if ($createdAt) {
+            $ts = strtotime($createdAt);
+            if ($ts !== false) {
+                $diff = time() - $ts;
+                if ($diff < 60) $createdAgo = $diff . ' seconds ago';
+                elseif ($diff < 3600) { $m = (int)floor($diff/60); $createdAgo = $m . ' minute' . ($m>1?'s':'') . ' ago'; }
+                elseif ($diff < 86400) { $h = (int)floor($diff/3600); $createdAgo = $h . ' hour' . ($h>1?'s':'') . ' ago'; }
+                else { $d = (int)floor($diff/86400); $createdAgo = $d . ' day' . ($d>1?'s':'') . ' ago'; }
+            }
+        }
+
+        $statusUi = strtolower((string)($row['status'] ?? 'open')) === 'answered' ? 'Answered' : 'Open';
+
+        $payload = [
+            'id' => (int)($row['q_id'] ?? 0),
+            'code' => 'FRM-' . (int)($row['q_id'] ?? 0),
+            'title' => (string)($row['title'] ?? 'Post'),
+            'description' => (string)($row['description'] ?? ''),
+            'topic' => (string)($row['topic'] ?? ''),
+            'status' => $statusUi,
+            'createdAt' => (string)($row['created_at'] ?? ''),
+            'createdOn' => $createdPretty,
+            'createdAgo' => $createdAgo,
+            'is_Public' => (int)($row['is_Public'] ?? 0),
+            'student' => [ 'id' => (int)($row['u_id'] ?? 0), 'name' => (string)($row['student_name'] ?? 'Student') ],
+            'attachments' => [],
+            'commentsCount' => (int)($db->query("SELECT COUNT(*) as c FROM forum_comments WHERE post_id = " . (int)($row['q_id'] ?? 0))->fetch_assoc()['c'] ?? 0),
+            'votes' => (int)($row['vote_count'] ?? 0),
+            'voted' => (int)($row['my_vote'] ?? 0),
+            'isOwner' => ((int)$row['u_id'] === $uId),
+        ];
+
+        echo json_encode($payload);
+    }
+
+    public function forumVote()
+    {
+        $this->requireLogin('admin');
+        header('Content-Type: application/json');
+
+        $db = Database::getInstance();
+        $uId = (int)($_SESSION['user']['u_id'] ?? 0);
+        $id = isset($_POST['id']) ? (int)$_POST['id'] : 0;
+        $type = isset($_POST['type']) ? $_POST['type'] : '';
+
+        if ($uId <= 0 || $id <= 0 || !in_array($type, ['up', 'down'])) {
+            http_response_code(400);
+            echo json_encode(['error' => 'bad_request']);
+            return;
+        }
+
+        $voteVal = ($type === 'up') ? 1 : -1;
+
+        // Check if post exists (Admin can access all)
+        $check = $db->query("SELECT q_id FROM forum_q WHERE q_id = $id");
+        if (!$check || $check->num_rows === 0) {
+            http_response_code(404);
+            echo json_encode(['error' => 'not_found']);
+            return;
+        }
+
+        // Check existing vote
+        $existing = 0;
+        $checkVote = $db->query("SELECT vote_type FROM forum_votes WHERE post_id = $id AND u_id = $uId");
+        if ($checkVote && $row = $checkVote->fetch_assoc()) {
+            $existing = (int)$row['vote_type'];
+        }
+
+        if ($existing === $voteVal) {
+            // Toggle off (remove vote)
+            $db->query("DELETE FROM forum_votes WHERE post_id = $id AND u_id = $uId");
+            $newVote = 0;
+        } else {
+            // Insert or Update
+            $stmt = $db->prepare("INSERT INTO forum_votes (post_id, u_id, vote_type) VALUES (?, ?, ?) ON DUPLICATE KEY UPDATE vote_type = ?");
+            if ($stmt) {
+                $stmt->bind_param("iiii", $id, $uId, $voteVal, $voteVal);
+                $stmt->execute();
+            }
+            $newVote = $voteVal;
+        }
+
+        // Get new total
+        $totalRes = $db->query("SELECT COALESCE(SUM(vote_type), 0) as cnt FROM forum_votes WHERE post_id = $id");
+        $total = 0;
+        if ($totalRes && $r = $totalRes->fetch_assoc()) {
+            $total = (int)$r['cnt'];
+        }
+
+        echo json_encode(['ok' => true, 'votes' => $total, 'voted' => $newVote]);
+    }
+
+    // Toggle forum post visibility (Admin can change any post)
+    public function forumToggleVisibility()
+    {
+        $this->requireLogin('admin');
+        header('Content-Type: application/json');
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+            http_response_code(405);
+            echo json_encode(['error' => 'method_not_allowed']);
+            return;
+        }
+
+        $id = isset($_POST['id']) ? (int)$_POST['id'] : 0;
+        $state = isset($_POST['state']) ? trim((string)$_POST['state']) : '';
+        if ($id <= 0 || ($state !== 'public' && $state !== 'private')) {
+            http_response_code(400);
+            echo json_encode(['error' => 'bad_request']);
+            return;
+        }
+
+        $isPublic = ($state === 'public') ? 1 : 0;
+
+        try {
+            $db = Database::getInstance();
+            $stmt = $db->prepare("UPDATE forum_q SET is_Public = ? WHERE q_id = ? LIMIT 1");
+            if (!$stmt) throw new Exception('prepare_failed');
+            $stmt->bind_param('ii', $isPublic, $id);
+            if (!$stmt->execute()) {
+                $err = $stmt->error;
+                $stmt->close();
+                throw new Exception('execute_failed: ' . $err);
+            }
+            $stmt->close();
+            echo json_encode(['ok' => true, 'is_Public' => $isPublic]);
+        } catch (Throwable $e) {
+            http_response_code(500);
+            echo json_encode(['error' => 'server_error']);
+        }
+    }
+
+    // Toggle forum post status (Admin can change any post)
+    public function forumToggleStatus()
+    {
+        $this->requireLogin('admin');
+        header('Content-Type: application/json');
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+            http_response_code(405);
+            echo json_encode(['error' => 'method_not_allowed']);
+            return;
+        }
+
+        $id = isset($_POST['id']) ? (int)$_POST['id'] : 0;
+        $status = isset($_POST['status']) ? strtolower(trim((string)$_POST['status'])) : '';
+        if ($id <= 0 || ($status !== 'open' && $status !== 'answered')) {
+            http_response_code(400);
+            echo json_encode(['error' => 'bad_request']);
+            return;
+        }
+
+        try {
+            $db = Database::getInstance();
+            $stmt = $db->prepare("UPDATE forum_q SET status = ? WHERE q_id = ? LIMIT 1");
+            if (!$stmt) throw new Exception('prepare_failed');
+            $stmt->bind_param('si', $status, $id);
+            if (!$stmt->execute()) {
+                $err = $stmt->error;
+                $stmt->close();
+                throw new Exception('execute_failed: ' . $err);
+            }
+            $stmt->close();
+            echo json_encode(['ok' => true, 'status' => $status]);
+        } catch (Throwable $e) {
+            http_response_code(500);
+            echo json_encode(['error' => 'server_error']);
+        }
+    }
+
+    // Delete a forum post (Admin can delete any post)
+    public function forumDelete()
+    {
+        $this->requireLogin('admin');
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+            http_response_code(405);
+            echo 'method_not_allowed';
+            return;
+        }
+
+        $id = isset($_POST['id']) ? (int)$_POST['id'] : 0;
+        if ($id <= 0) {
+            http_response_code(400);
+            echo 'bad_request';
+            return;
+        }
+
+        $db = Database::getInstance();
+        try {
+            $stmt = $db->prepare("DELETE FROM forum_q WHERE q_id = ? LIMIT 1");
+            if (!$stmt) throw new Exception('prepare_failed');
+            $stmt->bind_param('i', $id);
+            if (!$stmt->execute()) {
+                $err = $stmt->error;
+                $stmt->close();
+                throw new Exception('execute_failed: ' . $err);
+            }
+            $stmt->close();
+            echo 'ok';
+        } catch (Throwable $e) {
+            http_response_code(500);
+            echo 'server_error';
+        }
+    }
+
+
+
+
+    public function forumComments()
+    {
+        $this->requireLogin('admin');
+        header('Content-Type: application/json');
+
+        $db = Database::getInstance();
+        $uId = (int)($_SESSION['user']['u_id'] ?? 0);
+        $id = isset($_GET['id']) ? (int)$_GET['id'] : 0;
+        if ($uId <= 0 || $id <= 0) {
+            echo json_encode(['error' => 'bad_request']);
+            return;
+        }
+
+        // Admin can view any post
+        $check = $db->query("SELECT q_id FROM forum_q WHERE q_id = $id");
+        if (!$check || $check->num_rows === 0) {
+            echo json_encode([]);
+            return;
+        }
+
+        $sql = "SELECT c.id, c.parent_id, c.content, c.created_at, u.name as author_name, u.role as author_role, u.u_id as author_id
+                FROM forum_comments c
+                LEFT JOIN users u ON u.u_id = c.u_id
+                WHERE c.post_id = $id
+                ORDER BY c.created_at ASC";
+        
+        $comments = [];
+        if ($res = $db->query($sql)) {
+            while ($row = $res->fetch_assoc()) {
+                $ts = strtotime($row['created_at']);
+                $time = ($ts) ? date('M d, g:i A', $ts) : '';
+                
+                $comments[] = [
+                    'id' => (int)$row['id'],
+                    'parentId' => $row['parent_id'] ? (int)$row['parent_id'] : null,
+                    'text' => $row['content'],
+                    'time' => $time,
+                    'name' => $row['author_name'] ?? 'Unknown',
+                    'role' => $row['author_role'] ?? '',
+                    'authorType' => $row['author_role'] ?? 'admin',
+                    'authorId' => (int)$row['author_id']
+                ];
+            }
+        }
+        echo json_encode($comments);
+    }
+
+    public function forumAddComment()
+    {
+        $this->requireLogin('admin');
+        header('Content-Type: application/json');
+
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+            http_response_code(405);
+            echo json_encode(['error' => 'method']);
+            return;
+        }
+
+        $db = Database::getInstance();
+        $uId = (int)($_SESSION['user']['u_id'] ?? 0);
+        $id = isset($_POST['id']) ? (int)$_POST['id'] : 0;
+        $parentId = isset($_POST['parentId']) && $_POST['parentId'] ? (int)$_POST['parentId'] : null;
+        $text = isset($_POST['text']) ? trim($_POST['text']) : '';
+
+        if ($uId <= 0 || $id <= 0 || empty($text)) {
+            http_response_code(400);
+            echo json_encode(['error' => 'bad_request']);
+            return;
+        }
+
+        // Admin can comment on any post
+        $check = $db->query("SELECT q_id FROM forum_q WHERE q_id = $id");
+        if (!$check || $check->num_rows === 0) {
+            http_response_code(404);
+            echo json_encode(['error' => 'not_found']);
+            return;
+        }
+
+        $stmt = $db->prepare("INSERT INTO forum_comments (post_id, u_id, parent_id, content) VALUES (?, ?, ?, ?)");
+        if ($stmt) {
+            $stmt->bind_param("iiis", $id, $uId, $parentId, $text);
+            if ($stmt->execute()) {
+                $newId = $stmt->insert_id;
+                $res = $db->query("SELECT c.created_at, u.name as author_name, u.role FROM forum_comments c LEFT JOIN users u ON u.u_id = c.u_id WHERE c.id = $newId");
+                $r = $res ? $res->fetch_assoc() : null;
+                $time = $r ? date('M d, g:i A', strtotime($r['created_at'])) : 'Just now';
+                
+                echo json_encode([
+                    'ok' => true, 
+                    'comment' => [
+                        'id' => $newId,
+                        'parentId' => $parentId,
+                        'text' => $text,
+                        'time' => $time,
+                        'name' => $r['author_name'] ?? 'Me',
+                        'role' => $r['role'] ?? 'admin',
+                        'authorType' => 'admin'
+                    ]
+                ]);
+            } else {
+                http_response_code(500);
+                echo json_encode(['error' => 'db_error']);
+            }
+        }
+    }
+
+    // ==================== Reports ====================
+    
+    private $reportsModel;
+
+    private function getReportsModel()
+    {
+        if (!$this->reportsModel) {
+            require_once __DIR__ . '/../../models/admin/Reports.php';
+            $this->reportsModel = new AdminReportModel();
+        }
+        return $this->reportsModel;
+    }
+
+    /**
+     * Reports page view
+     */
+    public function reports()
+    {
+        $this->requireLogin('admin');
+        $headContent = '
+        <link rel="stylesheet" href="/css/admin/adminReports.css"/>';
+        $this->view('adminReports', [
+            'title' => 'Reports',
+            'head' => $headContent,
+        ]);
+    }
+
+    /**
+     * Get filter data for reports (divisions, staff, etc.)
+     */
+    public function reportsFilters()
+    {
+        $this->requireLogin('admin');
+        header('Content-Type: application/json');
+
+        try {
+            $model = $this->getReportsModel();
+            echo json_encode([
+                'divisions' => $model->getDivisions(),
+                'staff' => $model->getStaffMembers(),
+                'statuses' => $model->getTicketStatuses(),
+                'priorities' => $model->getTicketPriorities(),
+                'roles' => $model->getUserRoles()
+            ]);
+        } catch (Exception $e) {
+            http_response_code(500);
+            echo json_encode(['error' => 'Failed to load filter data']);
+        }
+    }
+
+    /**
+     * Generate quick reports
+     */
+    public function reportsQuick()
+    {
+        $this->requireLogin('admin');
+        header('Content-Type: application/json');
+
+        $reportType = $_GET['report_type'] ?? '';
+        $startDate = $_GET['start_date'] ?? '';
+        $endDate = $_GET['end_date'] ?? '';
+        $division = $_GET['division'] ?? '';
+        $groupBy = $_GET['group_by'] ?? 'category';
+        $period = $_GET['period'] ?? 'daily';
+
+        try {
+            $model = $this->getReportsModel();
+            $data = [];
+            $summary = [];
+            $columns = [];
+            $chartData = null;
+
+            switch ($reportType) {
+                case 'tickets-by-status':
+                    $data = $model->getTicketsByStatus($startDate, $endDate, $division);
+                    $summary = $model->getTicketsByStatusSummary($startDate, $endDate, $division);
+                    $columns = ['status', 'count', 'division_name'];
+                    $chartData = [
+                        'type' => 'doughnut',
+                        'labels' => array_column($data, 'status'),
+                        'values' => array_map('intval', array_column($data, 'count')),
+                        'label' => 'Tickets'
+                    ];
+                    break;
+
+                case 'tickets-by-category':
+                    $data = $model->getTicketsByCategory($startDate, $endDate);
+                    $columns = ['category', 'count'];
+                    $chartData = [
+                        'type' => 'bar',
+                        'labels' => array_column($data, 'category'),
+                        'values' => array_map('intval', array_column($data, 'count')),
+                        'label' => 'Tickets'
+                    ];
+                    break;
+
+                case 'tickets-by-role':
+                    $data = $model->getTicketsByRole($startDate, $endDate);
+                    $columns = ['role', 'count'];
+                    $chartData = [
+                        'type' => 'pie',
+                        'labels' => array_map('ucfirst', array_column($data, 'role')),
+                        'values' => array_map('intval', array_column($data, 'count')),
+                        'label' => 'Tickets'
+                    ];
+                    break;
+
+                case 'resolution-time':
+                    $data = $model->getResolutionTimeReport($startDate, $endDate, $groupBy);
+                    $columns = ['group_name', 'avg_hours', 'ticket_count'];
+                    $chartData = [
+                        'type' => 'bar',
+                        'labels' => array_column($data, 'group_name'),
+                        'values' => array_map('floatval', array_column($data, 'avg_hours')),
+                        'label' => 'Average Hours'
+                    ];
+                    break;
+
+                case 'staff-performance':
+                    $data = $model->getStaffPerformanceReport($startDate, $endDate);
+                    $columns = ['staff_name', 'department', 'assigned_tickets', 'resolved_tickets', 'closed_tickets', 'avg_response_hours'];
+                    $totalAssigned = array_sum(array_column($data, 'assigned_tickets'));
+                    $totalResolved = array_sum(array_column($data, 'resolved_tickets'));
+                    $summary = [
+                        'total_staff' => count($data),
+                        'total_assigned' => $totalAssigned,
+                        'total_resolved' => $totalResolved,
+                        'resolution_rate' => $totalAssigned > 0 ? round(($totalResolved / $totalAssigned) * 100, 1) . '%' : '0%'
+                    ];
+                    break;
+
+                case 'most-active-users':
+                    $data = $model->getMostActiveUsersReport($startDate, $endDate, 20);
+                    $columns = ['name', 'email', 'role', 'ticket_count'];
+                    $summary = [
+                        'total_users' => count($data),
+                        'total_tickets' => array_sum(array_column($data, 'ticket_count'))
+                    ];
+                    break;
+
+                case 'ticket-volume-trend':
+                    $data = $model->getTicketVolumeTrend($startDate, $endDate, $period);
+                    $columns = ['period', 'count'];
+                    $chartData = [
+                        'type' => 'line',
+                        'labels' => array_column($data, 'period'),
+                        'values' => array_map('intval', array_column($data, 'count')),
+                        'label' => 'Tickets'
+                    ];
+                    $summary = [
+                        'total_tickets' => array_sum(array_column($data, 'count')),
+                        'avg_per_period' => count($data) > 0 ? round(array_sum(array_column($data, 'count')) / count($data), 1) : 0,
+                        'peak' => count($data) > 0 ? max(array_column($data, 'count')) : 0
+                    ];
+                    break;
+
+                case 'unresolved-backlog':
+                    $data = $model->getUnresolvedTicketsReport($startDate, $endDate);
+                    $columns = ['date', 'unresolved_count', 'avg_days_pending'];
+                    $chartData = [
+                        'type' => 'line',
+                        'labels' => array_column($data, 'date'),
+                        'values' => array_map('intval', array_column($data, 'unresolved_count')),
+                        'label' => 'Unresolved Tickets'
+                    ];
+                    break;
+
+                default:
+                    http_response_code(400);
+                    echo json_encode(['error' => 'Invalid report type']);
+                    return;
+            }
+
+            echo json_encode([
+                'data' => $data,
+                'summary' => $summary,
+                'columns' => $columns,
+                'chartData' => $chartData
+            ]);
+
+        } catch (Exception $e) {
+            http_response_code(500);
+            echo json_encode(['error' => 'Failed to generate report: ' . $e->getMessage()]);
+        }
+    }
+
+    /**
+     * Generate custom reports with advanced filters
+     */
+    public function reportsCustom()
+    {
+        $this->requireLogin('admin');
+        header('Content-Type: application/json');
+
+        $filters = [
+            'start_date' => $_GET['start_date'] ?? '',
+            'end_date' => $_GET['end_date'] ?? '',
+            'status' => $_GET['status'] ?? '',
+            'category' => $_GET['category'] ?? '',
+            'priority' => $_GET['priority'] ?? '',
+            'assigned_to' => $_GET['assigned_to'] ?? '',
+            'user_role' => $_GET['user_role'] ?? '',
+            'limit' => $_GET['limit'] ?? 100
+        ];
+
+        try {
+            $model = $this->getReportsModel();
+            $data = $model->getCustomReport($filters);
+            $summary = $model->getCustomReportSummary($filters);
+
+            $columns = ['ticket_id', 'title', 'status', 'priority', 'category', 'submitted_by', 'user_role', 'assigned_staff', 'created_at'];
+
+            echo json_encode([
+                'data' => $data,
+                'summary' => $summary,
+                'columns' => $columns,
+                'chartData' => null
+            ]);
+
+        } catch (Exception $e) {
+            http_response_code(500);
+            echo json_encode(['error' => 'Failed to generate custom report: ' . $e->getMessage()]);
+        }
     }
 }

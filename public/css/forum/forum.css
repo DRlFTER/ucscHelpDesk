@@ -96,7 +96,57 @@ body {
   align-items: stretch;
 }
 
-/* Hide native selects when custom UI is rendered */
+.filters a#newPostBtn {
+  text-decoration: none;
+}
+
+.filterGroup {
+  display: flex;
+  gap: 5px;
+  background: rgba(255, 255, 255, 0.5);
+  border-radius: 30px;
+  min-height: 40px;
+}
+
+.filterGroup label {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 64px;
+  padding: 8px 14px;
+  border-radius: 30px;
+  cursor: pointer;
+  font-size: 14px;
+  color: #374151;
+  transition: background-color .2s ease, color .2s ease, box-shadow .2s ease, border-color .2s ease;
+}
+
+.filterGroup label:hover {
+  background: rgba(255, 255, 255, 0.6);
+}
+
+.filterGroup label input {
+  position: absolute;
+  opacity: 0;
+  pointer-events: none;
+}
+
+.filterGroup label:has(input:checked) {
+  background: #ffffff;
+  color: #111827;
+  box-shadow: 0 0 0 1px #d1d5db inset, 0 1px 2px rgba(0,0,0,0.04);
+}
+
+.filterGroup label:has(input:focus-visible) {
+  outline: 2px solid #93c5fd;
+  outline-offset: 2px;
+}
+
+.filterGroup input {
+  accent-color: #6366f1;
+}
+
 .selectHidden {
   position: absolute !important;
   opacity: 0 !important;
@@ -104,9 +154,11 @@ body {
   height: 0;
   width: 0;
 }
+
 .selectWrap {
   position: relative;
 }
+
 .selectButton {
   width: 100%;
   display: flex;
@@ -412,13 +464,28 @@ body {
   letter-spacing: 0.42px;
 }
 
-/* Public/Private visibility indicators (student only) */
-.visibility-public {
-  color: #155724;
-  background: #D4EDDA;
+/* Forum votes: simple arrow buttons with no frame/outline */
+.votesHolder {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
 }
-
-.visibility-private {
-  color: #B50000;
-  background: #FFD8D8;
+.voteBtn {
+  background: transparent;
+  border: none;
+  padding: 0;
+  margin: 0;
+  cursor: pointer;
+  color: #111827; /* neutral text color */
+  font-size: 16px; /* slightly larger arrow */
+  line-height: 1;
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  appearance: none;
+}
+.voteBtn:focus { outline: none; }
+.voteBtn:hover { color: #4338ca; }
+.voteUpCount, .voteDownCount {
+  font-size: 12px;
+  color: #374151;
 }

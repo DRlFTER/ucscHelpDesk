@@ -137,15 +137,16 @@ public function __construct()
             $files = [];
         }
         
-        $headContent = '<link rel="stylesheet" href="/css/staff/staffTickets.css" />' . "\n" .
-                       '<link rel="stylesheet" href="/css/staff/an_view.css" />';
+        // Use globalized announcement full stylesheet
+        $headContent = '<link rel="stylesheet" href="/css/announcements/announcementFull.css" />';
         
-        $this->view('staff/anView', [
+        $this->view('announcementsFull', [
             'title' => 'Announcement Details',
             'head' => $headContent,
             'announcement' => $announcement,
             'files' => $files,
             'errors' => $errors,
+            'role' => 'staff',
         ]);
     }
 
@@ -327,15 +328,15 @@ public function __construct()
 
         $dbError = method_exists($ann, 'getLastError') ? $ann->getLastError() : null;
 
-        $headContent = "<link rel=\"stylesheet\" href=\"/css/staff/staffTickets.css\" />\n";
-        $headContent .= "<link rel=\"stylesheet\" href=\"/css/staff/announcements.css\" />\n";
-        $headContent .= "<script src=\"/js/staff/announcements.js\" defer></script>\n";
+        // Use globalized announcements stylesheet
+        $headContent = '<link rel="stylesheet" href="/css/announcements/announcements.css" />';
 
-        $this->view('staff/staffAnnoucements', [
+        $this->view('announcements', [
             'title' => 'Announcements',
             'head' => $headContent,
             'announcements' => $announcements,
             'dbError' => $dbError,
+            'role' => 'staff',
         ]);
     }
 
@@ -909,21 +910,33 @@ public function staffFAQ()
     public function staffForum()
     {
         $this->requireLogin('staff');
-        $headContent = '<link rel="stylesheet" href="/css/student/studentForum.css" />';
-        $this->view('staff/staffForum', [
+        $headContent = '<link rel="stylesheet" href="/css/forum/forum.css" />';
+        $this->view('forum', [
             'title' => 'Forum',
             'head' => $headContent,
         ]);
     }
 
+    // Alias for global URL routing
+    public function forum()
+    {
+        return $this->staffForum();
+    }
+
     public function staffForumFull()
     {
         $this->requireLogin('staff');
-        $headContent = '<link rel="stylesheet" href="/css/student/studentForumFull.css" />';
-        $this->view('staff/staffForumFull', [
+        $headContent = '<link rel="stylesheet" href="/css/forum/forumFull.css" />';
+        $this->view('forumFull', [
             'title' => 'Forum Post',
             'head' => $headContent,
         ]);
+    }
+
+    // Alias for global URL routing
+    public function forumFull()
+    {
+        return $this->staffForumFull();
     }
 
     // Create new forum post
@@ -971,10 +984,7 @@ public function staffFAQ()
             }
         }
 
-        $headContent = '<link rel="stylesheet" href="/css/student/studentNewForum.css" />';
-        $this->view('student/studentNewForum', [
-            'title' => 'New Forum Post',
-            'head' => $headContent,
+        $this->view('newForum', [
             'flash' => $flash ?? null,
         ]);
     }
@@ -1061,10 +1071,14 @@ public function staffFAQ()
         $srt = strtolower($sort);
         if ($srt === 'oldest') {
             $orderSql = 'ORDER BY f.created_at ASC';
+        } elseif ($srt === 'votes') {
+             $orderSql = 'ORDER BY (SELECT COALESCE(SUM(vote_type), 0) FROM forum_votes WHERE post_id = f.q_id) DESC, f.created_at DESC';
         }
-        // 'votes' and 'comments' default to created_at for now
+        // 'comments' default to created_at for now
 
-    $sql = "SELECT f.q_id, f.created_at, f.title, f.topic, f.status, f.u_id, f.is_Public, u.name AS student_name
+    $sql = "SELECT f.q_id, f.created_at, f.title, f.topic, f.status, f.u_id, f.is_Public, u.name AS student_name,
+                (SELECT COALESCE(SUM(vote_type), 0) FROM forum_votes WHERE post_id = f.q_id) as vote_count,
+                 (SELECT vote_type FROM forum_votes WHERE post_id = f.q_id AND u_id = $uId LIMIT 1) as my_vote
                 FROM forum_q f
                 LEFT JOIN users u ON u.u_id = f.u_id
                 $whereSql
@@ -1097,8 +1111,8 @@ public function staffFAQ()
                 'topic' => (string)($r['topic'] ?? ''),
                 'status' => strtolower((string)($r['status'] ?? 'open')),
                 'is_Public' => isset($r['is_Public']) ? (int)$r['is_Public'] : 0,
-                'votesUp' => 0,
-                'votesDown' => 0,
+                'votes' => (int)($r['vote_count'] ?? 0),
+                'voted' => (int)($r['my_vote'] ?? 0),
                 'comments' => 0,
             ];
         }
@@ -1208,7 +1222,7 @@ public function staffFAQ()
     // Single forum post data from forum_q
     public function staffForumPostData()
     {
-        $this->requireLogin('student');
+        $this->requireLogin('staff');
         header('Content-Type: application/json');
 
         $db = Database::getInstance();
@@ -1221,7 +1235,9 @@ public function staffFAQ()
         }
 
         $idEsc = (int)$id;
-        $sql = "SELECT f.q_id, f.created_at, f.title, f.topic, f.status, f.description, f.u_id, f.is_Public, u.name AS student_name
+        $sql = "SELECT f.q_id, f.created_at, f.title, f.topic, f.status, f.description, f.u_id, f.is_Public, u.name AS student_name,
+                (SELECT COALESCE(SUM(vote_type), 0) FROM forum_votes WHERE post_id = f.q_id) as vote_count,
+                (SELECT vote_type FROM forum_votes WHERE post_id = f.q_id AND u_id = $uId LIMIT 1) as my_vote
                 FROM forum_q f
                 LEFT JOIN users u ON u.u_id = f.u_id
                 WHERE f.q_id = $idEsc AND (f.is_Public = 1 OR f.u_id = $uId)
@@ -1273,16 +1289,221 @@ public function staffFAQ()
             'is_Public' => (int)($row['is_Public'] ?? 0),
             'student' => [ 'id' => (int)($row['u_id'] ?? 0), 'name' => (string)($row['student_name'] ?? 'Student') ],
             'attachments' => [],
-            'commentsCount' => 0,
-            'votes' => 0,
+            'commentsCount' => (int)($db->query("SELECT COUNT(*) as c FROM forum_comments WHERE post_id = " . (int)($row['q_id'] ?? 0))->fetch_assoc()['c'] ?? 0),
+            'votes' => (int)($row['vote_count'] ?? 0),
+            'voted' => (int)($row['my_vote'] ?? 0),
+            'isOwner' => ((int)$row['u_id'] === $uId),
         ];
 
         echo json_encode($payload);
     }
 
+    public function staffForumVote()
+    {
+        $this->requireLogin('staff');
+        header('Content-Type: application/json');
+
+        $db = Database::getInstance();
+        $uId = (int)($_SESSION['user']['u_id'] ?? 0);
+        $id = isset($_POST['id']) ? (int)$_POST['id'] : 0;
+        $type = isset($_POST['type']) ? $_POST['type'] : '';
+
+        if ($uId <= 0 || $id <= 0 || !in_array($type, ['up', 'down'])) {
+            http_response_code(400);
+            echo json_encode(['error' => 'bad_request']);
+            return;
+        }
+
+        $voteVal = ($type === 'up') ? 1 : -1;
+
+        $check = $db->query("SELECT q_id FROM forum_q WHERE q_id = $id AND (is_Public = 1 OR u_id = $uId)");
+        if (!$check || $check->num_rows === 0) {
+            http_response_code(404);
+            echo json_encode(['error' => 'not_found']);
+            return;
+        }
+
+        $existing = 0;
+        $checkVote = $db->query("SELECT vote_type FROM forum_votes WHERE post_id = $id AND u_id = $uId");
+        if ($checkVote && $row = $checkVote->fetch_assoc()) {
+            $existing = (int)$row['vote_type'];
+        }
+
+        if ($existing === $voteVal) {
+            $db->query("DELETE FROM forum_votes WHERE post_id = $id AND u_id = $uId");
+            $newVote = 0;
+        } else {
+            $stmt = $db->prepare("INSERT INTO forum_votes (post_id, u_id, vote_type) VALUES (?, ?, ?) ON DUPLICATE KEY UPDATE vote_type = ?");
+             if ($stmt) {
+                $stmt->bind_param("iiii", $id, $uId, $voteVal, $voteVal);
+                $stmt->execute();
+            }
+            $newVote = $voteVal;
+        }
+
+        $totalRes = $db->query("SELECT COALESCE(SUM(vote_type), 0) as cnt FROM forum_votes WHERE post_id = $id");
+        $total = 0;
+        if ($totalRes && $r = $totalRes->fetch_assoc()) {
+            $total = (int)$r['cnt'];
+        }
+
+        echo json_encode(['ok' => true, 'votes' => $total, 'voted' => $newVote]);
+    }
+
+    // Delete a forum post (Staff can delete own posts only)
+    public function staffForumDelete()
+    {
+        // ... (existing implementation) ...
+        $this->requireLogin('staff');
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+            http_response_code(405);
+            echo 'method_not_allowed';
+            return;
+        }
+
+        $uId = (int)($_SESSION['user']['u_id'] ?? 0);
+        $id = isset($_POST['id']) ? (int)$_POST['id'] : 0;
+        if ($id <= 0 || $uId <= 0) {
+            http_response_code(400);
+            echo 'bad_request';
+            return;
+        }
+        
+        // ... rest of delete logic ...
+        $db = Database::getInstance();
+        try {
+            $stmt = $db->prepare("DELETE FROM forum_q WHERE q_id = ? AND u_id = ? LIMIT 1");
+            if (!$stmt) throw new Exception('prepare_failed');
+            $stmt->bind_param('ii', $id, $uId);
+            if (!$stmt->execute()) {
+                $err = $stmt->error;
+                $stmt->close();
+                throw new Exception('execute_failed: ' . $err);
+            }
+            $affected = $stmt->affected_rows;
+            $stmt->close();
+            if ($affected <= 0) {
+                http_response_code(403);
+                echo 'not_allowed';
+                return;
+            }
+            echo 'ok';
+        } catch (Throwable $e) {
+            http_response_code(500);
+            echo 'server_error';
+        }
+    }
+    
+    public function staffForumComments()
+    {
+        $this->requireLogin('staff');
+        header('Content-Type: application/json');
+
+        $db = Database::getInstance();
+        $uId = (int)($_SESSION['user']['u_id'] ?? 0);
+        $id = isset($_GET['id']) ? (int)$_GET['id'] : 0;
+        if ($uId <= 0 || $id <= 0) {
+            echo json_encode(['error' => 'bad_request']);
+            return;
+        }
+
+        $check = $db->query("SELECT q_id FROM forum_q WHERE q_id = $id AND (is_Public = 1 OR u_id = $uId)");
+        if (!$check || $check->num_rows === 0) {
+            echo json_encode([]);
+            return;
+        }
+
+        $sql = "SELECT c.id, c.parent_id, c.content, c.created_at, u.name as author_name, u.role as author_role, u.u_id as author_id
+                FROM forum_comments c
+                LEFT JOIN users u ON u.u_id = c.u_id
+                WHERE c.post_id = $id
+                ORDER BY c.created_at ASC";
+        
+        $comments = [];
+        if ($res = $db->query($sql)) {
+            while ($row = $res->fetch_assoc()) {
+                $ts = strtotime($row['created_at']);
+                $time = ($ts) ? date('M d, g:i A', $ts) : '';
+                
+                $comments[] = [
+                    'id' => (int)$row['id'],
+                    'parentId' => $row['parent_id'] ? (int)$row['parent_id'] : null,
+                    'text' => $row['content'],
+                    'time' => $time,
+                    'name' => $row['author_name'] ?? 'Unknown',
+                    'role' => $row['author_role'] ?? '',
+                    'authorType' => 'staff',
+                    'authorId' => (int)$row['author_id']
+                ];
+            }
+        }
+        echo json_encode($comments);
+    }
+
+    public function staffForumAddComment()
+    {
+        $this->requireLogin('staff');
+        header('Content-Type: application/json');
+
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+            http_response_code(405);
+            echo json_encode(['error' => 'method']);
+            return;
+        }
+
+        $db = Database::getInstance();
+        $uId = (int)($_SESSION['user']['u_id'] ?? 0);
+        $id = isset($_POST['id']) ? (int)$_POST['id'] : 0;
+        $parentId = isset($_POST['parentId']) && $_POST['parentId'] ? (int)$_POST['parentId'] : null;
+        $text = isset($_POST['text']) ? trim($_POST['text']) : '';
+
+        if ($uId <= 0 || $id <= 0 || empty($text)) {
+            http_response_code(400);
+            echo json_encode(['error' => 'bad_request']);
+            return;
+        }
+
+        $check = $db->query("SELECT q_id FROM forum_q WHERE q_id = $id AND (is_Public = 1 OR u_id = $uId)");
+        if (!$check || $check->num_rows === 0) {
+            http_response_code(403);
+            echo json_encode(['error' => 'forbidden']);
+            return;
+        }
+
+        $stmt = $db->prepare("INSERT INTO forum_comments (post_id, u_id, parent_id, content) VALUES (?, ?, ?, ?)");
+        if ($stmt) {
+            $stmt->bind_param("iiis", $id, $uId, $parentId, $text);
+            if ($stmt->execute()) {
+                $newId = $stmt->insert_id;
+                $res = $db->query("SELECT c.created_at, u.name as author_name, u.role FROM forum_comments c LEFT JOIN users u ON u.u_id = c.u_id WHERE c.id = $newId");
+                $r = $res ? $res->fetch_assoc() : null;
+                $time = $r ? date('M d, g:i A', strtotime($r['created_at'])) : 'Just now';
+                
+                echo json_encode([
+                    'ok' => true, 
+                    'comment' => [
+                        'id' => $newId,
+                        'parentId' => $parentId,
+                        'text' => $text,
+                        'time' => $time,
+                        'name' => $r['author_name'] ?? 'Me',
+                        'role' => $r['role'] ?? 'staff',
+                        'authorType' => 'staff'
+                    ]
+                ]);
+            } else {
+                http_response_code(500);
+                echo json_encode(['error' => 'db_error']);
+            }
+        }
+    }
+
+
+
    public function calender() {
         $this->requireLogin('staff');
         $headContent = '\n        <link rel="stylesheet" href="/css/calender/calender.css"/>';
+
         $this->view('calender', [
             'title' => 'Calendar',
             'head' => $headContent,
@@ -1334,10 +1555,7 @@ public function staffFAQ()
             $kb_data = [];
         }
 
-        $headContent = '<link rel="stylesheet" href="/css/staff/staffKB.css" />';
-        $this->view('staff/staffKB', [
-            'title' => 'Knowledge Base',
-            'head' => $headContent,
+        $this->view('knowledgeBase', [
             'kb_data' => $kb_data,
         ]);
 }
@@ -1652,4 +1870,185 @@ public function downloadKB($file_id = null) {
         }
     }
 
+
+        /**
+     * Generate Reports Page
+     */
+public function staffReports()
+{
+    $this->requireLogin('staff');
+
+    require_once __DIR__ . '/../../models/staff/Reports.php';
+    $model = new StaffReport();
+    $report_type = $_POST['report_type'] ?? ($_GET['type'] ?? 'all_tickets');
+    $start_date = $_POST['start_date'] ?? ($_GET['start'] ?? '');
+    $end_date = $_POST['end_date'] ?? ($_GET['end'] ?? '');
+    $status = $_POST['status'] ?? ($_GET['status'] ?? '');
+    $priority = $_POST['priority'] ?? ($_GET['priority'] ?? '');
+    $division_id = $_POST['division_id'] ?? ($_GET['division_id'] ?? '');
+    $level = (int)($_POST['level'] ?? ($_GET['level'] ?? 0));
+
+    $reports = [];
+    $summary = [];
+    $error = null;
+
+    try {
+        switch ($report_type) {
+            case 'all_tickets':
+                $reports = $model->getAllTicketsReport($start_date, $end_date, $status, $priority);
+                $summary = $model->getAllTicketsSummary($start_date, $end_date, $status, $priority);
+                break;
+            case 'overdue_tickets':
+                $reports = $model->getOverdueTicketsReport($division_id);
+                $summary = $model->getOverdueTicketsSummary($division_id);
+                break;
+            case 'staff_assignment':
+                $reports = $model->getStaffAssignmentReport($start_date, $end_date);
+                $summary = $model->getStaffAssignmentSummary($start_date, $end_date);
+                break;
+            case 'escalation':
+                $reports = $model->getEscalationReport($start_date, $end_date, $level);
+                $summary = $model->getEscalationSummary($start_date, $end_date, $level);
+                break;
+            default:
+                $reports = $model->getAllTicketsReport();
+                $summary = $model->getAllTicketsSummary();
+        }
+    } catch (Exception $e) {
+        $error = $e->getMessage();
+    }
+
+    $divisions = $model->getDivisions();
+
+    // Optional CSV Export (pure PHP, no libs)
+    if (isset($_GET['csv'])) {
+        $title = ucwords(str_replace('_', ' ', $report_type)) . '_Report_' . date('Y-m-d');
+        header('Content-Type: text/csv; charset=utf-8');
+        header('Content-Disposition: attachment; filename="' . $title . '.csv"');
+        $output = fopen('php://output', 'w');
+
+        // Summary rows
+        if ($report_type === 'all_tickets' && !empty($summary)) {
+            fputcsv($output, ['SUMMARY STATS']);
+            fputcsv($output, ['Total Tickets', $summary['total_tickets'] ?? 0]);
+            fputcsv($output, ['Pending (%)', ($summary['pending_pct'] ?? 0) . '%']);
+            fputcsv($output, ['Resolved (%)', ($summary['resolved_pct'] ?? 0) . '%']);
+            fputcsv($output, []);  // Blank
+        } elseif ($report_type === 'overdue_tickets' && !empty($summary)) {
+            fputcsv($output, ['SUMMARY STATS']);
+            fputcsv($output, ['Total Overdue', $summary['total_overdue'] ?? 0]);
+            fputcsv($output, ['Avg Days Overdue', ($summary['avg_days_overdue'] ?? 0) . ' days']);
+            fputcsv($output, []);  // Blank
+        } elseif ($report_type === 'staff_assignment' && !empty($summary)) {  // NEW: Added for staff
+            fputcsv($output, ['SUMMARY STATS']);
+            fputcsv($output, ['Total Staff', $summary['total_staff'] ?? 0]);
+            fputcsv($output, ['Total Assignments', $summary['total_assignments'] ?? 0]);
+            fputcsv($output, ['Avg per Staff', ($summary['avg_per_staff'] ?? 0)]);
+            fputcsv($output, []);  // Blank
+        } elseif ($report_type === 'escalation' && !empty($summary)) {  // NEW: Added for escalation
+            fputcsv($output, ['SUMMARY STATS']);
+            fputcsv($output, ['Total Escalations', $summary['total_escalations'] ?? 0]);
+            fputcsv($output, ['Level 1 (%)', ($summary['level1_pct'] ?? 0) . '%']);
+            fputcsv($output, ['Level 3 (%)', ($summary['level3_pct'] ?? 0) . '%']);
+            fputcsv($output, []);  // Blank
+        }
+
+        // Headers
+        $headers = [];
+        if ($report_type === 'all_tickets') $headers = ['Ticket ID', 'Title', 'Status', 'Priority', 'Student', 'Category', 'Created'];
+        elseif ($report_type === 'overdue_tickets') $headers = ['Ticket ID', 'Title', 'Student', 'Category', 'Days Overdue', 'Created'];
+        elseif ($report_type === 'staff_assignment') $headers = ['Staff Name', 'Email', 'Ticket Count', 'Status'];
+        elseif ($report_type === 'escalation') $headers = ['Ticket ID', 'Title', 'Student', 'Level 1 Date', 'Level 2 Date', 'Level 3 Date', 'Created'];
+        fputcsv($output, $headers);
+
+        // Data
+        foreach ($reports as $row) {
+            $data = [];
+            if ($report_type === 'all_tickets') {
+                $data = [$row['ticket_id'], substr($row['title'], 0, 50) . '...', $row['status'], $row['priority'], $row['student_name'], $row['category'], date('Y-m-d', strtotime($row['created_at']))];
+            } elseif ($report_type === 'overdue_tickets') {
+                $data = [$row['ticket_id'], substr($row['title'], 0, 50) . '...', $row['student_name'], $row['category'], $row['days_overdue'] . ' days', date('Y-m-d', strtotime($row['created_at']))];
+            } elseif ($report_type === 'staff_assignment') {
+                $data = [$row['staff_name'], $row['email'], $row['ticket_count'], $row['status'] ?? 'N/A'];
+            } elseif ($report_type === 'escalation') {
+                $data = [
+                    $row['ticket_id'],
+                    substr($row['title'], 0, 50) . '...',
+                    $row['student_name'],
+                    $row['level_1'] ? date('Y-m-d H:i', strtotime($row['level_1'])) : 'N/A',
+                    $row['level_2'] ? date('Y-m-d H:i', strtotime($row['level_2'])) : 'N/A',
+                    $row['level_3'] ? date('Y-m-d H:i', strtotime($row['level_3'])) : 'N/A',
+                    date('Y-m-d', strtotime($row['ticket_date']))
+                ];
+            }
+            fputcsv($output, $data);
+        }
+
+        fclose($output);
+        exit;
+    }
+
+    // Normal render
+    $headContent = '<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>';
+    $this->view('staff/staffReports', [
+        'title' => 'Generate Reports',
+        'head' => $headContent,
+        'reports' => $reports,
+        'summary' => $summary,
+        'report_type' => $report_type,
+        'divisions' => $divisions,
+        'error' => $error,
+        'start_date' => $start_date,
+        'end_date' => $end_date,
+        'status' => $status,
+        'priority' => $priority,
+        'division_id' => $division_id,
+        'level' => $level
+    ]);
+}
+
+    // ============ ALIASED FORUM METHODS FOR GLOBAL JS ============
+    // These non-prefixed methods simply delegate to the existing prefixed methods
+    // This allows the global forum.js and forumFull.js to work with staff role
+
+    public function forumData()
+    {
+        return $this->staffForumData();
+    }
+
+    public function forumPostData()
+    {
+        return $this->staffForumPostData();
+    }
+
+    public function forumToggleVisibility()
+    {
+        return $this->staffForumToggleVisibility();
+    }
+
+    public function forumToggleStatus()
+    {
+        return $this->staffForumToggleStatus();
+    }
+
+    public function forumDelete()
+    {
+        return $this->staffForumDelete();
+    }
+
+
+    public function forumVote()
+    {
+        return $this->staffForumVote();
+    }
+
+    public function forumComments()
+    {
+        return $this->staffForumComments();
+    }
+
+    public function forumAddComment()
+    {
+        return $this->staffForumAddComment();
+    }
 }

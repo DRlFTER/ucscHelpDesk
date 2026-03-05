@@ -53,7 +53,7 @@
 						</div>
 						<div class="field">
 							<label class="label" for="contact_email">Email</label>
-							<input id="contact_email" name="contact_email" type="email" placeholder="e.g., index@stu.ucsc.cmb.aclk">
+							<input id="contact_email" name="contact_email" type="email" placeholder="e.g., index@stu.ucsc.cmb.ac.lk">
 						</div>
 					</div>
 

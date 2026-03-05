@@ -27,8 +27,8 @@
 window.TICKETS_CONFIG = {
   role: '<?= htmlspecialchars($role ?? (strtolower($_SESSION['user']['role'] ?? 'guest'))) ?>',
   apiBase: '/<?= htmlspecialchars($role ?? (strtolower($_SESSION['user']['role'] ?? 'guest'))) ?>/ticketsData',
-  ticketUrlBase: '/<?= htmlspecialchars($role ?? (strtolower($_SESSION['user']['role'] ?? 'guest'))) ?>/ticket',
-  showLinks: <?php $r = strtolower($role ?? ($_SESSION['user']['role'] ?? 'guest')); echo ($r === 'admin' || $r === 'counselor') ? 'true' : 'false'; ?>
+  ticketUrlBase: '/<?= htmlspecialchars($role ?? (strtolower($_SESSION['user']['role'] ?? 'guest'))) ?>/ticketFull',
+  showLinks: <?php $r = strtolower($role ?? ($_SESSION['user']['role'] ?? 'guest')); echo ($r === 'admin' || $r === 'counselor' || $r === 'student') ? 'true' : 'false'; ?>
 };
 </script>
 <script src="/js/tickets/tickets.js"></script>
