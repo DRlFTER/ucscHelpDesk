@@ -681,22 +681,23 @@ body.modal-open .mainContentFull {
 
 .sidenavNewTicket {
   margin-top: 12px;
-  background: linear-gradient(135deg, #8c8cf9 0%, #6b6bf7 100%);
-  color: #fff;
+  background: #EEEDFE;
+  color: #8c8cf9;
   font-weight: 500;
+  transition: all 0.3s ease;
 }
 
 .sidenavNewTicket svg {
-  stroke: #fff;
+  stroke: #8c8cf9;
 }
 
 .sidenavNewTicket:hover {
-  background: linear-gradient(135deg, #7a7af7 0%, #5a5af5 100%);
-  color: #fff;
+  background: #d8d8ff;
+  color: #6b6bf7;
 }
 
 .sidenavNewTicket:hover svg {
-  stroke: #fff;
+  stroke: #6b6bf7;
 }
 
 /* Sidenav Bottom / Profile */
