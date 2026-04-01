@@ -18,19 +18,29 @@
               <p>Here’s what’s happening with your support requests</p>
             </div>
 
-            <div class="activeTickets">
-              <div class="activeTicketsHeader" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
-                <h3 style="margin-bottom: 0;">Active Tickets</h3>
+            <div class="activeTickets card sideWidget">
+              <div class="activeTicketsHeader" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px;">
+                <h3 class="sideWidgetTitle" style="margin-bottom: 0;">Active Tickets</h3>
                 <a href="/student/tickets" style="color: #6a6af5; font-size: 14px; text-decoration: none; font-weight: 300;">View All</a>
               </div>
               <div class="activeTicketsGrid">
                 <?php if (!empty($recentTickets)): ?>
                   <?php foreach ($recentTickets as $t): ?>
                     <?php
+                      $statusStr = strtolower($t['status']);
                       $status = strtoupper($t['status']);
-                      $statusBadgeClass = strtolower($t['status']) === 'resolved' ? 'resolved' : (strtolower($t['status']) === 'open' ? 'open' : 'inProgress');
-                      // Calculate pseudo-progress
-                      $progress = strtolower($t['status']) === 'resolved' ? 100 : (strtolower($t['status']) === 'in progress' ? 50 : 20);
+                      $statusBadgeClass = in_array($statusStr, ['resolved', 'closed', 'agent-closed']) ? 'resolved' : (in_array($statusStr, ['open', 'pending', 'submitted']) ? 'open' : 'inProgress');
+                      
+                      // Calculate timeline progress
+                      if (in_array($statusStr, ['resolved', 'closed', 'agent-closed'])) {
+                          $progress = 100;
+                      } elseif (in_array($statusStr, ['under review', 'in progress'])) {
+                          $progress = 75;
+                      } elseif (in_array($statusStr, ['agent assigned', 'assigned to staff', 'assigned'])) {
+                          $progress = 50;
+                      } else {
+                          $progress = 25; // submitted or pending
+                      }
                       
                       // Map category to a suitable icon
                       $cat = $t['category'] ?? '';
@@ -71,7 +81,8 @@
               </div>
             </div>
 
-            <div class="quickActions">
+            <div class="card sideWidget">
+              <h3 class="sideWidgetTitle" style="margin-bottom: 24px;">Quick Actions</h3>
               <div class="quickActions">
                 <a href="/student/ticket" class="quickActionItem">
                   <div class="icon">
@@ -198,18 +209,29 @@
               </a>
             </div>
 
-            <div class="card account sectionCard">
-              <h3>Account</h3>
-              <div class="accountItems">
-                <a href="/settings" class="accountItem">
-                  <svg xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 -960 960 960" width="24px"><path d="M480-480q-66 0-113-47t-47-113q0-66 47-113t113-47q66 0 113 47t47 113q0 66-47 113t-113 47ZM160-160v-112q0-34 17.5-62.5T224-378q62-31 126-46.5T480-440q66 0 130 15.5T736-378q29 15 46.5 43.5T800-272v112H160Z"/></svg>
-                  Settings<br>
-                </a>
-                <a href="/student/tickets" class="accountItem">
-                  <svg xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 -960 960 960" width="24px"><path d="M480-120q-138 0-240.5-91.5T122-440h82q14 104 92.5 172T480-200q117 0 198.5-81.5T760-480q0-117-81.5-198.5T480-760q-69 0-129 32t-101 88h110v80H120v-240h80v94q51-64 124.5-99T480-840q75 0 140.5 28.5t114 77q48.5 48.5 77 114t28.5 140.5q0 75-28.5 140.5t-77 114q-48.5 48.5-114 77T480-120Zm112-192L440-464v-216h80v184l128 128-56 56Z"/></svg>
-                  Ticket History<br>
-                </a>
-              </div>
+            <div class="card account sideWidget sectionCard">
+              <h3 class="sideWidgetTitle">Recent Forum Posts</h3>
+              <?php if (!empty($recentForumPosts)): ?>
+                <div class="sideWidgetList">
+                  <?php foreach ($recentForumPosts as $post): ?>
+                    <a href="/student/forumFull?id=<?= (int)($post['id']) ?>" class="forumPostItem">
+                      <div class="forumIconWrapper">
+                        <svg xmlns="http://www.w3.org/2000/svg" height="24" viewBox="0 -960 960 960" width="24" fill="currentColor"><path d="M240-400h320v-80H240v80Zm0-120h480v-80H240v80Zm0-120h480v-80H240v80ZM80-80v-720q0-33 23.5-56.5T160-880h640q33 0 56.5 23.5T880-800v480q0 33-23.5 56.5T800-240H240L80-80Zm126-240h594v-480H160v525l46-45Zm-46 0v-480 480Z"/></svg>
+                      </div>
+                      <div class="forumContent">
+                        <div class="forumTopic"><?= htmlspecialchars($post['title']) ?></div>
+                        <div class="forumMeta"><?= htmlspecialchars($post['author'] ?? 'Anonymous') ?> &bull; <?= htmlspecialchars(time_ago($post['created_at'])) ?></div>
+                      </div>
+                    </a>
+                  <?php endforeach; ?>
+                </div>
+              <?php else: ?>
+                <p class="mutedText sideWidgetEmpty">No recent posts.</p>
+              <?php endif; ?>
+
+              <a href="/student/forum" class="sideWidgetBtn">
+                Browse Forum
+              </a>
             </div>
           </div>
         </div>

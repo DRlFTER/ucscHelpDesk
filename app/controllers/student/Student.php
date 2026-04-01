@@ -51,6 +51,19 @@ class Student extends Controller
             $upcomingEvents = [];
         }
 
+        $recentForumPosts = [];
+        try {
+            $db = Database::getInstance();
+            $stmt = $db->query("SELECT f.q_id as id, f.title, f.created_at, u.name as author FROM forum_q f LEFT JOIN users u ON f.u_id = u.u_id WHERE f.is_Public = 1 ORDER BY f.created_at DESC LIMIT 3");
+            if ($stmt) {
+                while ($row = $stmt->fetch_assoc()) {
+                    $recentForumPosts[] = $row;
+                }
+            }
+        } catch (Throwable $e) {
+            $recentForumPosts = [];
+        }
+
     $headContent = '
     <link rel="stylesheet" href="/css/student/studentDashboard.css"/>';
          $this->view('dashboardStudent', [
@@ -61,6 +74,7 @@ class Student extends Controller
                 'lastActivity' => $lastActivity,
                 'recentAnnouncements' => $recentAnnouncements,
                 'upcomingEvents' => $upcomingEvents,
+                'recentForumPosts' => $recentForumPosts,
         ]);
     }
 
