@@ -615,18 +615,6 @@ public function templates()
     public function knowledgebase()
     {
         $this->requireLogin('student');
-        $headContent = '<link rel="stylesheet" href="/css/student/studentKnowledgeBase.css" />';
-        $this->view('student/studentKnowledgeBase', [
-            'title' => 'Knowledge Base',
-            'head' => $headContent,
-        ]);
-    }
-
-    // Knowledge Base data (JSON)
-    public function knowledgebaseData()
-    {
-        $this->requireLogin('student');
-        header('Content-Type: application/json');
 
         require_once __DIR__ . '/../../models/staff/KB.php';
         $kbModel = new KB();
@@ -683,8 +671,9 @@ public function templates()
             ];
         }
 
-        echo json_encode(array_values($grouped));
-        exit;
+        $this->view('knowledgeBase', [
+            'kb_data' => array_values($grouped)
+        ]);
     }
 
     // Student Calendar page
@@ -767,10 +756,7 @@ public function templates()
             }
         }
 
-        $headContent = '<link rel="stylesheet" href="/css/student/studentNewForum.css" />';
-        $this->view('student/studentNewForum', [
-            'title' => 'New Forum Post',
-            'head' => $headContent,
+        $this->view('newForum', [
             'flash' => $flash ?? null,
         ]);
     }
@@ -857,10 +843,14 @@ public function templates()
         $srt = strtolower($sort);
         if ($srt === 'oldest') {
             $orderSql = 'ORDER BY f.created_at ASC';
+        } elseif ($srt === 'votes') {
+            $orderSql = 'ORDER BY (SELECT COALESCE(SUM(vote_type), 0) FROM forum_votes WHERE post_id = f.q_id) DESC, f.created_at DESC';
         }
-        // 'votes' and 'comments' default to created_at for now
+        // 'comments' default to created_at for now
 
-    $sql = "SELECT f.q_id, f.created_at, f.title, f.topic, f.status, f.u_id, f.is_Public, u.name AS student_name
+    $sql = "SELECT f.q_id, f.created_at, f.title, f.topic, f.status, f.u_id, f.is_Public, u.name AS student_name,
+                (SELECT COALESCE(SUM(vote_type), 0) FROM forum_votes WHERE post_id = f.q_id) as vote_count,
+                (SELECT vote_type FROM forum_votes WHERE post_id = f.q_id AND u_id = $uId LIMIT 1) as my_vote
                 FROM forum_q f
                 LEFT JOIN users u ON u.u_id = f.u_id
                 $whereSql
@@ -893,8 +883,8 @@ public function templates()
                 'topic' => (string)($r['topic'] ?? ''),
                 'status' => strtolower((string)($r['status'] ?? 'open')),
                 'is_Public' => isset($r['is_Public']) ? (int)$r['is_Public'] : 0,
-                'votesUp' => 0,
-                'votesDown' => 0,
+                'votes' => (int)($r['vote_count'] ?? 0),
+                'voted' => (int)($r['my_vote'] ?? 0),
                 'comments' => 0,
             ];
         }
@@ -1017,7 +1007,9 @@ public function templates()
         }
 
         $idEsc = (int)$id;
-        $sql = "SELECT f.q_id, f.created_at, f.title, f.topic, f.status, f.description, f.u_id, f.is_Public, u.name AS student_name
+        $sql = "SELECT f.q_id, f.created_at, f.title, f.topic, f.status, f.description, f.u_id, f.is_Public, u.name AS student_name,
+                (SELECT COALESCE(SUM(vote_type), 0) FROM forum_votes WHERE post_id = f.q_id) as vote_count,
+                (SELECT vote_type FROM forum_votes WHERE post_id = f.q_id AND u_id = $uId LIMIT 1) as my_vote
                 FROM forum_q f
                 LEFT JOIN users u ON u.u_id = f.u_id
                 WHERE f.q_id = $idEsc AND (f.is_Public = 1 OR f.u_id = $uId)
@@ -1069,11 +1061,181 @@ public function templates()
             'is_Public' => (int)($row['is_Public'] ?? 0),
             'student' => [ 'id' => (int)($row['u_id'] ?? 0), 'name' => (string)($row['student_name'] ?? 'Student') ],
             'attachments' => [],
-            'commentsCount' => 0,
-            'votes' => 0,
+            'commentsCount' => (int)($db->query("SELECT COUNT(*) as c FROM forum_comments WHERE post_id = " . (int)($row['q_id'] ?? 0))->fetch_assoc()['c'] ?? 0),
+            'votes' => (int)($row['vote_count'] ?? 0),
+            'voted' => (int)($row['my_vote'] ?? 0),
+            'isOwner' => ((int)$row['u_id'] === $uId),
         ];
 
         echo json_encode($payload);
+    }
+
+    public function forumVote()
+    {
+        $this->requireLogin('student');
+        header('Content-Type: application/json');
+
+        $db = Database::getInstance();
+        $uId = (int)($_SESSION['user']['u_id'] ?? 0);
+        $id = isset($_POST['id']) ? (int)$_POST['id'] : 0;
+        $type = isset($_POST['type']) ? $_POST['type'] : '';
+
+        if ($uId <= 0 || $id <= 0 || !in_array($type, ['up', 'down'])) {
+            http_response_code(400);
+            echo json_encode(['error' => 'bad_request']);
+            return;
+        }
+
+        $voteVal = ($type === 'up') ? 1 : -1;
+
+        // Check if post exists & accessible
+        $check = $db->query("SELECT q_id FROM forum_q WHERE q_id = $id AND (is_Public = 1 OR u_id = $uId)");
+        if (!$check || $check->num_rows === 0) {
+            http_response_code(404);
+            echo json_encode(['error' => 'not_found']);
+            return;
+        }
+
+        // Check existing vote
+        $existing = 0;
+        $checkVote = $db->query("SELECT vote_type FROM forum_votes WHERE post_id = $id AND u_id = $uId");
+        if ($checkVote && $row = $checkVote->fetch_assoc()) {
+            $existing = (int)$row['vote_type'];
+        }
+
+        if ($existing === $voteVal) {
+            // Toggle off (remove vote)
+            $db->query("DELETE FROM forum_votes WHERE post_id = $id AND u_id = $uId");
+            $newVote = 0;
+        } else {
+            // Insert or Update
+            $stmt = $db->prepare("INSERT INTO forum_votes (post_id, u_id, vote_type) VALUES (?, ?, ?) ON DUPLICATE KEY UPDATE vote_type = ?");
+            if ($stmt) {
+                $stmt->bind_param("iiii", $id, $uId, $voteVal, $voteVal);
+                $stmt->execute();
+            }
+            $newVote = $voteVal;
+        }
+
+        // Get new total
+        $totalRes = $db->query("SELECT COALESCE(SUM(vote_type), 0) as cnt FROM forum_votes WHERE post_id = $id");
+        $total = 0;
+        if ($totalRes && $r = $totalRes->fetch_assoc()) {
+            $total = (int)$r['cnt'];
+        }
+
+        echo json_encode(['ok' => true, 'votes' => $total, 'voted' => $newVote]);
+    }
+
+    public function forumComments()
+    {
+        $this->requireLogin('student');
+        header('Content-Type: application/json');
+
+        $db = Database::getInstance();
+        $uId = (int)($_SESSION['user']['u_id'] ?? 0);
+        $id = isset($_GET['id']) ? (int)$_GET['id'] : 0;
+        if ($uId <= 0 || $id <= 0) {
+            echo json_encode(['error' => 'bad_request']);
+            return;
+        }
+
+        // Check view permission
+        $check = $db->query("SELECT q_id FROM forum_q WHERE q_id = $id AND (is_Public = 1 OR u_id = $uId)");
+        if (!$check || $check->num_rows === 0) {
+            echo json_encode([]);
+            return;
+        }
+
+        $sql = "SELECT c.id, c.parent_id, c.content, c.created_at, u.name as author_name, u.role as author_role, u.u_id as author_id
+                FROM forum_comments c
+                LEFT JOIN users u ON u.u_id = c.u_id
+                WHERE c.post_id = $id
+                ORDER BY c.created_at ASC";
+        
+        $comments = [];
+        if ($res = $db->query($sql)) {
+            while ($row = $res->fetch_assoc()) {
+                // Formatting time
+                $ts = strtotime($row['created_at']);
+                $time = ($ts) ? date('M d, g:i A', $ts) : '';
+                
+                $comments[] = [
+                    'id' => (int)$row['id'],
+                    'parentId' => $row['parent_id'] ? (int)$row['parent_id'] : null,
+                    'text' => $row['content'],
+                    'time' => $time,
+                    'name' => $row['author_name'] ?? 'Unknown',
+                    'role' => $row['author_role'] ?? '',
+                    'authorType' => $row['author_role'] ?? 'student', // simplified
+                    'authorId' => (int)$row['author_id']
+                ];
+            }
+        }
+        echo json_encode($comments);
+    }
+
+    public function forumAddComment()
+    {
+        $this->requireLogin('student');
+        header('Content-Type: application/json');
+
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+            http_response_code(405);
+            echo json_encode(['error' => 'method']);
+            return;
+        }
+
+        $db = Database::getInstance();
+        $uId = (int)($_SESSION['user']['u_id'] ?? 0);
+        $id = isset($_POST['id']) ? (int)$_POST['id'] : 0;
+        $parentId = isset($_POST['parentId']) && $_POST['parentId'] ? (int)$_POST['parentId'] : null;
+        $text = isset($_POST['text']) ? trim($_POST['text']) : '';
+
+        if ($uId <= 0 || $id <= 0 || empty($text)) {
+            http_response_code(400);
+            echo json_encode(['error' => 'bad_request']);
+            return;
+        }
+
+        // Check permissions
+        $check = $db->query("SELECT q_id FROM forum_q WHERE q_id = $id AND (is_Public = 1 OR u_id = $uId)");
+        if (!$check || $check->num_rows === 0) {
+            http_response_code(403);
+            echo json_encode(['error' => 'forbidden']);
+            return;
+        }
+
+        $stmt = $db->prepare("INSERT INTO forum_comments (post_id, u_id, parent_id, content) VALUES (?, ?, ?, ?)");
+        if ($stmt) {
+            $stmt->bind_param("iiis", $id, $uId, $parentId, $text);
+            if ($stmt->execute()) {
+                $newId = $stmt->insert_id;
+                // Fetch back to return UI friendly data
+                $res = $db->query("SELECT c.created_at, u.name as author_name, u.role FROM forum_comments c LEFT JOIN users u ON u.u_id = c.u_id WHERE c.id = $newId");
+                $r = $res ? $res->fetch_assoc() : null;
+                $time = $r ? date('M d, g:i A', strtotime($r['created_at'])) : 'Just now';
+                
+                echo json_encode([
+                    'ok' => true, 
+                    'comment' => [
+                        'id' => $newId,
+                        'parentId' => $parentId,
+                        'text' => $text,
+                        'time' => $time,
+                        'name' => $r['author_name'] ?? 'Me',
+                        'role' => $r['role'] ?? 'student',
+                        'authorType' => $r['role'] ?? 'student'
+                    ]
+                ]);
+            } else {
+                http_response_code(500);
+                echo json_encode(['error' => 'db_error']);
+            }
+        } else {
+             http_response_code(500);
+             echo json_encode(['error' => 'prepare_error']);
+        }
     }
 
     // Delete a forum post owned by the current student
@@ -1119,13 +1281,7 @@ public function templates()
         echo 'ok';
     }
 
-    // Placeholder for vote endpoint
-    public function forumVote()
-    {
-        $this->requireLogin('student');
-        header('Content-Type: application/json');
-        echo json_encode(['ok' => true]);
-    }
+
 
     // Student tickets list (using global tickets view)
     public function tickets()

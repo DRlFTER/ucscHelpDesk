@@ -1,6 +1,6 @@
 <?php
 	$title = 'Forum Post';
-	$head = '<link rel="stylesheet" href="/css/forum/forumFull.css">';
+	$head = '<link rel="stylesheet" href="/css/forum/forumFull.css"><link rel="stylesheet">';
 	
 	// Detect role from session for dynamic links
 	$sessionUser = $_SESSION['user'] ?? null;
@@ -136,4 +136,7 @@
 	<button type="button" class="modalBackdropClose" aria-label="Close"></button>
 </div>
 
+<script>
+window.ticketData = <?= json_encode($data ?? []) ?>;
+</script>
 <script src="/js/forum/forumFull.js"></script>

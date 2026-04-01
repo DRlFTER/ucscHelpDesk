@@ -132,6 +132,28 @@ INSERT INTO `faq` (`id`, `question`, `answer`, `created_at`) VALUES
 -- --------------------------------------------------------
 
 --
+-- Table structure for table `forum_comments`
+--
+
+CREATE TABLE `forum_comments` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `post_id` int(11) NOT NULL,
+  `u_id` int(11) NOT NULL,
+  `parent_id` int(11) DEFAULT NULL,
+  `content` text NOT NULL,
+  `created_at` datetime DEFAULT current_timestamp(),
+  PRIMARY KEY (`id`),
+  KEY `post_id` (`post_id`),
+  KEY `u_id` (`u_id`),
+  KEY `parent_id` (`parent_id`),
+  CONSTRAINT `fk_fc_post` FOREIGN KEY (`post_id`) REFERENCES `forum_q` (`q_id`) ON DELETE CASCADE,
+  CONSTRAINT `fk_fc_user` FOREIGN KEY (`u_id`) REFERENCES `users` (`u_id`) ON DELETE CASCADE,
+  CONSTRAINT `fk_fc_parent` FOREIGN KEY (`parent_id`) REFERENCES `forum_comments` (`id`) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+-- --------------------------------------------------------
+
+--
 -- Table structure for table `forum_q`
 --
 
@@ -1080,23 +1102,8 @@ ALTER TABLE `division`
 ALTER TABLE `faq`
   MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=9;
 
---
--- AUTO_INCREMENT for table `forum_q`
---
 ALTER TABLE `forum_q`
   MODIFY `q_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=15;
-
---
--- AUTO_INCREMENT for table `forum_replies`
---
-ALTER TABLE `forum_replies`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=6;
-
---
--- AUTO_INCREMENT for table `forum_topics`
---
-ALTER TABLE `forum_topics`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=6;
 
 --
 -- AUTO_INCREMENT for table `kb_files`
@@ -1209,19 +1216,6 @@ ALTER TABLE `announcement_files`
 --
 ALTER TABLE `forum_q`
   ADD CONSTRAINT `forum_q_ibfk_1` FOREIGN KEY (`u_id`) REFERENCES `users` (`u_id`) ON DELETE CASCADE;
-
---
--- Constraints for table `forum_replies`
---
-ALTER TABLE `forum_replies`
-  ADD CONSTRAINT `fk_forum_replies_author` FOREIGN KEY (`author_id`) REFERENCES `users` (`u_id`) ON DELETE CASCADE,
-  ADD CONSTRAINT `fk_forum_replies_topic` FOREIGN KEY (`topic_id`) REFERENCES `forum_topics` (`id`) ON DELETE CASCADE;
-
---
--- Constraints for table `forum_topics`
---
-ALTER TABLE `forum_topics`
-  ADD CONSTRAINT `fk_forum_topics_author` FOREIGN KEY (`author_id`) REFERENCES `users` (`u_id`) ON DELETE CASCADE;
 
 --
 -- Constraints for table `kb_files`
