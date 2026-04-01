@@ -110,7 +110,7 @@
                         
             <div class="knowledgeBase">
               <div class="kbCarousel">
-                <a href="/assets/imgs/kb/hanbook.jpg" target="_blank" class="kbCard" style="background-image: url('/assets/imgs/kb/hanbook.jpg');">
+                <a href="/student/knowledgebase" class="kbCard" style="background-image: url('/assets/imgs/kb/hanbook.jpg');">
                   <div class="kbCardContent">
                     <div class="kbCardText">
                       <span class="kbCardSubtitle">RESOURCE</span>
@@ -119,7 +119,7 @@
                     <div class="kbCardBtn">Read Guide</div>
                   </div>
                 </a>
-                <a href="/assets/imgs/kb/map.png" target="_blank" class="kbCard" style="background-image: url('/assets/imgs/kb/map.png');">
+                <a href="/student/knowledgebase" class="kbCard" style="background-image: url('/assets/imgs/kb/map.png');">
                   <div class="kbCardContent">
                     <div class="kbCardText">
                       <span class="kbCardSubtitle">RESOURCES</span>
