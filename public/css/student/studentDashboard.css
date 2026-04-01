@@ -18,7 +18,7 @@ main {
   border: none;
   box-shadow: none;
   padding: 20px;
-  border-radius: 16px;
+  border-radius: 20px;
   display: flex;
   flex-direction: column;
   width: 100%;
@@ -43,7 +43,7 @@ main {
   text-align: center;
   padding: 14px;
   border: 1px solid #c9d4ff;
-  border-radius: 8px;
+  border-radius: 12px;
   color: #5a5d6d;
   text-decoration: none;
   font-size: 14px;
@@ -178,14 +178,14 @@ h3 {
   justify-content: center;
   flex-direction: column;
   gap: 6px;
-  background: #7575f71f;
-  color: #6a6af5;
+  background: #a1a1ff1f;
+  color: #7a7aff;
 }
 
 .quickActionSvg svg {
-    width: 20px; 
-    height: 20px;
-    fill: #6a6af5;      
+    width: 30px; 
+    height: 30px;
+    fill: #7a7aff;      
 }
 
 .quickActions a:hover,
@@ -217,8 +217,8 @@ h3 {
   width: 40px;
   height: 40px;
   border-radius: 8px;
-  background: #f5f3fa;
-  color: #5b5b8d;
+  background: #e1e4ff;
+  color: #6a6af5;
   flex-shrink: 0;
   margin-top: 2px;
 }
@@ -226,7 +226,7 @@ h3 {
 .reqIcon svg {
   width: 24px;
   height: 24px;
-  fill: #5b5b8d;
+  fill: #6a6af5;
 }
 
 .reqCardBody {
@@ -618,8 +618,8 @@ h3 {
   width: 40px;
   height: 40px;
   border-radius: 8px;
-  background: #e8f5e9;
-  color: #4caf50;
+  background: #e8eafe;
+  color: #6a6af5;
   flex-shrink: 0;
   margin-top: 2px;
 }
