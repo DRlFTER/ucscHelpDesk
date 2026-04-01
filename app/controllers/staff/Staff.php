@@ -40,12 +40,17 @@ public function __construct()
         error_log('Failed to load tickets for dashboard: ' . $e->getMessage());
     }
 
+    $uId = (int)($_SESSION['user']['u_id'] ?? 0);
+
     $pending = array_filter($tickets, fn($t) => $t['status'] === 'pending');
     $assigned = array_filter($tickets, fn($t) => $t['status'] === 'agent assigned');
     $resolved = array_filter($tickets, fn($t) => in_array($t['status'], ['agent-closed', 'closed', 'resolved'])); // Fixed: Added 'resolved'
     $total = count($tickets);
 
-    $recentTickets = array_slice($tickets, 0, 8);
+    // 5 recent tickets assigned to THIS staff
+    $myTickets = array_filter($tickets, fn($t) => ((int)($t['assigned_to'] ?? 0) === $uId) && !in_array(strtolower($t['status']), ['closed', 'agent-closed', 'resolved']));
+    // sort by created_at DESC if needed, but tickets are usually sorted by ID DESC already
+    $myRecentTickets = array_slice($myTickets, 0, 5);
 
     $announcements = [];
     try {
@@ -55,7 +60,16 @@ public function __construct()
         error_log('Failed to load announcements for dashboard: ' . $e->getMessage());
     }
 
-    $headContent = '<link rel="stylesheet" href="/css/staff/staffTickets.css"/>';
+    $upcomingEvents = [];
+    try {
+        require_once __DIR__ . '/../../models/CalendarEvent.php';
+        $calModel = new CalendarEvent();
+        $upcomingEvents = $calModel->getUpcomingEvents($uId, 3);
+    } catch (Throwable $e) {
+        $upcomingEvents = [];
+    }
+
+    $headContent = '<link rel="stylesheet" href="/css/student/studentDashboard.css"/>';
     $this->view('staff/staffDashboard', [
         'title' => 'Staff Dashboard',
         'head' => $headContent,
@@ -65,8 +79,9 @@ public function __construct()
             'resolved' => count($resolved), 
             'total' => $total
         ],
-        'recentTickets' => $recentTickets,
-        'announcements' => $announcements,
+        'recentTickets' => $myRecentTickets,
+        'recentAnnouncements' => $announcements,
+        'upcomingEvents' => $upcomingEvents,
     ]);
 }
 
