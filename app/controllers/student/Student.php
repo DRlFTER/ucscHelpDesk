@@ -1335,9 +1335,11 @@ public function templates()
     public function forumDelete()
     {
         $this->requireLogin('student');
+        header('Content-Type: application/json');
+
         if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
             http_response_code(405);
-            echo 'method_not_allowed';
+            echo json_encode(['error' => 'Method not allowed']);
             return;
         }
 
@@ -1345,7 +1347,7 @@ public function templates()
         $id = isset($_POST['id']) ? (int)$_POST['id'] : 0;
         if ($id <= 0 || $uId <= 0) {
             http_response_code(400);
-            echo 'bad_request';
+            echo json_encode(['error' => 'Bad request']);
             return;
         }
 
@@ -1359,7 +1361,7 @@ public function templates()
         }
         if (!$ownRow) {
             http_response_code(404);
-            echo 'not_found';
+            echo json_encode(['error' => 'Not found']);
             return;
         }
 
@@ -1367,11 +1369,11 @@ public function templates()
         $ok = $db->query("DELETE FROM forum_q WHERE q_id = $idEsc AND u_id = $uId");
         if (!$ok) {
             http_response_code(500);
-            echo 'delete_failed';
+            echo json_encode(['error' => 'Delete failed']);
             return;
         }
 
-        echo 'ok';
+        echo json_encode(['success' => true]);
     }
 
 
@@ -1755,9 +1757,11 @@ public function templates()
     public function ticketDelete()
     {
         $this->requireLogin('student');
+        header('Content-Type: application/json');
+
         if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
             http_response_code(405);
-            echo 'method_not_allowed';
+            echo json_encode(['error' => 'Method not allowed']);
             return;
         }
 
@@ -1765,7 +1769,7 @@ public function templates()
         $id = isset($_POST['id']) ? (int)$_POST['id'] : 0;
         if ($id <= 0) {
             http_response_code(400);
-            echo 'bad_request';
+            echo json_encode(['error' => 'Bad request']);
             return;
         }
 
@@ -1779,7 +1783,7 @@ public function templates()
         }
         if (!$ownRow) {
             http_response_code(404);
-            echo 'not_found';
+            echo json_encode(['error' => 'Not found']);
             return;
         }
 
@@ -1787,16 +1791,18 @@ public function templates()
         $db->query("DELETE FROM attachments WHERE entity_type = 'ticket' AND entity_id = $idEsc");
         $db->query("DELETE FROM tickets WHERE ticket_id = $idEsc AND u_id = $studentId");
 
-        echo 'ok';
+        echo json_encode(['success' => true]);
     }
 
     // Mark a ticket owned by the current student as resolved
     public function ticketResolve()
     {
         $this->requireLogin('student');
+        header('Content-Type: application/json');
+        
         if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
             http_response_code(405);
-            echo 'method_not_allowed';
+            echo json_encode(['error' => 'Method not allowed']);
             return;
         }
 
@@ -1804,7 +1810,7 @@ public function templates()
         $id = isset($_POST['id']) ? (int)$_POST['id'] : 0;
         if ($id <= 0) {
             http_response_code(400);
-            echo 'bad_request';
+            echo json_encode(['error' => 'Bad request']);
             return;
         }
 
@@ -1818,7 +1824,7 @@ public function templates()
         }
         if (!$ownRow) {
             http_response_code(404);
-            echo 'not_found';
+            echo json_encode(['error' => 'Not found']);
             return;
         }
 
@@ -1826,14 +1832,14 @@ public function templates()
         $ok = $db->query("UPDATE tickets SET status = 'resolved' WHERE ticket_id = $idEsc AND u_id = $studentId");
         if (!$ok) {
             http_response_code(500);
-            echo 'update_failed';
+            echo json_encode(['error' => 'Update failed']);
             return;
         }
 
         // Update ticket_timeline resolved timestamp
         $db->query("UPDATE ticket_timeline SET resolved = CURRENT_TIMESTAMP WHERE ticket_id = $idEsc");
 
-        echo 'ok';
+        echo json_encode(['success' => true]);
     }
 
     public function lostfound_delete($id = null)
