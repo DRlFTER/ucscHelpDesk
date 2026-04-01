@@ -162,33 +162,57 @@ h3 {
   opacity: 0.6;
 }
 
-/* Account section button-like items */
-.account .accountItems {
+/* Recent Forum Posts Item */
+.forumPostItem {
   display: flex;
-  flex-direction: column;
-  gap: 12px;
+  align-items: flex-start;
+  text-decoration: none;
+  color: inherit;
+  gap: 16px;
+  border: none;
+  margin: 0;
+  padding: 0;
+  transition: opacity 0.2s;
 }
 
-.account .accountItem {
+.forumPostItem:hover {
+  opacity: 0.8;
+}
+
+.forumIconWrapper {
   display: flex;
   align-items: center;
-  gap: 10px;
-  padding: 10px 12px;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
   border-radius: 8px;
-  background: transparent;
-  color: #111827;
-  text-decoration: none;
-  transition: background-color .2s ease, box-shadow .2s ease, transform .1s ease;
-  cursor: pointer;
-  width: 100%;
-}
-
-.account .accountItem svg {
+  background: #e8f5e9;
+  color: #4caf50;
   flex-shrink: 0;
+  margin-top: 2px;
 }
 
-/* Hide manual line breaks inside account buttons for cleaner layout */
-.account .accountItem br { display: none; }
+.forumContent {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  overflow: hidden;
+}
+
+.forumTopic {
+  font-size: 15px;
+  font-weight: 500;
+  color: #2c2f3c;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.forumMeta {
+  font-size: 13px;
+  color: #8589a8;
+  line-height: 1.4;
+}
 
 /* Active Tickets Section */
 .activeTickets {
