@@ -178,19 +178,18 @@ h3 {
   justify-content: center;
   flex-direction: column;
   gap: 6px;
-  background: #a1a1ff1f;
   color: #7a7aff;
 }
 
 .quickActionSvg svg {
     width: 30px; 
     height: 30px;
-    fill: #7a7aff;      
+    fill: #7a7aff;
 }
 
 .quickActions a:hover,
 .quickActions a:focus-visible {
-  opacity: 0.6;
+    background:#cad4ff2b;
 }
 
 /* Active Tickets Section - List layout matching announcements/forum */
