@@ -5,10 +5,6 @@
         <h1 class="page-title">Knowledge Base</h1>
         <p class="page-subtitle">Access detailed guides, policies, and technical documentation.</p>
       </div>
-      <button class="btnWSvg" onclick="window.location.href='/staff/createKB';" type="button">
-        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#ffffff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
-        <span class="btnPrimaryText">Create New Resource</span>
-      </button>
     </div>
 
     <div class="content-area">
@@ -19,6 +15,10 @@
           </svg>
           <input id="kbSearchInput" type="text" placeholder="Search documents..." aria-label="Search knowledge base" />
         </div>
+        <button class="btnWSvg" onclick="window.location.href='/staff/createKB';" type="button">
+        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#ffffff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
+        <span class="btnPrimaryText">Create New Resource</span>
+      </button>
         <div class="filters">
           <div class="selectWrap" id="kbCategoryWrap">
             <button class="selectButton" type="button" aria-haspopup="listbox" aria-expanded="false" aria-controls="kbCategoryList">
@@ -78,6 +78,7 @@
     display: inline-flex;
     align-items: center;
     gap: 0.5rem;
+    margin-left:1.5rem ;
    
   }
   .btnPrimaryText {
@@ -89,13 +90,13 @@
     align-items: center;
     gap: 1rem;
     margin-bottom: 1.5rem;
-    flex-wrap: wrap;
+    flex-wrap: nowrap;
   }
 
   .search {
     flex: 1;
     min-width: 250px;
-    max-width: 400px;
+    max-width: 800px;
   }
 
   .filters {
@@ -182,6 +183,14 @@
       min-width: auto;
       max-width: none;
     }
+  }
+  .search {
+    width: 100%;
+  }
+
+  .filters {
+    width: max-content;
+    justify-content: flex-start;
   }
 </style>
 <script>
