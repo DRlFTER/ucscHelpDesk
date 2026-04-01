@@ -10,23 +10,19 @@ header {
 
 main {
   flex: 1;
+  
 }
 
 .sectionCard {
-  border-radius: 15px;
   padding: 15px;
-  box-shadow: 0 3px 8px rgba(0, 0, 0, 0.08);
   display: flex;
   flex-direction: column;
   gap: 12px;
   width: 100%;
-  backdrop-filter: blur(20px);
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  background: rgba(255, 255, 255, 0.5);
   transition: all 0.18s ease-in-out;
   background-clip: padding-box;
+  background: transparent;
 }
-
 
 .dashboardContainer {
   width: 100%;
@@ -38,34 +34,7 @@ main {
   justify-content: flex-start;
   align-items: flex-start;
   gap: 20px;
-}
-
-.navMenu {
-  flex: 0 0 10%;
-  height: 100%;
-}
-
-.sideNav {
-  display: flex;
-  flex-direction: column;
-  padding: 20px 10px;
-  gap: 12px;
-}
-
-.sideNav a {
-  color: #333;
-  text-decoration: none;
-  padding: 10px 14px;
-  border-radius: 6px;
-  font-weight: 500;
-  transition: background 0.2s ease, color 0.2s ease;
-}
-
-.sideNav a:hover {
-  background: #6a6af5;
-  color: white;
-  transform: translateX(2px);
-  transition: background 0.2s ease, color 0.2s ease, transform 0.4s ease;
+  
 }
 
 .dashboardContent {
@@ -92,33 +61,41 @@ main {
   flex-direction: column;
   justify-content: flex-start;
   align-items: flex-start;
+  gap: 20px;
   width: 35%;
   height: 100%;
   background: transparent;
   margin-left: auto;
 }
 
+/* OVERRIDE TO INCREASE DASHBOARD SECTIONS VERTICAL GAP */
+.dashboardGrid .colLeft, 
+.dashboardGrid .colRight,
+.dashboardGrid .col {
+  gap: 35px !important;
+}
+
 .welcomeCard {
   width: 100%;
-  background: linear-gradient(135deg, #6a6af5 0%, #babaff 100%);
-  color: white;
-  padding: 20px;
-  border-radius: 15px;
+  color: black;
+  padding-top: 20px;
+  padding-bottom: 20px;
   display: flex;
   flex-direction: column;
-  gap: 10px;
+  gap: 2px;
   height: auto;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
 }
 
 .welcomeCard h2 {
+  font-size: 2.5rem;
+  letter-spacing: -0.75px;
   font-weight: 500;
 }
 
 .welcomeCard p {
-  font-size: 0.95rem;
+  font-size: 1rem;
   font-weight: 400;
-  opacity: 0.9;
+  opacity: 0.8;
 }
 
 .welcomeCard .ticket-info {
@@ -158,9 +135,9 @@ h3 {
 .quickActions a {
   flex:1;
   padding: 12px;
-  height: 90px;
-  border-radius: 10px;
-  font-weight: 500;
+  height: 130px;
+  border-radius: 15px;
+  font-weight: 300;
   text-align: center;
   cursor: pointer;
   text-decoration: none;
@@ -170,49 +147,19 @@ h3 {
   justify-content: center;
   flex-direction: column;
   gap: 6px;
-  background: #6a6af51f;
+  background: #7575f71f;
   color: #6a6af5;
-  border: 1px solid #6a6af544;
-}
-
-.quickActions a:hover {
-  box-shadow: 0 4px 10px rgba(0,0,0,0.2);
 }
 
 .quickActionSvg svg {
-    width: 30px; 
-    height: 30px;
+    width: 20px; 
+    height: 20px;
     fill: #6a6af5;      
 }
 
 .quickActions a:hover,
 .quickActions a:focus-visible {
-  background: #8C8CF9;
-  color: #ffffff;
-  border-color: #8C8CF9;
-}
-
-.quickActions a:hover .quickActionSvg svg,
-.quickActions a:focus-visible .quickActionSvg svg {
-  fill: #ffffff;
-}
-
-.knowledgeBase .kbSearch {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  border: 1px solid #e5e7eb;
-  border-radius: 30px;
-  padding: 10px 12px;
-  background: #fff;
-  
-}
-
-.knowledgeBase .kbSearch input {
-  border: none;
-  outline: none;
-  font-size: 14px;
-  flex: 1;
+  opacity: 0.7;
 }
 
 /* Account section button-like items */
@@ -242,6 +189,115 @@ h3 {
 
 /* Hide manual line breaks inside account buttons for cleaner layout */
 .account .accountItem br { display: none; }
+
+/* Active Requests Section */
+.activeRequests {
+  width: 100%;
+}
+
+.activeRequestsGrid {
+  display: flex;
+  gap: 15px;
+  overflow-x: auto;
+  padding-bottom: 5px;
+}
+
+.activeRequestCard {
+  flex: 1;
+  min-width: 250px;
+  background: white;
+  border: 1px solid #f0f0f0;
+  border-radius: 12px;
+  padding: 20px;
+  padding-bottom: 24px;
+  text-decoration: none;
+  color: #333;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.02);
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+  position: relative;
+}
+
+.activeRequestCard:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 10px rgba(0,0,0,0.05);
+}
+
+.reqCardHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+}
+
+.reqIcon {
+  width: 42px;
+  height: 42px;
+  background: #f5f3fa;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.reqIcon svg {
+  width: 24px;
+  height: 24px;
+  fill: #5b5b8d;
+}
+
+.reqStatus {
+  font-size: 11px;
+  font-weight: 500;
+  padding: 6px 10px;
+  border-radius: 4px;
+  letter-spacing: 0.5px;
+}
+
+.reqStatus.inProgress,
+.reqStatus.open {
+  background: #e8e8ec;
+  color: #62627a;
+}
+
+.reqStatus.resolved {
+  background: #e6f9ed;
+  color: #278c52;
+}
+
+.reqCardBody {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.reqTitle {
+  font-size: 17px;
+  font-weight: 500;
+  margin: 0;
+  color: #222;
+}
+
+.reqMeta {
+  font-size: 14px;
+  color: #777;
+  margin: 0;
+}
+
+.reqProgress {
+  margin-top: 10px;
+  height: 4px;
+  background: #ebeaef;
+  border-radius: 2px;
+  overflow: hidden;
+}
+
+.reqProgressBar {
+  height: 100%;
+  background: #5b5b8d;
+  border-radius: 2px;
+}
 
 .ticket {
   background: #f9f9f9;
@@ -310,116 +366,241 @@ h3 {
   height: 17px;
   fill: #9f9e9e;
 }
-.dashboardColumnTwo > .sectionCard {
-  margin-bottom: 20px;
-  align-items:flex-start;
-}
-.dashboardColumnTwo > .sectionCard:last-child {
-  margin-bottom: 0;
-}
 
-.priorityTitle,
-.announcementTitle {
-  font-size: 15px;
-  font-weight: 500;
-}
-
-.announcement.warning {
-  background: #FEF9C3;
-  color: #9D5226;
-  border: 1px solid #9D5226;
-}
-
-.priorityItem,
-.announcement.info,
-.calendar .event {
-  background: #6a6af51f;
-  color: #6a6af5;
-  border: 1px solid #6a6af544;
-}
-
-.announcement.info,
-.priorityItem,
-.announcement.warning {
-  font-size: 13px;
-  padding: 3%;
-  padding-top: 5%;
-  padding-bottom: 5%;
-  border-radius: 10px;
-  text-decoration: none;
+/* Knowledge Base Carousel */
+.kbCarousel {
   display: flex;
-  align-items: center;
-  gap: 8px;
-  width: 100%;
-  box-sizing: border-box;
-  text-decoration: none;
-  cursor: pointer;
-  transition: all 0.2s ease-in-out;
-}
-
-.calendar .event {
-  display: flex;
-  justify-content: space-between;
-  font-size: 15px;
-  padding: 3%;
-  padding-top: 5%;
-  padding-bottom: 5%;
-  border-radius: 10px;
-  text-decoration: none;
-  width: 100%;
-  box-sizing: border-box;
-  flex-direction: row;
-  align-items: center;
+  overflow-x: auto;
+  scroll-snap-type: x mandatory;
+  -webkit-overflow-scrolling: touch;
   gap: 15px;
-  transition: all 0.2s ease-in-out;
+  padding-bottom: 5px;
+  scrollbar-width: thin; /* Firefox */
+  scrollbar-color: rgba(106, 106, 245, 0.3) transparent;
 }
 
-.accountItem {
+.kbCarousel::-webkit-scrollbar {
+  height: 6px;
+}
+
+.kbCarousel::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.kbCarousel::-webkit-scrollbar-thumb {
+  background-color: rgba(106, 106, 245, 0.3);
+  border-radius: 10px;
+}
+
+.kbCarousel::-webkit-scrollbar-thumb:hover {
+  background-color: rgba(106, 106, 245, 0.5);
+}
+
+.kbCard {
+  flex: 0 0 calc(100% - 20px);
+  scroll-snap-align: center;
+  height: 180px;
+  border-radius: 14px;
+  position: relative;
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
   display: flex;
-  align-items: center;
-  color: #394353;
-  gap: 8px;
-  margin-left: 10px;
-  padding: 10px 0;
+  flex-direction: column;
+  justify-content: flex-end;
+  padding: 20px;
+  color: #fff;
   text-decoration: none;
+  overflow: hidden;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
 }
 
-.accountItem:last-child {
-  border-bottom: none;
-}
-
-.accountItem svg{
-  color: #394353;
-}
-
-.mutedText {
-  color: #6b7280;
-}
-
-.clickable {
-  cursor: pointer;
-}
-
-.announcements .announcement svg.announcementIcon {
-  width: 28px;
-  height: 28px;
-  min-width: 28px;
-  min-height: 28px;
-  display: inline-block;
-  flex-shrink: 0;
-  fill: currentColor;
-}
-
-.calendar .event:hover,
-.calendar .event.isHover,
-.calendar .event:focus-visible,
-.priorityItem:hover,
-.priorityItem.isHover,
-.priorityItem:focus-visible,
-.announcement:hover,
-.announcement.isHover,
-.announcement:focus-visible {
-  background: rgba(255, 255, 255, 1);
-  border: 1px solid rgba(140, 140, 249, 0.7);
+.kbCard:hover, .kbCard:focus-visible {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 16px rgba(106, 106, 245, 0.2);
   outline: none;
+}
+
+.kbCard::before {
+  content: "";
+  position: absolute;
+  top: 0; left: 0; right: 0; bottom: 0;
+  background: linear-gradient(to top, rgba(0,0,0,0.85) 0%, rgba(0,0,0,0.4) 40%, rgba(0,0,0,0) 100%);
+  z-index: 1;
+  border-radius: 14px;
+}
+
+.kbCardContent {
+  position: relative;
+  z-index: 2;
+  display: flex;
+  flex-direction: row;
+  justify-content: space-between;
+  align-items: flex-end;
+  width: 100%;
+}
+
+.kbCardText {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.kbCardSubtitle {
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 1.5px;
+  font-weight: 500;
+  opacity: 0.85;
+}
+
+.kbCardTitle {
+  font-size: 1.3rem;
+  font-weight: 500;
+  margin: 0;
+  letter-spacing: -0.5px;
+}
+
+.kbCardBtn {
+  border: 1px solid rgba(255,255,255,0.4);
+  padding: 10px 20px;
+  border-radius: 30px;
+  font-size: 13px;
+  font-weight: 400;
+  color: #fff;
+  background: rgba(255,255,255,0.15);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  transition: all 0.2s;
+  white-space: nowrap;
+}
+
+.kbCard:hover .kbCardBtn {
+  background: rgba(255,255,255,0.25);
+  border-color: rgba(255,255,255,0.6);
+}
+
+/* OVERRIDE TO INCREASE DASHBOARD SECTIONS VERTICAL GAP */
+.dashboardGrid .colLeft,
+.dashboardGrid .colRight,
+.dashboardGrid .col {
+  gap: 35px !important;
+}/* Knowledge Base Carousel */
+.kbCarousel {
+  display: flex;
+  overflow-x: auto;
+  scroll-snap-type: x mandatory;
+  -webkit-overflow-scrolling: touch;
+  gap: 15px;
+  padding-bottom: 5px;
+  scrollbar-width: thin; /* Firefox */
+  scrollbar-color: rgba(106, 106, 245, 0.3) transparent;
+}
+
+.kbCarousel::-webkit-scrollbar {
+  height: 6px;
+}
+
+.kbCarousel::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.kbCarousel::-webkit-scrollbar-thumb {
+  background-color: rgba(106, 106, 245, 0.3);
+  border-radius: 10px;
+}
+
+.kbCarousel::-webkit-scrollbar-thumb:hover {
+  background-color: rgba(106, 106, 245, 0.5);
+}
+
+.kbCard {
+  flex: 0 0 calc(100% - 20px);
+  scroll-snap-align: center;
+  height: 180px;
+  border-radius: 14px;
+  position: relative;
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+  padding: 20px;
+  color: #fff;
+  text-decoration: none;
+  overflow: hidden;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.kbCard:hover, .kbCard:focus-visible {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 16px rgba(106, 106, 245, 0.2);
+  outline: none;
+}
+
+.kbCard::before {
+  content: "";
+  position: absolute;
+  top: 0; left: 0; right: 0; bottom: 0;
+  background: linear-gradient(to top, rgba(0,0,0,0.85) 0%, rgba(0,0,0,0.4) 40%, rgba(0,0,0,0) 100%);
+  z-index: 1;
+  border-radius: 14px;
+}
+
+.kbCardContent {
+  position: relative;
+  z-index: 2;
+  display: flex;
+  flex-direction: row;
+  justify-content: space-between;
+  align-items: flex-end;
+  width: 100%;
+}
+
+.kbCardText {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.kbCardSubtitle {
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 1.5px;
+  font-weight: 500;
+  opacity: 0.85;
+}
+
+.kbCardTitle {
+  font-size: 1.3rem;
+  font-weight: 500;
+  margin: 0;
+  letter-spacing: -0.5px;
+}
+
+.kbCardBtn {
+  border: 1px solid rgba(255,255,255,0.4);
+  padding: 10px 20px;
+  border-radius: 30px;
+  font-size: 13px;
+  font-weight: 400;
+  color: #fff;
+  background: rgba(255,255,255,0.15);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  transition: all 0.2s;
+  white-space: nowrap;
+}
+
+.kbCard:hover .kbCardBtn {
+  background: rgba(255,255,255,0.25);
+  border-color: rgba(255,255,255,0.6);
+}
+
+/* OVERRIDE TO INCREASE DASHBOARD SECTIONS VERTICAL GAP */
+.dashboardGrid .colLeft,
+.dashboardGrid .colRight,
+.dashboardGrid .col {
+  gap: 35px !important;
 }
