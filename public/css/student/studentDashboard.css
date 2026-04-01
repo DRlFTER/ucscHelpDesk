@@ -17,7 +17,7 @@ main {
   background:#cad4ff2b;
   border: none;
   box-shadow: none;
-  padding: 24px;
+  padding: 20px;
   border-radius: 16px;
   display: flex;
   flex-direction: column;
@@ -25,7 +25,7 @@ main {
 }
 
 .sectionCardTitle {
-  font-size: 20px;
+  font-size: 17px;
   font-weight: 400;
   margin-bottom: 24px;
   color: #333;
@@ -193,8 +193,8 @@ h3 {
   opacity: 0.6;
 }
 
-/* Recent Forum Posts Item */
-.forumPostItem {
+/* Active Tickets Section - List layout matching announcements/forum */
+.activeTicketItem {
   display: flex;
   align-items: flex-start;
   text-decoration: none;
@@ -206,94 +206,21 @@ h3 {
   transition: opacity 0.2s;
 }
 
-.forumPostItem:hover {
-  opacity: 0.8;
+.activeTicketItem:hover {
+  opacity: 0.7;
 }
 
-.forumIconWrapper {
+.reqIcon {
   display: flex;
   align-items: center;
   justify-content: center;
   width: 40px;
   height: 40px;
   border-radius: 8px;
-  background: #e8f5e9;
-  color: #4caf50;
+  background: #f5f3fa;
+  color: #5b5b8d;
   flex-shrink: 0;
   margin-top: 2px;
-}
-
-.forumContent {
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-  overflow: hidden;
-}
-
-.forumTopic {
-  font-size: 15px;
-  font-weight: 500;
-  color: #2c2f3c;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-
-.forumMeta {
-  font-size: 13px;
-  color: #8589a8;
-  line-height: 1.4;
-}
-
-/* Active Tickets Section */
-.activeTickets {
-  width: 100%;
-}
-
-.activeTicketsGrid {
-  display: flex;
-  gap: 15px;
-  overflow-x: auto;
-  padding-bottom: 5px;
-}
-
-.activeTicketCard {
-  flex: 1;
-  min-width: 250px;
-  background: rgba(255, 255, 255, 0.75);
-  border-radius: 15px;
-  padding: 20px;
-  padding-bottom: 24px;
-  text-decoration: none;
-  color: #333;
-  display: flex;
-  flex-direction: column;
-  gap: 20px;
-  box-shadow: 0 2px 4px rgba(0,0,0,0.02);
-  transition: all 0.2s ease-in-out;
-  position: relative;
-  border: 1px solid rgba(255, 255, 255, 0.5);
-}
-
-.activeTicketCard:hover {
-  background: rgba(255, 255, 255, 1);
-  border: 1px solid rgba(140, 140, 249, 0.7);
-}
-
-.reqCardHeader {
-  display: flex;
-  justify-content: space-between;
-  align-items: flex-start;
-}
-
-.reqIcon {
-  width: 42px;
-  height: 42px;
-  background: #f5f3fa;
-  border-radius: 8px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
 }
 
 .reqIcon svg {
@@ -302,12 +229,38 @@ h3 {
   fill: #5b5b8d;
 }
 
+.reqCardBody {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  flex: 1;
+  overflow: hidden;
+}
+
+.reqCardHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 10px;
+}
+
+.reqTitle {
+  font-size: 15px;
+  font-weight: 500;
+  color: #2c2f3c;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  margin: 0;
+}
+
 .reqStatus {
   font-size: 11px;
   font-weight: 500;
-  padding: 6px 10px;
+  padding: 4px 8px;
   border-radius: 50px;
   letter-spacing: 0.5px;
+  white-space: nowrap;
 }
 
 .reqStatus.inProgress,
@@ -321,31 +274,20 @@ h3 {
   color: #278c52;
 }
 
-.reqCardBody {
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
-}
-
-.reqTitle {
-  font-size: 17px;
-  font-weight: 500;
-  margin: 0;
-  color: #222;
-}
-
 .reqMeta {
-  font-size: 14px;
-  color: #777;
+  font-size: 13px;
+  color: #8589a8;
+  line-height: 1.4;
   margin: 0;
 }
 
 .reqProgress {
-  margin-top: 10px;
+  margin-top: 6px;
   height: 4px;
   background: #ebeaef;
   border-radius: 2px;
   overflow: hidden;
+  width: 100%;
 }
 
 .reqProgressBar {
@@ -557,7 +499,7 @@ h3 {
 }
 
 .announcementItem:hover {
-  opacity: 0.8;
+  opacity: 0.7;
 }
 
 .announcementIconWrapper {
@@ -609,7 +551,7 @@ h3 {
 }
 
 .calendarEventItem:hover {
-  opacity: 0.8;
+  opacity: 0.7;
 }
 
 .calendarEventDate {
@@ -650,4 +592,56 @@ h3 {
 .calendarEventMeta {
   font-size: 13px;
   color: #8589a8;
+}
+
+/* Recent Forum Posts Item */
+.forumPostItem {
+  display: flex;
+  align-items: flex-start;
+  text-decoration: none;
+  color: inherit;
+  gap: 16px;
+  border: none;
+  margin: 0;
+  padding: 0;
+  transition: opacity 0.2s;
+}
+
+.forumPostItem:hover {
+  opacity: 0.7;
+}
+
+.forumIconWrapper {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  border-radius: 8px;
+  background: #e8f5e9;
+  color: #4caf50;
+  flex-shrink: 0;
+  margin-top: 2px;
+}
+
+.forumContent {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  overflow: hidden;
+}
+
+.forumTopic {
+  font-size: 15px;
+  font-weight: 500;
+  color: #2c2f3c;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.forumMeta {
+  font-size: 13px;
+  color: #8589a8;
+  line-height: 1.4;
 }
