@@ -261,17 +261,18 @@ class StudentTicket
     // Add this method to models/student/Ticket.php (StudentTicket class)
 // This handles associating a file with the newly created ticket.kavindu added this
 
-public function addFile(int $ticket_id, string $file_path, string $original_name = ''): bool
+public function addFile(int $ticket_id, string $file_path, string $original_name = '', int $uId = 0): bool
 {
     $conn = self::getConnection();
-    $sql = "INSERT INTO supporting_documents (ticket_id, doc_name, location, uploaded_at) VALUES (?, ?, ?, NOW())";
+    // Uses the new unified attachments table
+    $sql = "INSERT INTO attachments (entity_type, entity_id, file_name, file_path, file_size, file_type, uploaded_by, uploaded_at) VALUES ('ticket', ?, ?, ?, 0, 'unknown', ?, NOW())";
 
     $stmt = $conn->prepare($sql);
     if (!$stmt) {
         throw new Exception('Prepare failed: ' . $conn->error);
     }
 
-    $stmt->bind_param('iss', $ticket_id, $original_name, $file_path);
+    $stmt->bind_param('issi', $ticket_id, $original_name, $file_path, $uId);
     $result = $stmt->execute();
     $stmt->close();
     $conn->close();

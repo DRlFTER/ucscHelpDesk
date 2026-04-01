@@ -573,7 +573,7 @@ class AdminModel extends Model
      */
     public function getTicketAttachments(int $ticketId): array
     {
-        $sql = "SELECT doc_name, location FROM supporting_documents WHERE ticket_id = ?";
+        $sql = "SELECT file_name AS doc_name, file_path AS location FROM attachments WHERE entity_type = 'ticket' AND entity_id = ?";
         $stmt = $this->db->prepare($sql);
         if (!$stmt) {
             throw new Exception('Prepare failed: ' . $this->db->error);

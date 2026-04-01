@@ -630,6 +630,22 @@
         </p>
       </div>
 
+      <?php if (!empty($attachments)): ?>
+      <div class="ticket-description" style="margin-top: 20px;">
+        <h3>Attachments</h3>
+        <ul style="list-style: none; padding-left: 0;">
+          <?php foreach ($attachments as $att): ?>
+            <li>
+              <a href="<?php echo htmlspecialchars($att['url']); ?>" target="_blank" style="color: #4f46e5; text-decoration: none; font-weight: 500;">
+                <svg xmlns="http://www.w3.org/2000/svg" height="20px" viewBox="0 -960 960 960" width="20px" fill="#4f46e5" style="vertical-align: middle; margin-right: 5px;"><path d="M260-160q-91 0-155.5-64.5T40-380q0-89 61.5-153.5T250-600h50v80h-50q-58 0-99 41t-41 99q0 58 41 99t99 41h220q58 0 99-41t41-99q0-58-41-99t-99-41h-70v-80h70q91 0 155.5 64.5T800-380q0 89-61.5 153.5T600-160H260Zm220-160L320-480l56-56 64 64v-368h80v368l64-64 56 56-160 160Z"/></svg>
+                <?php echo htmlspecialchars($att['name']); ?>
+              </a>
+            </li>
+          <?php endforeach; ?>
+        </ul>
+      </div>
+      <?php endif; ?>
+
       <!-- Assignment Section (Only for Pending Status) -->
       <?php if ($ticket['status'] === 'pending'): ?>
         <div class="assignment-section">

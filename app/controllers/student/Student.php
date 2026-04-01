@@ -95,6 +95,40 @@ class Student extends Controller
                         'meeting_requested' => $meetingRequested,
                         'type' => $t_type,
                     ]);
+
+                    // Handle attachments
+                    if ($ticketId && isset($_FILES['attachments']) && is_array($_FILES['attachments']['name'])) {
+                        require_once __DIR__ . '/../../models/Attachment.php';
+                        $attachmentModel = new Attachment();
+                        
+                        $fileCount = count($_FILES['attachments']['name']);
+                        for ($i = 0; $i < $fileCount; $i++) {
+                            // Reconstruct the individual file array for handle_upload
+                            $fileArr = [
+                                'name' => $_FILES['attachments']['name'][$i],
+                                'type' => $_FILES['attachments']['type'][$i],
+                                'tmp_name' => $_FILES['attachments']['tmp_name'][$i],
+                                'error' => $_FILES['attachments']['error'][$i],
+                                'size' => $_FILES['attachments']['size'][$i]
+                            ];
+                            
+                            if ($fileArr['error'] === UPLOAD_ERR_OK) {
+                                $uploadData = handle_upload($fileArr, 'ticket');
+                                if ($uploadData) {
+                                    $attachmentModel->insert([
+                                        'entity_type' => 'ticket',
+                                        'entity_id' => $ticketId,
+                                        'file_name' => $uploadData['file_name'],
+                                        'file_path' => $uploadData['file_path'],
+                                        'file_type' => $uploadData['file_type'],
+                                        'file_size' => $uploadData['file_size'],
+                                        'uploaded_by' => (int)($_SESSION['user']['u_id'] ?? 0)
+                                    ]);
+                                }
+                            }
+                        }
+                    }
+
                     $flash = ['type' => 'success', 'message' => 'Ticket submitted successfully. Redirecting to your dashboard...'];
                 } catch (Throwable $e) {
                     $flash = ['type' => 'error', 'message' => 'Ticket submission failed: ' . $e->getMessage()];
@@ -739,8 +773,41 @@ public function templates()
                     if ($stmt) {
                         $stmt->bind_param('isssis', $isPublic, $title, $topic, $description, $uId, $status);
                         $ok = $stmt->execute();
+                        $forumId = $stmt->insert_id;
                         $stmt->close();
                         if ($ok) {
+                            // Handle attachments
+                            if (isset($_FILES['attachments']) && is_array($_FILES['attachments']['name'])) {
+                                require_once __DIR__ . '/../../models/Attachment.php';
+                                $attachmentModel = new Attachment();
+                                
+                                $fileCount = count($_FILES['attachments']['name']);
+                                for ($i = 0; $i < $fileCount; $i++) {
+                                    $fileArr = [
+                                        'name' => $_FILES['attachments']['name'][$i],
+                                        'type' => $_FILES['attachments']['type'][$i],
+                                        'tmp_name' => $_FILES['attachments']['tmp_name'][$i],
+                                        'error' => $_FILES['attachments']['error'][$i],
+                                        'size' => $_FILES['attachments']['size'][$i]
+                                    ];
+                                    
+                                    if ($fileArr['error'] === UPLOAD_ERR_OK) {
+                                        $uploadData = handle_upload($fileArr, 'forum');
+                                        if ($uploadData) {
+                                            $attachmentModel->insert([
+                                                'entity_type' => 'forum',
+                                                'entity_id' => $forumId,
+                                                'file_name' => $uploadData['file_name'],
+                                                'file_path' => $uploadData['file_path'],
+                                                'file_type' => $uploadData['file_type'],
+                                                'file_size' => $uploadData['file_size'],
+                                                'uploaded_by' => $uId
+                                            ]);
+                                        }
+                                    }
+                                }
+                            }
+
                             $flash = ['type' => 'success', 'message' => $isPublic ? 'Post published successfully. Redirecting to Forum…' : 'Draft saved. Redirecting to Forum…'];
                         } else {
                             $flash = ['type' => 'error', 'message' => 'Failed to save the post. Please try again.'];
@@ -1048,6 +1115,18 @@ public function templates()
 
         $statusUi = strtolower((string)($row['status'] ?? 'open')) === 'answered' ? 'Answered' : 'Open';
 
+        // attachments from attachments table
+        $attachments = [];
+        if ($res = $db->query("SELECT file_name, file_path FROM attachments WHERE entity_type = 'forum' AND entity_id = $idEsc")) {
+            while ($r = $res->fetch_assoc()) {
+                $attachments[] = [
+                    'name' => (string)($r['file_name'] ?? ''),
+                    'url' => '/' . ltrim((string)($r['file_path'] ?? ''), '/'),
+                ];
+            }
+            $res->free();
+        }
+
         $payload = [
             'id' => (int)($row['q_id'] ?? 0),
             'code' => 'FRM-' . (int)($row['q_id'] ?? 0),
@@ -1060,7 +1139,7 @@ public function templates()
             'createdAgo' => $createdAgo,
             'is_Public' => (int)($row['is_Public'] ?? 0),
             'student' => [ 'id' => (int)($row['u_id'] ?? 0), 'name' => (string)($row['student_name'] ?? 'Student') ],
-            'attachments' => [],
+            'attachments' => $attachments,
             'commentsCount' => (int)($db->query("SELECT COUNT(*) as c FROM forum_comments WHERE post_id = " . (int)($row['q_id'] ?? 0))->fetch_assoc()['c'] ?? 0),
             'votes' => (int)($row['vote_count'] ?? 0),
             'voted' => (int)($row['my_vote'] ?? 0),
@@ -1486,13 +1565,13 @@ public function templates()
             ? 'Under Review'
             : (in_array($statusRaw, ['resolved','closed','agent-closed']) ? 'Resolved' : ucfirst($statusRaw));
 
-        // attachments from supporting_documents
+        // attachments from attachments table
         $attachments = [];
-        if ($res = $db->query("SELECT doc_name, location FROM supporting_documents WHERE ticket_id = $idEsc")) {
+        if ($res = $db->query("SELECT file_name, file_path FROM attachments WHERE entity_type = 'ticket' AND entity_id = $idEsc")) {
             while ($r = $res->fetch_assoc()) {
                 $attachments[] = [
-                    'name' => (string)($r['doc_name'] ?? ''),
-                    'url' => '/' . ltrim((string)($r['location'] ?? ''), '/'),
+                    'name' => (string)($r['file_name'] ?? ''),
+                    'url' => '/' . ltrim((string)($r['file_path'] ?? ''), '/'),
                 ];
             }
             $res->free();
@@ -1691,7 +1770,7 @@ public function templates()
         }
 
         // Optionally delete attachments first if FK constraints exist
-        $db->query("DELETE FROM supporting_documents WHERE ticket_id = $idEsc");
+        $db->query("DELETE FROM attachments WHERE entity_type = 'ticket' AND entity_id = $idEsc");
         $db->query("DELETE FROM tickets WHERE ticket_id = $idEsc AND u_id = $studentId");
 
         echo 'ok';

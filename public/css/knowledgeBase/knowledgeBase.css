@@ -261,17 +261,16 @@ main {
   display: flex;
   flex-direction: column;
   gap: 10px;
-  border-radius: 12px;
+  border-radius: 20px;
   border: 1px solid rgba(255, 255, 255, 0.1);
   background: rgba(255, 255, 255, 0.6);
-  padding: 12px;
+  padding: 15px;
   transition: all .18s ease-in-out;
 }
 
 .kbCard:hover {
+  cursor: pointer;
   background: rgba(255, 255, 255, 1);
-  border: 1px solid rgba(140, 140, 249, 0.7);
-  box-shadow: 0 6px 18px rgba(17, 24, 39, 0.06);
 }
 
 .kbCardHeader {
@@ -281,7 +280,7 @@ main {
 }
 
 .kbCardTitle {
-  font-weight: 600;
+  font-weight: 500;
 }
 
 .kbBadge {
@@ -327,7 +326,6 @@ main {
 
 .kbDownloadBtn:hover {
   background: #2563eb;
-  transform: translateY(-1px);
   box-shadow: 0 2px 8px rgba(59, 130, 246, 0.3);
 }
 
