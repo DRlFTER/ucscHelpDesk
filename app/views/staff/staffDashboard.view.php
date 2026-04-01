@@ -84,7 +84,7 @@
                 <?php endif; ?>
               </div>
 
-              <a href="/staff/staffTickets" class="sectionCardBtn">
+              <a href="/staff/tickets" class="sectionCardBtn">
                 View All Assigned Tickets
               </a>
             </div>
