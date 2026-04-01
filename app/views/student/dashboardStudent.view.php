@@ -18,9 +18,9 @@
               <p>Here’s what’s happening with your support requests</p>
             </div>
 
-            <div class="activeTickets">
-              <div class="activeTicketsHeader" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
-                <h3 style="margin-bottom: 0;">Active Tickets</h3>
+            <div class="activeTickets card sideWidget">
+              <div class="activeTicketsHeader" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px;">
+                <h3 class="sideWidgetTitle" style="margin-bottom: 0;">Active Tickets</h3>
                 <a href="/student/tickets" style="color: #6a6af5; font-size: 14px; text-decoration: none; font-weight: 300;">View All</a>
               </div>
               <div class="activeTicketsGrid">
@@ -81,7 +81,8 @@
               </div>
             </div>
 
-            <div class="quickActions">
+            <div class="card sideWidget">
+              <h3 class="sideWidgetTitle" style="margin-bottom: 24px;">Quick Actions</h3>
               <div class="quickActions">
                 <a href="/student/ticket" class="quickActionItem">
                   <div class="icon">
