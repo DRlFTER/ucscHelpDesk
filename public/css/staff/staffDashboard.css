@@ -10,22 +10,18 @@
     text-decoration: none;
     border-radius: 16px;
     background: transparent;
-    border: 1px solid #c9d4ff;
     transition: all 0.3s ease;
 }
 
-.staff-stat-item:hover {
-    background: #f1f5f9;
-}
 
 .staff-stat-number {
-    font-size: 28px;
+    font-size: 50px;
     font-weight: bold;
     margin-bottom: 8px;
 }
 
 .staff-stat-label {
-    font-size: 14px;
+    font-size: 15px;
     font-weight: 500;
     color: #5a5d6d;
 }

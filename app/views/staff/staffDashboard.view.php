@@ -2,9 +2,7 @@
   <div class="fullPage">
     <div class="pageLayout">
       <section class="settingsRight">
-        <div class="dashboardGrid">
-          <div class="col colLeft">
-            <div class=" welcomeCard">
+        <div class=" welcomeCard">
               <?php
                 $fullName = trim($_SESSION['user']['name'] ?? '');
                 $firstName = '';
@@ -40,8 +38,10 @@
               </div>
             </div>
 
-            <div class="activeTickets sectionCard">
-              <h3 class="sectionCardTitle">Recent Assigned Tickets</h3>
+            <div class="dashboardGrid">
+              <div class="col colLeft">
+                <div class="activeTickets sectionCard">
+                  <h3 class="sectionCardTitle">Recent Assigned Tickets</h3>
               <div class="sectionCardList">
                 <?php if (!empty($recentTickets)): ?>
                   <?php foreach ($recentTickets as $t): ?>
