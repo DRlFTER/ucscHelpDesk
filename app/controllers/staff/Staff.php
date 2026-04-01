@@ -2420,7 +2420,10 @@ public function staffReports()
             if ($ticket && $ticket['assigned_to'] == $_SESSION['user']['u_id']) {
                 $ok = $model->forwardTicket($id, $forward_to);
                 if ($ok) {
-                    $model->setTicketLevel($id, $forward_to, $model->getStaffLevel($forward_to));
+                    $level = $model->getStaffLevel($forward_to);
+                    if ($level !== null && $level > 0) {
+                        $model->setTicketLevel($id, $forward_to, $level);
+                    }
                     echo json_encode(['success' => true]);
                 } else {
                     http_response_code(500); echo json_encode(['error' => 'Failed to forward']);

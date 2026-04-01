@@ -347,7 +347,7 @@ function wireActions() {
           if (data.success) {
             window.location.reload();
           } else {
-            alert(data.message || "Failed");
+            alert(data.error || data.message || "Failed");
           }
         } catch(e) {
           console.error(e);
@@ -409,7 +409,7 @@ function wireActions() {
           if (data.success) {
             window.location.reload();
           } else {
-            alert(data.message || "Failed");
+            alert(data.error || data.message || "Failed");
           }
         } catch(e) { console.error(e); }
       });
@@ -704,7 +704,6 @@ function openResolveModal() {
         localStorage.removeItem(cacheKeyFor(ticketData.id));
       } catch (e) {}
 
-      alert("Ticket marked as resolved.");
       close();
     } catch (err) {
       console.error("RESOLVE ERROR:", err);

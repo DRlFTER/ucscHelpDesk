@@ -85,7 +85,7 @@
               </div>
 
               <a href="/staff/tickets" class="sectionCardBtn">
-                View All Assigned Tickets
+                View All Tickets
               </a>
             </div>
             
