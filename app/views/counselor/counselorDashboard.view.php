@@ -31,6 +31,7 @@
               <?php if (!empty($recentAssigned)): ?>
               <ul class="itemList">
                 <?php foreach ($recentAssigned as $t): ?>
+                  <a href="/counselor/ticketFull?id=<?= (int)$t['ticket_id'] ?>" style="text-decoration:none; color:inherit;">
                   <li class="item">
                     <div class="itemMain">
                       <div class="itemTitle">TKT-<?= (int)$t['ticket_id'] ?> · <?= htmlspecialchars($t['title'] ?? '') ?></div>
@@ -46,6 +47,7 @@
                       <span class="status <?= strtolower((string)($t['status'] ?? '')) ?>"><?= ucfirst((string)($t['status'] ?? '')) ?></span>
                     </div>
                   </li>
+                  </a>
                 <?php endforeach; ?>
               </ul>
               <?php else: ?>
@@ -61,6 +63,7 @@
               <?php if (!empty($newPending)): ?>
               <ul class="itemList">
                 <?php foreach ($newPending as $t): ?>
+                  <a href="/counselor/ticketFull?id=<?= (int)$t['ticket_id'] ?>" style="text-decoration:none; color:inherit;">
                   <li class="item">
                     <div class="itemMain">
                       <div class="itemTitle">TKT-<?= (int)$t['ticket_id'] ?> · <?= htmlspecialchars($t['title'] ?? '') ?></div>
@@ -80,6 +83,7 @@
                       <?php endif; ?>
                     </div>
                   </li>
+                  </a>
                 <?php endforeach; ?>
               </ul>
               <?php else: ?>
@@ -97,6 +101,7 @@
               <?php if (!empty($meetingTickets)): ?>
               <ul class="itemList">
                 <?php foreach ($meetingTickets as $t): ?>
+                  <a href="/counselor/ticketFull?id=<?= (int)$t['ticket_id'] ?>" style="text-decoration:none; color:inherit;">
                   <li class="item">
                     <div class="itemMain">
                       <div class="itemTitle">TKT-<?= (int)$t['ticket_id'] ?> · <?= htmlspecialchars($t['title'] ?? '') ?></div>
@@ -117,6 +122,7 @@
                       <?php endif; ?>
                     </div>
                   </li>
+                  </a>
                 <?php endforeach; ?>
               </ul>
               <?php else: ?>

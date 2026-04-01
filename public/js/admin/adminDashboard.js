@@ -185,14 +185,10 @@
         const id = el.getAttribute("data-id");
         const code = el.getAttribute("data-code");
         if (id) {
-          window.location.assign(`/admin/ticket?id=${encodeURIComponent(id)}`);
-        } else if (code) {
-          window.location.assign(
-            `/admin/ticket?code=${encodeURIComponent(code)}`
-          );
-        }
-      };
-
+            window.location.assign(`/admin/ticketFull?id=${encodeURIComponent(id)}`);
+          } else if (code) {
+            window.location.assign(
+              `/admin/ticketFull?code=${encodeURIComponent(code)}`
       c.addEventListener("click", (e) => {
         const item = e.target.closest(".ticketItem");
         if (item && c.contains(item)) open(item);
