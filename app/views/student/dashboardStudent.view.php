@@ -31,11 +31,28 @@
                       $statusBadgeClass = strtolower($t['status']) === 'resolved' ? 'resolved' : (strtolower($t['status']) === 'open' ? 'open' : 'inProgress');
                       // Calculate pseudo-progress
                       $progress = strtolower($t['status']) === 'resolved' ? 100 : (strtolower($t['status']) === 'in progress' ? 50 : 20);
+                      
+                      // Map category to a suitable icon
+                      $cat = $t['category'] ?? '';
+                      $iconSvg = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 -960 960 960"><path d="M447-80q-15 0-30-6t-27-18L104-390q-12-12-17.5-26.5T81-446q0-15 5.5-30t17.5-27l352-353q11-11 26-17.5t31-6.5h287q33 0 56.5 23.5T880-800v287q0 16-6 30.5T857-457L504-104q-12 12-27 18t-30 6Zm253-560q25 0 42.5-17.5T760-700q0-25-17.5-42.5T700-760q-25 0-42.5 17.5T640-700q0 25 17.5 42.5T700-640Z"/></svg>'; // default
+                      if (stripos($cat, 'CSC') !== false || stripos($cat, 'NOC') !== false || stripos($cat, 'Technical') !== false || stripos($cat, 'Wifi') !== false) {
+                          $iconSvg = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 -960 960 960"><path d="M480-160q-33 0-56.5-23.5T400-240q0-33 23.5-56.5T480-320q33 0 56.5 23.5T560-240q0 33-23.5 56.5T480-160Zm0-240q-83 0-141.5-58.5T280-600q0-16 2.5-31.5T290-662l190 190 190-190q7 15 9.5 30.5T680-600q0 83-58.5 141.5T480-400Zm-248 10-67-67q129-129 315-129t315 129l-67 67q-101-100-248-100T232-390Zm-114 113L51-344q178-176 429-176t429 176l-67 67q-150-150-362-150T118-277Z"/></svg>'; 
+                      } elseif (stripos($cat, 'Finance') !== false || stripos($cat, 'Payment') !== false || stripos($cat, 'Welfare') !== false || stripos($cat, 'Bursary') !== false) {
+                          $iconSvg = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 -960 960 960"><path d="M440-440v-80h160v-80h-80v-40h-80v40h-40q-17 0-28.5 11.5T360-640v160q0 17 11.5 28.5T400-440h120v80H360v80h80v80ZM80-120v-80h800v80H80Zm160-240v-480h480v480H240Zm80-80h320v-320H320v320Z"/></svg>'; 
+                      } elseif (stripos($cat, 'Exam') !== false || stripos($cat, 'Registration') !== false) {
+                          $iconSvg = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 -960 960 960"><path d="M320-240h320v-80H320v80Zm0-160h320v-80H320v80ZM240-80q-33 0-56.5-23.5T160-160v-640q0-33 23.5-56.5T240-880h320l240 240v480q0 33-23.5 56.5T720-80H240Zm280-520v-200H240v640h480v-440H520ZM240-800v200-200 640-640Z"/></svg>'; 
+                      } elseif (stripos($cat, 'Library') !== false) {
+                          $iconSvg = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 -960 960 960"><path d="M480-260q-96 0-184-38t-156-102v320q68 64 156 102t184 38q96 0 184-38t156-102v-320q-68 64-156 102T480-260Zm0 100q-90 0-172.5-31.5T160-280v-480q64 57 147.5 88.5T480-640q90 0 172.5-31.5T800-760v480q-65 57-147.5 88.5T480-160Zm0-180q-96 0-180-32.5T160-460q64-57 148-88T480-580q88 0 172 32t148 88q-60 55-144 87.5T480-340ZM140-120q-24 0-42-18t-18-42v-560q0-24 18-42t42-18h40v80h-40v480q64 57 147.5 88.5T480-560q90 0 172.5-31.5T800-680v-480h-40v-80h40q24 0 42 18t18 42v560q0 24-18 42t-42 18H140Z"/></svg>'; 
+                      } elseif (stripos($cat, 'Engineering') !== false || stripos($cat, 'Facilities') !== false) {
+                          $iconSvg = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 -960 960 960"><path d="M120-120v-400l400-320 400 320v400H600v-240H360v240H120Zm80-80h80v-240h400v240h80v-300L480-740 200-500v300Zm280-230q-42 0-71-29t-29-71q0-42 29-71t71-29q42 0 71 29t29 71q0 42-29 71t-71 29Zm0-60q17 0 28.5-11.5T520-530q0-17-11.5-28.5T480-570q-17 0-28.5 11.5T440-530q0 17 11.5 28.5T480-490Z"/></svg>'; 
+                      } elseif (stripos($cat, 'Counselling') !== false || stripos($cat, 'Mental') !== false) {
+                          $iconSvg = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 -960 960 960"><path d="M480-480q-66 0-113-47t-47-113q0-66 47-113t113-47q66 0 113 47t47 113q0 66-47 113t-113 47ZM160-160v-112q0-34 17.5-62.5T224-378q62-31 126-46.5T480-440q66 0 130 15.5T736-378q29 15 46.5 43.5T800-272v112H160Zm80-80h480v-32q0-11-5.5-20T700-306q-54-27-109-40.5T480-360q-56 0-111 13.5T260-306q-9 5-14.5 14t-5.5 20v32Zm240-320q33 0 56.5-23.5T560-640q0-33-23.5-56.5T480-720q-33 0-56.5 23.5T400-640q0 33 23.5 56.5T480-560Zm0-80Zm0 400Z"/></svg>'; 
+                      }
                     ?>
                     <a href="/student/ticketFull?id=<?= (int)$t['ticket_id'] ?>" class="activeTicketCard">
                       <div class="reqCardHeader">
                         <div class="reqIcon">
-                          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 -960 960 960"><path d="M447-80q-15 0-30-6t-27-18L104-390q-12-12-17.5-26.5T81-446q0-15 5.5-30t17.5-27l352-353q11-11 26-17.5t31-6.5h287q33 0 56.5 23.5T880-800v287q0 16-6 30.5T857-457L504-104q-12 12-27 18t-30 6Zm253-560q25 0 42.5-17.5T760-700q0-25-17.5-42.5T700-760q-25 0-42.5 17.5T640-700q0 25 17.5 42.5T700-640Z"/></svg>
+                          <?= $iconSvg ?>
                         </div>
                         <div class="reqStatus <?= $statusBadgeClass ?>"><?= htmlspecialchars($status) ?></div>
                       </div>
