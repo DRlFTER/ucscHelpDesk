@@ -134,58 +134,68 @@
           </div>
 
           <div class="col colRight">
-            <div class="card priority sectionCard">
-              <h3>Priority</h3>
-              <a href="/student/announcements" class="priorityItem">
-                <svg xmlns="http://www.w3.org/2000/svg" height="35px" viewBox="0 -960 960 960" width="35px" fill="currentColor"><path d="M440-280h80v-240h-80v240Zm40-320q17 0 28.5-11.5T520-640q0-17-11.5-28.5T480-680q-17 0-28.5 11.5T440-640q0 17 11.5 28.5T480-600Zm0 520q-83 0-156-31.5T197-197q-54-54-85.5-127T80-480q0-83 31.5-156T197-763q54-54 127-85.5T480-880q83 0 156 31.5T763-763q54 54 85.5 127T880-480q0 83-31.5 156T763-197q-54 54-127 85.5T480-80Z"/></svg>
-                <div>
-                  <span class="priorityTitle">Lecture Hall Changed</span><br>
-                  <span class="priorityDescription">Lecture - SCS2308 moved to lecture hall - S203, 10:00-12:00</span>
+            <div class="card announcements sectionCard" style="background-color: #f7f8fc; border: none; box-shadow: none; padding: 24px; border-radius: 16px;">
+              <h3 style="font-size: 20px; font-weight: 400; margin-bottom: 24px; color: #333;">Announcements</h3>
+              <?php if (!empty($recentAnnouncements)): ?>
+                <div style="display: flex; flex-direction: column; gap: 20px; margin-bottom: 28px;">
+                  <?php foreach ($recentAnnouncements as $a): ?>
+                    <a href="/student/announcement?id=<?= (int)($a['id'] ?? 0) ?>" class="announcement info" style="display: flex; align-items: flex-start; text-decoration: none; color: inherit; gap: 16px; border: none; margin: 0; padding: 0;">
+                      <div style="display: flex; align-items: center; justify-content: center; width: 40px; height: 40px; border-radius: 8px; background: #e8eafe; color: #6a6af5; flex-shrink: 0; margin-top: 2px;">
+                        <svg xmlns="http://www.w3.org/2000/svg" height="24" viewBox="0 -960 960 960" width="24" fill="currentColor"><path d="M726.67-446.67v-66.66H880v66.66H726.67ZM776-160l-123.33-92 40-53.33 123.33 92L776-160Zm-81.33-495.33-40-53.34L776-800l40 53.33-121.33 91.34ZM206.67-200v-160h-60Q119-360 99.5-379.5T80-426.67v-106.66Q80-561 99.5-580.5t47.17-19.5H320l200-120v480L320-360h-46.67v160h-66.66ZM560-346v-268q27 24 43.5 58.5T620-480q0 41-16.5 75.5T560-346Z"/></svg>
+                      </div>
+                      <div style="display: flex; flex-direction: column; gap: 4px; overflow: hidden;">
+                        <div style="font-size: 15px; font-weight: 500; color: #2c2f3c; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;"><?= htmlspecialchars($a['topic'] ?? 'Announcement') ?></div>
+                        <div style="font-size: 13px; color: #8589a8; line-height: 1.4;">
+                          <?php 
+                            $content = (string)($a['content'] ?? '');
+                            $snippet = trim(mb_substr(strip_tags($content), 0, 65));
+                            echo htmlspecialchars($snippet . (mb_strlen($content) > 65 ? '…' : ''));
+                          ?>
+                        </div>
+                      </div>
+                    </a>
+                  <?php endforeach; ?>
                 </div>
+              <?php else: ?>
+                <p class="mutedText" style="margin-bottom: 24px;">No announcements yet.</p>
+              <?php endif; ?>
+
+              <a href="/student/announcements" style="display: block; text-align: center; padding: 14px; border: 1px solid #e1e3eb; border-radius: 8px; color: #5a5d6d; text-decoration: none; font-size: 14px; font-weight: 500; transition: all 0.2s; background: transparent;">
+                View All Announcements
               </a>
             </div>
 
-            <div class="card announcements sectionCard">
-              <h3>Announcements</h3>
-              <?php if (!empty($recentAnnouncements)): ?>
-                <?php foreach ($recentAnnouncements as $a): ?>
-                  <a href="/student/announcement?id=<?= (int)($a['id'] ?? 0) ?>" class="announcement info">
-                    <svg class="announcementIcon" xmlns="http://www.w3.org/2000/svg" viewBox="0 -960 960 960" fill=""><path d="M726.67-446.67v-66.66H880v66.66H726.67ZM776-160l-123.33-92 40-53.33 123.33 92L776-160Zm-81.33-495.33-40-53.34L776-800l40 53.33-121.33 91.34ZM206.67-200v-160h-60Q119-360 99.5-379.5T80-426.67v-106.66Q80-561 99.5-580.5t47.17-19.5H320l200-120v480L320-360h-46.67v160h-66.66ZM560-346v-268q27 24 43.5 58.5T620-480q0 41-16.5 75.5T560-346Z"/></svg>
-                    <div>
-                      <span class="announcementTitle"><?= htmlspecialchars($a['topic'] ?? 'Announcement') ?></span><br>
-                      <span class="announcementDescription">
-                        <?php 
-                          $content = (string)($a['content'] ?? '');
-                          $snippet = trim(mb_substr(strip_tags($content), 0, 90));
-                          echo htmlspecialchars($snippet . (mb_strlen($content) > 90 ? '…' : ''));
-                        ?>
-                      </span>
-                    </div>
-                  </a>
-                <?php endforeach; ?>
-              <?php else: ?>
-                <p class="mutedText">No announcements yet.</p>
-              <?php endif; ?>
-            </div>
-
-            <div class="card calendar sectionCard">
-              <h3>Calendar</h3>
+            <div class="card calendar sectionCard" style="background-color: #f7f8fc; border: none; box-shadow: none; padding: 24px; border-radius: 16px;">
+              <h3 style="font-size: 20px; font-weight: 400; margin-bottom: 24px; color: #333;">Upcoming Events</h3>
               <?php if (!empty($upcomingEvents)): ?>
-                <?php foreach ($upcomingEvents as $e): ?>
-                  <?php
-                      $d = new DateTime($e['event_date']);
-                      $dateStr = $d->format('M j');
-                      $timeStr = ((int)$e['is_all_day'] === 1) ? 'All Day' : date('g:i A', strtotime($e['start_time']));
-                  ?>
-                  <a href="/student/calender" class="event">
-                    <div><?= htmlspecialchars($dateStr) ?></div>
-                    <div class="eventTitle"><?= htmlspecialchars($e['title']) ?></div>
-                    <div class="eventTime"><?= htmlspecialchars($timeStr) ?></div>
-                  </a>
-                <?php endforeach; ?>
+                <div style="display: flex; flex-direction: column; gap: 20px; margin-bottom: 28px;">
+                  <?php foreach ($upcomingEvents as $e): ?>
+                    <?php
+                        $d = new DateTime($e['event_date']);
+                        $month = $d->format('M');
+                        $day = $d->format('j');
+                        $timeStr = ((int)$e['is_all_day'] === 1) ? 'All Day' : date('g:i A', strtotime($e['start_time']));
+                        $location = !empty($e['location']) ? $e['location'] : 'Campus';
+                    ?>
+                    <a href="/student/calender" class="event" style="display: flex; align-items: flex-start; text-decoration: none; color: inherit; gap: 20px; border: none; margin: 0; padding: 0;">
+                      <div style="display: flex; flex-direction: column; align-items: center; min-width: 40px; margin-top: 2px;">
+                        <span style="font-size: 12px; font-weight: 600; color: #8589a8; text-transform: uppercase; letter-spacing: 0.5px;"><?= htmlspecialchars($month) ?></span>
+                        <span style="font-size: 22px; font-weight: 400; color: #6b6f80; margin-top: -2px;"><?= htmlspecialchars($day) ?></span>
+                      </div>
+                      <div style="display: flex; flex-direction: column; gap: 4px;">
+                        <div style="font-size: 15px; font-weight: 500; color: #2c2f3c;"><?= htmlspecialchars($e['title']) ?></div>
+                        <div style="font-size: 13px; color: #8589a8;"><?= htmlspecialchars($timeStr) ?> &bull; <?= htmlspecialchars($location) ?></div>
+                      </div>
+                    </a>
+                  <?php endforeach; ?>
+                </div>
               <?php else: ?>
-                 <p class="mutedText">No upcoming events.</p>
+                 <p class="mutedText" style="margin-bottom: 24px;">No upcoming events.</p>
               <?php endif; ?>
+
+              <a href="/student/calender" style="display: block; text-align: center; padding: 14px; border: 1px solid #e1e3eb; border-radius: 8px; color: #5a5d6d; text-decoration: none; font-size: 14px; font-weight: 500; transition: all 0.2s; background: transparent;">
+                Browse Full Calendar
+              </a>
             </div>
 
             <div class="card account sectionCard">
