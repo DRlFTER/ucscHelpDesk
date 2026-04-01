@@ -134,18 +134,18 @@
           </div>
 
           <div class="col colRight">
-            <div class="card announcements sectionCard" style="background-color: #f7f8fc; border: none; box-shadow: none; padding: 24px; border-radius: 16px;">
-              <h3 style="font-size: 20px; font-weight: 400; margin-bottom: 24px; color: #333;">Announcements</h3>
+            <div class="card announcements sideWidget">
+              <h3 class="sideWidgetTitle">Announcements</h3>
               <?php if (!empty($recentAnnouncements)): ?>
-                <div style="display: flex; flex-direction: column; gap: 20px; margin-bottom: 28px;">
+                <div class="sideWidgetList">
                   <?php foreach ($recentAnnouncements as $a): ?>
-                    <a href="/student/announcement?id=<?= (int)($a['id'] ?? 0) ?>" class="announcement info" style="display: flex; align-items: flex-start; text-decoration: none; color: inherit; gap: 16px; border: none; margin: 0; padding: 0;">
-                      <div style="display: flex; align-items: center; justify-content: center; width: 40px; height: 40px; border-radius: 8px; background: #e8eafe; color: #6a6af5; flex-shrink: 0; margin-top: 2px;">
+                    <a href="/student/announcement?id=<?= (int)($a['id'] ?? 0) ?>" class="announcementItem">
+                      <div class="announcementIconWrapper">
                         <svg xmlns="http://www.w3.org/2000/svg" height="24" viewBox="0 -960 960 960" width="24" fill="currentColor"><path d="M726.67-446.67v-66.66H880v66.66H726.67ZM776-160l-123.33-92 40-53.33 123.33 92L776-160Zm-81.33-495.33-40-53.34L776-800l40 53.33-121.33 91.34ZM206.67-200v-160h-60Q119-360 99.5-379.5T80-426.67v-106.66Q80-561 99.5-580.5t47.17-19.5H320l200-120v480L320-360h-46.67v160h-66.66ZM560-346v-268q27 24 43.5 58.5T620-480q0 41-16.5 75.5T560-346Z"/></svg>
                       </div>
-                      <div style="display: flex; flex-direction: column; gap: 4px; overflow: hidden;">
-                        <div style="font-size: 15px; font-weight: 500; color: #2c2f3c; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;"><?= htmlspecialchars($a['topic'] ?? 'Announcement') ?></div>
-                        <div style="font-size: 13px; color: #8589a8; line-height: 1.4;">
+                      <div class="announcementContent">
+                        <div class="announcementTopic"><?= htmlspecialchars($a['topic'] ?? 'Announcement') ?></div>
+                        <div class="announcementSnippet">
                           <?php 
                             $content = (string)($a['content'] ?? '');
                             $snippet = trim(mb_substr(strip_tags($content), 0, 65));
@@ -157,18 +157,18 @@
                   <?php endforeach; ?>
                 </div>
               <?php else: ?>
-                <p class="mutedText" style="margin-bottom: 24px;">No announcements yet.</p>
+                <p class="mutedText sideWidgetEmpty">No announcements yet.</p>
               <?php endif; ?>
 
-              <a href="/student/announcements" style="display: block; text-align: center; padding: 14px; border: 1px solid #e1e3eb; border-radius: 8px; color: #5a5d6d; text-decoration: none; font-size: 14px; font-weight: 500; transition: all 0.2s; background: transparent;">
+              <a href="/student/announcements" class="sideWidgetBtn">
                 View All Announcements
               </a>
             </div>
 
-            <div class="card calendar sectionCard" style="background-color: #f7f8fc; border: none; box-shadow: none; padding: 24px; border-radius: 16px;">
-              <h3 style="font-size: 20px; font-weight: 400; margin-bottom: 24px; color: #333;">Upcoming Events</h3>
+            <div class="card calendar sideWidget">
+              <h3 class="sideWidgetTitle">Upcoming Events</h3>
               <?php if (!empty($upcomingEvents)): ?>
-                <div style="display: flex; flex-direction: column; gap: 20px; margin-bottom: 28px;">
+                <div class="sideWidgetList">
                   <?php foreach ($upcomingEvents as $e): ?>
                     <?php
                         $d = new DateTime($e['event_date']);
@@ -177,23 +177,23 @@
                         $timeStr = ((int)$e['is_all_day'] === 1) ? 'All Day' : date('g:i A', strtotime($e['start_time']));
                         $location = !empty($e['location']) ? $e['location'] : 'Campus';
                     ?>
-                    <a href="/student/calender" class="event" style="display: flex; align-items: flex-start; text-decoration: none; color: inherit; gap: 20px; border: none; margin: 0; padding: 0;">
-                      <div style="display: flex; flex-direction: column; align-items: center; min-width: 40px; margin-top: 2px;">
-                        <span style="font-size: 12px; font-weight: 600; color: #8589a8; text-transform: uppercase; letter-spacing: 0.5px;"><?= htmlspecialchars($month) ?></span>
-                        <span style="font-size: 22px; font-weight: 400; color: #6b6f80; margin-top: -2px;"><?= htmlspecialchars($day) ?></span>
+                    <a href="/student/calender" class="calendarEventItem">
+                      <div class="calendarEventDate">
+                        <span class="calendarEventMonth"><?= htmlspecialchars($month) ?></span>
+                        <span class="calendarEventDay"><?= htmlspecialchars($day) ?></span>
                       </div>
-                      <div style="display: flex; flex-direction: column; gap: 4px;">
-                        <div style="font-size: 15px; font-weight: 500; color: #2c2f3c;"><?= htmlspecialchars($e['title']) ?></div>
-                        <div style="font-size: 13px; color: #8589a8;"><?= htmlspecialchars($timeStr) ?> &bull; <?= htmlspecialchars($location) ?></div>
+                      <div class="calendarEventContent">
+                        <div class="calendarEventTitle"><?= htmlspecialchars($e['title']) ?></div>
+                        <div class="calendarEventMeta"><?= htmlspecialchars($timeStr) ?> &bull; <?= htmlspecialchars($location) ?></div>
                       </div>
                     </a>
                   <?php endforeach; ?>
                 </div>
               <?php else: ?>
-                 <p class="mutedText" style="margin-bottom: 24px;">No upcoming events.</p>
+                 <p class="mutedText sideWidgetEmpty">No upcoming events.</p>
               <?php endif; ?>
 
-              <a href="/student/calender" style="display: block; text-align: center; padding: 14px; border: 1px solid #e1e3eb; border-radius: 8px; color: #5a5d6d; text-decoration: none; font-size: 14px; font-weight: 500; transition: all 0.2s; background: transparent;">
+              <a href="/student/calender" class="sideWidgetBtn">
                 Browse Full Calendar
               </a>
             </div>
