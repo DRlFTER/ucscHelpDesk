@@ -1,4 +1,19 @@
 {
+  // Set Prettier as the default formatter
+  "editor.defaultFormatter": "esbenp.prettier-vscode",
+  "editor.formatOnSave": true,
+
+  // Specifically for PHP, you can use prettier or an alternative like bmewburn.vscode-intelephense-client
+  "[php]": {
+    "editor.defaultFormatter": "esbenp.prettier-vscode"
+  },
+  "[javascript]": {
+    "editor.defaultFormatter": "esbenp.prettier-vscode"
+  },
+  "[css]": {
+    "editor.defaultFormatter": "esbenp.prettier-vscode"
+  },
+
   // Associate .htaccess with Apache configuration for syntax highlighting
   "files.associations": {
     ".htaccess": "apacheconf"
