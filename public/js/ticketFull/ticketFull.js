@@ -642,8 +642,8 @@ function openDeleteModal() {
 // ... (top of file)
 
 function openResolveModal() {
-  // Allow admin and student to resolve tickets
-  if (ROLE !== "admin" && ROLE !== "student") return;
+  // Allow admin, student, and staff to resolve tickets
+  if (ROLE !== "admin" && ROLE !== "student" && ROLE !== "staff") return;
   const overlay = document.getElementById("resolveModal");
   if (!overlay) return;
 
