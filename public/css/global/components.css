@@ -679,7 +679,8 @@ body.modal-open .mainContentFull {
   transition: stroke 0.2s ease;
 }
 
-.sidenavNewTicket {
+.sidenavNewTicket,
+.sidenavLink.active.sidenavNewTicket {
   margin-top: 12px;
   background: #EEEDFE;
   color: #8c8cf9;
@@ -687,16 +688,19 @@ body.modal-open .mainContentFull {
   transition: all 0.3s ease;
 }
 
-.sidenavNewTicket svg {
+.sidenavNewTicket svg,
+.sidenavLink.active.sidenavNewTicket svg {
   stroke: #8c8cf9;
 }
 
-.sidenavNewTicket:hover {
+.sidenavNewTicket:hover,
+.sidenavLink.active.sidenavNewTicket:hover {
   background: #d8d8ff;
   color: #6b6bf7;
 }
 
-.sidenavNewTicket:hover svg {
+.sidenavNewTicket:hover svg,
+.sidenavLink.active.sidenavNewTicket:hover svg {
   stroke: #6b6bf7;
 }
 
@@ -942,18 +946,34 @@ body.modal-open .mainContentFull {
   font-weight: 500;
 }
 
-.navbarNewTicket {
-  color: white;
+.navbarNewTicket,
+.navbarLink.active.navbarNewTicket {
+  background: #EEEDFE;
+  color: #8c8cf9;
   border: none;
   padding: 6px 14px;
   border-radius: 20px;
   cursor: pointer;
-  transition: background 0.2s;
+  font-weight: 500;
+  transition: all 0.3s ease;
 }
 
-.navbarNewTicket:hover {
+.navbarNewTicket svg,
+.navbarLink.active.navbarNewTicket svg {
+  stroke: #8c8cf9;
+}
+
+.navbarNewTicket:hover,
+.navbarLink.active.navbarNewTicket:hover {
+  background: #d8d8ff;
+  color: #6b6bf7;
   transform: none;
   box-shadow: none;
+}
+
+.navbarNewTicket:hover svg,
+.navbarLink.active.navbarNewTicket:hover svg {
+  stroke: #6b6bf7;
 }
 
 .notification {

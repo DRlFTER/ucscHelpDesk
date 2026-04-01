@@ -263,14 +263,10 @@ h3 {
 }
 
 .reqStatus.inProgress,
-.reqStatus.open {
+.reqStatus.open,
+.reqStatus.resolved {
   background: #e8eafe;
   color: #6a6af5;
-}
-
-.reqStatus.resolved {
-  background: #6a6af5;
-  color: #ffffff;
 }
 
 .reqMeta {
@@ -451,7 +447,6 @@ h3 {
 .kbCardSubtitle {
   font-size: 11px;
   text-transform: uppercase;
-  letter-spacing: 1.5px;
   font-weight: 500;
   opacity: 0.85;
 }
