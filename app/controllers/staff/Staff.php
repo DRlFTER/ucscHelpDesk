@@ -302,10 +302,23 @@ public function __construct()
                        '<link rel="stylesheet" href="/css/staff/global.css" />'."\n".
                        '<link rel="stylesheet" href="/css/global/components.css" />';
 
+        $db = Database::getInstance();
+        $attachments = [];
+        if ($res = $db->query("SELECT file_name, file_path FROM attachments WHERE entity_type = 'ticket' AND entity_id = " . (int)$ticket_id)) {
+            while ($r = $res->fetch_assoc()) {
+                $attachments[] = [
+                    'name' => (string)($r['file_name'] ?? ''),
+                    'url' => '/' . ltrim((string)($r['file_path'] ?? ''), '/'),
+                ];
+            }
+            $res->free();
+        }
+
         $this->view('staff/ticketDetails', [
             'title' => 'Ticket Details',
             'head' => $headContent,
             'ticket' => $ticket,
+            'attachments' => $attachments,
             'staff_members' => $staff_members,
             'errors' => $errors,
             'success' => $success,
