@@ -216,12 +216,11 @@ h3 {
   flex-direction: column;
   gap: 20px;
   box-shadow: 0 2px 4px rgba(0,0,0,0.02);
-  transition: transform 0.2s ease, box-shadow 0.2s ease;
+  transition: box-shadow 0.2s ease;
   position: relative;
 }
 
 .activeRequestCard:hover {
-  transform: translateY(-2px);
   box-shadow: 0 4px 10px rgba(0,0,0,0.05);
 }
 
@@ -397,125 +396,6 @@ h3 {
 }
 
 .kbCard {
-  flex: 0 0;
-  scroll-snap-align: center;
-  height: 180px;
-  border-radius: 14px;
-  position: relative;
-  background-size: cover;
-  background-position: center;
-  background-repeat: no-repeat;
-  display: flex;
-  flex-direction: column;
-  justify-content: flex-end;
-  padding: 20px;
-  color: #fff;
-  text-decoration: none;
-  overflow: hidden;
-  transition: box-shadow 0.2s ease;
-}
-
-.kbCard:hover, .kbCard:focus-visible {
-  box-shadow: 0 6px 16px rgba(106, 106, 245, 0.2);
-  outline: none;
-}
-
-.kbCard::before {
-  content: "";
-  position: absolute;
-  top: 0; left: 0; right: 0; bottom: 0;
-  background: linear-gradient(to top, rgba(0,0,0,0.85) 0%, rgba(0,0,0,0.4) 40%, rgba(0,0,0,0) 100%);
-  z-index: 1;
-  border-radius: 14px;
-}
-
-.kbCardContent {
-  position: relative;
-  z-index: 2;
-  display: flex;
-  flex-direction: row;
-  justify-content: space-between;
-  align-items: flex-end;
-  width: 100%;
-}
-
-.kbCardText {
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
-}
-
-.kbCardSubtitle {
-  font-size: 11px;
-  text-transform: uppercase;
-  letter-spacing: 1.5px;
-  font-weight: 500;
-  opacity: 0.85;
-}
-
-.kbCardTitle {
-  font-size: 1.3rem;
-  font-weight: 500;
-  margin: 0;
-  letter-spacing: -0.5px;
-}
-
-.kbCardBtn {
-  border: 1px solid rgba(255,255,255,0.4);
-  padding: 10px 20px;
-  border-radius: 30px;
-  font-size: 13px;
-  font-weight: 400;
-  color: #fff;
-  background: rgba(255,255,255,0.15);
-  backdrop-filter: blur(8px);
-  -webkit-backdrop-filter: blur(8px);
-  transition: all 0.2s;
-  white-space: nowrap;
-}
-
-.kbCard:hover .kbCardBtn {
-  background: rgba(255,255,255,0.25);
-  border-color: rgba(255,255,255,0.6);
-}
-
-/* OVERRIDE TO INCREASE DASHBOARD SECTIONS VERTICAL GAP */
-.dashboardGrid .colLeft,
-.dashboardGrid .colRight,
-.dashboardGrid .col {
-  gap: 35px !important;
-
-
-}/* Knowledge Base Carousel */
-.kbCarousel {
-  display: flex;
-  overflow-x: auto;
-  scroll-snap-type: x mandatory;
-  -webkit-overflow-scrolling: touch;
-  gap: 15px;
-  padding-bottom: 5px;
-  scrollbar-width: thin; /* Firefox */
-  scrollbar-color: rgba(106, 106, 245, 0.3) transparent;
-}
-
-.kbCarousel::-webkit-scrollbar {
-  height: 6px;
-}
-
-.kbCarousel::-webkit-scrollbar-track {
-  background: transparent;
-}
-
-.kbCarousel::-webkit-scrollbar-thumb {
-  background-color: rgba(106, 106, 245, 0.3);
-  border-radius: 10px;
-}
-
-.kbCarousel::-webkit-scrollbar-thumb:hover {
-  background-color: rgba(106, 106, 245, 0.5);
-}
-
-.kbCard {
   flex: 0 0 calc(100% - 20px);
   scroll-snap-align: center;
   height: 280px;
@@ -531,7 +411,7 @@ h3 {
   color: #fff;
   text-decoration: none;
   overflow: hidden;
-  transition: all 0.2s ease,
+  transition: all 0.2s ease;
 }
 
 .kbCard:hover, .kbCard:focus-visible {
@@ -595,11 +475,4 @@ h3 {
 .kbCard:hover .kbCardBtn {
   background: rgba(255,255,255,0.25);
   border-color: rgba(255,255,255,0.6);
-}
-
-/* OVERRIDE TO INCREASE DASHBOARD SECTIONS VERTICAL GAP */
-.dashboardGrid .colLeft,
-.dashboardGrid .colRight,
-.dashboardGrid .col {
-  gap: 35px !important;
 }
