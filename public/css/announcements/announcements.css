@@ -260,7 +260,8 @@ body {
   border-radius: 26px;
   backdrop-filter: blur(20px);
   border: 1px solid rgba(255, 255, 255, 0.1);
-  background: rgba(255, 255, 255, 0.5);
+  background:#c5c5c52b;
+  
 }
 
 .ticket {
@@ -274,7 +275,7 @@ body {
   border-radius: 15px;
   backdrop-filter: blur(20px);
   border: 1px solid rgba(255, 255, 255, 0.5);
-  background: rgba(255, 255, 255, 0.5);
+  background: rgb(255 255 255);
   transition: all 0.2s ease-in-out;
   cursor: pointer;
   text-decoration: none;
