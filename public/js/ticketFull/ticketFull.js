@@ -194,6 +194,8 @@ function toggleActionButtons() {
   const del = document.getElementById("deleteBtn");
   const sched = document.getElementById("scheduleBtn");
   const resolveBtn = document.getElementById("resolveBtn");
+  const assignBtn = document.getElementById("assignBtn");
+  const forwardBtn = document.getElementById("forwardBtn");
   const statusNorm = (ticketData.status || "").toLowerCase();
   const isResolved = statusNorm === "resolved" || statusNorm === "closed";
 
@@ -219,6 +221,34 @@ function toggleActionButtons() {
     if (sched) sched.style.display = meeting === "requested" ? "" : "none";
     if (del) del.style.display = "none";
     if (resolveBtn) resolveBtn.style.display = "none";
+    return;
+  }
+
+  // Staff: assign/forward/resolve rules
+  if (ROLE === "staff") {
+    const isPending = !!ticketData.isPending;
+    const isAssignedToMe = !!ticketData.isAssignedToMe;
+    
+    // Hide everything by default
+    if (del) del.style.display = "none";
+    if (sched) sched.style.display = "none";
+    
+    const assignBtn = document.getElementById("assignBtn");
+    const forwardBtn = document.getElementById("forwardBtn");
+    
+    if (assignBtn) assignBtn.style.display = isPending ? "" : "none";
+    if (forwardBtn) forwardBtn.style.display = isAssignedToMe && !isResolved ? "" : "none";
+    if (resolveBtn) resolveBtn.style.display = isAssignedToMe && !isResolved ? "" : "none";
+    
+    // Also disable chat input if not assigned or resolved
+    const sendBtn = document.getElementById("sendBtn");
+    const replyInput = document.getElementById("replyInput");
+    const attachBtn = document.getElementById("attachBtn");
+    if (!isAssignedToMe || isResolved) {
+      if (sendBtn) sendBtn.disabled = true;
+      if (replyInput) replyInput.disabled = true;
+      if (attachBtn) attachBtn.disabled = true;
+    }
     return;
   }
 
@@ -294,6 +324,105 @@ function wireActions() {
   const deleteBtn = document.getElementById("deleteBtn");
   if (deleteBtn) {
     deleteBtn.addEventListener("click", () => openDeleteModal());
+  }
+
+  const assignBtnEl = document.getElementById("assignBtn");
+  const assignModal = document.getElementById("assignModal");
+  if (assignBtnEl && assignModal) {
+    assignBtnEl.addEventListener("click", () => {
+      assignModal.classList.add("open");
+      assignModal.setAttribute("aria-hidden", "false");
+      document.body.classList.add("modal-open");
+    });
+    
+    // Assign Confirm
+    const confirmAssignBtn = document.getElementById("confirmAssignBtn");
+    if (confirmAssignBtn) {
+      confirmAssignBtn.addEventListener("click", async () => {
+        try {
+          const formData = new FormData();
+          formData.append("ticket_id", getTicketIdFromUrl());
+          const res = await fetch(`/staff/ticketAssign`, { method: "POST", body: formData });
+          const data = await res.json();
+          if (data.success) {
+            window.location.reload();
+          } else {
+            alert(data.message || "Failed");
+          }
+        } catch(e) {
+          console.error(e);
+        }
+      });
+    }
+
+    // Assign Cancel
+    const cancelAssignBtn = document.getElementById("cancelAssignBtn");
+    if (cancelAssignBtn) {
+      cancelAssignBtn.addEventListener("click", () => {
+        assignModal.classList.remove("open");
+        assignModal.setAttribute("aria-hidden", "true");
+        document.body.classList.remove("modal-open");
+      });
+    }
+  }
+
+  const forwardBtnEl = document.getElementById("forwardBtn");
+  const forwardModal = document.getElementById("forwardModal");
+  if (forwardBtnEl && forwardModal) {
+    forwardBtnEl.addEventListener("click", async () => {
+      forwardModal.classList.add("open");
+      forwardModal.setAttribute("aria-hidden", "false");
+      document.body.classList.add("modal-open");
+      
+      const select = document.getElementById("forwardStaffSelect");
+      if (select && select.options.length <= 1) {
+        try {
+          const res = await fetch("/staff/staffMembersList");
+          const data = await res.json();
+          if (data.success && Array.isArray(data.data)) {
+             data.data.forEach(m => {
+               const opt = document.createElement("option");
+               opt.value = m.u_id;
+               opt.textContent = m.name;
+               select.appendChild(opt);
+             });
+          }
+        } catch(e) {}
+      }
+    });
+
+    const confirmForwardBtn = document.getElementById("confirmForwardBtn");
+    if (confirmForwardBtn) {
+      confirmForwardBtn.addEventListener("click", async () => {
+        const select = document.getElementById("forwardStaffSelect");
+        if (!select || !select.value) { alert("Please select a staff member"); return; }
+        
+        try {
+          const formData = new FormData();
+          formData.append("ticket_id", getTicketIdFromUrl());
+          formData.append("staff_id", select.value);
+          const reason = document.getElementById("forwardReason");
+          if (reason) formData.append("reason", reason.value || "");
+          
+          const res = await fetch(`/staff/ticketForward`, { method: "POST", body: formData });
+          const data = await res.json();
+          if (data.success) {
+            window.location.reload();
+          } else {
+            alert(data.message || "Failed");
+          }
+        } catch(e) { console.error(e); }
+      });
+    }
+
+    const cancelForwardBtn = document.getElementById("cancelForwardBtn");
+    if (cancelForwardBtn) {
+      cancelForwardBtn.addEventListener("click", () => {
+        forwardModal.classList.remove("open");
+        forwardModal.setAttribute("aria-hidden", "true");
+        document.body.classList.remove("modal-open");
+      });
+    }
   }
 
   const scheduleBtn = document.getElementById("scheduleBtn");
