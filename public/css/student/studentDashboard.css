@@ -159,7 +159,7 @@ h3 {
 
 .quickActions a:hover,
 .quickActions a:focus-visible {
-  opacity: 0.7;
+  opacity: 0.6;
 }
 
 /* Account section button-like items */
@@ -190,19 +190,19 @@ h3 {
 /* Hide manual line breaks inside account buttons for cleaner layout */
 .account .accountItem br { display: none; }
 
-/* Active Requests Section */
-.activeRequests {
+/* Active Tickets Section */
+.activeTickets {
   width: 100%;
 }
 
-.activeRequestsGrid {
+.activeTicketsGrid {
   display: flex;
   gap: 15px;
   overflow-x: auto;
   padding-bottom: 5px;
 }
 
-.activeRequestCard {
+.activeTicketCard {
   flex: 1;
   min-width: 250px;
   background: white;
@@ -220,7 +220,7 @@ h3 {
   position: relative;
 }
 
-.activeRequestCard:hover {
+.activeTicketCard:hover {
   box-shadow: 0 4px 10px rgba(0,0,0,0.05);
 }
 

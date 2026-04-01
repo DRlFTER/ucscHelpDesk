@@ -18,12 +18,12 @@
               <p>Here’s what’s happening with your support requests</p>
             </div>
 
-            <div class="activeRequests">
-              <div class="activeRequestsHeader" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
-                <h3 style="margin-bottom: 0;">Active Requests</h3>
+            <div class="activeTickets">
+              <div class="activeTicketsHeader" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+                <h3 style="margin-bottom: 0;">Active Tickets</h3>
                 <a href="/student/tickets" style="color: #6a6af5; font-size: 14px; text-decoration: none; font-weight: 300;">View All</a>
               </div>
-              <div class="activeRequestsGrid">
+              <div class="activeTicketsGrid">
                 <?php if (!empty($recentTickets)): ?>
                   <?php foreach ($recentTickets as $t): ?>
                     <?php
@@ -32,7 +32,7 @@
                       // Calculate pseudo-progress
                       $progress = strtolower($t['status']) === 'resolved' ? 100 : (strtolower($t['status']) === 'in progress' ? 50 : 20);
                     ?>
-                    <a href="/student/ticketFull?id=<?= (int)$t['ticket_id'] ?>" class="activeRequestCard">
+                    <a href="/student/ticketFull?id=<?= (int)$t['ticket_id'] ?>" class="activeTicketCard">
                       <div class="reqCardHeader">
                         <div class="reqIcon">
                           <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 -960 960 960"><path d="M447-80q-15 0-30-6t-27-18L104-390q-12-12-17.5-26.5T81-446q0-15 5.5-30t17.5-27l352-353q11-11 26-17.5t31-6.5h287q33 0 56.5 23.5T880-800v287q0 16-6 30.5T857-457L504-104q-12 12-27 18t-30 6Zm253-560q25 0 42.5-17.5T760-700q0-25-17.5-42.5T700-760q-25 0-42.5 17.5T640-700q0 25 17.5 42.5T700-640Z"/></svg>
@@ -41,7 +41,7 @@
                       </div>
                       <div class="reqCardBody">
                         <h4 class="reqTitle"><?= htmlspecialchars($t['title']) ?></h4>
-                        <p class="reqMeta">Request #<?= htmlspecialchars($t['ticket_id']) ?> &bull; Submitted <?= htmlspecialchars(time_ago($t['created_at'])) ?></p>
+                        <p class="reqMeta">Ticket #<?= htmlspecialchars($t['ticket_id']) ?> &bull; Submitted <?= htmlspecialchars(time_ago($t['created_at'])) ?></p>
                       </div>
                       <div class="reqProgress">
                         <div class="reqProgressBar" style="width: <?= $progress ?>%;"></div>
@@ -49,7 +49,7 @@
                     </a>
                   <?php endforeach; ?>
                 <?php else: ?>
-                  <p class="mutedText">No active requests yet.</p>
+                  <p class="mutedText">No active tickets yet.</p>
                 <?php endif; ?>
               </div>
             </div>
