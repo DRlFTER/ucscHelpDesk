@@ -27,10 +27,20 @@
                 <?php if (!empty($recentTickets)): ?>
                   <?php foreach ($recentTickets as $t): ?>
                     <?php
+                      $statusStr = strtolower($t['status']);
                       $status = strtoupper($t['status']);
-                      $statusBadgeClass = strtolower($t['status']) === 'resolved' ? 'resolved' : (strtolower($t['status']) === 'open' ? 'open' : 'inProgress');
-                      // Calculate pseudo-progress
-                      $progress = strtolower($t['status']) === 'resolved' ? 100 : (strtolower($t['status']) === 'in progress' ? 50 : 20);
+                      $statusBadgeClass = in_array($statusStr, ['resolved', 'closed', 'agent-closed']) ? 'resolved' : (in_array($statusStr, ['open', 'pending', 'submitted']) ? 'open' : 'inProgress');
+                      
+                      // Calculate timeline progress
+                      if (in_array($statusStr, ['resolved', 'closed', 'agent-closed'])) {
+                          $progress = 100;
+                      } elseif (in_array($statusStr, ['under review', 'in progress'])) {
+                          $progress = 75;
+                      } elseif (in_array($statusStr, ['agent assigned', 'assigned to staff', 'assigned'])) {
+                          $progress = 50;
+                      } else {
+                          $progress = 25; // submitted or pending
+                      }
                       
                       // Map category to a suitable icon
                       $cat = $t['category'] ?? '';
