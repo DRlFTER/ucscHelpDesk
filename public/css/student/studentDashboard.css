@@ -397,7 +397,7 @@ h3 {
 }
 
 .kbCard {
-  flex: 0 0 calc(100% - 20px);
+  flex: 0 0;
   scroll-snap-align: center;
   height: 180px;
   border-radius: 14px;
@@ -412,11 +412,10 @@ h3 {
   color: #fff;
   text-decoration: none;
   overflow: hidden;
-  transition: transform 0.2s ease, box-shadow 0.2s ease;
+  transition: box-shadow 0.2s ease;
 }
 
 .kbCard:hover, .kbCard:focus-visible {
-  transform: translateY(-2px);
   box-shadow: 0 6px 16px rgba(106, 106, 245, 0.2);
   outline: none;
 }
@@ -485,6 +484,8 @@ h3 {
 .dashboardGrid .colRight,
 .dashboardGrid .col {
   gap: 35px !important;
+
+
 }/* Knowledge Base Carousel */
 .kbCarousel {
   display: flex;
@@ -517,8 +518,8 @@ h3 {
 .kbCard {
   flex: 0 0 calc(100% - 20px);
   scroll-snap-align: center;
-  height: 180px;
-  border-radius: 14px;
+  height: 280px;
+  border-radius: 20px;
   position: relative;
   background-size: cover;
   background-position: center;
@@ -530,13 +531,11 @@ h3 {
   color: #fff;
   text-decoration: none;
   overflow: hidden;
-  transition: transform 0.2s ease, box-shadow 0.2s ease;
+  transition: all 0.2s ease,
 }
 
 .kbCard:hover, .kbCard:focus-visible {
-  transform: translateY(-2px);
-  box-shadow: 0 6px 16px rgba(106, 106, 245, 0.2);
-  outline: none;
+  opacity: 0.8;
 }
 
 .kbCard::before {
