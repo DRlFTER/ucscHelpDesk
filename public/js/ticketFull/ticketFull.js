@@ -341,7 +341,7 @@ function wireActions() {
       confirmAssignBtn.addEventListener("click", async () => {
         try {
           const formData = new FormData();
-          formData.append("ticket_id", getTicketIdFromUrl());
+          formData.append("id", getTicketIdFromUrl());
           const res = await fetch(`/staff/ticketAssign`, { method: "POST", body: formData });
           const data = await res.json();
           if (data.success) {
@@ -399,8 +399,8 @@ function wireActions() {
         
         try {
           const formData = new FormData();
-          formData.append("ticket_id", getTicketIdFromUrl());
-          formData.append("staff_id", select.value);
+          formData.append("id", getTicketIdFromUrl());
+          formData.append("forward_to", select.value);
           const reason = document.getElementById("forwardReason");
           if (reason) formData.append("reason", reason.value || "");
           
