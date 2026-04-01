@@ -18,9 +18,9 @@
               <p>Here’s what’s happening with your support requests</p>
             </div>
 
-            <div class="activeTickets card sideWidget">
+            <div class="activeTickets sectionCard">
               <div class="activeTicketsHeader" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px;">
-                <h3 class="sideWidgetTitle" style="margin-bottom: 0;">Active Tickets</h3>
+                <h3 class="sectionCardTitle" style="margin-bottom: 0;">Active Tickets</h3>
                 <a href="/student/tickets" style="color: #6a6af5; font-size: 14px; text-decoration: none; font-weight: 300;">View All</a>
               </div>
               <div class="activeTicketsGrid">
@@ -81,8 +81,8 @@
               </div>
             </div>
 
-            <div class="card sideWidget">
-              <h3 class="sideWidgetTitle" style="margin-bottom: 24px;">Quick Actions</h3>
+            <div class="sectionCard">
+              <h3 class="sectionCardTitle" style="margin-bottom: 24px;">Quick Actions</h3>
               <div class="quickActions">
                 <a href="/student/ticket" class="quickActionItem">
                   <div class="icon">
@@ -145,10 +145,10 @@
           </div>
 
           <div class="col colRight">
-            <div class="card announcements sideWidget">
-              <h3 class="sideWidgetTitle">Announcements</h3>
+            <div class="announcements sectionCard">
+              <h3 class="sectionCardTitle">Announcements</h3>
               <?php if (!empty($recentAnnouncements)): ?>
-                <div class="sideWidgetList">
+                <div class="sectionCardList">
                   <?php foreach ($recentAnnouncements as $a): ?>
                     <a href="/student/announcement?id=<?= (int)($a['id'] ?? 0) ?>" class="announcementItem">
                       <div class="announcementIconWrapper">
@@ -168,18 +168,18 @@
                   <?php endforeach; ?>
                 </div>
               <?php else: ?>
-                <p class="mutedText sideWidgetEmpty">No announcements yet.</p>
+                <p class="mutedText sectionCardEmpty">No announcements yet.</p>
               <?php endif; ?>
 
-              <a href="/student/announcements" class="sideWidgetBtn">
+              <a href="/student/announcements" class="sectionCardBtn">
                 View All Announcements
               </a>
             </div>
 
-            <div class="card calendar sideWidget">
-              <h3 class="sideWidgetTitle">Upcoming Events</h3>
+            <div class="calendar sectionCard">
+              <h3 class="sectionCardTitle">Upcoming Events</h3>
               <?php if (!empty($upcomingEvents)): ?>
-                <div class="sideWidgetList">
+                <div class="sectionCardList">
                   <?php foreach ($upcomingEvents as $e): ?>
                     <?php
                         $d = new DateTime($e['event_date']);
@@ -201,18 +201,18 @@
                   <?php endforeach; ?>
                 </div>
               <?php else: ?>
-                 <p class="mutedText sideWidgetEmpty">No upcoming events.</p>
+                 <p class="mutedText sectionCardEmpty">No upcoming events.</p>
               <?php endif; ?>
 
-              <a href="/student/calender" class="sideWidgetBtn">
+              <a href="/student/calender" class="sectionCardBtn">
                 Browse Full Calendar
               </a>
             </div>
 
-            <div class="card account sideWidget sectionCard">
-              <h3 class="sideWidgetTitle">Recent Forum Posts</h3>
+            <div class="account sectionCard">
+              <h3 class="sectionCardTitle">Recent Forum Posts</h3>
               <?php if (!empty($recentForumPosts)): ?>
-                <div class="sideWidgetList">
+                <div class="sectionCardList">
                   <?php foreach ($recentForumPosts as $post): ?>
                     <a href="/student/forumFull?id=<?= (int)($post['id']) ?>" class="forumPostItem">
                       <div class="forumIconWrapper">
@@ -226,10 +226,10 @@
                   <?php endforeach; ?>
                 </div>
               <?php else: ?>
-                <p class="mutedText sideWidgetEmpty">No recent posts.</p>
+                <p class="mutedText sectionCardEmpty">No recent posts.</p>
               <?php endif; ?>
 
-              <a href="/student/forum" class="sideWidgetBtn">
+              <a href="/student/forum" class="sectionCardBtn">
                 Browse Forum
               </a>
             </div>
