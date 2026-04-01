@@ -69,7 +69,8 @@ public function __construct()
         $upcomingEvents = [];
     }
 
-    $headContent = '<link rel="stylesheet" href="/css/student/studentDashboard.css"/>';
+    $headContent = '<link rel="stylesheet" href="/css/student/studentDashboard.css"/>
+<link rel="stylesheet" href="/css/staff/staffDashboard.css"/>';
     $this->view('staff/staffDashboard', [
         'title' => 'Staff Dashboard',
         'head' => $headContent,

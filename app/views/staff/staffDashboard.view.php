@@ -20,22 +20,22 @@
 
             <div class="sectionCard">
               <h3 class="sectionCardTitle" style="margin-bottom: 24px;">Your Stats</h3>
-              <div class="quickActions" style="display: flex; gap: 16px;">
-                <div class="quickActionItem" style="flex: 1; text-align: center; padding: 20px 10px; text-decoration: none; border-radius: 16px; background: transparent; border: 1px solid #c9d4ff;">
-                  <div style="font-size: 28px; font-weight: bold; color: #1e3a8a; margin-bottom: 8px;"><?= $stats['total'] ?? 0 ?></div>
-                  <div style="font-size: 14px; font-weight: 500; color: #5a5d6d;">Total Tickets</div>
+              <div class="quickActions staff-stats-container">
+                <div class="quickActionItem staff-stat-item">
+                  <div class="staff-stat-number staff-stat-total"><?= $stats['total'] ?? 0 ?></div>
+                  <div class="staff-stat-label">Total Tickets</div>
                 </div>
-                <div class="quickActionItem" style="flex: 1; text-align: center; padding: 20px 10px; text-decoration: none; border-radius: 16px; background: transparent; border: 1px solid #c9d4ff;">
-                  <div style="font-size: 28px; font-weight: bold; color: #f59e0b; margin-bottom: 8px;"><?= $stats['pending'] ?? 0 ?></div>
-                  <div style="font-size: 14px; font-weight: 500; color: #5a5d6d;">Pending</div>
+                <div class="quickActionItem staff-stat-item">
+                  <div class="staff-stat-number staff-stat-pending"><?= $stats['pending'] ?? 0 ?></div>
+                  <div class="staff-stat-label">Pending</div>
                 </div>
-                <div class="quickActionItem" style="flex: 1; text-align: center; padding: 20px 10px; text-decoration: none; border-radius: 16px; background: transparent; border: 1px solid #c9d4ff;">
-                  <div style="font-size: 28px; font-weight: bold; color: #3b82f6; margin-bottom: 8px;"><?= $stats['assigned'] ?? 0 ?></div>
-                  <div style="font-size: 14px; font-weight: 500; color: #5a5d6d;">Assigned</div>
+                <div class="quickActionItem staff-stat-item">
+                  <div class="staff-stat-number staff-stat-assigned"><?= $stats['assigned'] ?? 0 ?></div>
+                  <div class="staff-stat-label">Assigned</div>
                 </div>
-                <div class="quickActionItem" style="flex: 1; text-align: center; padding: 20px 10px; text-decoration: none; border-radius: 16px; background: transparent; border: 1px solid #c9d4ff;">
-                  <div style="font-size: 28px; font-weight: bold; color: #10b981; margin-bottom: 8px;"><?= $stats['resolved'] ?? 0 ?></div>
-                  <div style="font-size: 14px; font-weight: 500; color: #5a5d6d;">Resolved</div>
+                <div class="quickActionItem staff-stat-item">
+                  <div class="staff-stat-number staff-stat-resolved"><?= $stats['resolved'] ?? 0 ?></div>
+                  <div class="staff-stat-label">Resolved</div>
                 </div>
               </div>
             </div>
