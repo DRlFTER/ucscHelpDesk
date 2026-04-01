@@ -29,7 +29,18 @@
                     <?php
                       $statusStr = strtolower($t['status']);
                       $status = strtoupper($t['status']);
-                      $statusBadgeClass = in_array($statusStr, ['resolved', 'closed', 'agent-closed']) ? 'resolved' : (in_array($statusStr, ['open', 'pending', 'submitted']) ? 'open' : 'inProgress');
+                      // Map status directly to the common css component classes
+                      if (in_array($statusStr, ['resolved', 'closed', 'agent-closed', 'completed'])) {
+                          $statusBadgeClass = 'resolved';
+                      } elseif (in_array($statusStr, ['under review', 'in progress'])) {
+                          $statusBadgeClass = 'inProgress';
+                      } elseif (in_array($statusStr, ['assigned to staff', 'agent assigned', 'assigned'])) {
+                          $statusBadgeClass = 'open'; // Using open or generic active class
+                      } elseif (in_array($statusStr, ['pending', 'submitted'])) {
+                          $statusBadgeClass = 'pending';
+                      } else {
+                          $statusBadgeClass = 'pending';
+                      }
                       
                       // Calculate timeline progress
                       if (in_array($statusStr, ['resolved', 'closed', 'agent-closed'])) {
@@ -64,7 +75,7 @@
                         <div class="reqIcon">
                           <?= $iconSvg ?>
                         </div>
-                        <div class="reqStatus <?= $statusBadgeClass ?>"><?= htmlspecialchars($status) ?></div>
+                        <div class="status <?= $statusBadgeClass ?>"><?= htmlspecialchars(ucwords(strtolower($status))) ?></div>
                       </div>
                       <div class="reqCardBody">
                         <h4 class="reqTitle"><?= htmlspecialchars($t['title']) ?></h4>
