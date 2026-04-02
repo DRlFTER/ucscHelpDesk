@@ -19,8 +19,8 @@ class Counselor extends Controller
     {
         $this->requireLogin('counselor');
 
-    $headContent = '
-    <link rel="stylesheet" href="/css/counselor/counselorDashboard.css"/>';
+        $headContent = '<link rel="stylesheet" href="/css/student/studentDashboard.css"/>
+<link rel="stylesheet" href="/css/staff/staffDashboard.css"/>';
 
         $uid = (int)($_SESSION['user']['u_id'] ?? 0);
 
@@ -29,16 +29,26 @@ class Counselor extends Controller
         $dash = new CounselorDashboard();
         $cards = $dash->getCardsData($uid);
         $recentAssigned = $dash->getRecentAssigned($uid, 6);
-        $newPending = $dash->getNewPending(6);
+        $allCounseling = $dash->getAllCounselingTickets(6);
         $meetingTickets = $dash->getMeetingTickets(6);
+
+        $upcomingEvents = [];
+        try {
+            require_once __DIR__ . '/../../models/CalendarEvent.php';
+            $calModel = new CalendarEvent();
+            $upcomingEvents = $calModel->getUpcomingEvents($uid, 3);
+        } catch (Throwable $e) {
+            $upcomingEvents = [];
+        }
 
         $this->view('counselor/counselorDashboard', [
             'title' => 'Counselor Dashboard',
             'head' => $headContent,
             'cards' => $cards,
             'recentAssigned' => $recentAssigned,
-            'newPending' => $newPending,
+            'allCounseling' => $allCounseling,
             'meetingTickets' => $meetingTickets,
+            'upcomingEvents' => $upcomingEvents,
         ]);
     }
 
@@ -106,7 +116,8 @@ class Counselor extends Controller
     {
         $this->requireLogin('counselor');
         $headContent = '
-        <link rel="stylesheet" href="/css/counselor/counselorDashboard.css"/>
+        <link rel="stylesheet" href="/css/student/studentDashboard.css"/>
+        <link rel="stylesheet" href="/css/staff/staffDashboard.css"/>
         <link rel="stylesheet" href="/css/counselor/counselorForum.css"/>';
 
         $topicId = (int)($_GET['id'] ?? 0);

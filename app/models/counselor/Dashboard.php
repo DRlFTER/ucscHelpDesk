@@ -201,6 +201,36 @@ class CounselorDashboard
         return [];
     }
 
+    public function getAllCounselingTickets(int $limit = 6): array
+    {
+        $userId = (int)($_SESSION['user']['u_id'] ?? 0);
+        $dids = $this->getCounselorDivisionIds($userId);
+        if (empty($dids)) return [];
+
+        $placeholders = implode(',', array_fill(0, count($dids), '?'));
+        $types = str_repeat('i', count($dids)) . 'i';
+
+        $sql = "SELECT t.ticket_id, t.created_at, t.title, u.name AS student_name, t.status, t.priority, t.assigned_to,
+                       CASE WHEN COALESCE(t.assigned_to, 0) = 0 THEN 0 ELSE 1 END AS is_assigned
+                FROM tickets t
+                LEFT JOIN users u ON u.u_id = t.u_id
+                WHERE t.division IN ($placeholders) AND " . $this->statusOpenClause() . "
+                ORDER BY t.created_at DESC
+                LIMIT ?";
+
+        if ($stmt = $this->db->prepare($sql)) {
+            $params = array_merge($dids, [$limit]);
+            $stmt->bind_param($types, ...$params);
+            $stmt->execute();
+            $res = $stmt->get_result();
+            $rows = $res->fetch_all(MYSQLI_ASSOC);
+            $stmt->close();
+            return $rows;
+        }
+
+        return [];
+    }
+
     public function getMeetingTickets(int $limit = 6): array
     {
         $userId = (int)($_SESSION['user']['u_id'] ?? 0);
