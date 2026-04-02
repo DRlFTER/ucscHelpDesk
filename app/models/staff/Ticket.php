@@ -163,7 +163,7 @@ class StaffTicket
      * Send escalation email to all staff in the given level using PHPMailer.
      * Uses SMTP settings from config.php.
      */
-    private function sendEscalationEmail(int $ticket_id, int $level): bool
+    public function sendEscalationEmail(int $ticket_id, int $level): bool
     {
         // DEBUG EMAIL: Starting sendEscalationEmail for ticket_id=$ticket_id, level=$level
         // echo "<pre>DEBUG EMAIL: Starting sendEscalationEmail for ticket_id=$ticket_id, level=$level</pre>";

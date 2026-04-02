@@ -241,13 +241,27 @@ function toggleActionButtons() {
     return;
   }
 
-  // Counselor: show schedule button if meeting requested, hide others
+  // Counselor: works same as staff but includes schedule option
   if (ROLE === "counselor") {
+    const isPending = !!ticketData.isPending;
+    const isAssignedToMe = !!ticketData.isAssignedToMe;
     const meeting = (ticketData.meeting || "").toLowerCase();
-    if (sched) sched.style.display = (meeting === "requested" || meeting === "true" || ticketData.meeting_requested) ? "" : "none";
+    
     if (del) del.style.display = "none";
-    if (rejectBtn) rejectBtn.style.display = "none";
-    if (resolveBtn) resolveBtn.style.display = "none";
+    if (assignBtn) assignBtn.style.display = isPending ? "" : "none";
+    if (forwardBtn) forwardBtn.style.display = "none"; // Hide forwarding for counselors
+    if (resolveBtn) resolveBtn.style.display = isAssignedToMe && !isResolved ? "" : "none";
+    if (rejectBtn) rejectBtn.style.display = "none"; // Hide closing/rejecting for counselors
+    if (sched) sched.style.display = isAssignedToMe && !isResolved && (meeting === "requested" || meeting === "true" || ticketData.meeting_requested) ? "" : "none";
+    
+    const sendBtn = document.getElementById("sendBtn");
+    const replyInput = document.getElementById("replyInput");
+    const attachBtn = document.getElementById("attachBtn");
+    if (!isAssignedToMe || isResolved) {
+      if (sendBtn) sendBtn.disabled = true;
+      if (replyInput) replyInput.disabled = true;
+      if (attachBtn) attachBtn.disabled = true;
+    }
     return;
   }
 
@@ -373,7 +387,7 @@ function wireActions() {
         try {
           const formData = new FormData();
           formData.append("id", getTicketIdFromUrl());
-          const res = await fetch(`/staff/ticketAssign`, { method: "POST", body: formData });
+          const res = await fetch(`/${ROLE}/ticketAssign`, { method: "POST", body: formData });
           const data = await res.json();
           if (data.success) {
             window.location.reload();
@@ -408,7 +422,7 @@ function wireActions() {
       const select = document.getElementById("forwardStaffSelect");
       if (select && select.options.length <= 1) {
         try {
-          const res = await fetch("/staff/staffMembersList");
+          const res = await fetch(`/${ROLE}/staffMembersList`);
           const data = await res.json();
           if (data.success && Array.isArray(data.data)) {
              data.data.forEach(m => {
@@ -435,7 +449,7 @@ function wireActions() {
           const reason = document.getElementById("forwardReason");
           if (reason) formData.append("reason", reason.value || "");
           
-          const res = await fetch(`/staff/ticketForward`, { method: "POST", body: formData });
+          const res = await fetch(`/${ROLE}/ticketForward`, { method: "POST", body: formData });
           const data = await res.json();
           if (data.success) {
             window.location.reload();
@@ -672,8 +686,8 @@ function openDeleteModal() {
 // ... (top of file)
 
 function openResolveModal() {
-  // Allow admin, student, and staff to resolve tickets
-  if (ROLE !== "admin" && ROLE !== "student" && ROLE !== "staff") return;
+  // Allow admin, student, staff, and counselor to resolve tickets
+  if (ROLE !== "admin" && ROLE !== "student" && ROLE !== "staff" && ROLE !== "counselor") return;
   const overlay = document.getElementById("resolveModal");
   if (!overlay) return;
 
@@ -803,7 +817,7 @@ function openRejectModal() {
     confirmBtn.disabled = true;
 
     try {
-      const res = await fetch(`/staff/ticketReject`, {
+      const res = await fetch(`/${ROLE}/ticketReject`, {
         method: "POST",
         headers: { "Content-Type": "application/x-www-form-urlencoded" },
         body: `id=${encodeURIComponent(ticketData.id)}`,
