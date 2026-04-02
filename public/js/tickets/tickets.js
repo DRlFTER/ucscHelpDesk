@@ -340,6 +340,15 @@
           visibilityHtml = `<div class="status ${visClass}">${esc(visLabel)}</div>`;
         }
 
+        let bgStyle = "";
+        let overdueBadge = "";
+        const isOverdue = t.overdue || t.is_overdue_pending || t.isOverdue;
+        
+        if (ROLE === 'staff' && isOverdue) {
+          bgStyle = "background-color: #fefce8; border-color: #fde047;";
+          overdueBadge = `<div class="status" style="background:#fef2f2; color:#dc2626; border:1px solid #fca5a5;">Overdue (Pending)</div>`;
+        }
+
         const inner = `
         <div class="ticketRow1">
           <div class="ticketName">
@@ -352,6 +361,7 @@
           </div>
           <div style="display:flex; gap:10px; align-items:center;">
             ${visibilityHtml}
+            ${overdueBadge}
             <div class="status ${status.cls}">${esc(status.label)}</div>
           </div>
         </div>
@@ -379,9 +389,9 @@
         if (SHOW_LINKS && url && url !== "#") {
           return `<a class="ticket" href="${url}" aria-label="Open ticket ${esc(
             t.title
-          )}" style="view-transition-name: ${vt}; text-decoration: none; color: inherit;">${inner}</a>`;
+          )}" style="view-transition-name: ${vt}; text-decoration: none; color: inherit; ${bgStyle}">${inner}</a>`;
         }
-        return `<div class="ticket" style="view-transition-name: ${vt};">${inner}</div>`;
+        return `<div class="ticket" style="view-transition-name: ${vt}; ${bgStyle}">${inner}</div>`;
       })
       .join("");
 
