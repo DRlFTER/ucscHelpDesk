@@ -156,20 +156,43 @@ function renderMessages() {
 function renderInfo() {
   const info = [
     { label: "Ticket ID", value: ticketData.id },
+    { label: "Student Name", value: ticketData.student?.name || "Unknown" },
+    { label: "Ticket type", value: ticketData.type || ticketData.t_type || "—" },
     { label: "Category", value: ticketData.category },
     { label: "Priority", value: ticketData.priority },
     { label: "Assigned staff", value: ticketData.assigned || "—" },
     { label: "Created on", value: ticketData.createdOn || "—" },
   ];
-  document.getElementById("ticketInfoList").innerHTML = info
-    .map(
-      (i) => `
+
+  let html = info.map(i => `
     <div class="infoRow">
       <span class="label">${i.label}</span>
       <span class="value">${i.value}</span>
-    </div>`
-    )
-    .join("");
+    </div>
+  `).join("");
+
+  // Add indicators at the bottom
+  const meetingNorm = (ticketData.meeting || "").toLowerCase();
+  const isMeetingRequested = meetingNorm === "requested" || meetingNorm === "true" || ticketData.meeting_requested;
+  if (isMeetingRequested) {
+    html += `
+    <div class="infoRow mt-2">
+      <span class="badge" style="background:#eff6ff;color:#1e40af;border:1px solid #bfdbfe;width:100%;text-align:center;padding:8px;border-radius:10px;font-weight:500;">
+        Meeting Requested
+      </span>
+    </div>`;
+  }
+  
+  if (ticketData.overdue || ticketData.is_overdue_pending || ticketData.isOverdue) {
+    html += `
+    <div class="infoRow mt-2">
+      <span class="badge" style="background:#fef2f2;color:#dc2626;border:1px solid #fca5a5;width:100%;text-align:center;padding:8px;border-radius:10px;font-weight:500;">
+        Overdue (Pending)
+      </span>
+    </div>`;
+  }
+
+  document.getElementById("ticketInfoList").innerHTML = html;
 }
 
 function renderTimeline() {
@@ -194,15 +217,17 @@ function toggleActionButtons() {
   const del = document.getElementById("deleteBtn");
   const sched = document.getElementById("scheduleBtn");
   const resolveBtn = document.getElementById("resolveBtn");
+  const rejectBtn = document.getElementById("rejectBtn");
   const assignBtn = document.getElementById("assignBtn");
   const forwardBtn = document.getElementById("forwardBtn");
   const statusNorm = (ticketData.status || "").toLowerCase();
-  const isResolved = statusNorm === "resolved" || statusNorm === "closed";
+  const isResolved = statusNorm === "resolved" || statusNorm === "closed" || statusNorm === "agent-closed" || statusNorm === "agent closed";
 
   // Admin: show delete and resolve (if not resolved)
   if (ROLE === "admin") {
     if (del) del.style.display = "";
     if (resolveBtn) resolveBtn.style.display = isResolved ? "none" : "";
+    if (rejectBtn) rejectBtn.style.display = "none";
     if (sched) sched.style.display = "none";
     return;
   }
@@ -211,6 +236,7 @@ function toggleActionButtons() {
   if (ROLE === "student") {
     if (del) del.style.display = "none";
     if (sched) sched.style.display = "none";
+    if (rejectBtn) rejectBtn.style.display = "none";
     if (resolveBtn) resolveBtn.style.display = isResolved ? "none" : "";
     return;
   }
@@ -218,13 +244,14 @@ function toggleActionButtons() {
   // Counselor: show schedule button if meeting requested, hide others
   if (ROLE === "counselor") {
     const meeting = (ticketData.meeting || "").toLowerCase();
-    if (sched) sched.style.display = meeting === "requested" ? "" : "none";
+    if (sched) sched.style.display = (meeting === "requested" || meeting === "true" || ticketData.meeting_requested) ? "" : "none";
     if (del) del.style.display = "none";
+    if (rejectBtn) rejectBtn.style.display = "none";
     if (resolveBtn) resolveBtn.style.display = "none";
     return;
   }
 
-  // Staff: assign/forward/resolve rules
+  // Staff: assign/forward/resolve/reject rules
   if (ROLE === "staff") {
     const isPending = !!ticketData.isPending;
     const isAssignedToMe = !!ticketData.isAssignedToMe;
@@ -233,12 +260,10 @@ function toggleActionButtons() {
     if (del) del.style.display = "none";
     if (sched) sched.style.display = "none";
     
-    const assignBtn = document.getElementById("assignBtn");
-    const forwardBtn = document.getElementById("forwardBtn");
-    
     if (assignBtn) assignBtn.style.display = isPending ? "" : "none";
     if (forwardBtn) forwardBtn.style.display = isAssignedToMe && !isResolved ? "" : "none";
     if (resolveBtn) resolveBtn.style.display = isAssignedToMe && !isResolved ? "" : "none";
+    if (rejectBtn) rejectBtn.style.display = isAssignedToMe && !isResolved ? "" : "none";
     
     // Also disable chat input if not assigned or resolved
     const sendBtn = document.getElementById("sendBtn");
@@ -256,6 +281,7 @@ function toggleActionButtons() {
   if (del) del.style.display = "none";
   if (sched) sched.style.display = "none";
   if (resolveBtn) resolveBtn.style.display = "none";
+  if (rejectBtn) rejectBtn.style.display = "none";
 }
 
 function wireActions() {
@@ -324,6 +350,11 @@ function wireActions() {
   const deleteBtn = document.getElementById("deleteBtn");
   if (deleteBtn) {
     deleteBtn.addEventListener("click", () => openDeleteModal());
+  }
+
+  const rejectBtn = document.getElementById("rejectBtn");
+  if (rejectBtn) {
+    rejectBtn.addEventListener("click", () => openRejectModal());
   }
 
   const assignBtnEl = document.getElementById("assignBtn");
@@ -574,11 +605,10 @@ async function fetchMessages(id) {
   toggleActionButtons();
   wireActions();
 
-  // Fetch chat messages from server
+  // Interval for polling chat messages (previously 10s, now 5s to match old logic)
   if (id) {
     fetchMessages(id);
-    // Poll for new messages every 10 seconds
-    setInterval(() => fetchMessages(id), 10000);
+    setInterval(() => fetchMessages(id), 5000);
   } else {
     renderMessages();
   }
@@ -746,4 +776,66 @@ function openScheduleModal() {
 
   cancelBtn && cancelBtn.addEventListener("click", close);
   backdropBtn && backdropBtn.addEventListener("click", close);
+}
+
+// Modal helper for Reject/Close Ticket (staff only)
+function openRejectModal() {
+  if (ROLE !== "staff") return; 
+  const overlay = document.getElementById("rejectModal");
+  if (!overlay) return;
+
+  overlay.classList.add("open");
+  overlay.removeAttribute("aria-hidden");
+  document.body.classList.add("modal-open");
+
+  const cancelBtn = document.getElementById("cancelRejectBtn");
+  const confirmBtn = document.getElementById("confirmRejectBtn");
+  const backdropBtn = overlay.querySelector(".modalBackdropClose");
+
+  const close = () => {
+    overlay.classList.remove("open");
+    overlay.setAttribute("aria-hidden", "true");
+    document.body.classList.remove("modal-open");
+  };
+
+  const onConfirm = async (e) => {
+    e && e.preventDefault();
+    confirmBtn.disabled = true;
+
+    try {
+      const res = await fetch(`/staff/ticketReject`, {
+        method: "POST",
+        headers: { "Content-Type": "application/x-www-form-urlencoded" },
+        body: `id=${encodeURIComponent(ticketData.id)}`,
+        credentials: "include",
+      });
+
+      const rawText = await res.text();
+      let data;
+      try {
+        data = JSON.parse(rawText);
+      } catch (jsonErr) {
+        throw new Error("Server returned non-JSON response.");
+      }
+
+      if (!res.ok) throw new Error(data.error || data.message || "Failed to reject via API");
+      if (data.success || (!data.error && !data.message)) {
+        window.location.reload();
+      } else {
+        alert(data.error || data.message || "Failed to reject via API");
+      }
+    } catch (err) {
+      console.error(err);
+      alert("Error rejecting ticket: " + err.message);
+    } finally {
+      confirmBtn.disabled = false;
+      close();
+    }
+  };
+
+  confirmBtn.onclick = onConfirm;
+  cancelBtn.onclick = (e) => { e.preventDefault(); close(); };
+  if (backdropBtn) {
+    backdropBtn.onclick = (e) => { e.preventDefault(); close(); };
+  }
 }

@@ -2358,15 +2358,40 @@ public function staffReports()
             'assigned_to' => isset($row['assigned_to']) ? (int)$row['assigned_to'] : null,
             'isAssignedToMe' => (isset($row['assigned_to']) && $row['assigned_to'] == $_SESSION['user']['u_id']),
             'isPending' => ($statusRaw === 'pending'),
-            'assigned_to' => isset($row['assigned_to']) ? (int)$row['assigned_to'] : null,
-            'isAssignedToMe' => (isset($row['assigned_to']) && $row['assigned_to'] == $_SESSION['user']['u_id']),
-            'isPending' => ($statusRaw === 'pending')
+            'overdue' => isset($row['is_overdue_pending']) ? (bool)$row['is_overdue_pending'] : false
         ];
 
         echo json_encode($out);
         exit;
     }
 
+    public function ticketReject()
+    {
+        $this->requireLogin('staff');
+        header('Content-Type: application/json');
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+            http_response_code(405); echo json_encode(['error' => 'POST required']); exit;
+        }
+
+        $id = isset($_POST['id']) ? (int)$_POST['id'] : 0;
+        if (!$id) {
+            http_response_code(400); echo json_encode(['error' => 'Missing ticket id']); exit;
+        }
+
+        require_once __DIR__ . '/../../models/staff/Ticket.php';
+        $model = new StaffTicket();
+        try {
+            $ok = $model->rejectTicket($id);
+            if ($ok) {
+                echo json_encode(['success' => true]);
+            } else {
+                http_response_code(400); echo json_encode(['error' => 'Failed to reject or not assigned']);
+            }
+        } catch (Throwable $e) {
+            http_response_code(500); echo json_encode(['error' => $e->getMessage()]);
+        }
+        exit;
+    }
 
     public function ticketAssign()
     {
