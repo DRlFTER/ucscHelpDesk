@@ -17,7 +17,10 @@
 
   let faqs = [];
   let page = 1;
-  const perPage = 10;
+  const perPage = (() => {
+    const stored = parseInt(localStorage.getItem("ucsc_table_rows"), 10);
+    return Number.isFinite(stored) && stored >= 5 && stored <= 100 ? stored : 10;
+  })();
   let meta = { total: 0, totalPages: 1 };
   let editingId = null;
   let pendingDeleteId = null;

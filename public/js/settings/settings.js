@@ -14,7 +14,7 @@
   let hasChanges = false;
 
   // Data model: side menu + sections with groups and controls
-  const settingsSections = [
+  const allSettingsSections = [
     {
       id: "profile",
       title: "Profile",
@@ -76,6 +76,7 @@
       id: "account",
       title: "Account",
       description: "Security and account configuration.",
+      functional: true,
       groups: [
         {
           title: "Security",
@@ -93,26 +94,6 @@
       ],
     },
     {
-      id: "appearance",
-      title: "Appearance",
-      description: "Theme and UI preferences.",
-      groups: [
-        {
-          title: "Theme",
-          items: [
-            {
-              label: "Theme",
-              control: { type: "select", options: ["System", "Light", "Dark"] },
-            },
-            {
-              label: "Density",
-              control: { type: "select", options: ["Comfortable", "Compact"] },
-            },
-          ],
-        },
-      ],
-    },
-    {
       id: "notifications",
       title: "Notifications",
       description: "Where and how you receive notifications.",
@@ -121,15 +102,19 @@
           title: "Email notifications",
           items: [
             {
+              id: "notif_tickets",
               label: "Ticket updates",
               control: { type: "select", options: ["All", "Mentions", "None"] },
+              value: localStorage.getItem("ucsc_notif_tickets") || "All"
             },
             {
+              id: "notif_announcements",
               label: "Announcements",
               control: {
                 type: "select",
                 options: ["All", "Important only", "None"],
               },
+              value: localStorage.getItem("ucsc_notif_announcements") || "All"
             },
           ],
         },
@@ -139,23 +124,34 @@
       id: "display",
       title: "Display",
       description: "Layout and visibility settings.",
+      functional: true,
+      roles: ["admin"],
       groups: [
         {
           title: "Content density",
           items: [
             {
+              id: "display_rows",
               label: "Table rows per page",
               control: {
                 type: "input",
                 placeholder: "10",
                 inputType: "number",
               },
+              value: localStorage.getItem("ucsc_table_rows") || "10",
+              hint: "Applies to all paginated tables (5–100)"
             },
           ],
         },
       ],
     },
   ];
+
+  // Filter sections by role
+  const settingsSections = allSettingsSections.filter((s) => {
+    if (!s.roles) return true;
+    return s.roles.includes(userRole);
+  });
 
   // Build side menu
   const menuButtons = settingsSections
@@ -268,18 +264,21 @@
                     const ctrl = item.control || { type: "input" };
                     const isEditable = ctrl.editable !== false;
                     const controlHtml = (() => {
+                      const val = item.value !== undefined ? item.value : "";
+                      const localDataAttr = item.id && (item.id.startsWith("display_") || item.id.startsWith("notif_")) ? `data-local="${item.id}"` : "";
+                      const minMax = item.id === "display_rows" ? 'min="5" max="100" step="1"' : "";
                       if (ctrl.type === "select") {
                         const opts = (ctrl.options || [])
-                          .map((o) => `<option>${o}</option>`)
+                          .map((o) => `<option ${o === val ? "selected" : ""}>${escapeHtml(o)}</option>`)
                           .join("");
                         return `<select ${
                           !isEditable ? "disabled" : ""
-                        }>${opts}</select>`;
+                        } ${localDataAttr}>${opts}</select>`;
                       }
                       if (ctrl.type === "textarea") {
                         return `<textarea rows="3" placeholder="${
                           ctrl.placeholder || ""
-                        }" ${!isEditable ? "disabled" : ""}></textarea>`;
+                        }" ${!isEditable ? "disabled" : ""}>${escapeHtml(val)}</textarea>`;
                       }
                       if (ctrl.type === "button") {
                         return `<button type="button" class="btnSecondary btnSmall" data-action="${
@@ -287,12 +286,11 @@
                         }">${ctrl.text || "Click"}</button>`;
                       }
                       const t = ctrl.inputType || "text";
-                      const val = item.value !== undefined ? item.value : "";
                       return `<input type="${t}" placeholder="${
                         ctrl.placeholder || ""
                       }" value="${escapeHtml(val)}" ${
                         !isEditable ? "disabled readonly" : ""
-                      } ${item.id ? `data-field="${item.id}"` : ""}/>`;
+                      } ${minMax} ${item.id && !localDataAttr ? `data-field="${item.id}"` : localDataAttr}/>`;
                     })();
 
                     return `
@@ -331,9 +329,9 @@
           </div>
           <div class="settingsMessage" id="settingsMessage"></div>
         `
-            : `
-          <div class="mutedText">These settings are placeholders and won't be saved yet.</div>
-        `
+            : section.functional
+              ? `<div class="settingsMessage" id="settingsMessage"></div>`
+              : `<div class="mutedText">These settings are placeholders and won't be saved yet.</div>`
         }
       </div>
     `;
@@ -341,6 +339,21 @@
     // Setup event listeners for profile section
     if (isProfileSection) {
       setupProfileListeners();
+    }
+
+    // Setup account section listeners (change password button)
+    if (sectionId === "account") {
+      const changePasswordBtn = right.querySelector(
+        '[data-action="changePassword"]'
+      );
+      if (changePasswordBtn) {
+        changePasswordBtn.addEventListener("click", openChangePasswordModal);
+      }
+    }
+
+    // Setup display section listeners (rows per page input)
+    if (sectionId === "display") {
+      setupDisplayListeners();
     }
   }
 
@@ -412,15 +425,118 @@
       saveBtn.addEventListener("click", saveProfile);
     }
 
-    // Change password button
-    const changePasswordBtn = right.querySelector(
-      '[data-action="changePassword"]'
-    );
-    if (changePasswordBtn) {
-      changePasswordBtn.addEventListener("click", () => {
-        showMessage("Password change functionality coming soon", "info");
-      });
-    }
+  }
+
+  // Setup display section event listeners
+  function setupDisplayListeners() {
+    const rowsInput = right.querySelector('[data-local="display_rows"]');
+    if (!rowsInput) return;
+
+    // Debounced save for the rows input
+    let saveTimeout = null;
+    rowsInput.addEventListener("input", () => {
+      clearTimeout(saveTimeout);
+      saveTimeout = setTimeout(() => {
+        const raw = rowsInput.value.trim();
+        if (!raw) return;
+        const val = parseInt(raw, 10);
+        if (isNaN(val) || val < 5) {
+          showMessage("Rows per page must be at least 5.", "error");
+          return;
+        }
+        if (val > 100) {
+          showMessage("Rows per page cannot exceed 100.", "error");
+          return;
+        }
+        localStorage.setItem("ucsc_table_rows", String(val));
+        rowsInput.value = String(val);
+        showMessage("Table rows per page updated to " + val + ".", "success");
+      }, 600);
+    });
+  }
+
+  // Open Change Password modal
+  function openChangePasswordModal() {
+    const overlay = document.getElementById("changePasswordModal");
+    if (!overlay) return;
+    overlay.classList.add("open");
+    document.body.classList.add("modal-open");
+
+    const cancelBtn = document.getElementById("cancelChangePasswordBtn");
+    const confirmBtn = document.getElementById("confirmChangePasswordBtn");
+    const backdropBtn = overlay.querySelector(".modalBackdropClose");
+    const form = document.getElementById("changePasswordForm");
+    const errorMsg = document.getElementById("passwordErrorMsg");
+
+    if (form) form.reset();
+    if (errorMsg) errorMsg.style.display = "none";
+
+    const close = () => {
+      overlay.classList.remove("open");
+      document.body.classList.remove("modal-open");
+      cancelBtn && cancelBtn.removeEventListener("click", onCancel);
+      confirmBtn && confirmBtn.removeEventListener("click", onConfirm);
+      backdropBtn && backdropBtn.removeEventListener("click", onCancel);
+    };
+
+    const onCancel = (e) => {
+      e && e.preventDefault();
+      close();
+    };
+
+    const onConfirm = async (e) => {
+      e && e.preventDefault();
+      const currentPwd = document.getElementById("currentPasswordInput").value;
+      const newPwd = document.getElementById("newPasswordInput").value;
+      const confirmPwd = document.getElementById("confirmNewPasswordInput").value;
+
+      if (!currentPwd || !newPwd || !confirmPwd) {
+        errorMsg.textContent = "All fields are required.";
+        errorMsg.style.display = "block";
+        return;
+      }
+
+      if (newPwd !== confirmPwd) {
+        errorMsg.textContent = "New passwords do not match.";
+        errorMsg.style.display = "block";
+        return;
+      }
+      
+      if (newPwd.length < 8) {
+        errorMsg.textContent = "New password must be at least 8 characters.";
+        errorMsg.style.display = "block";
+        return;
+      }
+
+      setLoading(confirmBtn, true);
+      errorMsg.style.display = "none";
+
+      try {
+        const response = await fetch("/settings/updatePassword", {
+           method: "POST",
+           headers: { "Content-Type": "application/json" },
+           body: JSON.stringify({ currentPassword: currentPwd, newPassword: newPwd })
+        });
+        const data = await response.json();
+        
+        if (data.success) {
+           close();
+           showMessage("Password updated successfully!", "success");
+        } else {
+           errorMsg.textContent = data.error || "Failed to update password.";
+           errorMsg.style.display = "block";
+        }
+      } catch (err) {
+        errorMsg.textContent = "An error occurred. Please try again.";
+        errorMsg.style.display = "block";
+      } finally {
+        setLoading(confirmBtn, false);
+      }
+    };
+
+    cancelBtn && cancelBtn.addEventListener("click", onCancel);
+    confirmBtn && confirmBtn.addEventListener("click", onConfirm);
+    backdropBtn && backdropBtn.addEventListener("click", onCancel);
   }
 
   // Handle photo upload
@@ -754,5 +870,17 @@
     btn.classList.add("active");
     // render content
     renderSection(target);
+  });
+
+  // Local storage auto-save for functioning preference toggles (selects only; display_rows handled in setupDisplayListeners)
+  document.body.addEventListener("change", (e) => {
+     const fieldId = e.target.getAttribute("data-local");
+     if (fieldId && fieldId !== "display_rows") {
+        const val = e.target.value;
+        if (fieldId === "notif_tickets") localStorage.setItem("ucsc_notif_tickets", val);
+        else if (fieldId === "notif_announcements") localStorage.setItem("ucsc_notif_announcements", val);
+        
+        showMessage("Preference updated.", "success");
+     }
   });
 })();

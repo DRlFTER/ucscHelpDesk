@@ -45,6 +45,39 @@
 	<button type="button" class="modalBackdropClose" aria-label="Close"></button>
 </div>
 
+<!-- Change Password Modal -->
+<div id="changePasswordModal" class="modalOverlay" aria-hidden="true">
+	<div class="msgHolder">
+		<div class="msgContainer" role="dialog" aria-modal="true" aria-labelledby="changePasswordModalTitle">
+			<div class="msgContent" style="width:100%;">
+				<h3 id="changePasswordModalTitle" class="msgTitle">Change Password</h3>
+				<div class="msgText" style="margin-top:20px;">
+                    <form id="changePasswordForm">
+                        <div class="settingRow" style="flex-direction:column; align-items:flex-start; margin-bottom:15px; border:none; padding:0;">
+                            <label style="margin-bottom:8px; font-size:14px; font-weight:600;">Current Password</label>
+                            <input type="password" id="currentPasswordInput" required style="width:100%; border:1px solid #e2e8f0; border-radius:6px; padding:10px;" />
+                        </div>
+                        <div class="settingRow" style="flex-direction:column; align-items:flex-start; margin-bottom:15px; border:none; padding:0;">
+                            <label style="margin-bottom:8px; font-size:14px; font-weight:600;">New Password</label>
+                            <input type="password" id="newPasswordInput" required minlength="8" style="width:100%; border:1px solid #e2e8f0; border-radius:6px; padding:10px;" />
+                        </div>
+                        <div class="settingRow" style="flex-direction:column; align-items:flex-start; margin-bottom:15px; border:none; padding:0;">
+                            <label style="margin-bottom:8px; font-size:14px; font-weight:600;">Confirm New Password</label>
+                            <input type="password" id="confirmNewPasswordInput" required minlength="8" style="width:100%; border:1px solid #e2e8f0; border-radius:6px; padding:10px;" />
+                        </div>
+						<div id="passwordErrorMsg" style="color:#ef4444; font-size:13px; margin-bottom:15px; display:none;"></div>
+                    </form>
+				</div>
+				<div class="msgActions">
+					<button id="cancelChangePasswordBtn" type="button" class="btnSecondary"><span class="btnSecondaryText">Cancel</span></button>
+					<button id="confirmChangePasswordBtn" type="button" class="btnPrimary"><span class="btnPrimaryText">Save Password</span></button>
+				</div>
+			</div>
+		</div>
+	</div>
+	<button type="button" class="modalBackdropClose" aria-label="Close"></button>
+</div>
+
 <!-- Pass user data to JavaScript -->
 <script>
 	window.SETTINGS_USER_DATA = <?= json_encode([
