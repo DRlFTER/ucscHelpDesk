@@ -1898,6 +1898,9 @@ public function downloadKB($file_id = null) {
         if ($chatId) {
             $success = $chatModel->sendMessage($chatId, $staffId, $message);
             if ($success) {
+                // Trigger notification for the other party
+                require_once __DIR__ . '/../../lib/NotificationHelper.php';
+                NotificationHelper::notifyTicketMessage($ticketId, $staffId, $_SESSION['user']['name'] ?? 'Staff');
                 echo json_encode(['success' => true]);
             } else {
                 echo json_encode(['error' => 'send_failed']);
@@ -2412,6 +2415,9 @@ public function staffReports()
                 $ok2 = $model->setTicketupdateTimeline($id);
                 if ($ok && $ok2) {
                     $model->setTicketLevel($id, $current_staff_id, $model->getStaffLevel($current_staff_id));
+                    // Notify ticket owner about assignment
+                    require_once __DIR__ . '/../../lib/NotificationHelper.php';
+                    NotificationHelper::notifyTicketAssigned($id, $current_staff_id);
                     echo json_encode(['success' => true]);
                 } else {
                     http_response_code(500); echo json_encode(['error' => 'Failed to assign']);
@@ -2449,6 +2455,9 @@ public function staffReports()
                     if ($level !== null && $level > 0) {
                         $model->setTicketLevel($id, $forward_to, $level);
                     }
+                    // Notify new staff about forwarded ticket
+                    require_once __DIR__ . '/../../lib/NotificationHelper.php';
+                    NotificationHelper::notifyTicketForward($id, $forward_to, $_SESSION['user']['name'] ?? 'Staff');
                     echo json_encode(['success' => true]);
                 } else {
                     http_response_code(500); echo json_encode(['error' => 'Failed to forward']);
@@ -2497,6 +2506,10 @@ public function staffReports()
             if ($ok) {
                 // Update the timeline 
                 $model->resolveTicketTimeLine($id);
+                // Notify ticket owner about resolution
+                require_once __DIR__ . '/../../lib/NotificationHelper.php';
+                $staffId = (int)($_SESSION['user']['u_id'] ?? 0);
+                NotificationHelper::notifyTicketStatusChange($id, 'resolved', $staffId);
                 echo json_encode(['success' => true]);
             } else {
                 http_response_code(500);

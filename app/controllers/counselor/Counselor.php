@@ -598,6 +598,9 @@ class Counselor extends Controller
                 $ok2 = $model->setTicketupdateTimeline($id);
                 if ($ok && $ok2) {
                     $model->setTicketLevel($id, 1); // Counselors act as level 1
+                    // Notify ticket owner about assignment
+                    require_once __DIR__ . '/../../lib/NotificationHelper.php';
+                    NotificationHelper::notifyTicketAssigned($id, $current_staff_id);
                     echo json_encode(['success' => true]);
                 } else {
                     http_response_code(500); echo json_encode(['error' => 'Failed to assign']);
@@ -634,6 +637,9 @@ class Counselor extends Controller
                 $ok = $model->forwardTicket($id, $current_staff_id, $forward_to);
                 if ($ok) {
                     $model->setTicketLevel($id, 1);
+                    // Notify new counselor about forwarded ticket
+                    require_once __DIR__ . '/../../lib/NotificationHelper.php';
+                    NotificationHelper::notifyTicketForward($id, $forward_to, $_SESSION['user']['name'] ?? 'Counselor');
                     echo json_encode(['success' => true]);
                 } else {
                     http_response_code(500); echo json_encode(['error' => 'Failed to forward']);
@@ -687,6 +693,9 @@ class Counselor extends Controller
                 $ok = $model->resolveTicket($id, $current_staff_id);
                 $ok2 = $model->resolveTicketTimeLine($id);
                 if ($ok && $ok2) {
+                    // Notify ticket owner about resolution
+                    require_once __DIR__ . '/../../lib/NotificationHelper.php';
+                    NotificationHelper::notifyTicketStatusChange($id, 'resolved', $current_staff_id);
                     echo json_encode(['success' => true]);
                 } else {
                     http_response_code(500); echo json_encode(['error' => 'Failed to resolve']);
@@ -806,6 +815,9 @@ class Counselor extends Controller
         if ($chatId) {
             $success = $chatModel->sendMessage($chatId, $staffId, $message);
             if ($success) {
+                // Trigger notification for the other party
+                require_once __DIR__ . '/../../lib/NotificationHelper.php';
+                NotificationHelper::notifyTicketMessage($ticketId, $staffId, $_SESSION['user']['name'] ?? 'Counselor');
                 echo json_encode(['success' => true]);
             } else {
                 echo json_encode(['error' => 'failed_to_send']);

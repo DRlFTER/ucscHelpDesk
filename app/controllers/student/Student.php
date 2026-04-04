@@ -1839,6 +1839,10 @@ public function templates()
         // Update ticket_timeline resolved timestamp
         $db->query("UPDATE ticket_timeline SET resolved = CURRENT_TIMESTAMP WHERE ticket_id = $idEsc");
 
+        // Trigger notification for status change
+        require_once __DIR__ . '/../../lib/NotificationHelper.php';
+        NotificationHelper::notifyTicketStatusChange($idEsc, 'resolved', $studentId);
+
         echo json_encode(['success' => true]);
     }
 
@@ -1954,6 +1958,9 @@ public function templates()
         if ($chatId) {
             $success = $chatModel->sendMessage($chatId, $studentId, $message);
             if ($success) {
+                // Trigger notification for the other party
+                require_once __DIR__ . '/../../lib/NotificationHelper.php';
+                NotificationHelper::notifyTicketMessage($ticketId, $studentId, $_SESSION['user']['name'] ?? 'Student');
                 echo json_encode(['success' => true]);
             } else {
                 echo json_encode(['error' => 'send_failed']);
