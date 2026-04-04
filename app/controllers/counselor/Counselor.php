@@ -899,165 +899,6 @@ public function exportReport()
         exit;
     }
 
-<<<<<<< HEAD
-=======
-    public function ticketAssign()
-    {
-        $this->requireLogin('counselor');
-        header('Content-Type: application/json');
-        $id = isset($_POST['id']) ? (int)$_POST['id'] : 0;
-        if (!$id) {
-            http_response_code(400); echo json_encode(['error' => 'Missing id']); exit;
-        }
-        
-        require_once __DIR__ . '/../../models/counselor/Dashboard.php';
-        $model = new CounselorDashboard();
-        $current_staff_id = (int)$_SESSION['user']['u_id'];
-        
-        try {
-            $ticket = $model->getCounselorTicketById($id, $current_staff_id);
-            if ($ticket && strtolower($ticket['status']) === 'pending') {
-                $ok = $model->assignToCounselor($id, $current_staff_id);
-                $ok2 = $model->setTicketupdateTimeline($id);
-                if ($ok && $ok2) {
-                    $model->setTicketLevel($id, 1); // Counselors act as level 1
-                    echo json_encode(['success' => true]);
-                } else {
-                    http_response_code(500); echo json_encode(['error' => 'Failed to assign']);
-                }
-            } else {
-                http_response_code(400); echo json_encode(['error' => 'Ticket not pending']);
-            }
-        } catch (Throwable $e) {
-            http_response_code(500); echo json_encode(['error' => $e->getMessage()]);
-        }
-        exit;
-    }
-
-    public function ticketForward()
-    {
-        $this->requireLogin('counselor');
-        header('Content-Type: application/json');
-        
-        $data = json_decode(file_get_contents('php://input'), true) ?: $_POST;
-        $id = isset($data['id']) ? (int)$data['id'] : ($_GET['id'] ?? 0);
-        $forward_to = isset($data['forward_to']) ? (int)$data['forward_to'] : 0;
-        
-        if (!$id || !$forward_to) {
-            http_response_code(400); echo json_encode(['error' => 'Missing id or target counselor']); exit;
-        }
-        
-        require_once __DIR__ . '/../../models/counselor/Dashboard.php';
-        $model = new CounselorDashboard();
-        $current_staff_id = (int)$_SESSION['user']['u_id'];
-        
-        try {
-            $ticket = $model->getCounselorTicketById($id, $current_staff_id);
-            if ($ticket && $ticket['assigned_to'] == $current_staff_id) {
-                $ok = $model->forwardTicket($id, $current_staff_id, $forward_to);
-                if ($ok) {
-                    $model->setTicketLevel($id, 1);
-                    echo json_encode(['success' => true]);
-                } else {
-                    http_response_code(500); echo json_encode(['error' => 'Failed to forward']);
-                }
-            } else {
-                http_response_code(400); echo json_encode(['error' => 'Not assigned to you']);
-            }
-        } catch (Throwable $e) {
-            http_response_code(500); echo json_encode(['error' => $e->getMessage()]);
-        }
-        exit;
-    }
-
-    public function staffMembersList()
-    {
-        $this->requireLogin('counselor');
-        header('Content-Type: application/json');
-        
-        $db = Database::getInstance();
-        $sql = "SELECT u_id, name FROM users WHERE role = 'counselor' ORDER BY name";
-        $members = [];
-        if ($res = $db->query($sql)) {
-            while ($row = $res->fetch_assoc()) {
-                $members[] = $row;
-            }
-            $res->free();
-        }
-        echo json_encode(['success' => true, 'data' => $members]);
-        exit;
-    }
-
-    public function ticketResolve()
-    {
-        $this->requireLogin('counselor');
-        header('Content-Type: application/json');
-        
-        $data = json_decode(file_get_contents('php://input'), true) ?: $_POST;
-        $id = isset($data['id']) ? (int)$data['id'] : ($_GET['id'] ?? 0);
-        
-        if (!$id) {
-            http_response_code(400); echo json_encode(['error' => 'Missing id']); exit;
-        }
-        
-        require_once __DIR__ . '/../../models/counselor/Dashboard.php';
-        $model = new CounselorDashboard();
-        $current_staff_id = (int)$_SESSION['user']['u_id'];
-        
-        try {
-            $ticket = $model->getCounselorTicketById($id, $current_staff_id);
-            if ($ticket && $ticket['assigned_to'] == $current_staff_id) {
-                $ok = $model->resolveTicket($id, $current_staff_id);
-                $ok2 = $model->resolveTicketTimeLine($id);
-                if ($ok && $ok2) {
-                    echo json_encode(['success' => true]);
-                } else {
-                    http_response_code(500); echo json_encode(['error' => 'Failed to resolve']);
-                }
-            } else {
-                http_response_code(400); echo json_encode(['error' => 'Not assigned to you']);
-            }
-        } catch (Throwable $e) {
-            http_response_code(500); echo json_encode(['error' => $e->getMessage()]);
-        }
-        exit;
-    }
-
-    public function ticketReject()
-    {
-        $this->requireLogin('counselor');
-        header('Content-Type: application/json');
-        
-        $data = json_decode(file_get_contents('php://input'), true) ?: $_POST;
-        $id = isset($data['id']) ? (int)$data['id'] : ($_GET['id'] ?? 0);
-        
-        if (!$id) {
-            http_response_code(400); echo json_encode(['error' => 'Missing id']); exit;
-        }
-        
-        require_once __DIR__ . '/../../models/counselor/Dashboard.php';
-        $model = new CounselorDashboard();
-        $current_staff_id = (int)$_SESSION['user']['u_id'];
-        
-        try {
-            $ticket = $model->getCounselorTicketById($id, $current_staff_id);
-            if ($ticket && $ticket['assigned_to'] == $current_staff_id) {
-                $ok = $model->rejectTicket($id, $current_staff_id);
-                if ($ok) {
-                    echo json_encode(['success' => true]);
-                } else {
-                    http_response_code(500); echo json_encode(['error' => 'Failed to reject']);
-                }
-            } else {
-                http_response_code(400); echo json_encode(['error' => 'Not assigned to you']);
-            }
-        } catch (Throwable $e) {
-            http_response_code(500); echo json_encode(['error' => $e->getMessage()]);
-        }
-        exit;
-    }
-
->>>>>>> a9932f02c5946f38d336d8baad5864b7a3b9e935
     public function chatMessages()
     {
         $this->requireLogin('counselor');
@@ -1065,17 +906,12 @@ public function exportReport()
 
         $ticketId = isset($_GET['ticket_id']) ? (int)$_GET['ticket_id'] : 0;
         if ($ticketId <= 0) {
-<<<<<<< HEAD
             echo json_encode(['error' => 'missing_ticket_id']);
-=======
-            echo json_encode(['error' => 'missing ticket_id']);
->>>>>>> a9932f02c5946f38d336d8baad5864b7a3b9e935
             return;
         }
 
         require_once __DIR__ . '/../../models/TicketChat.php';
         $chatModel = new TicketChat();
-<<<<<<< HEAD
 
         $messages = [];
         $chat = $chatModel->getChatByTicketId($ticketId);
@@ -1083,16 +919,6 @@ public function exportReport()
             $messages = $chatModel->getMessages((int)$chat['chat_id']);
             $counselorId = (int)($_SESSION['user']['u_id'] ?? 0);
             $chatModel->markMessagesAsRead((int)$chat['chat_id'], $counselorId);
-=======
-        
-        $chat = $chatModel->getChatByTicketId($ticketId);
-        $messages = [];
-        
-        if ($chat) {
-            $messages = $chatModel->getMessages($chat['chat_id']);
-            $staffId = (int)($_SESSION['user']['u_id'] ?? 0);
-            $chatModel->markMessagesAsRead($chat['chat_id'], $staffId);
->>>>>>> a9932f02c5946f38d336d8baad5864b7a3b9e935
         }
 
         echo json_encode(['messages' => $messages]);
@@ -1110,22 +936,15 @@ public function exportReport()
 
         $input = json_decode(file_get_contents('php://input'), true);
         $ticketId = isset($input['ticket_id']) ? (int)$input['ticket_id'] : 0;
-<<<<<<< HEAD
         $message = isset($input['message']) ? trim((string)$input['message']) : '';
 
         if ($ticketId <= 0 || $message === '') {
-=======
-        $message = isset($input['message']) ? trim($input['message']) : '';
-
-        if ($ticketId <= 0 || empty($message)) {
->>>>>>> a9932f02c5946f38d336d8baad5864b7a3b9e935
             echo json_encode(['error' => 'missing_data']);
             return;
         }
 
         require_once __DIR__ . '/../../models/TicketChat.php';
         $chatModel = new TicketChat();
-<<<<<<< HEAD
 
         $db = Database::getInstance();
         $counselorId = (int)($_SESSION['user']['u_id'] ?? 0);
@@ -1148,16 +967,10 @@ public function exportReport()
             return;
         }
 
-=======
-        
-        $staffId = (int)($_SESSION['user']['u_id'] ?? 0);
-        
->>>>>>> a9932f02c5946f38d336d8baad5864b7a3b9e935
         $chat = $chatModel->getChatByTicketId($ticketId);
         $chatId = 0;
 
         if (!$chat) {
-<<<<<<< HEAD
             $chatId = (int)$chatModel->createChat($ticketId, $studentId, $counselorId);
         } else {
             $chatId = (int)$chat['chat_id'];
@@ -1175,33 +988,6 @@ public function exportReport()
         }
 
         echo json_encode(['success' => true]);
-=======
-            require_once __DIR__ . '/../../models/staff/Ticket.php';
-            $ticketModel = new StaffTicket();
-            $ticket = $ticketModel->getTicketById($ticketId);
-            
-            if (!$ticket) {
-                echo json_encode(['error' => 'ticket_not_found']);
-                return;
-            }
-            
-            $studentId = $ticket['u_id'];
-            $chatId = $chatModel->createChat($ticketId, $studentId, $staffId);
-        } else {
-            $chatId = $chat['chat_id'];
-        }
-
-        if ($chatId) {
-            $success = $chatModel->sendMessage($chatId, $staffId, $message);
-            if ($success) {
-                echo json_encode(['success' => true]);
-            } else {
-                echo json_encode(['error' => 'failed_to_send']);
-            }
-        } else {
-            echo json_encode(['error' => 'failed_to_create_chat']);
-        }
->>>>>>> a9932f02c5946f38d336d8baad5864b7a3b9e935
     }
 
     // Forum posts data (JSON) for counselor
