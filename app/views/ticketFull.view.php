@@ -69,6 +69,12 @@
           <ul id="timelineList" class="timelineList"></ul>
         </div>
 
+        <!-- NEW: Feedback Section -->
+        <div class="card ticketFeedback" id="ticketFeedbackCard" style="display: none;">
+          <h3 class="sectionTitle">Feedback</h3>
+          <div id="feedbackContent"></div>
+        </div>
+
         <div class="card ticketActions">
           <h3 class="visuallyHidden">Actions</h3>
           <div class="btnHolder">

@@ -879,6 +879,18 @@ public function exportReport()
         if ($mr === 'requested') $meeting = 'requested';
         elseif ($mr === 'scheduled') $meeting = 'scheduled';
 
+        $feedback = null;
+        if ($resFb = $db->query("SELECT rating, feedback, created_at FROM feedbacks WHERE ticket_id = $idEsc LIMIT 1")) {
+            if ($rFb = $resFb->fetch_assoc()) {
+                $feedback = [
+                    'rating' => (int)$rFb['rating'],
+                    'feedback' => (string)$rFb['feedback'],
+                    'createdAt' => date('M d, Y \a\t g:i A', strtotime($rFb['created_at']))
+                ];
+            }
+            $resFb->free();
+        }
+
         echo json_encode([
             'id' => (int)$row['ticket_id'],
             'code' => 'TKT-' . (int)$row['ticket_id'],
@@ -895,6 +907,7 @@ public function exportReport()
             'isAssignedToMe' => (int)($row['assigned_to'] ?? 0) === (int)($_SESSION['user']['u_id'] ?? 0),
             'timeline' => $timeline,
             'attachments' => $attachments,
+            'feedback' => $feedback,
         ]);
         exit;
     }

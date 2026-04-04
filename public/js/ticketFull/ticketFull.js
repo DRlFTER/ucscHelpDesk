@@ -261,6 +261,112 @@ function renderTimeline() {
     .join("");
 }
 
+function renderFeedback() {
+  const fbCard = document.getElementById("ticketFeedbackCard");
+  const fbContent = document.getElementById("feedbackContent");
+  if (!fbCard || !fbContent) return;
+
+  const statusNorm = (ticketData.status || "").toLowerCase();
+  const isResolved = statusNorm === "resolved" || statusNorm === "closed" || statusNorm === "agent-closed" || statusNorm === "agent closed";
+
+  if (!isResolved) {
+    fbCard.style.display = "none";
+    return;
+  }
+
+  fbCard.style.display = "";
+
+  if (ticketData.feedback) {
+    // Show submitted feedback
+    let starsHtml = "";
+    for (let i = 1; i <= 5; i++) {
+      if (i <= ticketData.feedback.rating) {
+        starsHtml += '<span style="color:#fbbf24; font-size:1.2rem;">★</span>';
+      } else {
+        starsHtml += '<span style="color:#e5e7eb; font-size:1.2rem;">★</span>';
+      }
+    }
+    
+    fbContent.innerHTML = `
+      <div style="margin-bottom: 8px;">${starsHtml}</div>
+      <p style="font-size:0.95rem; color:#4b5563; margin-bottom: 8px;">${escapeHtml(ticketData.feedback.feedback)}</p>
+      <div style="font-size:0.8rem; color:#9ca3af;">Submitted on ${escapeHtml(ticketData.feedback.createdAt)}</div>
+    `;
+  } else if (ROLE === "student") {
+    // Show form for student
+    fbContent.innerHTML = `
+      <p style="font-size:0.95rem; color:#4b5563; margin-bottom:12px;">How was your experience? Please leave a feedback.</p>
+      <div id="starRatingSelector" style="margin-bottom:12px; cursor:pointer;">
+        <span data-value="1" class="star" style="font-size:1.5rem; color:#e5e7eb;">★</span>
+        <span data-value="2" class="star" style="font-size:1.5rem; color:#e5e7eb;">★</span>
+        <span data-value="3" class="star" style="font-size:1.5rem; color:#e5e7eb;">★</span>
+        <span data-value="4" class="star" style="font-size:1.5rem; color:#e5e7eb;">★</span>
+        <span data-value="5" class="star" style="font-size:1.5rem; color:#e5e7eb;">★</span>
+      </div>
+      <input type="hidden" id="feedbackRatingValue" value="0">
+      <textarea id="feedbackTextInput" placeholder="Write your feedback..." style="width:100%; border:1px solid #d1d5db; border-radius:6px; padding:8px; margin-bottom:12px; font-family:inherit; min-height:80px;"></textarea>
+      <button id="submitFeedbackBtn" class="btnPrimary" type="button" style="width:100%;"><span class="btnPrimaryText">Submit Feedback</span></button>
+    `;
+
+    const stars = document.querySelectorAll("#starRatingSelector .star");
+    const ratingValue = document.getElementById("feedbackRatingValue");
+    
+    stars.forEach(star => {
+      star.addEventListener("click", () => {
+        const val = parseInt(star.getAttribute("data-value"), 10);
+        ratingValue.value = val;
+        stars.forEach(s => {
+          if (parseInt(s.getAttribute("data-value"), 10) <= val) {
+            s.style.color = "#fbbf24";
+          } else {
+            s.style.color = "#e5e7eb";
+          }
+        });
+      });
+    });
+
+    document.getElementById("submitFeedbackBtn").addEventListener("click", async () => {
+      const rating = parseInt(ratingValue.value, 10);
+      const fbText = document.getElementById("feedbackTextInput").value.trim();
+
+      if (rating < 1) {
+        alert("Please select a star rating");
+        return;
+      }
+
+      const btn = document.getElementById("submitFeedbackBtn");
+      const origText = btn.querySelector('.btnPrimaryText').textContent;
+      btn.disabled = true;
+      btn.querySelector('.btnPrimaryText').textContent = 'Submitting...';
+
+      try {
+        const res = await fetch('/student/submitFeedback', {
+          method: 'POST',
+          headers: {'Content-Type':'application/json'},
+          body: JSON.stringify({
+            ticket_id: ticketData.id,
+            rating: rating,
+            feedback: fbText
+          })
+        });
+        const data = await res.json();
+        if (data.success) {
+          fbContent.innerHTML = `<p style="font-size:0.95rem; color:#10b981; font-weight:500; margin:0;">Thank you for your feedback!</p>`;
+        } else {
+          fbContent.innerHTML = `<p style="font-size:0.95rem; color:#ef4444; font-weight:500; margin:0;">Failed to submit feedback. Please try again later.</p>`;
+        }
+      } catch (e) {
+        console.error(e);
+        fbContent.innerHTML = `<p style="font-size:0.95rem; color:#ef4444; font-weight:500; margin:0;">Failed to submit feedback. Please try again later.</p>`;
+      }
+    });
+
+  } else {
+    // Staff/Admin/Counselor sees no feedback message if not submitted
+    fbContent.innerHTML = `<p style="font-size:0.95rem; color:#9ca3af; font-style:italic;">No feedback submitted yet.</p>`;
+  }
+}
+
 function toggleActionButtons() {
   const del = document.getElementById("deleteBtn");
   const sched = document.getElementById("scheduleBtn");
@@ -569,6 +675,7 @@ async function checkMeetingDueNotifications() {
             renderMessages();
             renderInfo();
             renderTimeline();
+            renderFeedback();
             toggleActionButtons();
           } else {
              saveToCache(id, fresh); // just update timestamp
@@ -611,6 +718,7 @@ async function checkMeetingDueNotifications() {
   renderAttachments();
   renderInfo();
   renderTimeline();
+  renderFeedback();
   toggleActionButtons();
   wireActions();
 
@@ -933,6 +1041,7 @@ function openResolveModal() {
         renderHeader();
         renderInfo();
         renderTimeline();
+        renderFeedback();
         toggleActionButtons();
 
         // Clear cache so it doesn't revert on manual refresh

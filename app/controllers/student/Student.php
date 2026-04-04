@@ -1750,7 +1750,81 @@ public function templates()
             'allowReply' => true,
         ];
 
+        $feedback = null;
+        if ($resFb = $db->query("SELECT rating, feedback, created_at FROM feedbacks WHERE ticket_id = $idEsc LIMIT 1")) {
+            if ($rFb = $resFb->fetch_assoc()) {
+                $feedback = [
+                    'rating' => (int)$rFb['rating'],
+                    'feedback' => (string)$rFb['feedback'],
+                    'createdAt' => date('M d, Y \a\t g:i A', strtotime($rFb['created_at']))
+                ];
+            }
+            $resFb->free();
+        }
+        $payload['feedback'] = $feedback;
+
         echo json_encode($payload);
+    }
+
+    public function submitFeedback()
+    {
+        $this->requireLogin('student');
+        header('Content-Type: application/json');
+
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+            http_response_code(405);
+            echo json_encode(['error' => 'Method not allowed']);
+            return;
+        }
+
+        $input = json_decode(file_get_contents('php://input'), true);
+        if (!$input) {
+            $input = json_decode(file_get_contents('php://input'), true);
+            if (!$input) $input = $_POST;
+        }
+
+        $studentId = (int)($_SESSION['user']['u_id'] ?? 0);
+        $ticketId = isset($input['ticket_id']) ? (int)$input['ticket_id'] : 0;
+        $rating = isset($input['rating']) ? (int)$input['rating'] : 0;
+        $feedbackText = isset($input['feedback']) ? (string)$input['feedback'] : '';
+
+        if ($ticketId <= 0 || $rating < 1 || $rating > 5) {
+            http_response_code(400);
+            echo json_encode(['error' => 'Invalid feedback data']);
+            return;
+        }
+
+        $db = Database::getInstance();
+        $ticketIdEsc = (int)$ticketId;
+        
+        $ownRow = null;
+        if ($res = $db->query("SELECT status FROM tickets WHERE ticket_id = $ticketIdEsc AND u_id = $studentId")) {
+            $ownRow = $res->fetch_assoc();
+            $res->free();
+        }
+        if (!$ownRow) {
+            http_response_code(404);
+            echo json_encode(['error' => 'Ticket not found or permission denied']);
+            return;
+        }
+
+        $statusRaw = strtolower((string)$ownRow['status']);
+        if (!in_array($statusRaw, ['resolved', 'closed', 'agent-closed'])) {
+            http_response_code(400);
+            echo json_encode(['error' => 'Ticket is not resolved yet']);
+            return;
+        }
+
+        $feedbackTextEsc = $db->real_escape_string($feedbackText);
+
+        $sql = "INSERT INTO feedbacks (ticket_id, student_id, rating, feedback) VALUES ($ticketIdEsc, $studentId, $rating, '$feedbackTextEsc')";
+        
+        if ($db->query($sql)) {
+            echo json_encode(['success' => true]);
+        } else {
+            http_response_code(500);
+            echo json_encode(['error' => 'Failed to save feedback']);
+        }
     }
 
     // Delete a ticket owned by the current student
