@@ -321,11 +321,11 @@ function toggleActionButtons() {
     // Hide everything by default
     if (del) del.style.display = "none";
     if (sched) sched.style.display = "none";
+    if (rejectBtn) rejectBtn.style.display = "none";
     
     if (assignBtn) assignBtn.style.display = isPending ? "" : "none";
     if (forwardBtn) forwardBtn.style.display = isAssignedToMe && !isResolved ? "" : "none";
     if (resolveBtn) resolveBtn.style.display = isAssignedToMe && !isResolved ? "" : "none";
-    if (rejectBtn) rejectBtn.style.display = isAssignedToMe && !isResolved ? "" : "none";
     
     // Also disable chat input if not assigned or resolved
     const sendBtn = document.getElementById("sendBtn");
@@ -407,6 +407,22 @@ function wireActions() {
   const resolveBtn = document.getElementById("resolveBtn");
   if (resolveBtn) {
     resolveBtn.addEventListener("click", () => openResolveModal());
+  }
+
+  const assignBtn = document.getElementById("assignBtn");
+  if (assignBtn) {
+    assignBtn.addEventListener("click", () => {
+      if (ROLE === "staff" || ROLE === "counselor") {
+        assignTicketSelf();
+      } else {
+        openAssignModal();
+      }
+    });
+  }
+
+  const forwardBtn = document.getElementById("forwardBtn");
+  if (forwardBtn) {
+    forwardBtn.addEventListener("click", () => openForwardModal());
   }
 
   const deleteBtn = document.getElementById("deleteBtn");
@@ -613,6 +629,194 @@ async function checkMeetingDueNotifications() {
   }
 })();
 
+function assignTicketSelf() {
+  const ticketId = getTicketIdFromUrl();
+  if (!ticketId) return;
+
+  fetch(`/${ROLE}/ticketAssign`, {
+    method: "POST",
+    headers: { "Content-Type": "application/x-www-form-urlencoded" },
+    body: `id=${encodeURIComponent(ticketId)}`,
+    credentials: "include",
+  })
+    .then((res) => {
+      if (res.url.includes("/login")) {
+        window.location.href = "/login";
+        return;
+      }
+      return res.json();
+    })
+    .then((data) => {
+      if (data && data.success) {
+        window.location.reload();
+      } else if (data && data.error) {
+        console.error("Assign failed:", data.error);
+      }
+    })
+    .catch((err) => {
+      console.error("ASSIGN ERROR:", err);
+    });
+}
+
+// Modal helpers
+function openAssignModal() {
+  if (ROLE !== "staff" && ROLE !== "counselor") return;
+  const overlay = document.getElementById("assignModal");
+  if (!overlay) return;
+
+  overlay.classList.add("open");
+  overlay.removeAttribute("aria-hidden");
+  document.body.classList.add("modal-open");
+
+  const cancelBtn = document.getElementById("cancelAssignBtn");
+  const confirmBtn = document.getElementById("confirmAssignBtn");
+  const backdropBtn = overlay.querySelector(".modalBackdropClose");
+
+  const close = () => {
+    overlay.classList.remove("open");
+    overlay.setAttribute("aria-hidden", "true");
+    document.body.classList.remove("modal-open");
+  };
+
+  confirmBtn.onclick = async (e) => {
+    e && e.preventDefault();
+    try {
+      const res = await fetch(`/${ROLE}/ticketAssign`, {
+        method: "POST",
+        headers: { "Content-Type": "application/x-www-form-urlencoded" },
+        body: `id=${encodeURIComponent(ticketData.id)}`,
+        credentials: "include",
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || "Assign failed");
+
+      // Success!
+      alert("Ticket assigned to you!");
+      window.location.reload();
+    } catch (err) {
+      console.error("ASSIGN ERROR:", err);
+      alert("Error: " + err.message);
+    }
+  };
+
+  cancelBtn.onclick = close;
+  if (backdropBtn) backdropBtn.onclick = close;
+}
+
+function openForwardModal() {
+  if (ROLE !== "staff") return;
+  const overlay = document.getElementById("forwardModal");
+  if (!overlay) return;
+
+  overlay.classList.add("open");
+  overlay.removeAttribute("aria-hidden");
+  document.body.classList.add("modal-open");
+
+  // Load staff members if not already loaded
+  const select = document.getElementById("forwardStaffSelect");
+  if (select.options.length <= 1) {
+    fetchStaffMembers(select);
+  }
+
+  const cancelBtn = document.getElementById("cancelForwardBtn");
+  const confirmBtn = document.getElementById("confirmForwardBtn");
+  const backdropBtn = overlay.querySelector(".modalBackdropClose");
+
+  const close = () => {
+    overlay.classList.remove("open");
+    overlay.setAttribute("aria-hidden", "true");
+    document.body.classList.remove("modal-open");
+  };
+
+  confirmBtn.onclick = async (e) => {
+    e && e.preventDefault();
+    const staffId = select.value;
+    if (!staffId) {
+      alert("Please select a staff member");
+      return;
+    }
+
+    try {
+      const res = await fetch(`/${ROLE}/ticketForward`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ id: ticketData.id, forward_to: parseInt(staffId) }),
+        credentials: "include",
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || "Forward failed");
+
+      window.location.reload();
+    } catch (err) {
+      console.error("FORWARD ERROR:", err);
+      // alert("Error: " + err.message);
+    }
+  };
+
+  cancelBtn.onclick = close;
+  if (backdropBtn) backdropBtn.onclick = close;
+}
+
+async function fetchStaffMembers(selectEl) {
+  try {
+    const res = await fetch(`/${ROLE}/staffList`);
+    const data = await res.json();
+    if (data.staff) {
+      data.staff.forEach(s => {
+        const opt = document.createElement("option");
+        opt.value = s.u_id;
+        opt.textContent = s.name;
+        selectEl.appendChild(opt);
+      });
+    }
+  } catch (err) {
+    console.error("Failed to load staff list", err);
+  }
+}
+
+function openRejectModal() {
+  if (ROLE !== "staff") return;
+  const overlay = document.getElementById("rejectModal");
+  if (!overlay) return;
+
+  overlay.classList.add("open");
+  overlay.removeAttribute("aria-hidden");
+  document.body.classList.add("modal-open");
+
+  const cancelBtn = document.getElementById("cancelRejectBtn");
+  const confirmBtn = document.getElementById("confirmRejectBtn");
+  const backdropBtn = overlay.querySelector(".modalBackdropClose");
+
+  const close = () => {
+    overlay.classList.remove("open");
+    overlay.setAttribute("aria-hidden", "true");
+    document.body.classList.remove("modal-open");
+  };
+
+  confirmBtn.onclick = async (e) => {
+    e && e.preventDefault();
+    try {
+      const res = await fetch(`/${ROLE}/ticketReject`, {
+        method: "POST",
+        headers: { "Content-Type": "application/x-www-form-urlencoded" },
+        body: `id=${encodeURIComponent(ticketData.id)}`,
+        credentials: "include",
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || "Reject failed");
+
+      alert("Ticket closed successfully!");
+      window.location.href = `/${ROLE}/tickets`;
+    } catch (err) {
+      console.error("REJECT ERROR:", err);
+      alert("Error: " + err.message);
+    }
+  };
+
+  cancelBtn.onclick = close;
+  if (backdropBtn) backdropBtn.onclick = close;
+}
+
 // Modal helpers (admin only)
 function openDeleteModal() {
   if (ROLE !== "admin") return; // safety
@@ -721,22 +925,28 @@ function openResolveModal() {
 
       if (!res.ok) throw new Error(data.error || "Mark as resolved failed");
 
-      ticketData.status = "Resolved";
+      if (ROLE === "staff") {
+        window.location.reload();
+      } else {
+        ticketData.status = "Resolved";
 
-      renderHeader();
-      renderInfo();
-      renderTimeline();
-      toggleActionButtons();
+        renderHeader();
+        renderInfo();
+        renderTimeline();
+        toggleActionButtons();
 
-      // Clear cache so it doesn't revert on manual refresh
-      try {
-        localStorage.removeItem(cacheKeyFor(ticketData.id));
-      } catch (e) {}
+        // Clear cache so it doesn't revert on manual refresh
+        try {
+          localStorage.removeItem(cacheKeyFor(ticketData.id));
+        } catch (e) {}
 
-      close();
+        close();
+      }
     } catch (err) {
       console.error("RESOLVE ERROR:", err);
-      alert("Error: " + err.message);
+      if (ROLE !== "staff") {
+        alert("Error: " + err.message);
+      }
     }
   };
 

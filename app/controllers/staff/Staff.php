@@ -240,8 +240,14 @@ public function __construct()
                         if ($ok && $ok2) {
                             $success = 'Ticket assigned to you!';
                             $ticket = $model->getTicketById($ticket_id);
-                            $set_level = $model->setTicketLevel($ticket_id, $current_staff_id, $model->getStaffLevel($current_staff_id));
-                            error_log('Ticket level set for ticket ID ' . $ticket_id . ' to staff ID ' . $current_staff_id."ticket level: ".$model->getStaffLevel($current_staff_id));
+                            
+                            $staff_level = $model->getStaffLevel($current_staff_id);
+                            if ($staff_level !== null) {
+                                $set_level = $model->setTicketLevel($ticket_id, $current_staff_id, (int)$staff_level);
+                                error_log('Ticket level set for ticket ID ' . $ticket_id . ' to staff ID ' . $current_staff_id . " ticket level: " . $staff_level);
+                            } else {
+                                error_log('Could not find staff level for staff ID ' . $current_staff_id);
+                            }
 
                         } else {
                             $errors[] = "Failed to assign ticket.";
@@ -2516,6 +2522,22 @@ public function staffReports()
                 echo json_encode(['error' => 'Mark as resolved failed or permission denied']);
             }
         } catch (Exception $e) {
+            http_response_code(500);
+            echo json_encode(['error' => $e->getMessage()]);
+        }
+        exit;
+    }
+
+    public function staffList()
+    {
+        $this->requireLogin('staff');
+        header('Content-Type: application/json');
+        require_once __DIR__ . '/../../models/staff/Ticket.php';
+        $model = new StaffTicket();
+        try {
+            $staff = $model->getStaffMembers();
+            echo json_encode(['staff' => $staff]);
+        } catch (Throwable $e) {
             http_response_code(500);
             echo json_encode(['error' => $e->getMessage()]);
         }

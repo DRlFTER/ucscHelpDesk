@@ -75,7 +75,6 @@
             <button id="resolveBtn" class="btnPrimary" type="button"><span class="btnPrimaryText">Mark as resolved</span></button>
           </div>
           <div class="btnHolder">
-            <button id="rejectBtn" class="btnSecondary" style="background-color: #ef4444; display:none;" type="button"><span class="btnSecondaryText" style="color: white;">Close Ticket</span></button>
             <!-- Delete is default for admin; hidden for counselor -->
             <button id="deleteBtn" class="btnSecondary" style="background-color: #ff7b7bff; display:none;" type="button"><span class="btnSecondaryText" style="color: white;">Delete ticket</span></button>
             <!-- Counselor schedule meeting button (shown when meeting requested) -->

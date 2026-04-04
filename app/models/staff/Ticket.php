@@ -90,8 +90,7 @@ class StaffTicket
         $stmt = $conn->prepare($sql);
         if (!$stmt) {
             $err = $conn->error;
-            $conn->close();
-            throw new Exception('Prepare failed: ' . $err);
+            return null;
         }
         $stmt->bind_param('i', $staff_id);
         $stmt->execute();
@@ -99,7 +98,7 @@ class StaffTicket
         $row = $result->fetch_assoc();
         $stmt->close();
         $conn->close();
-        return $row['level'] ?? null;
+        return isset($row['level']) ? (int)$row['level'] : null;
     }
     /**
      * Get all emails of staff members in a specific level.
