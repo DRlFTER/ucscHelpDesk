@@ -771,5 +771,25 @@ if (!isset($_SESSION[$session_key])) {
         $conn->close();
         return $staff;
     }
+    
+public function addfeedback(int $ticket_id,int $rating)
+     {
+        $conn = self::getConnection();
+
+        $sql = "INSERT INTO ticket_feedback(ticket_id,rating,fdate) VALUES (?,?,NOW())";
+
+    $stmt = $conn->prepare($sql);
+    if (!$stmt) {
+        throw new Exception('Prepare failed: ' . $conn->error);
+    }
+
+    $stmt->bind_param('ii', $ticket_id, $rating);
+    $result = $stmt->execute();
+    $stmt->close();
+    $conn->close();
+    return $result;
+
+    }
+
 }
 ?>

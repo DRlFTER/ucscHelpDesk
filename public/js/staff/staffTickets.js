@@ -19,7 +19,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
     container.innerHTML = list.map(ticket => {
       const status = ticket.status || "pending";
-      const displayStatus = typeof status === "string" ? status.charAt(0).toUpperCase() + status.slice(1) : "Pending";
+      const displayStatus = typeof status === "string" ? status.charAt(0).toUpperCase() + status.slice(1) : "Under review";
       const priority = ticket.priority || "medium";
       const statusClass = status.toLowerCase().replace(/\s+/g, '-');
       
@@ -36,6 +36,7 @@ document.addEventListener("DOMContentLoaded", () => {
             </span>
           </div>
         `;
+        console.log(`Ticket #${ticket.ticket_id} is overdue pending. , is_overdue_pending: ${ticket.is_overdue_pending}`);
       }
 
       // Existing: Level-based (for future escalation; optional)

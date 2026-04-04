@@ -31,4 +31,12 @@ window.TICKETS_CONFIG = {
   showLinks: <?php $r = strtolower($role ?? ($_SESSION['user']['role'] ?? 'guest')); echo ($r === 'admin' || $r === 'counselor' || $r === 'student' || $r === 'staff') ? 'true' : 'false'; ?>
 };
 </script>
+<!-- <script>
+
+  const scriptsrc = window.TICKETS_CONFIG.showLinks ? "/js/staff/staffTickets.js" : "/js/tickets/tickets.js";
+  const script = document.createElement('script');
+  script.src = scriptsrc;
+  document.body.appendChild(script);
+
+</script> -->
 <script src="/js/tickets/tickets.js"></script>
