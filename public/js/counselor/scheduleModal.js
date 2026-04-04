@@ -209,11 +209,17 @@ async function submitMeeting() {
             body: JSON.stringify(meetingData)
         });
 
-        const data = await response.json();
+        const raw = await response.text();
+        let data = null;
+        try {
+            data = raw ? JSON.parse(raw) : null;
+        } catch (parseErr) {
+            throw new Error(raw || 'Server returned an invalid response.');
+        }
         
         console.log('Response from server:', data);
         
-        if (data.success) {
+        if (response.ok && data && data.success) {
             // Success!
             showSuccessMessage('Meeting scheduled successfully!');
             closeScheduleModal();
@@ -224,14 +230,17 @@ async function submitMeeting() {
             }, 1000);
         } else {
             // Error from backend
-            alert('Error: ' + data.error);
+            const errorMessage = (data && (data.error || data.message))
+                ? (data.error || data.message)
+                : `Request failed (${response.status})`;
+            alert('Error: ' + errorMessage);
             submitBtn.disabled = false;
             submitBtn.textContent = originalText;
         }
         
     } catch (error) {
         console.error('Error scheduling meeting:', error);
-        alert('Failed to schedule meeting. Please check your connection and try again.');
+        alert('Failed to schedule meeting: ' + (error.message || 'Unknown error'));
         submitBtn.disabled = false;
         submitBtn.textContent = originalText;
     }

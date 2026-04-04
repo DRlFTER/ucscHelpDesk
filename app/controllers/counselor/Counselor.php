@@ -886,6 +886,97 @@ public function exportReport()
         exit;
     }
 
+    public function chatMessages()
+    {
+        $this->requireLogin('counselor');
+        header('Content-Type: application/json');
+
+        $ticketId = isset($_GET['ticket_id']) ? (int)$_GET['ticket_id'] : 0;
+        if ($ticketId <= 0) {
+            echo json_encode(['error' => 'missing_ticket_id']);
+            return;
+        }
+
+        require_once __DIR__ . '/../../models/TicketChat.php';
+        $chatModel = new TicketChat();
+
+        $messages = [];
+        $chat = $chatModel->getChatByTicketId($ticketId);
+        if ($chat) {
+            $messages = $chatModel->getMessages((int)$chat['chat_id']);
+            $counselorId = (int)($_SESSION['user']['u_id'] ?? 0);
+            $chatModel->markMessagesAsRead((int)$chat['chat_id'], $counselorId);
+        }
+
+        echo json_encode(['messages' => $messages]);
+    }
+
+    public function sendMessage()
+    {
+        $this->requireLogin('counselor');
+        header('Content-Type: application/json');
+
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+            echo json_encode(['error' => 'invalid_method']);
+            return;
+        }
+
+        $input = json_decode(file_get_contents('php://input'), true);
+        $ticketId = isset($input['ticket_id']) ? (int)$input['ticket_id'] : 0;
+        $message = isset($input['message']) ? trim((string)$input['message']) : '';
+
+        if ($ticketId <= 0 || $message === '') {
+            echo json_encode(['error' => 'missing_data']);
+            return;
+        }
+
+        require_once __DIR__ . '/../../models/TicketChat.php';
+        $chatModel = new TicketChat();
+
+        $db = Database::getInstance();
+        $counselorId = (int)($_SESSION['user']['u_id'] ?? 0);
+
+        $ticketQuery = "SELECT t.u_id FROM tickets t
+                        LEFT JOIN division d ON d.did = t.division
+                        WHERE t.ticket_id = $ticketId
+                          AND LOWER(COALESCE(d.name,'')) LIKE 'counsel%'
+                        LIMIT 1";
+        $ticketResult = $db->query($ticketQuery);
+        if (!$ticketResult || $ticketResult->num_rows === 0) {
+            echo json_encode(['error' => 'ticket_not_found']);
+            return;
+        }
+
+        $ticket = $ticketResult->fetch_assoc();
+        $studentId = !empty($ticket['u_id']) ? (int)$ticket['u_id'] : 0;
+        if ($studentId <= 0) {
+            echo json_encode(['error' => 'student_not_found']);
+            return;
+        }
+
+        $chat = $chatModel->getChatByTicketId($ticketId);
+        $chatId = 0;
+
+        if (!$chat) {
+            $chatId = (int)$chatModel->createChat($ticketId, $studentId, $counselorId);
+        } else {
+            $chatId = (int)$chat['chat_id'];
+        }
+
+        if ($chatId <= 0) {
+            echo json_encode(['error' => 'chat_creation_failed']);
+            return;
+        }
+
+        $ok = $chatModel->sendMessage($chatId, $counselorId, $message, 'text', null);
+        if (!$ok) {
+            echo json_encode(['error' => 'send_failed']);
+            return;
+        }
+
+        echo json_encode(['success' => true]);
+    }
+
     // Forum posts data (JSON) for counselor
     public function forumData()
     {

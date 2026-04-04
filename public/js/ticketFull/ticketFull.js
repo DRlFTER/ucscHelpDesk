@@ -91,9 +91,23 @@ function renderAttachments() {
 }
 
 // Date/time formatting helpers for chat
+function parseChatDate(dateString) {
+  if (!dateString) return null;
+
+  // MySQL DATETIME values have no timezone; treat them as UTC and convert for display.
+  const mysqlDateTime = /^\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}$/;
+  const isoString = mysqlDateTime.test(dateString)
+    ? dateString.replace(' ', 'T') + 'Z'
+    : dateString;
+
+  const date = new Date(isoString);
+  return Number.isNaN(date.getTime()) ? null : date;
+}
+
 function formatDate(dateString) {
-  if (!dateString) return '';
-  const date = new Date(dateString.replace(/-/g, '/'));
+  const date = parseChatDate(dateString);
+  if (!date) return '';
+
   const today = new Date();
   const yesterday = new Date(today);
   yesterday.setDate(yesterday.getDate() - 1);
@@ -108,9 +122,43 @@ function formatDate(dateString) {
 }
 
 function formatTime(dateString) {
-  if (!dateString) return '';
-  const date = new Date(dateString.replace(/-/g, '/'));
+  const date = parseChatDate(dateString);
+  if (!date) return '';
+
   return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: false });
+}
+
+function escapeHtml(value) {
+  return String(value ?? '')
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;');
+}
+
+function formatMessageText(rawText) {
+  const normalized = String(rawText || '')
+    .replace(/\\r\\n/g, '\n')
+    .replace(/\\n/g, '\n')
+    .replace(/\r\n/g, '\n')
+    .replace(/\n{2,}/g, '\n')
+    .replace(/\s+(Title:|Date:|Time:|Mode:|Venue:|Meeting Link:|Notes:|\(Meeting[^\)]*ID:\s*\d+\))/g, '\n$1')
+    .trim();
+
+  if (!normalized) return '';
+
+  return normalized
+    .split('\n')
+    .filter((line) => line.trim() !== '')
+    .map((line) => {
+      const escaped = escapeHtml(line.trim()).replace(
+        /(https?:\/\/[^\s<]+)/g,
+        '<a class="inlineMessageLink" href="$1" target="_blank" rel="noopener noreferrer">$1</a>'
+      );
+      return `<div class="messageLine">${escaped}</div>`;
+    })
+    .join('');
 }
 
 function renderMessages() {
@@ -143,7 +191,7 @@ function renderMessages() {
             ${headerTitle}
             <span class="time">${timeStr}</span>
           </div>
-          <div class="messageText">${msg.text}</div>
+          <div class="messageText">${formatMessageText(msg.text)}</div>
         </div>
       </div>`;
     })
@@ -370,6 +418,44 @@ async function fetchMessages(id) {
   }
 }
 
+function showMeetingDuePopup(notification) {
+  const title = notification.title || "Counseling Session";
+  const startTime = notification.start_time || "--:--";
+  const venue = notification.venue || "";
+  const link = notification.meeting_link || "";
+
+  let text = `Meeting time has started.\n\nTitle: ${title}\nStart Time: ${startTime}`;
+  if (venue) text += `\nVenue: ${venue}`;
+  if (link) text += `\nMeeting Link: ${link}`;
+
+  alert(text);
+}
+
+async function checkMeetingDueNotifications() {
+  try {
+    const res = await fetch('/meetingscheduler/processDueMeetingNotifications', {
+      credentials: 'include'
+    });
+    if (!res.ok) return;
+
+    const data = await res.json();
+    if (!data || !data.success || !Array.isArray(data.notifications)) return;
+
+    data.notifications.forEach((notification) => {
+      const meetingId = notification.meeting_id;
+      if (!meetingId) return;
+
+      const key = `meeting_popup_seen_${meetingId}`;
+      if (localStorage.getItem(key) === '1') return;
+
+      showMeetingDuePopup(notification);
+      localStorage.setItem(key, '1');
+    });
+  } catch (e) {
+    console.error('Error checking due meeting notifications:', e);
+  }
+}
+
 (async function init() {
   const id = getTicketIdFromUrl();
   if (id) {
@@ -447,6 +533,11 @@ async function fetchMessages(id) {
     fetchMessages(id);
     // Poll for new messages every 10 seconds
     setInterval(() => fetchMessages(id), 10000);
+
+    if (ROLE === 'student' || ROLE === 'counselor') {
+      checkMeetingDueNotifications();
+      setInterval(() => checkMeetingDueNotifications(), 30000);
+    }
   } else {
     renderMessages();
   }
