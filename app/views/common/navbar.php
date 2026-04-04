@@ -42,6 +42,7 @@
         ['href' => '/counselor/tickets', 'label' => 'Tickets', 'icon' => 'ticket'],
         ['href' => '/counselor/calender', 'label' => 'Calendar', 'icon' => 'calendar'],
         ['href' => '/counselor/Forum', 'label' => 'Forum', 'icon' => 'forum'],
+        ['href' => '/counselor/Reports', 'label' => 'Reports', 'icon' => 'reports'],
       ],
       'lecturer' => [
         ['href' => '/lecturer/dashboard', 'label' => 'Dashboard', 'icon' => 'dashboard'],

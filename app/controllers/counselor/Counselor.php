@@ -283,6 +283,327 @@ class Counselor extends Controller
         exit;
     }
 
+public function reports()
+{
+    $this->requireLogin('counselor');
+    
+    $headContent = '
+    <link rel="stylesheet" href="/css/counselor/counselorReports.css"/>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>';
+
+    $this->view('counselor/counselorReports', [
+        'title' => 'Reports',
+        'head' => $headContent,
+    ]);
+}
+
+public function getReportData()
+{
+    $this->requireLogin('counselor');
+    header('Content-Type: application/json');
+
+    try {
+        require_once __DIR__ . '/../../models/counselor/Reports.php';
+        $reportsModel = new CounselorReports();
+
+        $type = $_GET['type'] ?? 'overview';
+        $startDate = $_GET['start_date'] ?? date('Y-m-01 00:00:00');
+        $endDate = $_GET['end_date'] ?? date('Y-m-t 23:59:59');
+        $counselorId = isset($_GET['counselor_id']) ? (int)$_GET['counselor_id'] : null;
+
+        $data = null;
+
+        switch ($type) {
+            case 'overview':
+                $data = $reportsModel->getOverviewStats($startDate, $endDate, $counselorId);
+                break;
+            
+            case 'by_category':
+                $data = $reportsModel->getTicketsByCategory($startDate, $endDate);
+                break;
+            
+            case 'by_priority':
+                $data = $reportsModel->getTicketsByPriority($startDate, $endDate);
+                break;
+            
+            case 'daily_volume':
+                $data = $reportsModel->getDailyVolume($startDate, $endDate);
+                break;
+            
+            case 'performance':
+                $data = $reportsModel->getCounselorPerformance($startDate, $endDate);
+                break;
+            
+            case 'meetings':
+                $data = $reportsModel->getMeetingStats($startDate, $endDate);
+                break;
+            
+            case 'students':
+                $data = $reportsModel->getStudentEngagement($startDate, $endDate);
+                break;
+            
+            default:
+                http_response_code(400);
+                echo json_encode(['error' => 'Invalid report type']);
+                exit;
+        }
+
+        echo json_encode([
+            'success' => true,
+            'data' => $data
+        ]);
+
+    } catch (Exception $e) {
+        http_response_code(500);
+        echo json_encode([
+            'success' => false,
+            'error' => $e->getMessage()
+        ]);
+    }
+    exit;
+}
+
+
+/**
+ * ADD THIS METHOD TO: controllers/Counselor.php
+ * Add after the existing reports() method
+ */
+
+/**
+ * Generate filtered report with statistics
+ */
+public function generateReport()
+{
+    $this->requireLogin('counselor');
+    header('Content-Type: application/json');
+
+    try {
+        require_once __DIR__ . '/../../models/counselor/Reports.php';
+        $reportsModel = new CounselorReports();
+
+        // Get filter parameters
+        $reportType = $_GET['report_type'] ?? 'all';
+        $startDate = $_GET['start_date'] ?? date('Y-m-01 00:00:00');
+        $endDate = $_GET['end_date'] ?? date('Y-m-t 23:59:59');
+        $status = isset($_GET['status']) && $_GET['status'] !== 'all' ? $_GET['status'] : null;
+        $priority = isset($_GET['priority']) && $_GET['priority'] !== 'all' ? $_GET['priority'] : null;
+
+        // Get filtered tickets
+        $tickets = $reportsModel->getFilteredTickets($startDate, $endDate, $status, $priority);
+        
+        // Calculate statistics
+        $stats = $this->calculateReportStatistics($tickets);
+        
+        // Return response
+        echo json_encode([
+            'success' => true,
+            'data' => [
+                'total' => $stats['total'],
+                'pending' => $stats['pending'],
+                'assigned' => $stats['assigned'],
+                'resolved' => $stats['resolved'],
+                'closed' => $stats['closed'],
+                'tickets' => $tickets
+            ]
+        ]);
+
+    } catch (Exception $e) {
+        error_log('Generate Report Error: ' . $e->getMessage());
+        http_response_code(500);
+        echo json_encode([
+            'success' => false,
+            'error' => $e->getMessage()
+        ]);
+    }
+    exit;
+}
+
+/**
+ * Calculate statistics from ticket array
+ */
+private function calculateReportStatistics($tickets)
+{
+    $stats = [
+        'total' => count($tickets),
+        'pending' => 0,
+        'assigned' => 0,
+        'resolved' => 0,
+        'closed' => 0
+    ];
+
+    foreach ($tickets as $ticket) {
+        $status = strtolower($ticket['status'] ?? '');
+        
+        if ($status === 'pending') {
+            $stats['pending']++;
+        } elseif ($status === 'agent assigned') {
+            $stats['assigned']++;
+        } elseif ($status === 'resolved') {
+            $stats['resolved']++;
+        } elseif (in_array($status, ['closed', 'agent-closed'])) {
+            $stats['closed']++;
+        }
+    }
+
+    return $stats;
+}
+
+/**
+ * Export report as PDF
+ */
+public function exportReport()
+{
+    $this->requireLogin('counselor');
+
+    try {
+        require_once __DIR__ . '/../../models/counselor/Reports.php';
+        $reportsModel = new CounselorReports();
+
+                $startDateInput = trim((string)($_GET['start_date'] ?? date('Y-m-01')));
+                $endDateInput = trim((string)($_GET['end_date'] ?? date('Y-m-t')));
+                $status = isset($_GET['status']) && $_GET['status'] !== 'all' ? trim((string)$_GET['status']) : null;
+                $priority = isset($_GET['priority']) && $_GET['priority'] !== 'all' ? trim((string)$_GET['priority']) : null;
+
+                $startDate = preg_match('/^\d{4}-\d{2}-\d{2}$/', substr($startDateInput, 0, 10)) ? substr($startDateInput, 0, 10) : date('Y-m-01');
+                $endDate = preg_match('/^\d{4}-\d{2}-\d{2}$/', substr($endDateInput, 0, 10)) ? substr($endDateInput, 0, 10) : date('Y-m-t');
+
+                $tickets = $reportsModel->getFilteredTickets(
+                        $startDate . ' 00:00:00',
+                        $endDate . ' 23:59:59',
+                        $status,
+                        $priority
+                );
+                $stats = $this->calculateReportStatistics($tickets);
+
+                $payload = [
+                        'meta' => [
+                                'startDate' => $startDate,
+                                'endDate' => $endDate,
+                                'status' => $status ?: 'All',
+                                'priority' => $priority ?: 'All',
+                                'generatedAt' => date('Y-m-d H:i:s'),
+                        ],
+                        'stats' => $stats,
+                        'tickets' => $tickets,
+                ];
+
+                $payloadJson = json_encode(
+                        $payload,
+                        JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE | JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT
+                );
+
+                if ($payloadJson === false) {
+                        throw new Exception('Failed to prepare report data');
+                }
+
+                header('Content-Type: text/html; charset=UTF-8');
+
+                echo '<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Generating Counselor PDF Report</title>
+    <script src="https://cdn.jsdelivr.net/npm/jspdf@2.5.1/dist/jspdf.umd.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/jspdf-autotable@3.8.2/dist/jspdf.plugin.autotable.min.js"></script>
+</head>
+<body style="font-family: Arial, sans-serif; display:flex; align-items:center; justify-content:center; min-height:100vh; margin:0; color:#111827;">
+    <div style="text-align:center;">
+        <h2 style="margin-bottom:8px;">Preparing PDF report...</h2>
+        <p style="margin-top:0; color:#6b7280;">Your download will start automatically.</p>
+    </div>
+
+    <script>
+        const payload = ' . $payloadJson . ';
+
+        function createPdfReport() {
+            if (!window.jspdf || !window.jspdf.jsPDF) {
+                throw new Error("PDF library failed to load");
+            }
+
+            const { jsPDF } = window.jspdf;
+            const doc = new jsPDF({ orientation: "landscape", unit: "pt", format: "a4" });
+
+            doc.setFontSize(16);
+            doc.text("Counselor Report", 40, 40);
+
+            doc.setFontSize(10);
+            doc.text(`Generated: ${payload.meta.generatedAt || "N/A"}`, 40, 58);
+            doc.text(`Date Range: ${payload.meta.startDate || "N/A"} to ${payload.meta.endDate || "N/A"}`, 40, 74);
+            doc.text(`Status: ${payload.meta.status || "All"}`, 40, 88);
+            doc.text(`Priority: ${payload.meta.priority || "All"}`, 200, 88);
+
+            doc.setFontSize(11);
+            doc.text(`Total: ${payload.stats.total || 0}`, 40, 108);
+            doc.text(`Pending: ${payload.stats.pending || 0}`, 130, 108);
+            doc.text(`Assigned: ${payload.stats.assigned || 0}`, 230, 108);
+            doc.text(`Resolved: ${payload.stats.resolved || 0}`, 340, 108);
+            doc.text(`Closed: ${payload.stats.closed || 0}`, 450, 108);
+
+            const rows = (payload.tickets || []).map(ticket => [
+                ticket.ticket_id || "",
+                ticket.title || "",
+                ticket.status || "",
+                ticket.priority || "",
+                ticket.student_name || "N/A",
+                ticket.division || "Counselling",
+                ticket.created_at ? new Date(ticket.created_at).toLocaleDateString("en-US") : "N/A"
+            ]);
+
+            if (typeof doc.autoTable !== "function") {
+                throw new Error("PDF table plugin failed to load");
+            }
+
+            doc.autoTable({
+                startY: 124,
+                head: [["ID", "Title", "Status", "Priority", "Student", "Division", "Date"]],
+                body: rows,
+                styles: { fontSize: 9, cellPadding: 5, overflow: "linebreak" },
+                headStyles: { fillColor: [76, 29, 149], textColor: [255, 255, 255], fontStyle: "bold" },
+                columnStyles: {
+                    0: { cellWidth: 48 },
+                    1: { cellWidth: 260 },
+                    2: { cellWidth: 90 },
+                    3: { cellWidth: 70 },
+                    4: { cellWidth: 120 },
+                    5: { cellWidth: 90 },
+                    6: { cellWidth: 70 }
+                },
+                margin: { left: 30, right: 30 }
+            });
+
+            const safeStart = String(payload.meta.startDate || "start").replace(/[^0-9-]/g, "");
+            const safeEnd = String(payload.meta.endDate || "end").replace(/[^0-9-]/g, "");
+            doc.save(`counselor_report_${safeStart}_to_${safeEnd}.pdf`);
+
+            setTimeout(() => {
+                window.location.href = "/counselor/reports";
+            }, 600);
+        }
+
+        try {
+            createPdfReport();
+        } catch (error) {
+            document.body.innerHTML = `<div style="font-family: Arial, sans-serif; padding: 24px; color: #b91c1c;">
+                <h3>Failed to generate PDF</h3>
+                <p>${error.message}</p>
+                <p><a href="/counselor/reports">Back to Reports</a></p>
+            </div>`;
+        }
+    </script>
+</body>
+</html>';
+
+        exit;
+
+    } catch (Exception $e) {
+        http_response_code(500);
+                header('Content-Type: text/plain; charset=UTF-8');
+                echo 'Failed to generate report PDF: ' . $e->getMessage();
+        exit;
+    }
+}
+
     public function ticketsData()
     {
         $this->requireLogin('counselor');
@@ -578,162 +899,6 @@ class Counselor extends Controller
         exit;
     }
 
-    public function ticketAssign()
-    {
-        $this->requireLogin('counselor');
-        header('Content-Type: application/json');
-        $id = isset($_POST['id']) ? (int)$_POST['id'] : 0;
-        if (!$id) {
-            http_response_code(400); echo json_encode(['error' => 'Missing id']); exit;
-        }
-        
-        require_once __DIR__ . '/../../models/counselor/Dashboard.php';
-        $model = new CounselorDashboard();
-        $current_staff_id = (int)$_SESSION['user']['u_id'];
-        
-        try {
-            $ticket = $model->getCounselorTicketById($id, $current_staff_id);
-            if ($ticket && strtolower($ticket['status']) === 'pending') {
-                $ok = $model->assignToCounselor($id, $current_staff_id);
-                $ok2 = $model->setTicketupdateTimeline($id);
-                if ($ok && $ok2) {
-                    $model->setTicketLevel($id, 1); // Counselors act as level 1
-                    echo json_encode(['success' => true]);
-                } else {
-                    http_response_code(500); echo json_encode(['error' => 'Failed to assign']);
-                }
-            } else {
-                http_response_code(400); echo json_encode(['error' => 'Ticket not pending']);
-            }
-        } catch (Throwable $e) {
-            http_response_code(500); echo json_encode(['error' => $e->getMessage()]);
-        }
-        exit;
-    }
-
-    public function ticketForward()
-    {
-        $this->requireLogin('counselor');
-        header('Content-Type: application/json');
-        
-        $data = json_decode(file_get_contents('php://input'), true) ?: $_POST;
-        $id = isset($data['id']) ? (int)$data['id'] : ($_GET['id'] ?? 0);
-        $forward_to = isset($data['forward_to']) ? (int)$data['forward_to'] : 0;
-        
-        if (!$id || !$forward_to) {
-            http_response_code(400); echo json_encode(['error' => 'Missing id or target counselor']); exit;
-        }
-        
-        require_once __DIR__ . '/../../models/counselor/Dashboard.php';
-        $model = new CounselorDashboard();
-        $current_staff_id = (int)$_SESSION['user']['u_id'];
-        
-        try {
-            $ticket = $model->getCounselorTicketById($id, $current_staff_id);
-            if ($ticket && $ticket['assigned_to'] == $current_staff_id) {
-                $ok = $model->forwardTicket($id, $current_staff_id, $forward_to);
-                if ($ok) {
-                    $model->setTicketLevel($id, 1);
-                    echo json_encode(['success' => true]);
-                } else {
-                    http_response_code(500); echo json_encode(['error' => 'Failed to forward']);
-                }
-            } else {
-                http_response_code(400); echo json_encode(['error' => 'Not assigned to you']);
-            }
-        } catch (Throwable $e) {
-            http_response_code(500); echo json_encode(['error' => $e->getMessage()]);
-        }
-        exit;
-    }
-
-    public function staffMembersList()
-    {
-        $this->requireLogin('counselor');
-        header('Content-Type: application/json');
-        
-        $db = Database::getInstance();
-        $sql = "SELECT u_id, name FROM users WHERE role = 'counselor' ORDER BY name";
-        $members = [];
-        if ($res = $db->query($sql)) {
-            while ($row = $res->fetch_assoc()) {
-                $members[] = $row;
-            }
-            $res->free();
-        }
-        echo json_encode(['success' => true, 'data' => $members]);
-        exit;
-    }
-
-    public function ticketResolve()
-    {
-        $this->requireLogin('counselor');
-        header('Content-Type: application/json');
-        
-        $data = json_decode(file_get_contents('php://input'), true) ?: $_POST;
-        $id = isset($data['id']) ? (int)$data['id'] : ($_GET['id'] ?? 0);
-        
-        if (!$id) {
-            http_response_code(400); echo json_encode(['error' => 'Missing id']); exit;
-        }
-        
-        require_once __DIR__ . '/../../models/counselor/Dashboard.php';
-        $model = new CounselorDashboard();
-        $current_staff_id = (int)$_SESSION['user']['u_id'];
-        
-        try {
-            $ticket = $model->getCounselorTicketById($id, $current_staff_id);
-            if ($ticket && $ticket['assigned_to'] == $current_staff_id) {
-                $ok = $model->resolveTicket($id, $current_staff_id);
-                $ok2 = $model->resolveTicketTimeLine($id);
-                if ($ok && $ok2) {
-                    echo json_encode(['success' => true]);
-                } else {
-                    http_response_code(500); echo json_encode(['error' => 'Failed to resolve']);
-                }
-            } else {
-                http_response_code(400); echo json_encode(['error' => 'Not assigned to you']);
-            }
-        } catch (Throwable $e) {
-            http_response_code(500); echo json_encode(['error' => $e->getMessage()]);
-        }
-        exit;
-    }
-
-    public function ticketReject()
-    {
-        $this->requireLogin('counselor');
-        header('Content-Type: application/json');
-        
-        $data = json_decode(file_get_contents('php://input'), true) ?: $_POST;
-        $id = isset($data['id']) ? (int)$data['id'] : ($_GET['id'] ?? 0);
-        
-        if (!$id) {
-            http_response_code(400); echo json_encode(['error' => 'Missing id']); exit;
-        }
-        
-        require_once __DIR__ . '/../../models/counselor/Dashboard.php';
-        $model = new CounselorDashboard();
-        $current_staff_id = (int)$_SESSION['user']['u_id'];
-        
-        try {
-            $ticket = $model->getCounselorTicketById($id, $current_staff_id);
-            if ($ticket && $ticket['assigned_to'] == $current_staff_id) {
-                $ok = $model->rejectTicket($id, $current_staff_id);
-                if ($ok) {
-                    echo json_encode(['success' => true]);
-                } else {
-                    http_response_code(500); echo json_encode(['error' => 'Failed to reject']);
-                }
-            } else {
-                http_response_code(400); echo json_encode(['error' => 'Not assigned to you']);
-            }
-        } catch (Throwable $e) {
-            http_response_code(500); echo json_encode(['error' => $e->getMessage()]);
-        }
-        exit;
-    }
-
     public function chatMessages()
     {
         $this->requireLogin('counselor');
@@ -741,20 +906,19 @@ class Counselor extends Controller
 
         $ticketId = isset($_GET['ticket_id']) ? (int)$_GET['ticket_id'] : 0;
         if ($ticketId <= 0) {
-            echo json_encode(['error' => 'missing ticket_id']);
+            echo json_encode(['error' => 'missing_ticket_id']);
             return;
         }
 
         require_once __DIR__ . '/../../models/TicketChat.php';
         $chatModel = new TicketChat();
-        
-        $chat = $chatModel->getChatByTicketId($ticketId);
+
         $messages = [];
-        
+        $chat = $chatModel->getChatByTicketId($ticketId);
         if ($chat) {
-            $messages = $chatModel->getMessages($chat['chat_id']);
-            $staffId = (int)($_SESSION['user']['u_id'] ?? 0);
-            $chatModel->markMessagesAsRead($chat['chat_id'], $staffId);
+            $messages = $chatModel->getMessages((int)$chat['chat_id']);
+            $counselorId = (int)($_SESSION['user']['u_id'] ?? 0);
+            $chatModel->markMessagesAsRead((int)$chat['chat_id'], $counselorId);
         }
 
         echo json_encode(['messages' => $messages]);
@@ -772,47 +936,58 @@ class Counselor extends Controller
 
         $input = json_decode(file_get_contents('php://input'), true);
         $ticketId = isset($input['ticket_id']) ? (int)$input['ticket_id'] : 0;
-        $message = isset($input['message']) ? trim($input['message']) : '';
+        $message = isset($input['message']) ? trim((string)$input['message']) : '';
 
-        if ($ticketId <= 0 || empty($message)) {
+        if ($ticketId <= 0 || $message === '') {
             echo json_encode(['error' => 'missing_data']);
             return;
         }
 
         require_once __DIR__ . '/../../models/TicketChat.php';
         $chatModel = new TicketChat();
-        
-        $staffId = (int)($_SESSION['user']['u_id'] ?? 0);
-        
+
+        $db = Database::getInstance();
+        $counselorId = (int)($_SESSION['user']['u_id'] ?? 0);
+
+        $ticketQuery = "SELECT t.u_id FROM tickets t
+                        LEFT JOIN division d ON d.did = t.division
+                        WHERE t.ticket_id = $ticketId
+                          AND LOWER(COALESCE(d.name,'')) LIKE 'counsel%'
+                        LIMIT 1";
+        $ticketResult = $db->query($ticketQuery);
+        if (!$ticketResult || $ticketResult->num_rows === 0) {
+            echo json_encode(['error' => 'ticket_not_found']);
+            return;
+        }
+
+        $ticket = $ticketResult->fetch_assoc();
+        $studentId = !empty($ticket['u_id']) ? (int)$ticket['u_id'] : 0;
+        if ($studentId <= 0) {
+            echo json_encode(['error' => 'student_not_found']);
+            return;
+        }
+
         $chat = $chatModel->getChatByTicketId($ticketId);
         $chatId = 0;
 
         if (!$chat) {
-            require_once __DIR__ . '/../../models/staff/Ticket.php';
-            $ticketModel = new StaffTicket();
-            $ticket = $ticketModel->getTicketById($ticketId);
-            
-            if (!$ticket) {
-                echo json_encode(['error' => 'ticket_not_found']);
-                return;
-            }
-            
-            $studentId = $ticket['u_id'];
-            $chatId = $chatModel->createChat($ticketId, $studentId, $staffId);
+            $chatId = (int)$chatModel->createChat($ticketId, $studentId, $counselorId);
         } else {
-            $chatId = $chat['chat_id'];
+            $chatId = (int)$chat['chat_id'];
         }
 
-        if ($chatId) {
-            $success = $chatModel->sendMessage($chatId, $staffId, $message);
-            if ($success) {
-                echo json_encode(['success' => true]);
-            } else {
-                echo json_encode(['error' => 'failed_to_send']);
-            }
-        } else {
-            echo json_encode(['error' => 'failed_to_create_chat']);
+        if ($chatId <= 0) {
+            echo json_encode(['error' => 'chat_creation_failed']);
+            return;
         }
+
+        $ok = $chatModel->sendMessage($chatId, $counselorId, $message, 'text', null);
+        if (!$ok) {
+            echo json_encode(['error' => 'send_failed']);
+            return;
+        }
+
+        echo json_encode(['success' => true]);
     }
 
     // Forum posts data (JSON) for counselor
