@@ -201,6 +201,36 @@ class CounselorDashboard
         return [];
     }
 
+    public function getAllCounselingTickets(int $limit = 6): array
+    {
+        $userId = (int)($_SESSION['user']['u_id'] ?? 0);
+        $dids = $this->getCounselorDivisionIds($userId);
+        if (empty($dids)) return [];
+
+        $placeholders = implode(',', array_fill(0, count($dids), '?'));
+        $types = str_repeat('i', count($dids)) . 'i';
+
+        $sql = "SELECT t.ticket_id, t.created_at, t.title, u.name AS student_name, t.status, t.priority, t.assigned_to,
+                       CASE WHEN COALESCE(t.assigned_to, 0) = 0 THEN 0 ELSE 1 END AS is_assigned
+                FROM tickets t
+                LEFT JOIN users u ON u.u_id = t.u_id
+                WHERE t.division IN ($placeholders) AND " . $this->statusOpenClause() . "
+                ORDER BY t.created_at DESC
+                LIMIT ?";
+
+        if ($stmt = $this->db->prepare($sql)) {
+            $params = array_merge($dids, [$limit]);
+            $stmt->bind_param($types, ...$params);
+            $stmt->execute();
+            $res = $stmt->get_result();
+            $rows = $res->fetch_all(MYSQLI_ASSOC);
+            $stmt->close();
+            return $rows;
+        }
+
+        return [];
+    }
+
     public function getMeetingTickets(int $limit = 6): array
     {
         $userId = (int)($_SESSION['user']['u_id'] ?? 0);
@@ -247,5 +277,125 @@ class CounselorDashboard
         if ($diff < 3600) return (int)floor($diff / 60) . 'm ago';
         if ($diff < 86400) return (int)floor($diff / 3600) . 'h ago';
         return (int)floor($diff / 86400) . 'd ago';
+    }
+
+    public function getCounselorTicketById(int $ticket_id, int $counselor_id): ?array
+    {
+        $dids = $this->getCounselorDivisionIds($counselor_id);
+        if (empty($dids)) return null;
+
+        $placeholders = implode(',', array_fill(0, count($dids), '?'));
+        $types = 'i' . str_repeat('i', count($dids));
+        
+        $sql = "SELECT * FROM tickets WHERE ticket_id = ? AND division IN ($placeholders) LIMIT 1";
+        if ($stmt = $this->db->prepare($sql)) {
+            $params = array_merge([$ticket_id], $dids);
+            $stmt->bind_param($types, ...$params);
+            $stmt->execute();
+            $res = $stmt->get_result();
+            $row = $res->fetch_assoc();
+            $stmt->close();
+            return $row ?: null;
+        }
+        return null;
+    }
+
+    public function assignToCounselor(int $ticket_id, int $counselor_id): bool
+    {
+        $dids = $this->getCounselorDivisionIds($counselor_id);
+        if (empty($dids)) return false;
+
+        $placeholders = implode(',', array_fill(0, count($dids), '?'));
+        $types = 'ii' . str_repeat('i', count($dids));
+
+        $sql = "UPDATE tickets SET status = 'agent assigned', assigned_to = ?
+                WHERE ticket_id = ? AND status = 'pending' AND division IN ($placeholders)";
+        if ($stmt = $this->db->prepare($sql)) {
+            $params = array_merge([$counselor_id, $ticket_id], $dids);
+            $stmt->bind_param($types, ...$params);
+            $ok = $stmt->execute() && $stmt->affected_rows > 0;
+            $stmt->close();
+            return $ok;
+        }
+        return false;
+    }
+
+    public function setTicketupdateTimeline(int $ticket_id): bool
+    {
+        $sql = "UPDATE ticket_timeline SET assigned = CURRENT_TIMESTAMP WHERE ticket_id = ? ";
+        if ($stmt = $this->db->prepare($sql)) {
+            $stmt->bind_param('i', $ticket_id);
+            $ok = $stmt->execute() && $stmt->affected_rows > 0;
+            $stmt->close();
+            return $ok;
+        }
+        return false;
+    }
+
+    public function setTicketLevel(int $ticket_id, int $level): bool
+    {
+        $column = "level_$level";
+        $sql = "UPDATE ticket_timeline SET $column = CURRENT_TIMESTAMP WHERE ticket_id = ?";
+        if ($stmt = $this->db->prepare($sql)) {
+            $stmt->bind_param('i', $ticket_id);
+            $ok = $stmt->execute() && $stmt->affected_rows > 0;
+            $stmt->close();
+            
+            if ($ok) {
+                require_once __DIR__ . '/../staff/Ticket.php';
+                $tmp = new StaffTicket();
+                $tmp->sendEscalationEmail($ticket_id, $level);
+            }
+            return $ok;
+        }
+        return false;
+    }
+
+    public function forwardTicket(int $ticket_id, int $current_counselor, int $new_counselor): bool
+    {
+        $sql = "UPDATE tickets SET assigned_to = ? WHERE ticket_id = ? AND assigned_to = ?";
+        if ($stmt = $this->db->prepare($sql)) {
+            $stmt->bind_param('iii', $new_counselor, $ticket_id, $current_counselor);
+            $ok = $stmt->execute() && $stmt->affected_rows > 0;
+            $stmt->close();
+            return $ok;
+        }
+        return false;
+    }
+
+    public function resolveTicket(int $ticket_id, int $counselor_id): bool
+    {
+        $sql = "UPDATE tickets SET status = 'resolved' WHERE ticket_id = ? AND assigned_to = ?";
+        if ($stmt = $this->db->prepare($sql)) {
+            $stmt->bind_param('ii', $ticket_id, $counselor_id);
+            $ok = $stmt->execute() && $stmt->affected_rows > 0;
+            $stmt->close();
+            return $ok;
+        }
+        return false;
+    }
+
+    public function resolveTicketTimeLine(int $ticket_id): bool
+    {
+        $sql = "UPDATE ticket_timeline SET resolved = CURRENT_TIMESTAMP WHERE ticket_id = ? ";
+        if ($stmt = $this->db->prepare($sql)) {
+            $stmt->bind_param('i', $ticket_id);
+            $ok = $stmt->execute() && $stmt->affected_rows > 0;
+            $stmt->close();
+            return $ok;
+        }
+        return false;
+    }
+
+    public function rejectTicket(int $ticket_id, int $counselor_id): bool
+    {
+        $sql = "UPDATE tickets SET status = 'agent-closed' WHERE ticket_id = ? AND assigned_to = ?";  
+        if ($stmt = $this->db->prepare($sql)) {
+            $stmt->bind_param('ii', $ticket_id, $counselor_id);
+            $ok = $stmt->execute() && $stmt->affected_rows > 0;
+            $stmt->close();
+            return $ok;
+        }
+        return false;
     }
 }

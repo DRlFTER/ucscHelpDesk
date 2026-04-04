@@ -1088,6 +1088,18 @@ class Admin extends Controller
 
         $statusUi = strtolower((string)($row['status'] ?? 'open')) === 'answered' ? 'Answered' : 'Open';
 
+        // attachments from attachments table
+        $attachments = [];
+        if ($res = $db->query("SELECT file_name, file_path FROM attachments WHERE entity_type = 'forum' AND entity_id = $idEsc")) {
+            while ($r = $res->fetch_assoc()) {
+                $attachments[] = [
+                    'name' => (string)($r['file_name'] ?? ''),
+                    'url' => '/' . ltrim((string)($r['file_path'] ?? ''), '/'),
+                ];
+            }
+            $res->free();
+        }
+
         $payload = [
             'id' => (int)($row['q_id'] ?? 0),
             'code' => 'FRM-' . (int)($row['q_id'] ?? 0),
@@ -1100,7 +1112,7 @@ class Admin extends Controller
             'createdAgo' => $createdAgo,
             'is_Public' => (int)($row['is_Public'] ?? 0),
             'student' => [ 'id' => (int)($row['u_id'] ?? 0), 'name' => (string)($row['student_name'] ?? 'Student') ],
-            'attachments' => [],
+            'attachments' => $attachments,
             'commentsCount' => (int)($db->query("SELECT COUNT(*) as c FROM forum_comments WHERE post_id = " . (int)($row['q_id'] ?? 0))->fetch_assoc()['c'] ?? 0),
             'votes' => (int)($row['vote_count'] ?? 0),
             'voted' => (int)($row['my_vote'] ?? 0),

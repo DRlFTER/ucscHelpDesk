@@ -27,7 +27,7 @@
       ],
       'staff' => [
         ['href' => '/staff/staffDashboard', 'label' => 'Dashboard', 'icon' => 'dashboard'],
-        ['href' => '/staff/staffTickets', 'label' => 'Tickets', 'icon' => 'ticket'],
+        ['href' => '/staff/tickets', 'label' => 'Tickets', 'icon' => 'ticket'],
         ['href' => '/staff/staffFAQ', 'label' => 'FAQs', 'icon' => 'faq'],
         ['href' => '/staff/calender', 'label' => 'Calendar', 'icon' => 'calendar'],
         ['href' => '/staff/staffForum', 'label' => 'Forum', 'icon' => 'forum'],

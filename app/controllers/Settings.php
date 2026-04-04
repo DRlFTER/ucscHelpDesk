@@ -309,4 +309,76 @@ class Settings extends Controller
             echo json_encode(['error' => 'An error occurred: ' . $e->getMessage()]);
         }
     }
+    /**
+     * Update user password (AJAX endpoint)
+     */
+    public function updatePassword()
+    {
+        header('Content-Type: application/json');
+        
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+            http_response_code(405);
+            echo json_encode(['error' => 'Method not allowed']);
+            return;
+        }
+
+        if (empty($_SESSION['user'])) {
+            http_response_code(401);
+            echo json_encode(['error' => 'Not authenticated']);
+            return;
+        }
+
+        $input = json_decode(file_get_contents('php://input'), true);
+        if (!$input) {
+            http_response_code(400);
+            echo json_encode(['error' => 'Invalid JSON']);
+            return;
+        }
+
+        $currentPassword = $input['currentPassword'] ?? '';
+        $newPassword = $input['newPassword'] ?? '';
+        
+        if (empty($currentPassword) || empty($newPassword)) {
+            http_response_code(400);
+            echo json_encode(['error' => 'Current and new password are required']);
+            return;
+        }
+        
+        if (strlen($newPassword) < 8) {
+            http_response_code(400);
+            echo json_encode(['error' => 'New password must be at least 8 characters long']);
+            return;
+        }
+
+        $userId = (int)$_SESSION['user']['u_id'];
+        $email = $_SESSION['user']['email'] ?? '';
+
+        try {
+            $userModel = $this->model('User');
+            // Re-fetch user to check current password
+            $userRecord = $userModel->findByEmail($email);
+            
+            if (!$userRecord || !password_verify($currentPassword, $userRecord['password_hash'])) {
+                http_response_code(400);
+                echo json_encode(['error' => 'Incorrect current password']);
+                return;
+            }
+            
+            $newHash = password_hash($newPassword, PASSWORD_BCRYPT);
+            $result = $userModel->updatePassword($userId, $newHash);
+
+            if ($result) {
+                echo json_encode([
+                    'success' => true,
+                    'message' => 'Password updated successfully'
+                ]);
+            } else {
+                http_response_code(500);
+                echo json_encode(['error' => 'Failed to update password']);
+            }
+        } catch (Exception $e) {
+            http_response_code(500);
+            echo json_encode(['error' => 'An error occurred: ' . $e->getMessage()]);
+        }
+    }
 }

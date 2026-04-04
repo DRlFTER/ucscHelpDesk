@@ -40,12 +40,17 @@ public function __construct()
         error_log('Failed to load tickets for dashboard: ' . $e->getMessage());
     }
 
+    $uId = (int)($_SESSION['user']['u_id'] ?? 0);
+
     $pending = array_filter($tickets, fn($t) => $t['status'] === 'pending');
     $assigned = array_filter($tickets, fn($t) => $t['status'] === 'agent assigned');
     $resolved = array_filter($tickets, fn($t) => in_array($t['status'], ['agent-closed', 'closed', 'resolved'])); // Fixed: Added 'resolved'
     $total = count($tickets);
 
-    $recentTickets = array_slice($tickets, 0, 8);
+    // 5 recent tickets assigned to THIS staff
+    $myTickets = array_filter($tickets, fn($t) => ((int)($t['assigned_to'] ?? 0) === $uId) && !in_array(strtolower($t['status']), ['closed', 'agent-closed', 'resolved']));
+    // sort by created_at DESC if needed, but tickets are usually sorted by ID DESC already
+    $myRecentTickets = array_slice($myTickets, 0, 5);
 
     $announcements = [];
     try {
@@ -55,7 +60,17 @@ public function __construct()
         error_log('Failed to load announcements for dashboard: ' . $e->getMessage());
     }
 
-    $headContent = '<link rel="stylesheet" href="/css/staff/staffTickets.css"/>';
+    $upcomingEvents = [];
+    try {
+        require_once __DIR__ . '/../../models/CalendarEvent.php';
+        $calModel = new CalendarEvent();
+        $upcomingEvents = $calModel->getUpcomingEvents($uId, 3);
+    } catch (Throwable $e) {
+        $upcomingEvents = [];
+    }
+
+    $headContent = '<link rel="stylesheet" href="/css/student/studentDashboard.css"/>
+<link rel="stylesheet" href="/css/staff/staffDashboard.css"/>';
     $this->view('staff/staffDashboard', [
         'title' => 'Staff Dashboard',
         'head' => $headContent,
@@ -65,8 +80,9 @@ public function __construct()
             'resolved' => count($resolved), 
             'total' => $total
         ],
-        'recentTickets' => $recentTickets,
-        'announcements' => $announcements,
+        'recentTickets' => $myRecentTickets,
+        'recentAnnouncements' => $announcements,
+        'upcomingEvents' => $upcomingEvents,
     ]);
 }
 
@@ -150,32 +166,28 @@ public function __construct()
         ]);
     }
 
-    public function staffTickets()
+
+    public function ticketFull() {
+        $this->requireLogin('staff');
+        $headContent = '<link rel="stylesheet" href="/css/ticketFull/ticketFull.css"/>';
+        $this->view('ticketFull', [
+            'title' => 'Ticket Details',
+            'head' => $headContent,
+            'role' => 'staff',
+        ]);
+    }
+
+    public function tickets()
 {
     unset($_SESSION['overdues_checked']);
     $this->requireLogin('staff');
 
-    require_once __DIR__ . '/../../models/staff/Ticket.php';
-    $tickets = [];
-    $errorMsg = null;
-    $staff_level = null;  // Initialize
-    try {
-        $model = new StaffTicket();
-        $tickets = $model->getAllTickets(); 
-        $staff_level = $model->getStaffLevel((int)$_SESSION['user']['u_id']);  // FIXED: Correct method name, cast int
-    } catch (Throwable $e) {
-        $tickets = [];
-        $errorMsg = $e->getMessage();
-        error_log('StaffTickets error: ' . $e->getMessage());  // Log for debug
-    }
-
-    $headContent = '<link rel="stylesheet" href="/css/staff/staffTickets.css"/>';
-    $this->view('staff/staffTickets', [
+    // Remove staff scope logic, just load the globalized view
+    $headContent = '<link rel="stylesheet" href="/css/tickets/tickets.css"/>';
+    $this->view('tickets', [
         'title' => 'Tickets',
         'head' => $headContent,
-        'tickets' => $tickets,
-        'error' => $errorMsg,
-        'staff_level' => $staff_level ?? 0,  // Default to 0 if null (or 'staff' string if preferred)
+        'role' => 'staff',
     ]);
 }
 
@@ -302,10 +314,23 @@ public function __construct()
                        '<link rel="stylesheet" href="/css/staff/global.css" />'."\n".
                        '<link rel="stylesheet" href="/css/global/components.css" />';
 
+        $db = Database::getInstance();
+        $attachments = [];
+        if ($res = $db->query("SELECT file_name, file_path FROM attachments WHERE entity_type = 'ticket' AND entity_id = " . (int)$ticket_id)) {
+            while ($r = $res->fetch_assoc()) {
+                $attachments[] = [
+                    'name' => (string)($r['file_name'] ?? ''),
+                    'url' => '/' . ltrim((string)($r['file_path'] ?? ''), '/'),
+                ];
+            }
+            $res->free();
+        }
+
         $this->view('staff/ticketDetails', [
             'title' => 'Ticket Details',
             'head' => $headContent,
             'ticket' => $ticket,
+            'attachments' => $attachments,
             'staff_members' => $staff_members,
             'errors' => $errors,
             'success' => $success,
@@ -1276,6 +1301,18 @@ public function staffFAQ()
 
         $statusUi = strtolower((string)($row['status'] ?? 'open')) === 'answered' ? 'Answered' : 'Open';
 
+        // attachments from attachments table
+        $attachments = [];
+        if ($res = $db->query("SELECT file_name, file_path FROM attachments WHERE entity_type = 'forum' AND entity_id = $idEsc")) {
+            while ($r = $res->fetch_assoc()) {
+                $attachments[] = [
+                    'name' => (string)($r['file_name'] ?? ''),
+                    'url' => '/' . ltrim((string)($r['file_path'] ?? ''), '/'),
+                ];
+            }
+            $res->free();
+        }
+
         $payload = [
             'id' => (int)($row['q_id'] ?? 0),
             'code' => 'FRM-' . (int)($row['q_id'] ?? 0),
@@ -1288,7 +1325,7 @@ public function staffFAQ()
             'createdAgo' => $createdAgo,
             'is_Public' => (int)($row['is_Public'] ?? 0),
             'student' => [ 'id' => (int)($row['u_id'] ?? 0), 'name' => (string)($row['student_name'] ?? 'Student') ],
-            'attachments' => [],
+            'attachments' => $attachments,
             'commentsCount' => (int)($db->query("SELECT COUNT(*) as c FROM forum_comments WHERE post_id = " . (int)($row['q_id'] ?? 0))->fetch_assoc()['c'] ?? 0),
             'votes' => (int)($row['vote_count'] ?? 0),
             'voted' => (int)($row['my_vote'] ?? 0),
@@ -2050,5 +2087,425 @@ public function staffReports()
     public function forumAddComment()
     {
         return $this->staffForumAddComment();
+    }
+
+
+    public function ticketsData()
+    {
+        $this->requireLogin('staff');
+        header('Content-Type: application/json');
+
+        require_once __DIR__ . '/../../models/staff/Ticket.php';
+        $model = new StaffTicket();
+        
+        try {
+            $allRows = $model->getAllTickets();
+        } catch (Throwable $e) {
+            http_response_code(500);
+            echo json_encode(['error' => $e->getMessage()]);
+            exit;
+        }
+
+        $page    = isset($_GET['page']) ? max(1, (int)$_GET['page']) : 1;
+        $perPage = isset($_GET['perPage']) ? max(1, min(100, (int)$_GET['perPage'])) : 10;
+        $search  = isset($_GET['search']) ? trim(strtolower((string)$_GET['search'])) : '';
+        $category= isset($_GET['category']) ? trim(strtolower((string)$_GET['category'])) : '';
+        $status  = isset($_GET['status']) ? trim(strtolower((string)$_GET['status'])) : '';
+        $priority= isset($_GET['priority']) ? trim(strtolower((string)$_GET['priority'])) : '';
+
+        $filtered = [];
+        foreach ($allRows as $r) {
+            if ($search !== '') {
+                $titleMatch = (strpos(strtolower($r['title'] ?? ''), $search) !== false);
+                $codeMatch = (strpos(strtolower('TKT-' . ($r['ticket_id'] ?? '')), $search) !== false);
+                if (!$titleMatch && !$codeMatch) continue;
+            }
+            if ($category !== '' && strtolower($r['category'] ?? '') !== $category) continue;
+            if ($priority !== '' && strtolower($r['priority'] ?? '') !== $priority) continue;
+            if ($status !== '') {
+                $rs = strtolower($r['status'] ?? '');
+                $uiStatus = $rs;
+                if ($rs === 'pending') $uiStatus = 'open';
+                if ($rs === 'agent assigned') $uiStatus = 'in-progress';
+                if (in_array($rs, ['resolved', 'closed', 'agent-closed'])) $uiStatus = 'resolved';
+                if (strtolower($uiStatus) !== $status) continue;
+            }
+            $filtered[] = $r;
+        }
+
+        $total = count($filtered);
+        $totalPages = $perPage > 0 ? (int)max(1, ceil($total / $perPage)) : 1;
+        if ($page > $totalPages) { $page = $totalPages; }
+        $offset = ($page - 1) * $perPage;
+
+        $paged = array_slice($filtered, $offset, $perPage);
+
+        $mapStatus = function ($s) {
+            $s = strtolower((string)$s);
+            switch ($s) {
+                case 'pending': return 'open';
+                case 'agent assigned': return 'in-progress';
+                case 'resolved':
+                case 'closed':
+                case 'agent-closed': return 'resolved';
+                default: return $s ?: '';
+            }
+        };
+
+        $mapMeeting = function ($m) {
+            $m = strtolower(trim((string)$m));
+            if ($m === 'requested') return 'requested';
+            if ($m === 'scheduled') return 'scheduled';
+            return 'none';
+        };
+
+        $mapDate = function ($dt) {
+            if (!$dt) return '';
+            $ts = strtotime($dt);
+            if ($ts === false) return '';
+            return date('Y-m-d', $ts);
+        };
+
+        $out = [];
+        foreach ($paged as $r) {
+            $out[] = [
+                'id' => isset($r['ticket_id']) ? (int)$r['ticket_id'] : null,
+                'code' => 'TKT-' . (string)($r['ticket_id'] ?? ''),
+                'createdAt' => $mapDate($r['created_at'] ?? null),
+                'title' => (string)($r['title'] ?? ''),
+                'student' => [
+                    'id' => isset($r['u_id']) ? (int)$r['u_id'] : null,
+                    'name' => (string)($r['student_name'] ?? 'Unknown'),
+                ],
+                'category' => (string)($r['category'] ?? ''),
+                'status' => $mapStatus($r['status'] ?? ''),
+                'meeting' => $mapMeeting($r['meeting_requested'] ?? ''),
+                'priority' => strtolower((string)($r['priority'] ?? '')),
+                'overdue' => isset($r['is_overdue_pending']) && ($r['is_overdue_pending'] == 1),
+            ];
+        }
+
+        echo json_encode([
+            'data' => $out,
+            'meta' => [
+                'total' => $total,
+                'page' => $page,
+                'perPage' => $perPage,
+                'totalPages' => $totalPages
+            ]
+        ]);
+        exit;
+    }
+
+    public function ticketData()
+    {
+        $this->requireLogin('staff');
+        header('Content-Type: application/json');
+
+        $id = isset($_GET['id']) ? (int)$_GET['id'] : 0;
+        $code = isset($_GET['code']) ? trim((string)$_GET['code']) : '';
+        if (!$id && $code) {
+            if (preg_match('/TKT[-\s]?(\d+)/i', $code, $m)) {
+                $id = (int)$m[1];
+            }
+        }
+        if (!$id) {
+            http_response_code(400);
+            echo json_encode(['error' => 'Missing ticket id']);
+            exit;
+        }
+
+        require_once __DIR__ . '/../../models/staff/Ticket.php';
+        $model = new StaffTicket();
+        try {
+            $row = $model->getTicketById($id);
+        } catch (Throwable $e) {
+            http_response_code(500);
+            echo json_encode(['error' => $e->getMessage()]);
+            exit;
+        }
+
+        if (!$row) {
+            http_response_code(404);
+            echo json_encode(['error' => 'Ticket not found or permission denied']);
+            exit;
+        }
+
+        $db = Database::getInstance();
+        $idEsc = (int)$id;
+
+        $extraSql = "SELECT sh.position, sh.level, tl.assigned AS assigned_at, tl.under_review AS under_review_at, tl.resolved AS resolved_at
+                     FROM tickets t
+                     LEFT JOIN staff_division sd ON sd.u_id = t.assigned_to AND sd.did = t.division
+                     LEFT JOIN staff_hierachy sh ON sh.h_id = sd.h_id
+                     LEFT JOIN ticket_timeline tl ON tl.ticket_id = t.ticket_id
+                     WHERE t.ticket_id = $idEsc LIMIT 1";
+        
+        $extra = [];
+        if ($res = $db->query($extraSql)) {
+            $extra = $res->fetch_assoc() ?: [];
+            $res->free();
+        }
+
+        $row = array_merge($row, $extra);
+
+        $attachments = [];
+        if ($res = $db->query("SELECT file_name, file_path FROM attachments WHERE entity_type = 'ticket' AND entity_id = $idEsc")) {
+            while ($r = $res->fetch_assoc()) {
+                $attachments[] = [
+                    'name' => (string)($r['file_name'] ?? ''),
+                    'url' => '/' . ltrim((string)($r['file_path'] ?? ''), '/'),
+                ];
+            }
+            $res->free();
+        }
+
+        $statusRaw = strtolower((string)($row['status'] ?? ''));
+        $statusUi = ($statusRaw === 'pending' || $statusRaw === 'agent assigned') ? 'Under Review' : (in_array($statusRaw, ['resolved','closed','agent-closed']) ? 'Resolved' : ucfirst($statusRaw));
+
+        $createdAt = $row['created_at'] ?? null;
+        $createdPretty = '';
+        if ($createdAt) {
+            $ts = strtotime($createdAt);
+            if ($ts !== false) $createdPretty = date('M d, Y \a\t g:i A', $ts);
+        }
+
+        $timeline = [];
+        $timeline[] = [ 'label' => 'Ticket created', 'time' => $createdPretty ?: '—', 'color' => 'green', 'pending' => false ];
+
+        $staffName = $row['staff_name'] ?? null;
+        $position = $row['position'] ?? null;
+        $level = $row['level'] ?? null;
+        $assignedAt = $row['assigned_at'] ?? null;
+        
+        $assignLabel = 'Assigned to staff';
+        $assignTime = '';
+        $assignColor = 'gray';
+        $assignPending = true;
+        if (!empty($staffName) || in_array($statusRaw, ['agent assigned', 'resolved', 'closed', 'agent-closed'])) {
+            $assignLabel = "Assigned to staff";
+            if (!empty($staffName)) {
+                $assignLabel = "Assigned to {$staffName}";
+                if ($position) $assignLabel .= " ({$position})";
+                if ($level) $assignLabel .= " [Level {$level}]";
+            }
+            if ($assignedAt && $assignedAt !== '0000-00-00 00:00:00') {
+                $ts = strtotime($assignedAt);
+                $assignTime = ($ts !== false) ? date('M d, Y \a\t g:i A', $ts) : 'Assigned';
+            } else {
+                $assignTime = 'Assigned';
+            }
+            $assignColor = 'blue';
+            $assignPending = false;
+        }
+        $timeline[] = [ 'label' => $assignLabel, 'time' => $assignTime, 'color' => $assignColor, 'pending' => $assignPending ];
+
+        $underReviewAt = $row['under_review_at'] ?? null;
+        $reviewLabel = 'Under review';
+        $reviewTime = 'Pending';
+        $reviewColor = 'gray';
+        $reviewPending = true;
+        if (in_array($statusRaw, ['agent assigned', 'resolved', 'closed', 'agent-closed'])) {
+            if ($underReviewAt && $underReviewAt !== '0000-00-00 00:00:00') {
+                $ts = strtotime($underReviewAt);
+                $reviewTime = ($ts !== false) ? date('M d, Y \a\t g:i A', $ts) : 'In Progress';
+                $reviewColor = 'blue';
+                $reviewPending = false;
+            } elseif ($statusRaw !== 'pending') {
+                $reviewTime = 'In Progress';
+                $reviewColor = 'blue';
+                $reviewPending = false;
+            }
+        }
+        $timeline[] = [ 'label' => $reviewLabel, 'time' => $reviewTime, 'color' => $reviewColor, 'pending' => $reviewPending ];
+
+        $resolvedAt = $row['resolved_at'] ?? null;
+        $resLabel = 'Resolved';
+        $resTime = 'Pending';
+        $resColor = 'gray';
+        $resPending = true;
+        if (in_array($statusRaw, ['resolved', 'closed', 'agent-closed'])) {
+            if ($resolvedAt && $resolvedAt !== '0000-00-00 00:00:00') {
+                $ts = strtotime($resolvedAt);
+                $resTime = ($ts !== false) ? date('M d, Y \a\t g:i A', $ts) : 'Resolved';
+            } else {
+                $resTime = 'Resolved';
+            }
+            $resColor = 'green';
+            $resPending = false;
+        }
+        $timeline[] = [ 'label' => $resLabel, 'time' => $resTime, 'color' => $resColor, 'pending' => $resPending ];
+
+        $out = [
+            'id' => isset($row['ticket_id']) ? (int)$row['ticket_id'] : null,
+            'code' => 'TKT-' . (string)($row['ticket_id'] ?? ''),
+            'createdOn' => $createdPretty,
+            'title' => (string)($row['title'] ?? ''),
+            'student' => [
+                'id' => isset($row['u_id']) ? (int)$row['u_id'] : null,
+                'name' => (string)($row['student_name'] ?? 'Unknown'),
+            ],
+            'category' => (string)($row['category'] ?? ''),
+            'status' => $statusUi,
+            'statusRaw' => $statusRaw,
+            'priority' => ucfirst((string)($row['priority'] ?? '')),
+            'meeting' => ucfirst((string)($row['meeting_requested'] ?? 'None')),
+            'assigned' => (string)($row['staff_name'] ?? ''),
+            'description' => (string)($row['description'] ?? ''),
+            'attachments' => $attachments,
+            'timeline' => $timeline,
+                                    'type' => (string)($row['t_type'] ?? 'public'),
+            'assigned_to' => isset($row['assigned_to']) ? (int)$row['assigned_to'] : null,
+            'isAssignedToMe' => (isset($row['assigned_to']) && $row['assigned_to'] == $_SESSION['user']['u_id']),
+            'isPending' => ($statusRaw === 'pending'),
+            'overdue' => isset($row['is_overdue_pending']) ? (bool)$row['is_overdue_pending'] : false
+        ];
+
+        echo json_encode($out);
+        exit;
+    }
+
+    public function ticketReject()
+    {
+        $this->requireLogin('staff');
+        header('Content-Type: application/json');
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+            http_response_code(405); echo json_encode(['error' => 'POST required']); exit;
+        }
+
+        $id = isset($_POST['id']) ? (int)$_POST['id'] : 0;
+        if (!$id) {
+            http_response_code(400); echo json_encode(['error' => 'Missing ticket id']); exit;
+        }
+
+        require_once __DIR__ . '/../../models/staff/Ticket.php';
+        $model = new StaffTicket();
+        try {
+            $ok = $model->rejectTicket($id);
+            if ($ok) {
+                echo json_encode(['success' => true]);
+            } else {
+                http_response_code(400); echo json_encode(['error' => 'Failed to reject or not assigned']);
+            }
+        } catch (Throwable $e) {
+            http_response_code(500); echo json_encode(['error' => $e->getMessage()]);
+        }
+        exit;
+    }
+
+    public function ticketAssign()
+    {
+        $this->requireLogin('staff');
+        header('Content-Type: application/json');
+        $id = isset($_POST['id']) ? (int)$_POST['id'] : 0;
+        if (!$id) {
+            http_response_code(400); echo json_encode(['error' => 'Missing id']); exit;
+        }
+        
+        require_once __DIR__ . '/../../models/staff/Ticket.php';
+        $model = new StaffTicket();
+        try {
+            $ticket = $model->getTicketById($id);
+            if ($ticket && strtolower($ticket['status']) === 'pending') {
+                $current_staff_id = (int)$_SESSION['user']['u_id'];
+                $ok = $model->assignToStaff($id, $current_staff_id);
+                $ok2 = $model->setTicketupdateTimeline($id);
+                if ($ok && $ok2) {
+                    $model->setTicketLevel($id, $current_staff_id, $model->getStaffLevel($current_staff_id));
+                    echo json_encode(['success' => true]);
+                } else {
+                    http_response_code(500); echo json_encode(['error' => 'Failed to assign']);
+                }
+            } else {
+                http_response_code(400); echo json_encode(['error' => 'Ticket not pending']);
+            }
+        } catch (Throwable $e) {
+            http_response_code(500); echo json_encode(['error' => $e->getMessage()]);
+        }
+        exit;
+    }
+
+    public function ticketForward()
+    {
+        $this->requireLogin('staff');
+        header('Content-Type: application/json');
+        
+        $data = json_decode(file_get_contents('php://input'), true) ?: $_POST;
+        $id = isset($data['id']) ? (int)$data['id'] : ($_GET['id'] ?? 0);
+        $forward_to = isset($data['forward_to']) ? (int)$data['forward_to'] : 0;
+        
+        if (!$id || !$forward_to) {
+            http_response_code(400); echo json_encode(['error' => 'Missing id or target staff']); exit;
+        }
+        
+        require_once __DIR__ . '/../../models/staff/Ticket.php';
+        $model = new StaffTicket();
+        try {
+            $ticket = $model->getTicketById($id);
+            if ($ticket && $ticket['assigned_to'] == $_SESSION['user']['u_id']) {
+                $ok = $model->forwardTicket($id, $forward_to);
+                if ($ok) {
+                    $level = $model->getStaffLevel($forward_to);
+                    if ($level !== null && $level > 0) {
+                        $model->setTicketLevel($id, $forward_to, $level);
+                    }
+                    echo json_encode(['success' => true]);
+                } else {
+                    http_response_code(500); echo json_encode(['error' => 'Failed to forward']);
+                }
+            } else {
+                http_response_code(403); echo json_encode(['error' => 'Not assigned to you']);
+            }
+        } catch (Throwable $e) {
+            http_response_code(500); echo json_encode(['error' => $e->getMessage()]);
+        }
+        exit;
+    }
+
+    public function staffMembersList()
+    {
+        $this->requireLogin('staff');
+        header('Content-Type: application/json');
+        
+        require_once __DIR__ . '/../../models/staff/Ticket.php';
+        $model = new StaffTicket();
+        try {
+            $members = $model->getStaffMembers();
+            echo json_encode(['success' => true, 'data' => $members]);
+        } catch (Throwable $e) {
+            http_response_code(500); echo json_encode(['error' => $e->getMessage()]);
+        }
+        exit;
+    }
+
+    public function ticketResolve()
+    {
+        $this->requireLogin('staff');
+        header('Content-Type: application/json');
+
+        $id = isset($_POST['id']) ? (int)$_POST['id'] : (isset($_GET['id']) ? (int)$_GET['id'] : 0);
+        if (!$id) {
+            http_response_code(400);
+            echo json_encode(['error' => 'Missing id']);
+            exit;
+        }
+
+        require_once __DIR__ . '/../../models/staff/Ticket.php';
+        $model = new StaffTicket();
+        try {
+            $ok = $model->resolveTicket($id);
+            if ($ok) {
+                // Update the timeline 
+                $model->resolveTicketTimeLine($id);
+                echo json_encode(['success' => true]);
+            } else {
+                http_response_code(500);
+                echo json_encode(['error' => 'Mark as resolved failed or permission denied']);
+            }
+        } catch (Exception $e) {
+            http_response_code(500);
+            echo json_encode(['error' => $e->getMessage()]);
+        }
+        exit;
     }
 }

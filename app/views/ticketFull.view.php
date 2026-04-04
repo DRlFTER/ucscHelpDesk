@@ -75,10 +75,15 @@
             <button id="resolveBtn" class="btnPrimary" type="button"><span class="btnPrimaryText">Mark as resolved</span></button>
           </div>
           <div class="btnHolder">
+            <button id="rejectBtn" class="btnSecondary" style="background-color: #ef4444; display:none;" type="button"><span class="btnSecondaryText" style="color: white;">Close Ticket</span></button>
             <!-- Delete is default for admin; hidden for counselor -->
             <button id="deleteBtn" class="btnSecondary" style="background-color: #ff7b7bff; display:none;" type="button"><span class="btnSecondaryText" style="color: white;">Delete ticket</span></button>
             <!-- Counselor schedule meeting button (shown when meeting requested) -->
             <button id="scheduleBtn" class="btnSecondary" style="display:none;" type="button"><span class="btnSecondaryText">Schedule meeting</span></button>
+            <!-- Staff assign button (shown when pending) -->
+            <button id="assignBtn" class="btnPrimary" style="background-color: #22c55e; display:none;" type="button"><span class="btnPrimaryText">Get Assigned</span></button>
+            <!-- Staff forward button (shown when assigned to them) -->
+            <button id="forwardBtn" class="btnSecondary" style="display:none;" type="button"><span class="btnSecondaryText">Forward Ticket</span></button>
           </div>
         </div>
       </aside>
@@ -86,6 +91,45 @@
     </div>
   </div>
 </main>
+
+<!-- Forward ticket modal (staff only) -->
+<div id="forwardModal" class="modalOverlay" aria-hidden="true">
+  <div class="msgHolder">
+    <div class="msgContainer" role="dialog" aria-modal="true" aria-labelledby="forwardModalTitle">
+      <div class="msgContent">
+        <h3 id="forwardModalTitle" class="msgTitle">Forward Ticket</h3>
+        <p class="msgText">Select a staff member to forward this ticket to.</p>
+        <div class="inputGroup">
+          <select id="forwardStaffSelect" class="formSelect">
+            <option value="">Select staff member...</option>
+          </select>
+        </div>
+        <div class="msgActions">
+          <button type="button" id="cancelForwardBtn" class="btnSecondary"><span class="btnSecondaryText">Cancel</span></button>
+          <button type="button" id="confirmForwardBtn" class="btnPrimary"><span class="btnPrimaryText">Forward</span></button>
+        </div>
+      </div>
+    </div>
+  </div>
+  <button type="button" class="modalBackdropClose" aria-label="Close"></button>
+</div>
+
+<!-- Assign ticket modal (staff only) -->
+<div id="assignModal" class="modalOverlay" aria-hidden="true">
+  <div class="msgHolder">
+    <div class="msgContainer" role="dialog" aria-modal="true" aria-labelledby="assignModalTitle">
+      <div class="msgContent">
+        <h3 id="assignModalTitle" class="msgTitle">Assign Ticket</h3>
+        <p class="msgText">Are you sure you want to assign this ticket to yourself?</p>
+        <div class="msgActions">
+          <button type="button" id="cancelAssignBtn" class="btnSecondary"><span class="btnSecondaryText">Cancel</span></button>
+          <button type="button" id="confirmAssignBtn" class="btnPrimary"><span class="btnPrimaryText">Confirm</span></button>
+        </div>
+      </div>
+    </div>
+  </div>
+  <button type="button" class="modalBackdropClose" aria-label="Close"></button>
+</div>
 
 <!-- Mark resolved confirmation modal (admin, student only; hidden for others) -->
 <div id="resolveModal" class="modalOverlay" aria-hidden="true">
@@ -97,6 +141,23 @@
         <div class="msgActions">
           <button id="cancelResolveBtn" type="button" class="btnSecondary"><span class="btnSecondaryText">Cancel</span></button>
           <button id="confirmResolveBtn" type="button" class="btnPrimary"><span class="btnPrimaryText">Mark</span></button>
+        </div>
+      </div>
+    </div>
+  </div>
+  <button type="button" class="modalBackdropClose" aria-label="Close"></button>
+</div>
+
+<!-- Close/Reject confirmation modal (staff only) -->
+<div id="rejectModal" class="modalOverlay" aria-hidden="true">
+  <div class="msgHolder">
+    <div class="msgContainer" role="dialog" aria-modal="true" aria-labelledby="rejectModalTitle">
+      <div class="msgContent">
+        <h3 id="rejectModalTitle" class="msgTitle">Close this ticket?</h3>
+        <p class="msgText">Are you sure you want to completely close and reject this ticket?</p>
+        <div class="msgActions">
+          <button id="cancelRejectBtn" type="button" class="btnSecondary"><span class="btnSecondaryText">Cancel</span></button>
+          <button id="confirmRejectBtn" type="button" class="btnPrimary btnDanger"><span class="btnPrimaryText">Close Ticket</span></button>
         </div>
       </div>
     </div>
