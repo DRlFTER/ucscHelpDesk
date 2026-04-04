@@ -2370,6 +2370,19 @@ public function staffReports()
             'overdue' => isset($row['is_overdue_pending']) ? (bool)$row['is_overdue_pending'] : false
         ];
 
+        $feedback = null;
+        if ($resFb = $db->query("SELECT rating, feedback, created_at FROM feedbacks WHERE ticket_id = $idEsc LIMIT 1")) {
+            if ($rFb = $resFb->fetch_assoc()) {
+                $feedback = [
+                    'rating' => (int)$rFb['rating'],
+                    'feedback' => (string)$rFb['feedback'],
+                    'createdAt' => date('M d, Y \a\t g:i A', strtotime($rFb['created_at']))
+                ];
+            }
+            $resFb->free();
+        }
+        $out['feedback'] = $feedback;
+
         echo json_encode($out);
         exit;
     }

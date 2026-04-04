@@ -849,6 +849,20 @@ class Admin extends Controller
         if ($mr === 'requested') $meeting = 'requested';
         elseif ($mr === 'scheduled') $meeting = 'scheduled';
 
+        $db = Database::getInstance();
+        $idEsc = (int)$id;
+        $feedback = null;
+        if ($resFb = $db->query("SELECT rating, feedback, created_at FROM feedbacks WHERE ticket_id = $idEsc LIMIT 1")) {
+            if ($rFb = $resFb->fetch_assoc()) {
+                $feedback = [
+                    'rating' => (int)$rFb['rating'],
+                    'feedback' => (string)$rFb['feedback'],
+                    'createdAt' => date('M d, Y \a\t g:i A', strtotime($rFb['created_at']))
+                ];
+            }
+            $resFb->free();
+        }
+
         echo json_encode([
             'id' => (int)$row['ticket_id'],
             'code' => 'TKT-' . (int)$row['ticket_id'],
@@ -866,6 +880,7 @@ class Admin extends Controller
             'assigned' => !empty($staffName) ? ($position ? "$staffName ($position)" : $staffName) : null,
             'timeline' => $timeline,
             'attachments' => $attachments,
+            'feedback' => $feedback,
         ]);
         exit;
     }
