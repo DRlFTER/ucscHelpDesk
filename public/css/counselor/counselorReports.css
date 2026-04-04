@@ -1,0 +1,173 @@
+/* Import base dashboard styles */
+@import url('counselorDashboard.css');
+
+/* Filter Section */
+.filterRow {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 10px;
+  align-items: end;
+}
+
+.filterGroup {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.filterGroup label {
+  font-size: 12px;
+  font-weight: 500;
+  color: #6b7280;
+}
+
+.filterInput {
+  padding: 8px 12px;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  font-size: 14px;
+  background: #ffffff;
+  transition: border-color 0.2s;
+}
+
+.filterInput:focus {
+  outline: none;
+  border-color: #8c8cf9;
+  box-shadow: 0 0 0 3px rgba(140, 140, 249, 0.1);
+}
+
+/* Buttons */
+.btnPrimary,
+.btnSecondary {
+  padding: 8px 16px;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  border: none;
+  transition: all 0.2s;
+  margin-top: 22px;
+}
+
+.btnPrimary {
+  background: linear-gradient(135deg, #8c8cf9 0%, #a78bfa 100%);
+  color: white;
+}
+
+.btnPrimary:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(140, 140, 249, 0.3);
+}
+
+.btnSecondary {
+  background: #f3f4f6;
+  color: #374151;
+  border: 1px solid #e5e7eb;
+}
+
+.btnSecondary:hover {
+  background: #e5e7eb;
+}
+
+/* Table Styles */
+.tableContainer {
+  margin-top: 12px;
+  overflow-x: auto;
+}
+
+.reportTable {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.reportTable thead {
+  background: #f9fafb;
+}
+
+.reportTable th {
+  padding: 10px 12px;
+  text-align: left;
+  font-size: 13px;
+  font-weight: 600;
+  color: #374151;
+  border-bottom: 2px solid #e5e7eb;
+}
+
+.reportTable td {
+  padding: 10px 12px;
+  font-size: 14px;
+  color: #111827;
+  border-bottom: 1px solid #e5e7eb;
+}
+
+.reportTable tbody tr:hover {
+  background: #f9fafb;
+}
+
+/* Stats List */
+.statsList {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin-top: 12px;
+}
+
+.statsItem {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 10px;
+  background: #f9fafb;
+  border-radius: 8px;
+}
+
+.statsLabel {
+  font-size: 13px;
+  color: #6b7280;
+  font-weight: 500;
+}
+
+.statsValue {
+  font-size: 18px;
+  font-weight: 600;
+  color: #111827;
+}
+
+/* Chart Container */
+canvas {
+  display: block;
+  margin-top: 12px;
+}
+
+/* Loading State */
+.loading {
+  opacity: 0.6;
+  pointer-events: none;
+}
+
+/* Responsive */
+@media (max-width: 1024px) {
+  .filterRow {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}
+
+@media (max-width: 768px) {
+  .filterRow {
+    grid-template-columns: 1fr;
+  }
+  
+  .btnPrimary,
+  .btnSecondary {
+    width: 100%;
+    margin-top: 0;
+  }
+  
+  .grid-4 {
+    grid-template-columns: repeat(2, 1fr);
+  }
+  
+  .grid-2 {
+    grid-template-columns: 1fr;
+  }
+}

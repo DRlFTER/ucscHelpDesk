@@ -73,7 +73,9 @@ class TicketChat
         $sql = "INSERT INTO ticket_messages (chat_id, sender_id, message, message_type, reply_to_id, created_at) 
                 VALUES (?, ?, ?, ?, ?, NOW())";
         $stmt = $conn->prepare($sql);
-        $stmt->bind_param("iisss", $chatId, $senderId, $message, $messageType, $replyToId);
+
+        $replyToParam = isset($replyToId) && $replyToId !== '' ? (int)$replyToId : null;
+        $stmt->bind_param("iissi", $chatId, $senderId, $message, $messageType, $replyToParam);
         
         $result = $stmt->execute();
         $stmt->close();

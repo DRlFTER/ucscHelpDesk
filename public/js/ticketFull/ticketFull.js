@@ -91,9 +91,23 @@ function renderAttachments() {
 }
 
 // Date/time formatting helpers for chat
+function parseChatDate(dateString) {
+  if (!dateString) return null;
+
+  // MySQL DATETIME values have no timezone; treat them as UTC and convert for display.
+  const mysqlDateTime = /^\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}$/;
+  const isoString = mysqlDateTime.test(dateString)
+    ? dateString.replace(' ', 'T') + 'Z'
+    : dateString;
+
+  const date = new Date(isoString);
+  return Number.isNaN(date.getTime()) ? null : date;
+}
+
 function formatDate(dateString) {
-  if (!dateString) return '';
-  const date = new Date(dateString.replace(/-/g, '/'));
+  const date = parseChatDate(dateString);
+  if (!date) return '';
+
   const today = new Date();
   const yesterday = new Date(today);
   yesterday.setDate(yesterday.getDate() - 1);
@@ -108,9 +122,43 @@ function formatDate(dateString) {
 }
 
 function formatTime(dateString) {
-  if (!dateString) return '';
-  const date = new Date(dateString.replace(/-/g, '/'));
+  const date = parseChatDate(dateString);
+  if (!date) return '';
+
   return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: false });
+}
+
+function escapeHtml(value) {
+  return String(value ?? '')
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;');
+}
+
+function formatMessageText(rawText) {
+  const normalized = String(rawText || '')
+    .replace(/\\r\\n/g, '\n')
+    .replace(/\\n/g, '\n')
+    .replace(/\r\n/g, '\n')
+    .replace(/\n{2,}/g, '\n')
+    .replace(/\s+(Title:|Date:|Time:|Mode:|Venue:|Meeting Link:|Notes:|\(Meeting[^\)]*ID:\s*\d+\))/g, '\n$1')
+    .trim();
+
+  if (!normalized) return '';
+
+  return normalized
+    .split('\n')
+    .filter((line) => line.trim() !== '')
+    .map((line) => {
+      const escaped = escapeHtml(line.trim()).replace(
+        /(https?:\/\/[^\s<]+)/g,
+        '<a class="inlineMessageLink" href="$1" target="_blank" rel="noopener noreferrer">$1</a>'
+      );
+      return `<div class="messageLine">${escaped}</div>`;
+    })
+    .join('');
 }
 
 function renderMessages() {
@@ -143,7 +191,7 @@ function renderMessages() {
             ${headerTitle}
             <span class="time">${timeStr}</span>
           </div>
-          <div class="messageText">${msg.text}</div>
+          <div class="messageText">${formatMessageText(msg.text)}</div>
         </div>
       </div>`;
     })
@@ -366,117 +414,7 @@ function wireActions() {
     deleteBtn.addEventListener("click", () => openDeleteModal());
   }
 
-  const rejectBtn = document.getElementById("rejectBtn");
-  if (rejectBtn) {
-    rejectBtn.addEventListener("click", () => openRejectModal());
-  }
-
-  const assignBtnEl = document.getElementById("assignBtn");
-  const assignModal = document.getElementById("assignModal");
-  if (assignBtnEl && assignModal) {
-    assignBtnEl.addEventListener("click", () => {
-      assignModal.classList.add("open");
-      assignModal.setAttribute("aria-hidden", "false");
-      document.body.classList.add("modal-open");
-    });
-    
-    // Assign Confirm
-    const confirmAssignBtn = document.getElementById("confirmAssignBtn");
-    if (confirmAssignBtn) {
-      confirmAssignBtn.addEventListener("click", async () => {
-        try {
-          const formData = new FormData();
-          formData.append("id", getTicketIdFromUrl());
-          const res = await fetch(`/${ROLE}/ticketAssign`, { method: "POST", body: formData });
-          const data = await res.json();
-          if (data.success) {
-            window.location.reload();
-          } else {
-            alert(data.error || data.message || "Failed");
-          }
-        } catch(e) {
-          console.error(e);
-        }
-      });
-    }
-
-    // Assign Cancel
-    const cancelAssignBtn = document.getElementById("cancelAssignBtn");
-    if (cancelAssignBtn) {
-      cancelAssignBtn.addEventListener("click", () => {
-        assignModal.classList.remove("open");
-        assignModal.setAttribute("aria-hidden", "true");
-        document.body.classList.remove("modal-open");
-      });
-    }
-  }
-
-  const forwardBtnEl = document.getElementById("forwardBtn");
-  const forwardModal = document.getElementById("forwardModal");
-  if (forwardBtnEl && forwardModal) {
-    forwardBtnEl.addEventListener("click", async () => {
-      forwardModal.classList.add("open");
-      forwardModal.setAttribute("aria-hidden", "false");
-      document.body.classList.add("modal-open");
-      
-      const select = document.getElementById("forwardStaffSelect");
-      if (select && select.options.length <= 1) {
-        try {
-          const res = await fetch(`/${ROLE}/staffMembersList`);
-          const data = await res.json();
-          if (data.success && Array.isArray(data.data)) {
-             data.data.forEach(m => {
-               const opt = document.createElement("option");
-               opt.value = m.u_id;
-               opt.textContent = m.name;
-               select.appendChild(opt);
-             });
-          }
-        } catch(e) {}
-      }
-    });
-
-    const confirmForwardBtn = document.getElementById("confirmForwardBtn");
-    if (confirmForwardBtn) {
-      confirmForwardBtn.addEventListener("click", async () => {
-        const select = document.getElementById("forwardStaffSelect");
-        if (!select || !select.value) { alert("Please select a staff member"); return; }
-        
-        try {
-          const formData = new FormData();
-          formData.append("id", getTicketIdFromUrl());
-          formData.append("forward_to", select.value);
-          const reason = document.getElementById("forwardReason");
-          if (reason) formData.append("reason", reason.value || "");
-          
-          const res = await fetch(`/${ROLE}/ticketForward`, { method: "POST", body: formData });
-          const data = await res.json();
-          if (data.success) {
-            window.location.reload();
-          } else {
-            alert(data.error || data.message || "Failed");
-          }
-        } catch(e) { console.error(e); }
-      });
-    }
-
-    const cancelForwardBtn = document.getElementById("cancelForwardBtn");
-    if (cancelForwardBtn) {
-      cancelForwardBtn.addEventListener("click", () => {
-        forwardModal.classList.remove("open");
-        forwardModal.setAttribute("aria-hidden", "true");
-        document.body.classList.remove("modal-open");
-      });
-    }
-  }
-
-  const scheduleBtn = document.getElementById("scheduleBtn");
-  if (scheduleBtn) {
-    scheduleBtn.addEventListener("click", () => {
-      // Open the custom schedule meeting modal (UI only)
-      openScheduleModal();
-    });
-  }
+  // Schedule button is handled by inline script in the view file
 }
 
 // Cache helpers
@@ -550,6 +488,44 @@ async function fetchMessages(id) {
   }
 }
 
+function showMeetingDuePopup(notification) {
+  const title = notification.title || "Counseling Session";
+  const startTime = notification.start_time || "--:--";
+  const venue = notification.venue || "";
+  const link = notification.meeting_link || "";
+
+  let text = `Meeting time has started.\n\nTitle: ${title}\nStart Time: ${startTime}`;
+  if (venue) text += `\nVenue: ${venue}`;
+  if (link) text += `\nMeeting Link: ${link}`;
+
+  alert(text);
+}
+
+async function checkMeetingDueNotifications() {
+  try {
+    const res = await fetch('/meetingscheduler/processDueMeetingNotifications', {
+      credentials: 'include'
+    });
+    if (!res.ok) return;
+
+    const data = await res.json();
+    if (!data || !data.success || !Array.isArray(data.notifications)) return;
+
+    data.notifications.forEach((notification) => {
+      const meetingId = notification.meeting_id;
+      if (!meetingId) return;
+
+      const key = `meeting_popup_seen_${meetingId}`;
+      if (localStorage.getItem(key) === '1') return;
+
+      showMeetingDuePopup(notification);
+      localStorage.setItem(key, '1');
+    });
+  } catch (e) {
+    console.error('Error checking due meeting notifications:', e);
+  }
+}
+
 (async function init() {
   const id = getTicketIdFromUrl();
   if (id) {
@@ -584,6 +560,9 @@ async function fetchMessages(id) {
         })
         .catch(() => {});
     }
+    
+    // Make ticket data globally available for modal
+    window.ticketData = ticketData;
   }
   if (!ticketData) {
     ticketData = {
@@ -622,7 +601,13 @@ async function fetchMessages(id) {
   // Interval for polling chat messages (previously 10s, now 5s to match old logic)
   if (id) {
     fetchMessages(id);
-    setInterval(() => fetchMessages(id), 5000);
+    // Poll for new messages every 10 seconds
+    setInterval(() => fetchMessages(id), 10000);
+
+    if (ROLE === 'student' || ROLE === 'counselor') {
+      checkMeetingDueNotifications();
+      setInterval(() => checkMeetingDueNotifications(), 30000);
+    }
   } else {
     renderMessages();
   }
@@ -769,87 +754,4 @@ function openResolveModal() {
   }
 }
 
-// Modal helper: counselor schedule meeting (UI only)
-function openScheduleModal() {
-  const overlay = document.getElementById("scheduleModal");
-  if (!overlay) return;
-
-  overlay.classList.add("open");
-  document.body.classList.add("modal-open");
-
-  const cancelBtn = document.getElementById("cancelScheduleBtn");
-  const backdropBtn = overlay.querySelector(".modalBackdropClose");
-
-  const close = (e) => {
-    e && e.preventDefault();
-    overlay.classList.remove("open");
-    document.body.classList.remove("modal-open");
-    cancelBtn && cancelBtn.removeEventListener("click", close);
-    backdropBtn && backdropBtn.removeEventListener("click", close);
-  };
-
-  cancelBtn && cancelBtn.addEventListener("click", close);
-  backdropBtn && backdropBtn.addEventListener("click", close);
-}
-
-// Modal helper for Reject/Close Ticket (staff only)
-function openRejectModal() {
-  if (ROLE !== "staff") return; 
-  const overlay = document.getElementById("rejectModal");
-  if (!overlay) return;
-
-  overlay.classList.add("open");
-  overlay.removeAttribute("aria-hidden");
-  document.body.classList.add("modal-open");
-
-  const cancelBtn = document.getElementById("cancelRejectBtn");
-  const confirmBtn = document.getElementById("confirmRejectBtn");
-  const backdropBtn = overlay.querySelector(".modalBackdropClose");
-
-  const close = () => {
-    overlay.classList.remove("open");
-    overlay.setAttribute("aria-hidden", "true");
-    document.body.classList.remove("modal-open");
-  };
-
-  const onConfirm = async (e) => {
-    e && e.preventDefault();
-    confirmBtn.disabled = true;
-
-    try {
-      const res = await fetch(`/${ROLE}/ticketReject`, {
-        method: "POST",
-        headers: { "Content-Type": "application/x-www-form-urlencoded" },
-        body: `id=${encodeURIComponent(ticketData.id)}`,
-        credentials: "include",
-      });
-
-      const rawText = await res.text();
-      let data;
-      try {
-        data = JSON.parse(rawText);
-      } catch (jsonErr) {
-        throw new Error("Server returned non-JSON response.");
-      }
-
-      if (!res.ok) throw new Error(data.error || data.message || "Failed to reject via API");
-      if (data.success || (!data.error && !data.message)) {
-        window.location.reload();
-      } else {
-        alert(data.error || data.message || "Failed to reject via API");
-      }
-    } catch (err) {
-      console.error(err);
-      alert("Error rejecting ticket: " + err.message);
-    } finally {
-      confirmBtn.disabled = false;
-      close();
-    }
-  };
-
-  confirmBtn.onclick = onConfirm;
-  cancelBtn.onclick = (e) => { e.preventDefault(); close(); };
-  if (backdropBtn) {
-    backdropBtn.onclick = (e) => { e.preventDefault(); close(); };
-  }
-}
+// Schedule modal is handled by inline script in the view file
