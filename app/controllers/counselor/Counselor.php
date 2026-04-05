@@ -1547,6 +1547,111 @@ public function exportReport()
         }
     }
 
+    public function forumComments()
+    {
+        $this->requireLogin('counselor');
+        header('Content-Type: application/json');
+
+        $db = Database::getInstance();
+        $id = isset($_GET['id']) ? (int)$_GET['id'] : 0;
+        if ($id <= 0) {
+            http_response_code(400);
+            echo json_encode(['error' => 'invalid_id']);
+            return;
+        }
+
+        $res = $db->query("SELECT c.*, u.name as author_name, u.role FROM forum_comments c 
+            JOIN users u ON c.u_id = u.u_id 
+            WHERE c.post_id = $id ORDER BY c.created_at ASC");
+        
+        $comments = [];
+        if ($res) {
+            while ($row = $res->fetch_assoc()) {
+                $comments[] = [
+                    'id' => (int)$row['id'],
+                    'parentId' => $row['parent_id'] ? (int)$row['parent_id'] : null,
+                    'text' => $row['content'],
+                    'time' => date('M d, g:i A', strtotime($row['created_at'])),
+                    'name' => $row['author_name'],
+                    'role' => $row['role'],
+                    'authorType' => $row['role'] === 'counselor' ? 'counselor' : (in_array($row['role'], ['staff','admin','lecturer']) ? 'staff' : 'student')
+                ];
+            }
+            $res->free();
+        }
+
+        echo json_encode($comments);
+    }
+
+    public function forumAddComment()
+    {
+        $this->requireLogin('counselor');
+        header('Content-Type: application/json');
+
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+            http_response_code(405);
+            echo json_encode(['error' => 'method_not_allowed']);
+            return;
+        }
+
+        $uId = (int)($_SESSION['user']['u_id'] ?? 0);
+        $id = isset($_POST['id']) ? (int)$_POST['id'] : 0;
+        $parentId = isset($_POST['parentId']) && $_POST['parentId'] ? (int)$_POST['parentId'] : null;
+        $text = isset($_POST['text']) ? trim($_POST['text']) : '';
+
+        if ($uId <= 0 || $id <= 0 || empty($text)) {
+            http_response_code(400);
+            echo json_encode(['error' => 'bad_request']);
+            return;
+        }
+
+        $db = Database::getInstance();
+        
+        // Ensure post exists
+        $check = $db->query("SELECT q_id FROM forum_q WHERE q_id = $id");
+        if (!$check || $check->num_rows === 0) {
+            http_response_code(404);
+            echo json_encode(['error' => 'post_not_found']);
+            return;
+        }
+
+        $stmt = $db->prepare("INSERT INTO forum_comments (post_id, u_id, parent_id, content) VALUES (?, ?, ?, ?)");
+        if ($stmt) {
+            $stmt->bind_param("iiis", $id, $uId, $parentId, $text);
+            if ($stmt->execute()) {
+                $newId = $stmt->insert_id;
+                
+                // Get inserted comment details
+                $res = $db->query("SELECT c.created_at, u.name as author_name, u.role 
+                    FROM forum_comments c JOIN users u ON c.u_id = u.u_id WHERE c.id = $newId");
+                $r = $res ? $res->fetch_assoc() : null;
+                $time = $r ? date('M d, g:i A', strtotime($r['created_at'])) : 'Just now';
+                $name = $r['author_name'] ?? 'Me';
+                $role = $r['role'] ?? 'counselor';
+                
+                echo json_encode([
+                    'ok' => true,
+                    'comment' => [
+                        'id' => $newId,
+                        'parentId' => $parentId,
+                        'text' => $text,
+                        'time' => $time,
+                        'name' => $name,
+                        'role' => $role,
+                        'authorType' => 'counselor'
+                    ]
+                ]);
+            } else {
+                http_response_code(500);
+                echo json_encode(['error' => 'db_insert_failed']);
+            }
+            $stmt->close();
+        } else {
+             http_response_code(500);
+             echo json_encode(['error' => 'db_prepare_failed']);
+        }
+    }
+
     // Delete a forum post (Counselor can delete own posts only)
     public function forumDelete()
     {
