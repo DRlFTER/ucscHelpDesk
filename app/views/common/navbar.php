@@ -183,7 +183,7 @@
 <script>
 (function() {
   // ─── Notification Manager ───
-  const POLL_INTERVAL = 60000; // 60 seconds
+  const POLL_INTERVAL = 2000; // 2 seconds (simulated real-time)
   let _notifCache = [];
   let _lastPollTime = '';
   let _unreadCount = 0;
