@@ -1,0 +1,32 @@
+.staff-stats-container {
+    display: flex;
+    gap: 16px;
+}
+
+.staff-stat-item {
+    flex: 1;
+    text-align: center;
+    padding: 20px 10px;
+    text-decoration: none;
+    border-radius: 16px;
+    background: transparent;
+    transition: all 0.3s ease;
+}
+
+
+.staff-stat-number {
+    font-size: 50px;
+    font-weight: bold;
+    margin-bottom: 8px;
+}
+
+.staff-stat-label {
+    font-size: 15px;
+    font-weight: 500;
+    color: #5a5d6d;
+}
+
+.staff-stat-total { color: #1e3a8a; }
+.staff-stat-pending { color: #f59e0b; }
+.staff-stat-assigned { color: #3b82f6; }
+.staff-stat-resolved { color: #10b981; }

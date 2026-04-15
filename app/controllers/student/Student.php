@@ -51,6 +51,19 @@ class Student extends Controller
             $upcomingEvents = [];
         }
 
+        $recentForumPosts = [];
+        try {
+            $db = Database::getInstance();
+            $stmt = $db->query("SELECT f.q_id as id, f.title, f.created_at, u.name as author FROM forum_q f LEFT JOIN users u ON f.u_id = u.u_id WHERE f.is_Public = 1 ORDER BY f.created_at DESC LIMIT 3");
+            if ($stmt) {
+                while ($row = $stmt->fetch_assoc()) {
+                    $recentForumPosts[] = $row;
+                }
+            }
+        } catch (Throwable $e) {
+            $recentForumPosts = [];
+        }
+
     $headContent = '
     <link rel="stylesheet" href="/css/student/studentDashboard.css"/>';
          $this->view('dashboardStudent', [
@@ -61,6 +74,7 @@ class Student extends Controller
                 'lastActivity' => $lastActivity,
                 'recentAnnouncements' => $recentAnnouncements,
                 'upcomingEvents' => $upcomingEvents,
+                'recentForumPosts' => $recentForumPosts,
         ]);
     }
 
@@ -95,6 +109,40 @@ class Student extends Controller
                         'meeting_requested' => $meetingRequested,
                         'type' => $t_type,
                     ]);
+
+                    // Handle attachments
+                    if ($ticketId && isset($_FILES['attachments']) && is_array($_FILES['attachments']['name'])) {
+                        require_once __DIR__ . '/../../models/Attachment.php';
+                        $attachmentModel = new Attachment();
+                        
+                        $fileCount = count($_FILES['attachments']['name']);
+                        for ($i = 0; $i < $fileCount; $i++) {
+                            // Reconstruct the individual file array for handle_upload
+                            $fileArr = [
+                                'name' => $_FILES['attachments']['name'][$i],
+                                'type' => $_FILES['attachments']['type'][$i],
+                                'tmp_name' => $_FILES['attachments']['tmp_name'][$i],
+                                'error' => $_FILES['attachments']['error'][$i],
+                                'size' => $_FILES['attachments']['size'][$i]
+                            ];
+                            
+                            if ($fileArr['error'] === UPLOAD_ERR_OK) {
+                                $uploadData = handle_upload($fileArr, 'ticket');
+                                if ($uploadData) {
+                                    $attachmentModel->insert([
+                                        'entity_type' => 'ticket',
+                                        'entity_id' => $ticketId,
+                                        'file_name' => $uploadData['file_name'],
+                                        'file_path' => $uploadData['file_path'],
+                                        'file_type' => $uploadData['file_type'],
+                                        'file_size' => $uploadData['file_size'],
+                                        'uploaded_by' => (int)($_SESSION['user']['u_id'] ?? 0)
+                                    ]);
+                                }
+                            }
+                        }
+                    }
+
                     $flash = ['type' => 'success', 'message' => 'Ticket submitted successfully. Redirecting to your dashboard...'];
                 } catch (Throwable $e) {
                     $flash = ['type' => 'error', 'message' => 'Ticket submission failed: ' . $e->getMessage()];
@@ -615,18 +663,6 @@ public function templates()
     public function knowledgebase()
     {
         $this->requireLogin('student');
-        $headContent = '<link rel="stylesheet" href="/css/student/studentKnowledgeBase.css" />';
-        $this->view('student/studentKnowledgeBase', [
-            'title' => 'Knowledge Base',
-            'head' => $headContent,
-        ]);
-    }
-
-    // Knowledge Base data (JSON)
-    public function knowledgebaseData()
-    {
-        $this->requireLogin('student');
-        header('Content-Type: application/json');
 
         require_once __DIR__ . '/../../models/staff/KB.php';
         $kbModel = new KB();
@@ -683,8 +719,9 @@ public function templates()
             ];
         }
 
-        echo json_encode(array_values($grouped));
-        exit;
+        $this->view('knowledgeBase', [
+            'kb_data' => array_values($grouped)
+        ]);
     }
 
     // Student Calendar page
@@ -750,8 +787,41 @@ public function templates()
                     if ($stmt) {
                         $stmt->bind_param('isssis', $isPublic, $title, $topic, $description, $uId, $status);
                         $ok = $stmt->execute();
+                        $forumId = $stmt->insert_id;
                         $stmt->close();
                         if ($ok) {
+                            // Handle attachments
+                            if (isset($_FILES['attachments']) && is_array($_FILES['attachments']['name'])) {
+                                require_once __DIR__ . '/../../models/Attachment.php';
+                                $attachmentModel = new Attachment();
+                                
+                                $fileCount = count($_FILES['attachments']['name']);
+                                for ($i = 0; $i < $fileCount; $i++) {
+                                    $fileArr = [
+                                        'name' => $_FILES['attachments']['name'][$i],
+                                        'type' => $_FILES['attachments']['type'][$i],
+                                        'tmp_name' => $_FILES['attachments']['tmp_name'][$i],
+                                        'error' => $_FILES['attachments']['error'][$i],
+                                        'size' => $_FILES['attachments']['size'][$i]
+                                    ];
+                                    
+                                    if ($fileArr['error'] === UPLOAD_ERR_OK) {
+                                        $uploadData = handle_upload($fileArr, 'forum');
+                                        if ($uploadData) {
+                                            $attachmentModel->insert([
+                                                'entity_type' => 'forum',
+                                                'entity_id' => $forumId,
+                                                'file_name' => $uploadData['file_name'],
+                                                'file_path' => $uploadData['file_path'],
+                                                'file_type' => $uploadData['file_type'],
+                                                'file_size' => $uploadData['file_size'],
+                                                'uploaded_by' => $uId
+                                            ]);
+                                        }
+                                    }
+                                }
+                            }
+
                             $flash = ['type' => 'success', 'message' => $isPublic ? 'Post published successfully. Redirecting to Forum…' : 'Draft saved. Redirecting to Forum…'];
                         } else {
                             $flash = ['type' => 'error', 'message' => 'Failed to save the post. Please try again.'];
@@ -767,10 +837,7 @@ public function templates()
             }
         }
 
-        $headContent = '<link rel="stylesheet" href="/css/student/studentNewForum.css" />';
-        $this->view('student/studentNewForum', [
-            'title' => 'New Forum Post',
-            'head' => $headContent,
+        $this->view('newForum', [
             'flash' => $flash ?? null,
         ]);
     }
@@ -857,10 +924,14 @@ public function templates()
         $srt = strtolower($sort);
         if ($srt === 'oldest') {
             $orderSql = 'ORDER BY f.created_at ASC';
+        } elseif ($srt === 'votes') {
+            $orderSql = 'ORDER BY (SELECT COALESCE(SUM(vote_type), 0) FROM forum_votes WHERE post_id = f.q_id) DESC, f.created_at DESC';
         }
-        // 'votes' and 'comments' default to created_at for now
+        // 'comments' default to created_at for now
 
-    $sql = "SELECT f.q_id, f.created_at, f.title, f.topic, f.status, f.u_id, f.is_Public, u.name AS student_name
+    $sql = "SELECT f.q_id, f.created_at, f.title, f.topic, f.status, f.u_id, f.is_Public, u.name AS student_name,
+                (SELECT COALESCE(SUM(vote_type), 0) FROM forum_votes WHERE post_id = f.q_id) as vote_count,
+                (SELECT vote_type FROM forum_votes WHERE post_id = f.q_id AND u_id = $uId LIMIT 1) as my_vote
                 FROM forum_q f
                 LEFT JOIN users u ON u.u_id = f.u_id
                 $whereSql
@@ -893,8 +964,8 @@ public function templates()
                 'topic' => (string)($r['topic'] ?? ''),
                 'status' => strtolower((string)($r['status'] ?? 'open')),
                 'is_Public' => isset($r['is_Public']) ? (int)$r['is_Public'] : 0,
-                'votesUp' => 0,
-                'votesDown' => 0,
+                'votes' => (int)($r['vote_count'] ?? 0),
+                'voted' => (int)($r['my_vote'] ?? 0),
                 'comments' => 0,
             ];
         }
@@ -1017,7 +1088,9 @@ public function templates()
         }
 
         $idEsc = (int)$id;
-        $sql = "SELECT f.q_id, f.created_at, f.title, f.topic, f.status, f.description, f.u_id, f.is_Public, u.name AS student_name
+        $sql = "SELECT f.q_id, f.created_at, f.title, f.topic, f.status, f.description, f.u_id, f.is_Public, u.name AS student_name,
+                (SELECT COALESCE(SUM(vote_type), 0) FROM forum_votes WHERE post_id = f.q_id) as vote_count,
+                (SELECT vote_type FROM forum_votes WHERE post_id = f.q_id AND u_id = $uId LIMIT 1) as my_vote
                 FROM forum_q f
                 LEFT JOIN users u ON u.u_id = f.u_id
                 WHERE f.q_id = $idEsc AND (f.is_Public = 1 OR f.u_id = $uId)
@@ -1056,6 +1129,18 @@ public function templates()
 
         $statusUi = strtolower((string)($row['status'] ?? 'open')) === 'answered' ? 'Answered' : 'Open';
 
+        // attachments from attachments table
+        $attachments = [];
+        if ($res = $db->query("SELECT file_name, file_path FROM attachments WHERE entity_type = 'forum' AND entity_id = $idEsc")) {
+            while ($r = $res->fetch_assoc()) {
+                $attachments[] = [
+                    'name' => (string)($r['file_name'] ?? ''),
+                    'url' => '/' . ltrim((string)($r['file_path'] ?? ''), '/'),
+                ];
+            }
+            $res->free();
+        }
+
         $payload = [
             'id' => (int)($row['q_id'] ?? 0),
             'code' => 'FRM-' . (int)($row['q_id'] ?? 0),
@@ -1068,21 +1153,193 @@ public function templates()
             'createdAgo' => $createdAgo,
             'is_Public' => (int)($row['is_Public'] ?? 0),
             'student' => [ 'id' => (int)($row['u_id'] ?? 0), 'name' => (string)($row['student_name'] ?? 'Student') ],
-            'attachments' => [],
-            'commentsCount' => 0,
-            'votes' => 0,
+            'attachments' => $attachments,
+            'commentsCount' => (int)($db->query("SELECT COUNT(*) as c FROM forum_comments WHERE post_id = " . (int)($row['q_id'] ?? 0))->fetch_assoc()['c'] ?? 0),
+            'votes' => (int)($row['vote_count'] ?? 0),
+            'voted' => (int)($row['my_vote'] ?? 0),
+            'isOwner' => ((int)$row['u_id'] === $uId),
         ];
 
         echo json_encode($payload);
+    }
+
+    public function forumVote()
+    {
+        $this->requireLogin('student');
+        header('Content-Type: application/json');
+
+        $db = Database::getInstance();
+        $uId = (int)($_SESSION['user']['u_id'] ?? 0);
+        $id = isset($_POST['id']) ? (int)$_POST['id'] : 0;
+        $type = isset($_POST['type']) ? $_POST['type'] : '';
+
+        if ($uId <= 0 || $id <= 0 || !in_array($type, ['up', 'down'])) {
+            http_response_code(400);
+            echo json_encode(['error' => 'bad_request']);
+            return;
+        }
+
+        $voteVal = ($type === 'up') ? 1 : -1;
+
+        // Check if post exists & accessible
+        $check = $db->query("SELECT q_id FROM forum_q WHERE q_id = $id AND (is_Public = 1 OR u_id = $uId)");
+        if (!$check || $check->num_rows === 0) {
+            http_response_code(404);
+            echo json_encode(['error' => 'not_found']);
+            return;
+        }
+
+        // Check existing vote
+        $existing = 0;
+        $checkVote = $db->query("SELECT vote_type FROM forum_votes WHERE post_id = $id AND u_id = $uId");
+        if ($checkVote && $row = $checkVote->fetch_assoc()) {
+            $existing = (int)$row['vote_type'];
+        }
+
+        if ($existing === $voteVal) {
+            // Toggle off (remove vote)
+            $db->query("DELETE FROM forum_votes WHERE post_id = $id AND u_id = $uId");
+            $newVote = 0;
+        } else {
+            // Insert or Update
+            $stmt = $db->prepare("INSERT INTO forum_votes (post_id, u_id, vote_type) VALUES (?, ?, ?) ON DUPLICATE KEY UPDATE vote_type = ?");
+            if ($stmt) {
+                $stmt->bind_param("iiii", $id, $uId, $voteVal, $voteVal);
+                $stmt->execute();
+            }
+            $newVote = $voteVal;
+        }
+
+        // Get new total
+        $totalRes = $db->query("SELECT COALESCE(SUM(vote_type), 0) as cnt FROM forum_votes WHERE post_id = $id");
+        $total = 0;
+        if ($totalRes && $r = $totalRes->fetch_assoc()) {
+            $total = (int)$r['cnt'];
+        }
+
+        echo json_encode(['ok' => true, 'votes' => $total, 'voted' => $newVote]);
+    }
+
+    public function forumComments()
+    {
+        $this->requireLogin('student');
+        header('Content-Type: application/json');
+
+        $db = Database::getInstance();
+        $uId = (int)($_SESSION['user']['u_id'] ?? 0);
+        $id = isset($_GET['id']) ? (int)$_GET['id'] : 0;
+        if ($uId <= 0 || $id <= 0) {
+            echo json_encode(['error' => 'bad_request']);
+            return;
+        }
+
+        // Check view permission
+        $check = $db->query("SELECT q_id FROM forum_q WHERE q_id = $id AND (is_Public = 1 OR u_id = $uId)");
+        if (!$check || $check->num_rows === 0) {
+            echo json_encode([]);
+            return;
+        }
+
+        $sql = "SELECT c.id, c.parent_id, c.content, c.created_at, u.name as author_name, u.role as author_role, u.u_id as author_id
+                FROM forum_comments c
+                LEFT JOIN users u ON u.u_id = c.u_id
+                WHERE c.post_id = $id
+                ORDER BY c.created_at ASC";
+        
+        $comments = [];
+        if ($res = $db->query($sql)) {
+            while ($row = $res->fetch_assoc()) {
+                // Formatting time
+                $ts = strtotime($row['created_at']);
+                $time = ($ts) ? date('M d, g:i A', $ts) : '';
+                
+                $comments[] = [
+                    'id' => (int)$row['id'],
+                    'parentId' => $row['parent_id'] ? (int)$row['parent_id'] : null,
+                    'text' => $row['content'],
+                    'time' => $time,
+                    'name' => $row['author_name'] ?? 'Unknown',
+                    'role' => $row['author_role'] ?? '',
+                    'authorType' => $row['author_role'] ?? 'student', // simplified
+                    'authorId' => (int)$row['author_id']
+                ];
+            }
+        }
+        echo json_encode($comments);
+    }
+
+    public function forumAddComment()
+    {
+        $this->requireLogin('student');
+        header('Content-Type: application/json');
+
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+            http_response_code(405);
+            echo json_encode(['error' => 'method']);
+            return;
+        }
+
+        $db = Database::getInstance();
+        $uId = (int)($_SESSION['user']['u_id'] ?? 0);
+        $id = isset($_POST['id']) ? (int)$_POST['id'] : 0;
+        $parentId = isset($_POST['parentId']) && $_POST['parentId'] ? (int)$_POST['parentId'] : null;
+        $text = isset($_POST['text']) ? trim($_POST['text']) : '';
+
+        if ($uId <= 0 || $id <= 0 || empty($text)) {
+            http_response_code(400);
+            echo json_encode(['error' => 'bad_request']);
+            return;
+        }
+
+        // Check permissions
+        $check = $db->query("SELECT q_id FROM forum_q WHERE q_id = $id AND (is_Public = 1 OR u_id = $uId)");
+        if (!$check || $check->num_rows === 0) {
+            http_response_code(403);
+            echo json_encode(['error' => 'forbidden']);
+            return;
+        }
+
+        $stmt = $db->prepare("INSERT INTO forum_comments (post_id, u_id, parent_id, content) VALUES (?, ?, ?, ?)");
+        if ($stmt) {
+            $stmt->bind_param("iiis", $id, $uId, $parentId, $text);
+            if ($stmt->execute()) {
+                $newId = $stmt->insert_id;
+                // Fetch back to return UI friendly data
+                $res = $db->query("SELECT c.created_at, u.name as author_name, u.role FROM forum_comments c LEFT JOIN users u ON u.u_id = c.u_id WHERE c.id = $newId");
+                $r = $res ? $res->fetch_assoc() : null;
+                $time = $r ? date('M d, g:i A', strtotime($r['created_at'])) : 'Just now';
+                
+                echo json_encode([
+                    'ok' => true, 
+                    'comment' => [
+                        'id' => $newId,
+                        'parentId' => $parentId,
+                        'text' => $text,
+                        'time' => $time,
+                        'name' => $r['author_name'] ?? 'Me',
+                        'role' => $r['role'] ?? 'student',
+                        'authorType' => $r['role'] ?? 'student'
+                    ]
+                ]);
+            } else {
+                http_response_code(500);
+                echo json_encode(['error' => 'db_error']);
+            }
+        } else {
+             http_response_code(500);
+             echo json_encode(['error' => 'prepare_error']);
+        }
     }
 
     // Delete a forum post owned by the current student
     public function forumDelete()
     {
         $this->requireLogin('student');
+        header('Content-Type: application/json');
+
         if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
             http_response_code(405);
-            echo 'method_not_allowed';
+            echo json_encode(['error' => 'Method not allowed']);
             return;
         }
 
@@ -1090,7 +1347,7 @@ public function templates()
         $id = isset($_POST['id']) ? (int)$_POST['id'] : 0;
         if ($id <= 0 || $uId <= 0) {
             http_response_code(400);
-            echo 'bad_request';
+            echo json_encode(['error' => 'Bad request']);
             return;
         }
 
@@ -1104,7 +1361,7 @@ public function templates()
         }
         if (!$ownRow) {
             http_response_code(404);
-            echo 'not_found';
+            echo json_encode(['error' => 'Not found']);
             return;
         }
 
@@ -1112,20 +1369,14 @@ public function templates()
         $ok = $db->query("DELETE FROM forum_q WHERE q_id = $idEsc AND u_id = $uId");
         if (!$ok) {
             http_response_code(500);
-            echo 'delete_failed';
+            echo json_encode(['error' => 'Delete failed']);
             return;
         }
 
-        echo 'ok';
+        echo json_encode(['success' => true]);
     }
 
-    // Placeholder for vote endpoint
-    public function forumVote()
-    {
-        $this->requireLogin('student');
-        header('Content-Type: application/json');
-        echo json_encode(['ok' => true]);
-    }
+
 
     // Student tickets list (using global tickets view)
     public function tickets()
@@ -1330,13 +1581,13 @@ public function templates()
             ? 'Under Review'
             : (in_array($statusRaw, ['resolved','closed','agent-closed']) ? 'Resolved' : ucfirst($statusRaw));
 
-        // attachments from supporting_documents
+        // attachments from attachments table
         $attachments = [];
-        if ($res = $db->query("SELECT doc_name, location FROM supporting_documents WHERE ticket_id = $idEsc")) {
+        if ($res = $db->query("SELECT file_name, file_path FROM attachments WHERE entity_type = 'ticket' AND entity_id = $idEsc")) {
             while ($r = $res->fetch_assoc()) {
                 $attachments[] = [
-                    'name' => (string)($r['doc_name'] ?? ''),
-                    'url' => '/' . ltrim((string)($r['location'] ?? ''), '/'),
+                    'name' => (string)($r['file_name'] ?? ''),
+                    'url' => '/' . ltrim((string)($r['file_path'] ?? ''), '/'),
                 ];
             }
             $res->free();
@@ -1499,16 +1750,92 @@ public function templates()
             'allowReply' => true,
         ];
 
+        $feedback = null;
+        if ($resFb = $db->query("SELECT rating, feedback, created_at FROM feedbacks WHERE ticket_id = $idEsc LIMIT 1")) {
+            if ($rFb = $resFb->fetch_assoc()) {
+                $feedback = [
+                    'rating' => (int)$rFb['rating'],
+                    'feedback' => (string)$rFb['feedback'],
+                    'createdAt' => date('M d, Y \a\t g:i A', strtotime($rFb['created_at']))
+                ];
+            }
+            $resFb->free();
+        }
+        $payload['feedback'] = $feedback;
+
         echo json_encode($payload);
+    }
+
+    public function submitFeedback()
+    {
+        $this->requireLogin('student');
+        header('Content-Type: application/json');
+
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+            http_response_code(405);
+            echo json_encode(['error' => 'Method not allowed']);
+            return;
+        }
+
+        $input = json_decode(file_get_contents('php://input'), true);
+        if (!$input) {
+            $input = json_decode(file_get_contents('php://input'), true);
+            if (!$input) $input = $_POST;
+        }
+
+        $studentId = (int)($_SESSION['user']['u_id'] ?? 0);
+        $ticketId = isset($input['ticket_id']) ? (int)$input['ticket_id'] : 0;
+        $rating = isset($input['rating']) ? (int)$input['rating'] : 0;
+        $feedbackText = isset($input['feedback']) ? (string)$input['feedback'] : '';
+
+        if ($ticketId <= 0 || $rating < 1 || $rating > 5) {
+            http_response_code(400);
+            echo json_encode(['error' => 'Invalid feedback data']);
+            return;
+        }
+
+        $db = Database::getInstance();
+        $ticketIdEsc = (int)$ticketId;
+        
+        $ownRow = null;
+        if ($res = $db->query("SELECT status FROM tickets WHERE ticket_id = $ticketIdEsc AND u_id = $studentId")) {
+            $ownRow = $res->fetch_assoc();
+            $res->free();
+        }
+        if (!$ownRow) {
+            http_response_code(404);
+            echo json_encode(['error' => 'Ticket not found or permission denied']);
+            return;
+        }
+
+        $statusRaw = strtolower((string)$ownRow['status']);
+        if (!in_array($statusRaw, ['resolved', 'closed', 'agent-closed'])) {
+            http_response_code(400);
+            echo json_encode(['error' => 'Ticket is not resolved yet']);
+            return;
+        }
+
+        $feedbackTextEsc = $db->real_escape_string($feedbackText);
+
+        $sql = "INSERT INTO feedbacks (ticket_id, student_id, rating, feedback) VALUES ($ticketIdEsc, $studentId, $rating, '$feedbackTextEsc')";
+        
+        if ($db->query($sql)) {
+            echo json_encode(['success' => true]);
+        } else {
+            http_response_code(500);
+            echo json_encode(['error' => 'Failed to save feedback']);
+        }
     }
 
     // Delete a ticket owned by the current student
     public function ticketDelete()
     {
         $this->requireLogin('student');
+        header('Content-Type: application/json');
+
         if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
             http_response_code(405);
-            echo 'method_not_allowed';
+            echo json_encode(['error' => 'Method not allowed']);
             return;
         }
 
@@ -1516,7 +1843,7 @@ public function templates()
         $id = isset($_POST['id']) ? (int)$_POST['id'] : 0;
         if ($id <= 0) {
             http_response_code(400);
-            echo 'bad_request';
+            echo json_encode(['error' => 'Bad request']);
             return;
         }
 
@@ -1530,24 +1857,26 @@ public function templates()
         }
         if (!$ownRow) {
             http_response_code(404);
-            echo 'not_found';
+            echo json_encode(['error' => 'Not found']);
             return;
         }
 
         // Optionally delete attachments first if FK constraints exist
-        $db->query("DELETE FROM supporting_documents WHERE ticket_id = $idEsc");
+        $db->query("DELETE FROM attachments WHERE entity_type = 'ticket' AND entity_id = $idEsc");
         $db->query("DELETE FROM tickets WHERE ticket_id = $idEsc AND u_id = $studentId");
 
-        echo 'ok';
+        echo json_encode(['success' => true]);
     }
 
     // Mark a ticket owned by the current student as resolved
     public function ticketResolve()
     {
         $this->requireLogin('student');
+        header('Content-Type: application/json');
+        
         if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
             http_response_code(405);
-            echo 'method_not_allowed';
+            echo json_encode(['error' => 'Method not allowed']);
             return;
         }
 
@@ -1555,7 +1884,7 @@ public function templates()
         $id = isset($_POST['id']) ? (int)$_POST['id'] : 0;
         if ($id <= 0) {
             http_response_code(400);
-            echo 'bad_request';
+            echo json_encode(['error' => 'Bad request']);
             return;
         }
 
@@ -1569,7 +1898,7 @@ public function templates()
         }
         if (!$ownRow) {
             http_response_code(404);
-            echo 'not_found';
+            echo json_encode(['error' => 'Not found']);
             return;
         }
 
@@ -1577,14 +1906,18 @@ public function templates()
         $ok = $db->query("UPDATE tickets SET status = 'resolved' WHERE ticket_id = $idEsc AND u_id = $studentId");
         if (!$ok) {
             http_response_code(500);
-            echo 'update_failed';
+            echo json_encode(['error' => 'Update failed']);
             return;
         }
 
         // Update ticket_timeline resolved timestamp
         $db->query("UPDATE ticket_timeline SET resolved = CURRENT_TIMESTAMP WHERE ticket_id = $idEsc");
 
-        echo 'ok';
+        // Trigger notification for status change
+        require_once __DIR__ . '/../../lib/NotificationHelper.php';
+        NotificationHelper::notifyTicketStatusChange($idEsc, 'resolved', $studentId);
+
+        echo json_encode(['success' => true]);
     }
 
     public function lostfound_delete($id = null)
@@ -1699,6 +2032,9 @@ public function templates()
         if ($chatId) {
             $success = $chatModel->sendMessage($chatId, $studentId, $message);
             if ($success) {
+                // Trigger notification for the other party
+                require_once __DIR__ . '/../../lib/NotificationHelper.php';
+                NotificationHelper::notifyTicketMessage($ticketId, $studentId, $_SESSION['user']['name'] ?? 'Student');
                 echo json_encode(['success' => true]);
             } else {
                 echo json_encode(['error' => 'send_failed']);

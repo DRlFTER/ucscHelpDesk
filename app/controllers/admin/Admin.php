@@ -307,8 +307,8 @@ class Admin extends Controller
                 'topic' => (string)($r['topic'] ?? ''),
                 'status' => strtolower((string)($r['status'] ?? 'open')),
                 'is_Public' => isset($r['is_Public']) ? (int)$r['is_Public'] : 0,
-                'votesUp' => 0,
-                'votesDown' => 0,
+                'votes' => (int)($r['vote_count'] ?? 0),
+                'voted' => (int)($r['my_vote'] ?? 0),
                 'comments' => 0,
             ];
         }
@@ -849,6 +849,20 @@ class Admin extends Controller
         if ($mr === 'requested') $meeting = 'requested';
         elseif ($mr === 'scheduled') $meeting = 'scheduled';
 
+        $db = Database::getInstance();
+        $idEsc = (int)$id;
+        $feedback = null;
+        if ($resFb = $db->query("SELECT rating, feedback, created_at FROM feedbacks WHERE ticket_id = $idEsc LIMIT 1")) {
+            if ($rFb = $resFb->fetch_assoc()) {
+                $feedback = [
+                    'rating' => (int)$rFb['rating'],
+                    'feedback' => (string)$rFb['feedback'],
+                    'createdAt' => date('M d, Y \a\t g:i A', strtotime($rFb['created_at']))
+                ];
+            }
+            $resFb->free();
+        }
+
         echo json_encode([
             'id' => (int)$row['ticket_id'],
             'code' => 'TKT-' . (int)$row['ticket_id'],
@@ -866,6 +880,7 @@ class Admin extends Controller
             'assigned' => !empty($staffName) ? ($position ? "$staffName ($position)" : $staffName) : null,
             'timeline' => $timeline,
             'attachments' => $attachments,
+            'feedback' => $feedback,
         ]);
         exit;
     }
@@ -1048,7 +1063,9 @@ class Admin extends Controller
 
         $idEsc = (int)$id;
         // Admin can see all posts
-        $sql = "SELECT f.q_id, f.created_at, f.title, f.topic, f.status, f.description, f.u_id, f.is_Public, u.name AS student_name
+        $sql = "SELECT f.q_id, f.created_at, f.title, f.topic, f.status, f.description, f.u_id, f.is_Public, u.name AS student_name,
+                (SELECT COALESCE(SUM(vote_type), 0) FROM forum_votes WHERE post_id = f.q_id) as vote_count,
+                (SELECT vote_type FROM forum_votes WHERE post_id = f.q_id AND u_id = $uId LIMIT 1) as my_vote
                 FROM forum_q f
                 LEFT JOIN users u ON u.u_id = f.u_id
                 WHERE f.q_id = $idEsc
@@ -1086,6 +1103,18 @@ class Admin extends Controller
 
         $statusUi = strtolower((string)($row['status'] ?? 'open')) === 'answered' ? 'Answered' : 'Open';
 
+        // attachments from attachments table
+        $attachments = [];
+        if ($res = $db->query("SELECT file_name, file_path FROM attachments WHERE entity_type = 'forum' AND entity_id = $idEsc")) {
+            while ($r = $res->fetch_assoc()) {
+                $attachments[] = [
+                    'name' => (string)($r['file_name'] ?? ''),
+                    'url' => '/' . ltrim((string)($r['file_path'] ?? ''), '/'),
+                ];
+            }
+            $res->free();
+        }
+
         $payload = [
             'id' => (int)($row['q_id'] ?? 0),
             'code' => 'FRM-' . (int)($row['q_id'] ?? 0),
@@ -1098,12 +1127,71 @@ class Admin extends Controller
             'createdAgo' => $createdAgo,
             'is_Public' => (int)($row['is_Public'] ?? 0),
             'student' => [ 'id' => (int)($row['u_id'] ?? 0), 'name' => (string)($row['student_name'] ?? 'Student') ],
-            'attachments' => [],
-            'commentsCount' => 0,
-            'votes' => 0,
+            'attachments' => $attachments,
+            'commentsCount' => (int)($db->query("SELECT COUNT(*) as c FROM forum_comments WHERE post_id = " . (int)($row['q_id'] ?? 0))->fetch_assoc()['c'] ?? 0),
+            'votes' => (int)($row['vote_count'] ?? 0),
+            'voted' => (int)($row['my_vote'] ?? 0),
+            'isOwner' => ((int)$row['u_id'] === $uId),
         ];
 
         echo json_encode($payload);
+    }
+
+    public function forumVote()
+    {
+        $this->requireLogin('admin');
+        header('Content-Type: application/json');
+
+        $db = Database::getInstance();
+        $uId = (int)($_SESSION['user']['u_id'] ?? 0);
+        $id = isset($_POST['id']) ? (int)$_POST['id'] : 0;
+        $type = isset($_POST['type']) ? $_POST['type'] : '';
+
+        if ($uId <= 0 || $id <= 0 || !in_array($type, ['up', 'down'])) {
+            http_response_code(400);
+            echo json_encode(['error' => 'bad_request']);
+            return;
+        }
+
+        $voteVal = ($type === 'up') ? 1 : -1;
+
+        // Check if post exists (Admin can access all)
+        $check = $db->query("SELECT q_id FROM forum_q WHERE q_id = $id");
+        if (!$check || $check->num_rows === 0) {
+            http_response_code(404);
+            echo json_encode(['error' => 'not_found']);
+            return;
+        }
+
+        // Check existing vote
+        $existing = 0;
+        $checkVote = $db->query("SELECT vote_type FROM forum_votes WHERE post_id = $id AND u_id = $uId");
+        if ($checkVote && $row = $checkVote->fetch_assoc()) {
+            $existing = (int)$row['vote_type'];
+        }
+
+        if ($existing === $voteVal) {
+            // Toggle off (remove vote)
+            $db->query("DELETE FROM forum_votes WHERE post_id = $id AND u_id = $uId");
+            $newVote = 0;
+        } else {
+            // Insert or Update
+            $stmt = $db->prepare("INSERT INTO forum_votes (post_id, u_id, vote_type) VALUES (?, ?, ?) ON DUPLICATE KEY UPDATE vote_type = ?");
+            if ($stmt) {
+                $stmt->bind_param("iiii", $id, $uId, $voteVal, $voteVal);
+                $stmt->execute();
+            }
+            $newVote = $voteVal;
+        }
+
+        // Get new total
+        $totalRes = $db->query("SELECT COALESCE(SUM(vote_type), 0) as cnt FROM forum_votes WHERE post_id = $id");
+        $total = 0;
+        if ($totalRes && $r = $totalRes->fetch_assoc()) {
+            $total = (int)$r['cnt'];
+        }
+
+        echo json_encode(['ok' => true, 'votes' => $total, 'voted' => $newVote]);
     }
 
     // Toggle forum post visibility (Admin can change any post)
@@ -1217,12 +1305,113 @@ class Admin extends Controller
         }
     }
 
-    // Placeholder for vote endpoint
-    public function forumVote()
+
+
+
+    public function forumComments()
     {
         $this->requireLogin('admin');
         header('Content-Type: application/json');
-        echo json_encode(['ok' => true]);
+
+        $db = Database::getInstance();
+        $uId = (int)($_SESSION['user']['u_id'] ?? 0);
+        $id = isset($_GET['id']) ? (int)$_GET['id'] : 0;
+        if ($uId <= 0 || $id <= 0) {
+            echo json_encode(['error' => 'bad_request']);
+            return;
+        }
+
+        // Admin can view any post
+        $check = $db->query("SELECT q_id FROM forum_q WHERE q_id = $id");
+        if (!$check || $check->num_rows === 0) {
+            echo json_encode([]);
+            return;
+        }
+
+        $sql = "SELECT c.id, c.parent_id, c.content, c.created_at, u.name as author_name, u.role as author_role, u.u_id as author_id
+                FROM forum_comments c
+                LEFT JOIN users u ON u.u_id = c.u_id
+                WHERE c.post_id = $id
+                ORDER BY c.created_at ASC";
+        
+        $comments = [];
+        if ($res = $db->query($sql)) {
+            while ($row = $res->fetch_assoc()) {
+                $ts = strtotime($row['created_at']);
+                $time = ($ts) ? date('M d, g:i A', $ts) : '';
+                
+                $comments[] = [
+                    'id' => (int)$row['id'],
+                    'parentId' => $row['parent_id'] ? (int)$row['parent_id'] : null,
+                    'text' => $row['content'],
+                    'time' => $time,
+                    'name' => $row['author_name'] ?? 'Unknown',
+                    'role' => $row['author_role'] ?? '',
+                    'authorType' => $row['author_role'] ?? 'admin',
+                    'authorId' => (int)$row['author_id']
+                ];
+            }
+        }
+        echo json_encode($comments);
+    }
+
+    public function forumAddComment()
+    {
+        $this->requireLogin('admin');
+        header('Content-Type: application/json');
+
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+            http_response_code(405);
+            echo json_encode(['error' => 'method']);
+            return;
+        }
+
+        $db = Database::getInstance();
+        $uId = (int)($_SESSION['user']['u_id'] ?? 0);
+        $id = isset($_POST['id']) ? (int)$_POST['id'] : 0;
+        $parentId = isset($_POST['parentId']) && $_POST['parentId'] ? (int)$_POST['parentId'] : null;
+        $text = isset($_POST['text']) ? trim($_POST['text']) : '';
+
+        if ($uId <= 0 || $id <= 0 || empty($text)) {
+            http_response_code(400);
+            echo json_encode(['error' => 'bad_request']);
+            return;
+        }
+
+        // Admin can comment on any post
+        $check = $db->query("SELECT q_id FROM forum_q WHERE q_id = $id");
+        if (!$check || $check->num_rows === 0) {
+            http_response_code(404);
+            echo json_encode(['error' => 'not_found']);
+            return;
+        }
+
+        $stmt = $db->prepare("INSERT INTO forum_comments (post_id, u_id, parent_id, content) VALUES (?, ?, ?, ?)");
+        if ($stmt) {
+            $stmt->bind_param("iiis", $id, $uId, $parentId, $text);
+            if ($stmt->execute()) {
+                $newId = $stmt->insert_id;
+                $res = $db->query("SELECT c.created_at, u.name as author_name, u.role FROM forum_comments c LEFT JOIN users u ON u.u_id = c.u_id WHERE c.id = $newId");
+                $r = $res ? $res->fetch_assoc() : null;
+                $time = $r ? date('M d, g:i A', strtotime($r['created_at'])) : 'Just now';
+                
+                echo json_encode([
+                    'ok' => true, 
+                    'comment' => [
+                        'id' => $newId,
+                        'parentId' => $parentId,
+                        'text' => $text,
+                        'time' => $time,
+                        'name' => $r['author_name'] ?? 'Me',
+                        'role' => $r['role'] ?? 'admin',
+                        'authorType' => 'admin'
+                    ]
+                ]);
+            } else {
+                http_response_code(500);
+                echo json_encode(['error' => 'db_error']);
+            }
+        }
     }
 
     // ==================== Reports ====================

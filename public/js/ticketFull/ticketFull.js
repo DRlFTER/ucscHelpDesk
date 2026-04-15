@@ -91,9 +91,23 @@ function renderAttachments() {
 }
 
 // Date/time formatting helpers for chat
+function parseChatDate(dateString) {
+  if (!dateString) return null;
+
+  // MySQL DATETIME values have no timezone; treat them as UTC and convert for display.
+  const mysqlDateTime = /^\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}$/;
+  const isoString = mysqlDateTime.test(dateString)
+    ? dateString.replace(' ', 'T') + 'Z'
+    : dateString;
+
+  const date = new Date(isoString);
+  return Number.isNaN(date.getTime()) ? null : date;
+}
+
 function formatDate(dateString) {
-  if (!dateString) return '';
-  const date = new Date(dateString.replace(/-/g, '/'));
+  const date = parseChatDate(dateString);
+  if (!date) return '';
+
   const today = new Date();
   const yesterday = new Date(today);
   yesterday.setDate(yesterday.getDate() - 1);
@@ -108,9 +122,43 @@ function formatDate(dateString) {
 }
 
 function formatTime(dateString) {
-  if (!dateString) return '';
-  const date = new Date(dateString.replace(/-/g, '/'));
+  const date = parseChatDate(dateString);
+  if (!date) return '';
+
   return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: false });
+}
+
+function escapeHtml(value) {
+  return String(value ?? '')
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;');
+}
+
+function formatMessageText(rawText) {
+  const normalized = String(rawText || '')
+    .replace(/\\r\\n/g, '\n')
+    .replace(/\\n/g, '\n')
+    .replace(/\r\n/g, '\n')
+    .replace(/\n{2,}/g, '\n')
+    .replace(/\s+(Title:|Date:|Time:|Mode:|Venue:|Meeting Link:|Notes:|\(Meeting[^\)]*ID:\s*\d+\))/g, '\n$1')
+    .trim();
+
+  if (!normalized) return '';
+
+  return normalized
+    .split('\n')
+    .filter((line) => line.trim() !== '')
+    .map((line) => {
+      const escaped = escapeHtml(line.trim()).replace(
+        /(https?:\/\/[^\s<]+)/g,
+        '<a class="inlineMessageLink" href="$1" target="_blank" rel="noopener noreferrer">$1</a>'
+      );
+      return `<div class="messageLine">${escaped}</div>`;
+    })
+    .join('');
 }
 
 function renderMessages() {
@@ -143,7 +191,7 @@ function renderMessages() {
             ${headerTitle}
             <span class="time">${timeStr}</span>
           </div>
-          <div class="messageText">${msg.text}</div>
+          <div class="messageText">${formatMessageText(msg.text)}</div>
         </div>
       </div>`;
     })
@@ -156,20 +204,43 @@ function renderMessages() {
 function renderInfo() {
   const info = [
     { label: "Ticket ID", value: ticketData.id },
+    { label: "Student Name", value: ticketData.student?.name || "Unknown" },
+    { label: "Ticket type", value: ticketData.type || ticketData.t_type || "—" },
     { label: "Category", value: ticketData.category },
     { label: "Priority", value: ticketData.priority },
     { label: "Assigned staff", value: ticketData.assigned || "—" },
     { label: "Created on", value: ticketData.createdOn || "—" },
   ];
-  document.getElementById("ticketInfoList").innerHTML = info
-    .map(
-      (i) => `
+
+  let html = info.map(i => `
     <div class="infoRow">
       <span class="label">${i.label}</span>
       <span class="value">${i.value}</span>
-    </div>`
-    )
-    .join("");
+    </div>
+  `).join("");
+
+  // Add indicators at the bottom
+  const meetingNorm = (ticketData.meeting || "").toLowerCase();
+  const isMeetingRequested = meetingNorm === "requested" || meetingNorm === "true" || ticketData.meeting_requested;
+  if (isMeetingRequested) {
+    html += `
+    <div class="infoRow mt-2">
+      <span class="badge" style="background:#eff6ff;color:#1e40af;border:1px solid #bfdbfe;width:100%;text-align:center;padding:8px;border-radius:10px;font-weight:500;">
+        Meeting Requested
+      </span>
+    </div>`;
+  }
+  
+  if (ticketData.overdue || ticketData.is_overdue_pending || ticketData.isOverdue) {
+    html += `
+    <div class="infoRow mt-2">
+      <span class="badge" style="background:#fef2f2;color:#dc2626;border:1px solid #fca5a5;width:100%;text-align:center;padding:8px;border-radius:10px;font-weight:500;">
+        Overdue (Pending)
+      </span>
+    </div>`;
+  }
+
+  document.getElementById("ticketInfoList").innerHTML = html;
 }
 
 function renderTimeline() {
@@ -190,17 +261,127 @@ function renderTimeline() {
     .join("");
 }
 
+function renderFeedback() {
+  const fbCard = document.getElementById("ticketFeedbackCard");
+  const fbContent = document.getElementById("feedbackContent");
+  if (!fbCard || !fbContent) return;
+
+  const statusNorm = (ticketData.status || "").toLowerCase();
+  const isResolved = statusNorm === "resolved" || statusNorm === "closed" || statusNorm === "agent-closed" || statusNorm === "agent closed";
+
+  if (!isResolved) {
+    fbCard.style.display = "none";
+    return;
+  }
+
+  fbCard.style.display = "";
+
+  if (ticketData.feedback) {
+    // Show submitted feedback
+    let starsHtml = "";
+    for (let i = 1; i <= 5; i++) {
+      if (i <= ticketData.feedback.rating) {
+        starsHtml += '<span style="color:#fbbf24; font-size:1.2rem;">★</span>';
+      } else {
+        starsHtml += '<span style="color:#e5e7eb; font-size:1.2rem;">★</span>';
+      }
+    }
+    
+    fbContent.innerHTML = `
+      <div style="margin-bottom: 8px;">${starsHtml}</div>
+      <p style="font-size:0.95rem; color:#4b5563; margin-bottom: 8px;">${escapeHtml(ticketData.feedback.feedback)}</p>
+      <div style="font-size:0.8rem; color:#9ca3af;">Submitted on ${escapeHtml(ticketData.feedback.createdAt)}</div>
+    `;
+  } else if (ROLE === "student") {
+    // Show form for student
+    fbContent.innerHTML = `
+      <p style="font-size:0.95rem; color:#4b5563; margin-bottom:12px;">How was your experience? Please leave a feedback.</p>
+      <div id="starRatingSelector" style="margin-bottom:12px; cursor:pointer;">
+        <span data-value="1" class="star" style="font-size:1.5rem; color:#e5e7eb;">★</span>
+        <span data-value="2" class="star" style="font-size:1.5rem; color:#e5e7eb;">★</span>
+        <span data-value="3" class="star" style="font-size:1.5rem; color:#e5e7eb;">★</span>
+        <span data-value="4" class="star" style="font-size:1.5rem; color:#e5e7eb;">★</span>
+        <span data-value="5" class="star" style="font-size:1.5rem; color:#e5e7eb;">★</span>
+      </div>
+      <input type="hidden" id="feedbackRatingValue" value="0">
+      <textarea id="feedbackTextInput" placeholder="Write your feedback..." style="width:100%; border:1px solid #d1d5db; border-radius:6px; padding:8px; margin-bottom:12px; font-family:inherit; min-height:80px;"></textarea>
+      <button id="submitFeedbackBtn" class="btnPrimary" type="button" style="width:100%;"><span class="btnPrimaryText">Submit Feedback</span></button>
+    `;
+
+    const stars = document.querySelectorAll("#starRatingSelector .star");
+    const ratingValue = document.getElementById("feedbackRatingValue");
+    
+    stars.forEach(star => {
+      star.addEventListener("click", () => {
+        const val = parseInt(star.getAttribute("data-value"), 10);
+        ratingValue.value = val;
+        stars.forEach(s => {
+          if (parseInt(s.getAttribute("data-value"), 10) <= val) {
+            s.style.color = "#fbbf24";
+          } else {
+            s.style.color = "#e5e7eb";
+          }
+        });
+      });
+    });
+
+    document.getElementById("submitFeedbackBtn").addEventListener("click", async () => {
+      const rating = parseInt(ratingValue.value, 10);
+      const fbText = document.getElementById("feedbackTextInput").value.trim();
+
+      if (rating < 1) {
+        alert("Please select a star rating");
+        return;
+      }
+
+      const btn = document.getElementById("submitFeedbackBtn");
+      const origText = btn.querySelector('.btnPrimaryText').textContent;
+      btn.disabled = true;
+      btn.querySelector('.btnPrimaryText').textContent = 'Submitting...';
+
+      try {
+        const res = await fetch('/student/submitFeedback', {
+          method: 'POST',
+          headers: {'Content-Type':'application/json'},
+          body: JSON.stringify({
+            ticket_id: ticketData.id,
+            rating: rating,
+            feedback: fbText
+          })
+        });
+        const data = await res.json();
+        if (data.success) {
+          fbContent.innerHTML = `<p style="font-size:0.95rem; color:#10b981; font-weight:500; margin:0;">Thank you for your feedback!</p>`;
+        } else {
+          fbContent.innerHTML = `<p style="font-size:0.95rem; color:#ef4444; font-weight:500; margin:0;">Failed to submit feedback. Please try again later.</p>`;
+        }
+      } catch (e) {
+        console.error(e);
+        fbContent.innerHTML = `<p style="font-size:0.95rem; color:#ef4444; font-weight:500; margin:0;">Failed to submit feedback. Please try again later.</p>`;
+      }
+    });
+
+  } else {
+    // Staff/Admin/Counselor sees no feedback message if not submitted
+    fbContent.innerHTML = `<p style="font-size:0.95rem; color:#9ca3af; font-style:italic;">No feedback submitted yet.</p>`;
+  }
+}
+
 function toggleActionButtons() {
   const del = document.getElementById("deleteBtn");
   const sched = document.getElementById("scheduleBtn");
   const resolveBtn = document.getElementById("resolveBtn");
+  const rejectBtn = document.getElementById("rejectBtn");
+  const assignBtn = document.getElementById("assignBtn");
+  const forwardBtn = document.getElementById("forwardBtn");
   const statusNorm = (ticketData.status || "").toLowerCase();
-  const isResolved = statusNorm === "resolved" || statusNorm === "closed";
+  const isResolved = statusNorm === "resolved" || statusNorm === "closed" || statusNorm === "agent-closed" || statusNorm === "agent closed";
 
   // Admin: show delete and resolve (if not resolved)
   if (ROLE === "admin") {
     if (del) del.style.display = "";
     if (resolveBtn) resolveBtn.style.display = isResolved ? "none" : "";
+    if (rejectBtn) rejectBtn.style.display = "none";
     if (sched) sched.style.display = "none";
     return;
   }
@@ -209,16 +390,58 @@ function toggleActionButtons() {
   if (ROLE === "student") {
     if (del) del.style.display = "none";
     if (sched) sched.style.display = "none";
+    if (rejectBtn) rejectBtn.style.display = "none";
     if (resolveBtn) resolveBtn.style.display = isResolved ? "none" : "";
     return;
   }
 
-  // Counselor: show schedule button if meeting requested, hide others
+  // Counselor: works same as staff but includes schedule option
   if (ROLE === "counselor") {
+    const isPending = !!ticketData.isPending;
+    const isAssignedToMe = !!ticketData.isAssignedToMe;
     const meeting = (ticketData.meeting || "").toLowerCase();
-    if (sched) sched.style.display = meeting === "requested" ? "" : "none";
+    
     if (del) del.style.display = "none";
-    if (resolveBtn) resolveBtn.style.display = "none";
+    if (assignBtn) assignBtn.style.display = isPending ? "" : "none";
+    if (forwardBtn) forwardBtn.style.display = "none"; // Hide forwarding for counselors
+    if (resolveBtn) resolveBtn.style.display = isAssignedToMe && !isResolved ? "" : "none";
+    if (rejectBtn) rejectBtn.style.display = "none"; // Hide closing/rejecting for counselors
+    if (sched) sched.style.display = isAssignedToMe && !isResolved && (meeting === "requested" || meeting === "true" || ticketData.meeting_requested) ? "" : "none";
+    
+    const sendBtn = document.getElementById("sendBtn");
+    const replyInput = document.getElementById("replyInput");
+    const attachBtn = document.getElementById("attachBtn");
+    if (!isAssignedToMe || isResolved) {
+      if (sendBtn) sendBtn.disabled = true;
+      if (replyInput) replyInput.disabled = true;
+      if (attachBtn) attachBtn.disabled = true;
+    }
+    return;
+  }
+
+  // Staff: assign/forward/resolve/reject rules
+  if (ROLE === "staff") {
+    const isPending = !!ticketData.isPending;
+    const isAssignedToMe = !!ticketData.isAssignedToMe;
+    
+    // Hide everything by default
+    if (del) del.style.display = "none";
+    if (sched) sched.style.display = "none";
+    if (rejectBtn) rejectBtn.style.display = "none";
+    
+    if (assignBtn) assignBtn.style.display = isPending ? "" : "none";
+    if (forwardBtn) forwardBtn.style.display = isAssignedToMe && !isResolved ? "" : "none";
+    if (resolveBtn) resolveBtn.style.display = isAssignedToMe && !isResolved ? "" : "none";
+    
+    // Also disable chat input if not assigned or resolved
+    const sendBtn = document.getElementById("sendBtn");
+    const replyInput = document.getElementById("replyInput");
+    const attachBtn = document.getElementById("attachBtn");
+    if (!isAssignedToMe || isResolved) {
+      if (sendBtn) sendBtn.disabled = true;
+      if (replyInput) replyInput.disabled = true;
+      if (attachBtn) attachBtn.disabled = true;
+    }
     return;
   }
 
@@ -226,6 +449,7 @@ function toggleActionButtons() {
   if (del) del.style.display = "none";
   if (sched) sched.style.display = "none";
   if (resolveBtn) resolveBtn.style.display = "none";
+  if (rejectBtn) rejectBtn.style.display = "none";
 }
 
 function wireActions() {
@@ -291,18 +515,28 @@ function wireActions() {
     resolveBtn.addEventListener("click", () => openResolveModal());
   }
 
+  const assignBtn = document.getElementById("assignBtn");
+  if (assignBtn) {
+    assignBtn.addEventListener("click", () => {
+      if (ROLE === "staff" || ROLE === "counselor") {
+        assignTicketSelf();
+      } else {
+        openAssignModal();
+      }
+    });
+  }
+
+  const forwardBtn = document.getElementById("forwardBtn");
+  if (forwardBtn) {
+    forwardBtn.addEventListener("click", () => openForwardModal());
+  }
+
   const deleteBtn = document.getElementById("deleteBtn");
   if (deleteBtn) {
     deleteBtn.addEventListener("click", () => openDeleteModal());
   }
 
-  const scheduleBtn = document.getElementById("scheduleBtn");
-  if (scheduleBtn) {
-    scheduleBtn.addEventListener("click", () => {
-      // Open the custom schedule meeting modal (UI only)
-      openScheduleModal();
-    });
-  }
+  // Schedule button is handled by inline script in the view file
 }
 
 // Cache helpers
@@ -376,6 +610,44 @@ async function fetchMessages(id) {
   }
 }
 
+function showMeetingDuePopup(notification) {
+  const title = notification.title || "Counseling Session";
+  const startTime = notification.start_time || "--:--";
+  const venue = notification.venue || "";
+  const link = notification.meeting_link || "";
+
+  let text = `Meeting time has started.\n\nTitle: ${title}\nStart Time: ${startTime}`;
+  if (venue) text += `\nVenue: ${venue}`;
+  if (link) text += `\nMeeting Link: ${link}`;
+
+  alert(text);
+}
+
+async function checkMeetingDueNotifications() {
+  try {
+    const res = await fetch('/meetingscheduler/processDueMeetingNotifications', {
+      credentials: 'include'
+    });
+    if (!res.ok) return;
+
+    const data = await res.json();
+    if (!data || !data.success || !Array.isArray(data.notifications)) return;
+
+    data.notifications.forEach((notification) => {
+      const meetingId = notification.meeting_id;
+      if (!meetingId) return;
+
+      const key = `meeting_popup_seen_${meetingId}`;
+      if (localStorage.getItem(key) === '1') return;
+
+      showMeetingDuePopup(notification);
+      localStorage.setItem(key, '1');
+    });
+  } catch (e) {
+    console.error('Error checking due meeting notifications:', e);
+  }
+}
+
 (async function init() {
   const id = getTicketIdFromUrl();
   if (id) {
@@ -403,6 +675,7 @@ async function fetchMessages(id) {
             renderMessages();
             renderInfo();
             renderTimeline();
+            renderFeedback();
             toggleActionButtons();
           } else {
              saveToCache(id, fresh); // just update timestamp
@@ -410,6 +683,9 @@ async function fetchMessages(id) {
         })
         .catch(() => {});
     }
+    
+    // Make ticket data globally available for modal
+    window.ticketData = ticketData;
   }
   if (!ticketData) {
     ticketData = {
@@ -442,18 +718,212 @@ async function fetchMessages(id) {
   renderAttachments();
   renderInfo();
   renderTimeline();
+  renderFeedback();
   toggleActionButtons();
   wireActions();
 
-  // Fetch chat messages from server
+  // Interval for polling chat messages (previously 10s, now 5s to match old logic)
   if (id) {
     fetchMessages(id);
     // Poll for new messages every 10 seconds
     setInterval(() => fetchMessages(id), 10000);
+
+    if (ROLE === 'student' || ROLE === 'counselor') {
+      checkMeetingDueNotifications();
+      setInterval(() => checkMeetingDueNotifications(), 30000);
+    }
   } else {
     renderMessages();
   }
 })();
+
+function assignTicketSelf() {
+  const ticketId = getTicketIdFromUrl();
+  if (!ticketId) return;
+
+  fetch(`/${ROLE}/ticketAssign`, {
+    method: "POST",
+    headers: { "Content-Type": "application/x-www-form-urlencoded" },
+    body: `id=${encodeURIComponent(ticketId)}`,
+    credentials: "include",
+  })
+    .then((res) => {
+      if (res.url.includes("/login")) {
+        window.location.href = "/login";
+        return;
+      }
+      return res.json();
+    })
+    .then((data) => {
+      if (data && data.success) {
+        window.location.reload();
+      } else if (data && data.error) {
+        console.error("Assign failed:", data.error);
+      }
+    })
+    .catch((err) => {
+      console.error("ASSIGN ERROR:", err);
+    });
+}
+
+// Modal helpers
+function openAssignModal() {
+  if (ROLE !== "staff" && ROLE !== "counselor") return;
+  const overlay = document.getElementById("assignModal");
+  if (!overlay) return;
+
+  overlay.classList.add("open");
+  overlay.removeAttribute("aria-hidden");
+  document.body.classList.add("modal-open");
+
+  const cancelBtn = document.getElementById("cancelAssignBtn");
+  const confirmBtn = document.getElementById("confirmAssignBtn");
+  const backdropBtn = overlay.querySelector(".modalBackdropClose");
+
+  const close = () => {
+    overlay.classList.remove("open");
+    overlay.setAttribute("aria-hidden", "true");
+    document.body.classList.remove("modal-open");
+  };
+
+  confirmBtn.onclick = async (e) => {
+    e && e.preventDefault();
+    try {
+      const res = await fetch(`/${ROLE}/ticketAssign`, {
+        method: "POST",
+        headers: { "Content-Type": "application/x-www-form-urlencoded" },
+        body: `id=${encodeURIComponent(ticketData.id)}`,
+        credentials: "include",
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || "Assign failed");
+
+      // Success!
+      alert("Ticket assigned to you!");
+      window.location.reload();
+    } catch (err) {
+      console.error("ASSIGN ERROR:", err);
+      alert("Error: " + err.message);
+    }
+  };
+
+  cancelBtn.onclick = close;
+  if (backdropBtn) backdropBtn.onclick = close;
+}
+
+function openForwardModal() {
+  if (ROLE !== "staff") return;
+  const overlay = document.getElementById("forwardModal");
+  if (!overlay) return;
+
+  overlay.classList.add("open");
+  overlay.removeAttribute("aria-hidden");
+  document.body.classList.add("modal-open");
+
+  // Load staff members if not already loaded
+  const select = document.getElementById("forwardStaffSelect");
+  if (select.options.length <= 1) {
+    fetchStaffMembers(select);
+  }
+
+  const cancelBtn = document.getElementById("cancelForwardBtn");
+  const confirmBtn = document.getElementById("confirmForwardBtn");
+  const backdropBtn = overlay.querySelector(".modalBackdropClose");
+
+  const close = () => {
+    overlay.classList.remove("open");
+    overlay.setAttribute("aria-hidden", "true");
+    document.body.classList.remove("modal-open");
+  };
+
+  confirmBtn.onclick = async (e) => {
+    e && e.preventDefault();
+    const staffId = select.value;
+    if (!staffId) {
+      alert("Please select a staff member");
+      return;
+    }
+
+    try {
+      const res = await fetch(`/${ROLE}/ticketForward`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ id: ticketData.id, forward_to: parseInt(staffId) }),
+        credentials: "include",
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || "Forward failed");
+
+      window.location.reload();
+    } catch (err) {
+      console.error("FORWARD ERROR:", err);
+      // alert("Error: " + err.message);
+    }
+  };
+
+  cancelBtn.onclick = close;
+  if (backdropBtn) backdropBtn.onclick = close;
+}
+
+async function fetchStaffMembers(selectEl) {
+  try {
+    const res = await fetch(`/${ROLE}/staffList`);
+    const data = await res.json();
+    if (data.staff) {
+      data.staff.forEach(s => {
+        const opt = document.createElement("option");
+        opt.value = s.u_id;
+        opt.textContent = s.name;
+        selectEl.appendChild(opt);
+      });
+    }
+  } catch (err) {
+    console.error("Failed to load staff list", err);
+  }
+}
+
+function openRejectModal() {
+  if (ROLE !== "staff") return;
+  const overlay = document.getElementById("rejectModal");
+  if (!overlay) return;
+
+  overlay.classList.add("open");
+  overlay.removeAttribute("aria-hidden");
+  document.body.classList.add("modal-open");
+
+  const cancelBtn = document.getElementById("cancelRejectBtn");
+  const confirmBtn = document.getElementById("confirmRejectBtn");
+  const backdropBtn = overlay.querySelector(".modalBackdropClose");
+
+  const close = () => {
+    overlay.classList.remove("open");
+    overlay.setAttribute("aria-hidden", "true");
+    document.body.classList.remove("modal-open");
+  };
+
+  confirmBtn.onclick = async (e) => {
+    e && e.preventDefault();
+    try {
+      const res = await fetch(`/${ROLE}/ticketReject`, {
+        method: "POST",
+        headers: { "Content-Type": "application/x-www-form-urlencoded" },
+        body: `id=${encodeURIComponent(ticketData.id)}`,
+        credentials: "include",
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || "Reject failed");
+
+      alert("Ticket closed successfully!");
+      window.location.href = `/${ROLE}/tickets`;
+    } catch (err) {
+      console.error("REJECT ERROR:", err);
+      alert("Error: " + err.message);
+    }
+  };
+
+  cancelBtn.onclick = close;
+  if (backdropBtn) backdropBtn.onclick = close;
+}
 
 // Modal helpers (admin only)
 function openDeleteModal() {
@@ -513,8 +983,8 @@ function openDeleteModal() {
 // ... (top of file)
 
 function openResolveModal() {
-  // Allow admin and student to resolve tickets
-  if (ROLE !== "admin" && ROLE !== "student") return;
+  // Allow admin, student, staff, and counselor to resolve tickets
+  if (ROLE !== "admin" && ROLE !== "student" && ROLE !== "staff" && ROLE !== "counselor") return;
   const overlay = document.getElementById("resolveModal");
   if (!overlay) return;
 
@@ -563,23 +1033,29 @@ function openResolveModal() {
 
       if (!res.ok) throw new Error(data.error || "Mark as resolved failed");
 
-      ticketData.status = "Resolved";
+      if (ROLE === "staff") {
+        window.location.reload();
+      } else {
+        ticketData.status = "Resolved";
 
-      renderHeader();
-      renderInfo();
-      renderTimeline();
-      toggleActionButtons();
+        renderHeader();
+        renderInfo();
+        renderTimeline();
+        renderFeedback();
+        toggleActionButtons();
 
-      // Clear cache so it doesn't revert on manual refresh
-      try {
-        localStorage.removeItem(cacheKeyFor(ticketData.id));
-      } catch (e) {}
+        // Clear cache so it doesn't revert on manual refresh
+        try {
+          localStorage.removeItem(cacheKeyFor(ticketData.id));
+        } catch (e) {}
 
-      alert("Ticket marked as resolved.");
-      close();
+        close();
+      }
     } catch (err) {
       console.error("RESOLVE ERROR:", err);
-      alert("Error: " + err.message);
+      if (ROLE !== "staff") {
+        alert("Error: " + err.message);
+      }
     }
   };
 
@@ -597,25 +1073,4 @@ function openResolveModal() {
   }
 }
 
-// Modal helper: counselor schedule meeting (UI only)
-function openScheduleModal() {
-  const overlay = document.getElementById("scheduleModal");
-  if (!overlay) return;
-
-  overlay.classList.add("open");
-  document.body.classList.add("modal-open");
-
-  const cancelBtn = document.getElementById("cancelScheduleBtn");
-  const backdropBtn = overlay.querySelector(".modalBackdropClose");
-
-  const close = (e) => {
-    e && e.preventDefault();
-    overlay.classList.remove("open");
-    document.body.classList.remove("modal-open");
-    cancelBtn && cancelBtn.removeEventListener("click", close);
-    backdropBtn && backdropBtn.removeEventListener("click", close);
-  };
-
-  cancelBtn && cancelBtn.addEventListener("click", close);
-  backdropBtn && backdropBtn.addEventListener("click", close);
-}
+// Schedule modal is handled by inline script in the view file

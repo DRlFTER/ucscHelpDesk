@@ -148,6 +148,25 @@ class User extends Model
 		$stmt->close();
 		return $row['profile_url'] ?? null;
 	}
+
+	/**
+	 * Update user password
+	 * @param int $userId User ID
+	 * @param string $passwordHash New password hash
+	 * @return bool Success status
+	 */
+	public function updatePassword(int $userId, string $passwordHash): bool
+	{
+		$sql = "UPDATE users SET password_hash = ? WHERE u_id = ?";
+		$stmt = $this->db->prepare($sql);
+		if (!$stmt) {
+			throw new Exception('Prepare failed: ' . $this->db->error);
+		}
+		$stmt->bind_param('si', $passwordHash, $userId);
+		$result = $stmt->execute();
+		$stmt->close();
+		return $result;
+	}
 }
 
 

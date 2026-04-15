@@ -1,0 +1,7 @@
+# Ignore files and directories
+node_modules/
+vendor/
+lib/
+public/uploads/
+*.min.js
+*.min.css

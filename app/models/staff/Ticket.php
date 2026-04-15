@@ -90,8 +90,7 @@ class StaffTicket
         $stmt = $conn->prepare($sql);
         if (!$stmt) {
             $err = $conn->error;
-            $conn->close();
-            throw new Exception('Prepare failed: ' . $err);
+            return null;
         }
         $stmt->bind_param('i', $staff_id);
         $stmt->execute();
@@ -99,7 +98,7 @@ class StaffTicket
         $row = $result->fetch_assoc();
         $stmt->close();
         $conn->close();
-        return $row['level'] ?? null;
+        return isset($row['level']) ? (int)$row['level'] : null;
     }
     /**
      * Get all emails of staff members in a specific level.
@@ -163,7 +162,7 @@ class StaffTicket
      * Send escalation email to all staff in the given level using PHPMailer.
      * Uses SMTP settings from config.php.
      */
-    private function sendEscalationEmail(int $ticket_id, int $level): bool
+    public function sendEscalationEmail(int $ticket_id, int $level): bool
     {
         // DEBUG EMAIL: Starting sendEscalationEmail for ticket_id=$ticket_id, level=$level
         // echo "<pre>DEBUG EMAIL: Starting sendEscalationEmail for ticket_id=$ticket_id, level=$level</pre>";
@@ -528,7 +527,8 @@ if (!isset($_SESSION[$session_key])) {
         $conn = self::getConnection();
         $staff_name = $this->getticketassignedstaffname($ticket_id);
         $current_staff = (int)($_SESSION['user']['u_id'] ?? 0);
-        $sql = "SELECT t.ticket_id, t.created_at, t.title, u.name AS student_name, d.name AS category, t.status, t.priority, t.meeting_requested, t.description, t.assigned_to , ? AS staff_name,t.t_type
+        $sql = "SELECT t.ticket_id, t.u_id, t.created_at, t.title, u.name AS student_name, d.name AS category, t.status, t.priority, t.meeting_requested, t.description, t.assigned_to , ? AS staff_name,t.t_type,
+                       CASE WHEN t.status = 'pending' AND t.created_at < DATE_SUB(NOW(), INTERVAL 3 DAY) THEN 1 ELSE 0 END AS is_overdue_pending
                 FROM tickets t
                 INNER JOIN users u ON t.u_id = u.u_id
                 LEFT JOIN division d ON d.did = t.division

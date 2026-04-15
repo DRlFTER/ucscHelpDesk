@@ -218,39 +218,47 @@ class AdminModel extends Model
     public function getForumPosts(int $userId = 0, string $search = '', string $topic = '', string $status = '', string $type = '', string $sort = 'latest', int $limit = 10, int $offset = 0): array
     {
         $where = [];
-        $params = [];
-        $types = '';
+        $whereParams = [];
+        $whereTypes = '';
 
         if (strtolower($type) === 'my' && $userId > 0) {
             $where[] = "f.u_id = ?";
-            $params[] = $userId;
-            $types .= 'i';
+            $whereParams[] = $userId;
+            $whereTypes .= 'i';
         }
 
         if ($search !== '') {
             $searchPattern = '%' . $search . '%';
             $where[] = "(f.title LIKE ? OR f.description LIKE ?)";
-            $params[] = $searchPattern;
-            $params[] = $searchPattern;
-            $types .= 'ss';
+            $whereParams[] = $searchPattern;
+            $whereParams[] = $searchPattern;
+            $whereTypes .= 'ss';
         }
 
         if ($topic !== '') {
             $where[] = "f.topic = ?";
-            $params[] = $topic;
-            $types .= 's';
+            $whereParams[] = $topic;
+            $whereTypes .= 's';
         }
 
         if ($status !== '') {
             $where[] = "LOWER(f.status) = LOWER(?)";
-            $params[] = $status;
-            $types .= 's';
+            $whereParams[] = $status;
+            $whereTypes .= 's';
         }
 
         $whereSql = count($where) ? 'WHERE ' . implode(' AND ', $where) : '';
-        $orderSql = strtolower($sort) === 'oldest' ? 'ORDER BY f.created_at ASC' : 'ORDER BY f.created_at DESC';
+        
+        $orderSql = 'ORDER BY f.created_at DESC';
+        if (strtolower($sort) === 'oldest') {
+            $orderSql = 'ORDER BY f.created_at ASC';
+        } elseif (strtolower($sort) === 'votes') {
+             $orderSql = 'ORDER BY (SELECT COALESCE(SUM(vote_type), 0) FROM forum_votes WHERE post_id = f.q_id) DESC, f.created_at DESC';
+        }
 
-        $sql = "SELECT f.q_id, f.created_at, f.title, f.topic, f.status, f.u_id, f.is_Public, u.name AS student_name
+        $sql = "SELECT f.q_id, f.created_at, f.title, f.topic, f.status, f.u_id, f.is_Public, u.name AS student_name,
+                (SELECT COALESCE(SUM(vote_type), 0) FROM forum_votes WHERE post_id = f.q_id) as vote_count,
+                 (SELECT vote_type FROM forum_votes WHERE post_id = f.q_id AND u_id = ? LIMIT 1) as my_vote
                 FROM forum_q f
                 LEFT JOIN users u ON u.u_id = f.u_id
                 $whereSql
@@ -262,11 +270,20 @@ class AdminModel extends Model
             throw new Exception('Prepare failed: ' . $this->db->error);
         }
 
-        $params[] = $limit;
-        $params[] = $offset;
-        $types .= 'ii';
+        // Construct final params: [userId, ...whereParams, limit, offset]
+        $finalParams = [$userId];
+        $finalTypes = 'i';
+        
+        foreach ($whereParams as $p) {
+            $finalParams[] = $p;
+        }
+        $finalTypes .= $whereTypes;
+        
+        $finalParams[] = $limit;
+        $finalParams[] = $offset;
+        $finalTypes .= 'ii';
 
-        $stmt->bind_param($types, ...$params);
+        $stmt->bind_param($finalTypes, ...$finalParams);
         $stmt->execute();
         $result = $stmt->get_result();
 
@@ -556,7 +573,7 @@ class AdminModel extends Model
      */
     public function getTicketAttachments(int $ticketId): array
     {
-        $sql = "SELECT doc_name, location FROM supporting_documents WHERE ticket_id = ?";
+        $sql = "SELECT file_name AS doc_name, file_path AS location FROM attachments WHERE entity_type = 'ticket' AND entity_id = ?";
         $stmt = $this->db->prepare($sql);
         if (!$stmt) {
             throw new Exception('Prepare failed: ' . $this->db->error);

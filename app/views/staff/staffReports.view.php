@@ -121,18 +121,21 @@
         .filter-item input,
         .filter-item select {
             padding: 10px 15px;
-            border: 1px solid var(--color-border-medium);
+            border: 1px solid #e0e7ff;
             border-radius: 8px;
             background: var(--color-bg-filter);
             font-size: 14px;
             color: var(--color-text-dark);
             transition: border-color 0.2s ease, box-shadow 0.2s ease;
+            background: linear-gradient(135deg, #ffffff 0%, #f8f9ff 100%);
         }
         .filter-item input:focus,
         .filter-item select:focus {
             outline: none;
-            border-color: var(--color-primary);
+            border: 1px solid #e0e7ff;
+            border-radius: 8px;
             box-shadow: 0 0 0 3px rgba(140, 140, 249, 0.1);
+            background: linear-gradient(135deg, #ffffff 0%, #f8f9ff 100%);
         }
         .generate-btn {
             padding: 10px 20px;
@@ -151,6 +154,9 @@
         .generate-btn:hover {
             background: #6a6af5;
             transform: translateY(-1px);
+        }
+        .filter-item input:hover {
+            border: 1px solid #6a6af5;
         }
         .hidden {
             display: none !important;
@@ -471,6 +477,48 @@
             .report-table { font-size: 12px; }
             .report-table th, .report-table td { padding: 8px 6px; }
         }
+        /* ============================================= */
+/*              PRINT OPTIMIZATIONS              */
+/* ============================================= */
+
+@media print {
+    /* Hide global navigation/sidebar elements */
+    nav,
+    header,
+    .sidebar,
+    .side-nav,
+    .global-navigation,
+    aside,
+    .navbar,
+    .topbar,
+    footer,
+    .sidenavWrapper,
+    .no-print {
+        display: none !important;
+        visibility: hidden !important;
+    }
+
+    /* Ensure main content uses full page width */
+    .main-content,
+    .content-area,
+    #main-content {
+        margin: 0 !important;
+        padding: 8px !important;
+        width: 100% !important;
+        box-shadow: none !important;
+        border: none !important;
+    }
+
+    body {
+        margin: 0 !important;
+        padding: 0 !important;
+        background: white !important;
+    }
+
+    @page {
+        margin: 0.7cm 0.5cm !important;
+    }
+}
     </style>
 </head>
 <body>
@@ -576,10 +624,6 @@
                         </div>
                     <?php elseif ($report_type === 'staff_assignment' && !empty($summary)): ?>
                         <div class="stat-card">
-                            <h6>Total Staff</h6>
-                            <p><?= $summary['total_staff'] ?? 0 ?></p>
-                        </div>
-                        <div class="stat-card">
                             <h6>Total Assignments</h6>
                             <p><?= $summary['total_assignments'] ?? 0 ?></p>
                         </div>
@@ -607,56 +651,55 @@
                     <?php
                     $pending_count = $summary['pending_count'] ?? 0;
                     $resolved_count = $summary['resolved_count'] ?? 0;
-                    $other_count = ($summary['total_tickets'] ?? 0) - $pending_count - $resolved_count;
+                    $agent_assigned_count = $summary['agent_assigned_count'] ?? 0;
+                    $agent_closed_count = $summary['agent_closed_count'] ?? 0;
+                    $closed_count = $summary['closed_count'] ?? 0;
                     $total = $summary['total_tickets'] ?? 0;
                     $pending_pct = $total ? round(($pending_count / $total) * 100, 1) : 0;
                     $resolved_pct = $total ? round(($resolved_count / $total) * 100, 1) : 0;
-                    $other_pct = 100 - $pending_pct - $resolved_pct;
+                    $agent_assigned_pct = $total ? round(($agent_assigned_count / $total) * 100, 1) : 0;
+                    $agent_closed_pct = $total ? round(($agent_closed_count / $total) * 100, 1) : 0;
+                    $closed_pct = $total ? round(($closed_count / $total) * 100, 1) : 0;
                     ?>
                     <div class="chart-container">
                         <h6 style="margin: 0 0 10px 0; color: var(--color-text-body);">Status Breakdown (Pie Chart)</h6>
                         <canvas id="statusChart"></canvas>
                         <div class="print-fallback">Status Breakdown: Pending <?= $pending_pct ?>% (<?= $pending_count ?> tickets), Resolved <?= $resolved_pct ?>% (<?= $resolved_count ?>), Other <?= $other_pct ?>% (<?= $other_count ?>)</div>
                     </div>
-                <?php elseif ($report_type === 'overdue_tickets' && !empty($summary)): ?>
-                    <?php
-                    $breakdown = json_decode($summary['category_breakdown'] ?? '{}', true);
-                    $electronics = $breakdown['Electronics'] ?? 0;
-                    $registration = $breakdown['Registration'] ?? 0;
-                    $examination = $breakdown['Examination'] ?? 0;
-                    $other_cat = $breakdown['Other'] ?? 0;
-                    $total_over = $summary['total_overdue'] ?? 0;
-                    $elec_pct = $total_over ? round(($electronics / $total_over) * 100) : 0;
-                    $reg_pct = $total_over ? round(($registration / $total_over) * 100) : 0;
-                    $exam_pct = $total_over ? round(($examination / $total_over) * 100) : 0;
-                    $other_pct = 100 - $elec_pct - $reg_pct - $exam_pct;
-                    ?>
-                    <div class="chart-container">
-                        <h6 style="margin: 0 0 10px 0; color: var(--color-text-body);">Overdue by Category (Pie Chart)</h6>
-                        <canvas id="overdueChart"></canvas>
-                        <div class="print-fallback">Overdue Breakdown: Electronics <?= $elec_pct ?>% (<?= $electronics ?>), Registration <?= $reg_pct ?>% (<?= $registration ?>), Examination <?= $exam_pct ?>% (<?= $examination ?>), Other <?= $other_pct ?>% (<?= $other_cat ?>)</div>
-                    </div>
+              <?php elseif ($report_type === 'overdue_tickets' && !empty($summary)): ?>
+    <?php
+    $days_data = json_decode($summary['days_breakdown'] ?? '{}', true);
+    $labels = array_keys($days_data);
+    $values = array_values($days_data);
+    ?>
+    <div class="chart-container">
+        <h6 style="margin: 0 0 10px 0; color: var(--color-text-body);">Overdue Tickets by Days (Pie Chart)</h6>
+        <canvas id="overdueChart"></canvas>
+        <div class="print-fallback">
+            Overdue Breakdown: 
+            <?php foreach ($days_data as $range => $count): ?>
+                <?= $range ?> (<?= $count ?>), 
+            <?php endforeach; ?>
+        </div>
+    </div>
+                    
                 <?php elseif ($report_type === 'staff_assignment' && !empty($reports)): ?>
-                    <?php
-                    $top_staff = array_slice($reports, 0, 5);
-                    $staff_names = [];
-                    $staff_counts = [];
-                    $total_assign = $summary['total_assignments'] ?? 0;
-                    foreach ($top_staff as $staff) {
-                        $staff_names[] = $staff['staff_name'];
-                        $staff_counts[] = $staff['ticket_count'];
-                    }
-                    $other_staff = $total_assign - array_sum($staff_counts);
-                    if ($other_staff > 0) {
-                        $staff_names[] = 'Other Staff';
-                        $staff_counts[] = $other_staff;
-                    }
-                    ?>
-                    <div class="chart-container">
-                        <h6 style="margin: 0 0 10px 0; color: var(--color-text-body);">Assignments by Staff (Bar Chart - Top 5)</h6>
-                        <canvas id="staffChart"></canvas>
-                        <div class="print-fallback">Staff Assignments: <?= implode('; ', array_map(function($name, $count) { return $name . ': ' . $count . ' tickets'; }, $staff_names, $staff_counts)) ?></div>
-                    </div>
+    <?php
+    $top_staff = array_slice($reports, 0, 8); // Top 8 staff
+    $staff_names = [];
+    $staff_counts = [];
+    foreach ($top_staff as $staff) {
+        $staff_names[] = $staff['staff_name'];
+        $staff_counts[] = (int)$staff['ticket_count'];
+    }
+    ?>
+    <div class="chart-container">
+        <h6 style="margin: 0 0 10px 0; color: var(--color-text-body);">Currently Agent Assigned Tickets per Staff</h6>
+        <canvas id="staffChart"></canvas>
+        <div class="print-fallback">
+            Agent Assigned Tickets: <?= implode('; ', array_map(fn($n, $c) => "$n: $c", $staff_names, $staff_counts)) ?>
+        </div>
+    </div>
                 <?php elseif ($report_type === 'escalation' && !empty($summary)): ?>
                     <?php
                     $total = $summary['total_escalations'] ?? 0;
@@ -779,7 +822,7 @@
                 cell.style.border = '1px solid black !important';
                 cell.style.padding = '2px !important';
                 cell.style.wordBreak = 'break-word !important';
-                cell.style.lineHeight = '1.0 !important';
+                cell.style.lFneHeight = '1.0 !important';
                 cell.style.color = 'black !important';
                 cell.style.fontSize = '8px !important';
             });
@@ -805,50 +848,66 @@
                 window.statusChart = new Chart(ctxStatus, {
                     type: 'pie',
                     data: {
-                        labels: ['Pending (<?= $pending_pct ?>%)', 'Resolved (<?= $resolved_pct ?>%)', 'Other (<?= $other_pct ?>%)'],
+                        labels: ['Pending (<?= $pending_pct ?>%)', 'Resolved (<?= $resolved_pct ?>%)', 'Agent Assigned (<?= $agent_assigned_pct ?>%)', 'Agent Closed (<?= $agent_closed_pct ?>%)', 'Closed (<?= $closed_pct ?>%)'],
                         datasets: [{
-                            data: [<?= $pending_count ?>, <?= $resolved_count ?>, <?= $other_count ?>],
-                            backgroundColor: ['#fff68f', '#9effbc', '#badbff']
+                            data: [<?= $pending_count ?>, <?= $resolved_count ?>, <?= $agent_assigned_count ?>, <?= $agent_closed_count ?>, <?= $closed_count ?>],
+                            backgroundColor: ['#78290Fbc', '#15616Dc9', '#FF7D00c9', '#C0C0C0c9', '#4B4B4Bc9']
                         }]
                     },
                     options: { responsive: true, maintainAspectRatio: false }
                 });
             }
-        <?php elseif ($report_type === 'overdue_tickets' && !empty($summary)): ?>
-            const ctxOverdue = document.getElementById('overdueChart')?.getContext('2d');
-            if (ctxOverdue) {
-                window.overdueChart = new Chart(ctxOverdue, {
-                    type: 'pie',
-                    data: {
-                        labels: ['Electronics (<?= $elec_pct ?>%)', 'Registration (<?= $reg_pct ?>%)', 'Examination (<?= $exam_pct ?>%)', 'Other (<?= $other_pct ?>%)'],
-                        datasets: [{
-                            data: [<?= $electronics ?>, <?= $registration ?>, <?= $examination ?>, <?= $other_cat ?>],
-                            backgroundColor: ['#ff6384', '#36a2eb', '#ffce56', '#4bc0c0']
-                        }]
-                    },
-                    options: { responsive: true, maintainAspectRatio: false }
-                });
+      <?php elseif ($report_type === 'overdue_tickets' && !empty($summary)): ?>
+    const ctxOverdue = document.getElementById('overdueChart')?.getContext('2d');
+    if (ctxOverdue) {
+        window.overdueChart = new Chart(ctxOverdue, {
+            type: 'pie',
+            data: {
+                labels: <?= json_encode($labels) ?>,
+                datasets: [{
+                    data: <?= json_encode($values) ?>,
+                    backgroundColor: ['#ff6384', '#ff9f40', '#ffc107', '#ef4444']
+                }]
+            },
+            options: { 
+                responsive: true, 
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: { position: 'bottom' }
+                }
             }
+        });
+    }
         <?php elseif ($report_type === 'staff_assignment' && !empty($reports)): ?>
-            const ctxStaff = document.getElementById('staffChart')?.getContext('2d');
-            if (ctxStaff) {
-                window.staffChart = new Chart(ctxStaff, {
-                    type: 'bar',
-                    data: {
-                        labels: <?= json_encode($staff_names) ?>,
-                        datasets: [{
-                            label: 'Ticket Count',
-                            data: <?= json_encode($staff_counts) ?>,
-                            backgroundColor: ['#ff6384', '#36a2eb', '#ffce56', '#4bc0c0', '#9966ff', '#ff9f40']
-                        }]
-                    },
-                    options: {
-                        responsive: true,
-                        maintainAspectRatio: false,
-                        scales: { y: { beginAtZero: true } }
-                    }
-                });
+    const ctxStaff = document.getElementById('staffChart')?.getContext('2d');
+    if (ctxStaff) {
+        window.staffChart = new Chart(ctxStaff, {
+            type: 'bar',  
+            data: {
+                labels: <?= json_encode($staff_names) ?>,
+                datasets: [{
+                    label: 'Agent Assigned Tickets',
+                    data: <?= json_encode($staff_counts) ?>,
+                    backgroundColor: '#3b82f6',
+                    borderColor: '#1e40af',
+                    borderWidth: 1
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                scales: { 
+                    y: { 
+                        beginAtZero: true,
+                        ticks: { stepSize: 1 }
+                    } 
+                },
+                plugins: {
+                    legend: { display: false }
+                }
             }
+        });
+    }
         <?php elseif ($report_type === 'escalation' && !empty($summary)): ?>
             const ctxEscalation = document.getElementById('escalationChart')?.getContext('2d');
             if (ctxEscalation) {

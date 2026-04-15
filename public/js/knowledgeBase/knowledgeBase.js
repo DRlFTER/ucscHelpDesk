@@ -12,22 +12,39 @@
 })();
 
 document.addEventListener("DOMContentLoaded", () => {
-  if (typeof KB_DATA === 'undefined' || !Array.isArray(KB_DATA)) {
-    const container = document.getElementById('kbSections');
-    if (container) {
-      container.innerHTML = `<div style="padding:12px 14px; border:1px solid #f59e0b; background:#fffbeb; color:#92400e; border-radius:8px;">Knowledge base data is not available.</div>`;
-    }
-    return;  // Exit early if no data
-  }
-
-  console.log('KB_DATA:', KB_DATA);  // Debug: Shows your grouped data (e.g., [{section: "General Documents", items: [...]}])
+  // Get role and permissions from window (set by PHP)
+  const role = window.USER_ROLE || 'student';
+  const canManage = window.CAN_MANAGE_KB || false;
+  let KB_DATA = window.KB_DATA || [];
 
   function buildCard(item) {
-    // Color by type (as you have; green for Guide, blue for Schedule)
+    // Color by type (green for Guide, blue for Schedule)
     const colorCls = item.type === 'Guide' ? 'kbCard--green' : (item.type === 'Schedule' ? 'kbCard--blue' : '');
-
-    // Type fallback (hardcode or from DB)
     const typeBadge = item.type || 'Guide';
+    
+    // Use desc or description depending on data format
+    const description = item.description || item.desc || '';
+    const updated = item.updated || '';
+
+    // Download button - works for all users
+    let downloadBtn = '';
+    if (item.fileUrl) {
+      downloadBtn = `
+        <a href="${item.fileUrl}" class="kbDownloadBtn" download title="Download">
+          <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+        </a>`;
+    } else {
+      downloadBtn = `
+        <button class="kbDownloadBtn" type="button" title="Download" data-id="${item.id}">
+          <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+        </button>`;
+    }
+
+    // Management buttons for staff/admin only
+    let manageBtn = '';
+    if (canManage) {
+      manageBtn = `<button class="kbUpdateBtn" type="button">View Resource</button>`;
+    }
 
     return `
       <div class="kbCard ${colorCls}" data-id="${item.id}">
@@ -35,16 +52,11 @@ document.addEventListener("DOMContentLoaded", () => {
           <div class="kbCardTitle">${item.title}</div>
           <div class="kbBadge">${typeBadge}</div>
         </div>
-        <div class="kbMeta">Updated: ${item.updated}</div>
-        <div class="kbDesc">${item.description}</div>
+        <div class="kbMeta">Updated: ${updated}</div>
+        <div class="kbDesc">${description}</div>
         <div class="kbFooter">
-          <!-- Download Button (unchanged: icon-only) -->
-          <button class="kbDownloadBtn" type="button" title="Download">
-            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
-          </button>
-          <!-- Update Button (text, green theme) -->
-          <button class="kbUpdateBtn" type="button">View Resource</button>
-          <!-- Delete Button (text, red theme) -->
+          ${downloadBtn}
+          ${manageBtn}
         </div>
       </div>
     `;
@@ -54,13 +66,12 @@ document.addEventListener("DOMContentLoaded", () => {
     const wrap = document.getElementById('kbSections');
     if (!wrap) return;
 
-    // Pass section to items for color
-    const dataWithColors = data.map(sec => ({
-      ...sec,
-      items: sec.items.map(item => ({ ...item, sectionColor: sec.section, section: sec.section }))  // Add both for flexibility
-    }));
+    if (!data || data.length === 0) {
+      wrap.innerHTML = '<p style="text-align:center; color:#6b7280; padding: 40px;">No knowledge base articles found.</p>';
+      return;
+    }
 
-    const generatedHtml = dataWithColors.map(sec => `
+    wrap.innerHTML = data.map(sec => `
       <section class="kbSection">
         <h3 class="kbSectionTitle">${sec.section}</h3>
         <div class="kbGrid">
@@ -68,9 +79,6 @@ document.addEventListener("DOMContentLoaded", () => {
         </div>
       </section>
     `).join('');
-
-    wrap.innerHTML = generatedHtml;
-    console.log('Generated HTML length:', generatedHtml.length);  // Debug: Should be >1000 if data renders
   }
 
   function populateCategories(data) {
@@ -79,7 +87,7 @@ document.addEventListener("DOMContentLoaded", () => {
     const cats = ['All categories'].concat(data.map(s => s.section));
     sel.innerHTML = cats.map((c, i) => `<option value="${i===0?'all':c}">${c}</option>`).join('');
 
-    // Build custom select UI using forum/tickets styles
+    // Build custom select UI
     const wrap = document.getElementById('kbCategoryWrap');
     const btn = wrap?.querySelector('.selectButton');
     const list = document.getElementById('kbCategoryList');
@@ -137,78 +145,84 @@ document.addEventListener("DOMContentLoaded", () => {
       .filter(s => cat === 'all' || s.section === cat)
       .map(s => ({
         section: s.section,
-        items: s.items.filter(it =>
-          it.title.toLowerCase().includes(ql) ||
-          it.description.toLowerCase().includes(ql) ||  // Fixed: 'description' not 'desc'
-          (it.type || 'Guide').toLowerCase().includes(ql)  // Include type (hardcoded fallback)
-        )
+        items: s.items.filter(it => {
+          const desc = it.description || it.desc || '';
+          return it.title.toLowerCase().includes(ql) ||
+            desc.toLowerCase().includes(ql) ||
+            (it.type || 'Guide').toLowerCase().includes(ql);
+        })
       }))
       .filter(s => s.items.length > 0);
   }
 
   function wireInteractions() {
-    const input = document.getElementById('kbSearchInput');  // By ID, as in your HTML
+    const input = document.getElementById('kbSearchInput');
     const sel = document.getElementById('kbCategorySelect');
     const apply = () => {
       const q = input ? input.value : '';
       const cat = sel ? sel.value : 'all';
-      const catVal = cat === 'all' ? 'all' : cat;
-      const shown = filterData(q, catVal);
+      const shown = filterData(q, cat);
       renderSections(shown);
     };
-    if (input) input.addEventListener('input', apply);  // 'input' event for real-time search
+    if (input) input.addEventListener('input', apply);
     if (sel) sel.addEventListener('change', apply);
-    apply();  // Initial render with no filters
+    apply();
 
-    // Wire card buttons (delegated to document for dynamic cards)
+    // Wire card buttons (delegated)
     document.addEventListener('click', (e) => {
       const card = e.target.closest('.kbCard');
       if (!card) return;
       const id = card.dataset.id;
 
-      // Update Button
+      // Update/View Resource Button (staff/admin only)
       if (e.target.classList.contains('kbUpdateBtn')) {
-        if (id) window.location.href = `/staff/updateKB/${id}`;
+        if (id) window.location.href = `/${role}/updateKB/${id}`;
         e.preventDefault();
       }
 
-      // Delete Button
-      if (e.target.classList.contains('kbDeleteBtn')) {
-        if (id && confirm(`Delete "${card.querySelector('.kbCardTitle').textContent}"? This cannot be undone.`)) {
-          fetch(`/staff/deleteKB/${id}`, { method: 'DELETE' })
-            .then(res => {
-              if (res.ok) {
-                location.reload();  // Refetch and re-render
-              } else {
-                alert('Delete failed—check console.');
-                console.error('Delete error:', res);
-              }
-            })
-            .catch(err => {
-              alert('Delete failed.');
-              console.error('Delete error:', err);
-            });
-        }
-        e.preventDefault();
-      }
-
-      // Download Button — invoke server download endpoint
-      if (e.target.closest('.kbDownloadBtn')) {
+      // Download Button - trigger download via server
+      if (e.target.closest('.kbDownloadBtn') && !e.target.closest('a')) {
         if (id) {
-          // Use the backend download route which streams the file with proper headers
-          window.location.href = `/staff/downloadKB/${id}`;
+          window.location.href = `/${role}/downloadKB/${id}`;
           e.preventDefault();
         }
       }
     });
   }
 
-  // Your init
+  async function loadData() {
+    // If KB_DATA is already populated from PHP, use it
+    if (KB_DATA && KB_DATA.length > 0) {
+      init();
+      return;
+    }
+
+    // Otherwise fetch from API
+    try {
+      const res = await fetch(`/${role}/knowledgebaseData`);
+      if (!res.ok) throw new Error('Failed to load data');
+      KB_DATA = await res.json();
+      window.KB_DATA = KB_DATA;
+      init();
+    } catch (e) {
+      console.error(e);
+      const wrap = document.getElementById('kbSections');
+      if(wrap) wrap.innerHTML = '<p style="text-align:center; color:red;">Failed to load knowledge base.</p>';
+    }
+  }
+
   function init() {
-    console.log('Init called with:', KB_DATA.length, 'sections');  // Debug: e.g., "Init called with: 1 sections"
+    if (!KB_DATA || !Array.isArray(KB_DATA)) {
+      const container = document.getElementById('kbSections');
+      if (container) {
+        container.innerHTML = `<div style="padding:12px 14px; border:1px solid #f59e0b; background:#fffbeb; color:#92400e; border-radius:8px;">Knowledge base data is not available.</div>`;
+      }
+      return;
+    }
     populateCategories(KB_DATA);
     renderSections(KB_DATA);
     wireInteractions();
   }
-  init();
+
+  loadData();
 });

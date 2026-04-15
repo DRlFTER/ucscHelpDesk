@@ -69,6 +69,12 @@
           <ul id="timelineList" class="timelineList"></ul>
         </div>
 
+        <!-- NEW: Feedback Section -->
+        <div class="card ticketFeedback" id="ticketFeedbackCard" style="display: none;">
+          <h3 class="sectionTitle">Feedback</h3>
+          <div id="feedbackContent"></div>
+        </div>
+
         <div class="card ticketActions">
           <h3 class="visuallyHidden">Actions</h3>
           <div class="btnHolder">
@@ -79,6 +85,10 @@
             <button id="deleteBtn" class="btnSecondary" style="background-color: #ff7b7bff; display:none;" type="button"><span class="btnSecondaryText" style="color: white;">Delete ticket</span></button>
             <!-- Counselor schedule meeting button (shown when meeting requested) -->
             <button id="scheduleBtn" class="btnSecondary" style="display:none;" type="button"><span class="btnSecondaryText">Schedule meeting</span></button>
+            <!-- Staff assign button (shown when pending) -->
+            <button id="assignBtn" class="btnPrimary" style="background-color: #22c55e; display:none;" type="button"><span class="btnPrimaryText">Get Assigned</span></button>
+            <!-- Staff forward button (shown when assigned to them) -->
+            <button id="forwardBtn" class="btnSecondary" style="display:none;" type="button"><span class="btnSecondaryText">Forward Ticket</span></button>
           </div>
         </div>
       </aside>
@@ -86,6 +96,45 @@
     </div>
   </div>
 </main>
+
+<!-- Forward ticket modal (staff only) -->
+<div id="forwardModal" class="modalOverlay" aria-hidden="true">
+  <div class="msgHolder">
+    <div class="msgContainer" role="dialog" aria-modal="true" aria-labelledby="forwardModalTitle">
+      <div class="msgContent">
+        <h3 id="forwardModalTitle" class="msgTitle">Forward Ticket</h3>
+        <p class="msgText">Select a staff member to forward this ticket to.</p>
+        <div class="inputGroup">
+          <select id="forwardStaffSelect" class="formSelect">
+            <option value="">Select staff member...</option>
+          </select>
+        </div>
+        <div class="msgActions">
+          <button type="button" id="cancelForwardBtn" class="btnSecondary"><span class="btnSecondaryText">Cancel</span></button>
+          <button type="button" id="confirmForwardBtn" class="btnPrimary"><span class="btnPrimaryText">Forward</span></button>
+        </div>
+      </div>
+    </div>
+  </div>
+  <button type="button" class="modalBackdropClose" aria-label="Close"></button>
+</div>
+
+<!-- Assign ticket modal (staff only) -->
+<div id="assignModal" class="modalOverlay" aria-hidden="true">
+  <div class="msgHolder">
+    <div class="msgContainer" role="dialog" aria-modal="true" aria-labelledby="assignModalTitle">
+      <div class="msgContent">
+        <h3 id="assignModalTitle" class="msgTitle">Assign Ticket</h3>
+        <p class="msgText">Are you sure you want to assign this ticket to yourself?</p>
+        <div class="msgActions">
+          <button type="button" id="cancelAssignBtn" class="btnSecondary"><span class="btnSecondaryText">Cancel</span></button>
+          <button type="button" id="confirmAssignBtn" class="btnPrimary"><span class="btnPrimaryText">Confirm</span></button>
+        </div>
+      </div>
+    </div>
+  </div>
+  <button type="button" class="modalBackdropClose" aria-label="Close"></button>
+</div>
 
 <!-- Mark resolved confirmation modal (admin, student only; hidden for others) -->
 <div id="resolveModal" class="modalOverlay" aria-hidden="true">
@@ -97,6 +146,23 @@
         <div class="msgActions">
           <button id="cancelResolveBtn" type="button" class="btnSecondary"><span class="btnSecondaryText">Cancel</span></button>
           <button id="confirmResolveBtn" type="button" class="btnPrimary"><span class="btnPrimaryText">Mark</span></button>
+        </div>
+      </div>
+    </div>
+  </div>
+  <button type="button" class="modalBackdropClose" aria-label="Close"></button>
+</div>
+
+<!-- Close/Reject confirmation modal (staff only) -->
+<div id="rejectModal" class="modalOverlay" aria-hidden="true">
+  <div class="msgHolder">
+    <div class="msgContainer" role="dialog" aria-modal="true" aria-labelledby="rejectModalTitle">
+      <div class="msgContent">
+        <h3 id="rejectModalTitle" class="msgTitle">Close this ticket?</h3>
+        <p class="msgText">Are you sure you want to completely close and reject this ticket?</p>
+        <div class="msgActions">
+          <button id="cancelRejectBtn" type="button" class="btnSecondary"><span class="btnSecondaryText">Cancel</span></button>
+          <button id="confirmRejectBtn" type="button" class="btnPrimary btnDanger"><span class="btnPrimaryText">Close Ticket</span></button>
         </div>
       </div>
     </div>
@@ -200,24 +266,102 @@
     if (!openBtn || !modal) return;
 
     const cancelBtn = document.getElementById('cancelScheduleBtn');
+    const saveBtn = document.getElementById('saveScheduleBtn');
     const backdropBtn = modal.querySelector('.modalBackdropClose');
+    const form = document.getElementById('scheduleForm');
 
     const open = () => {
       modal.classList.add('open');
       modal.setAttribute('aria-hidden', 'false');
       document.body.classList.add('modal-open');
       if (cancelBtn) cancelBtn.focus();
+      
+      // Set minimum date to today
+      const today = new Date().toISOString().split('T')[0];
+      const dateInput = document.getElementById('meetingDate');
+      if (dateInput) dateInput.min = today;
     };
+    
     const close = () => {
       modal.classList.remove('open');
       modal.setAttribute('aria-hidden', 'true');
       document.body.classList.remove('modal-open');
       if (openBtn) openBtn.focus();
+      // Reset form
+      if (form) form.reset();
+    };
+
+    const submitMeeting = async (e) => {
+      e.preventDefault();
+      
+      // Validate form
+      if (!form.checkValidity()) {
+        form.reportValidity();
+        return;
+      }
+
+      // Get ticket data
+      const ticketId = window.ticketData ? window.ticketData.id : null;
+      const studentId = window.ticketData && window.ticketData.student ? window.ticketData.student.id : null;
+
+      // Collect form data
+      const meetingData = {
+        ticket_id: ticketId,
+        student_id: studentId,
+        meeting_date: document.getElementById('meetingDate').value,
+        start_time: document.getElementById('meetingStart').value + ':00',
+        duration: parseInt(document.getElementById('meetingDuration').value),
+        mode: document.getElementById('meetingMode').value,
+        room_location: document.getElementById('meetingLocation').value,
+        meeting_link: document.getElementById('meetingLink').value,
+        notes: document.getElementById('meetingNotes').value
+      };
+
+      console.log('Submitting meeting data:', meetingData);
+
+      // Show loading state
+      const originalText = saveBtn.querySelector('.btnPrimaryText').textContent;
+      saveBtn.disabled = true;
+      saveBtn.querySelector('.btnPrimaryText').textContent = 'Scheduling...';
+
+      try {
+        const response = await fetch('/meetingscheduler/scheduleMeeting', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify(meetingData),
+          credentials: 'include'
+        });
+
+        const data = await response.json();
+        console.log('Server response:', data);
+
+        if (data.success) {
+          alert('Meeting scheduled successfully!');
+          close();
+          
+          // Reload page to show updated status
+          setTimeout(() => {
+            location.reload();
+          }, 500);
+        } else {
+          alert('Error: ' + (data.error || 'Failed to schedule meeting'));
+          saveBtn.disabled = false;
+          saveBtn.querySelector('.btnPrimaryText').textContent = originalText;
+        }
+      } catch (error) {
+        console.error('Error scheduling meeting:', error);
+        alert('Failed to schedule meeting. Please check your connection and try again.');
+        saveBtn.disabled = false;
+        saveBtn.querySelector('.btnPrimaryText').textContent = originalText;
+      }
     };
 
     openBtn.addEventListener('click', open);
     if (cancelBtn) cancelBtn.addEventListener('click', close);
     if (backdropBtn) backdropBtn.addEventListener('click', close);
+    if (form) form.addEventListener('submit', submitMeeting);
   })();
 </script>
 

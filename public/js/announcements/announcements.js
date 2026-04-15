@@ -13,10 +13,16 @@
   // Division options for filter
   const divisions = [
     { label: 'All divisions', value: '' },
-    { label: 'IT', value: 'it' },
-    { label: 'Academic', value: 'academic' },
-    { label: 'Admin', value: 'admin' },
-    { label: 'Facilities', value: 'facilities' },
+    { label: 'Examination and Registration', value: 'examination and registration' },
+    { label: 'CSC and NOC', value: 'csc and noc' },
+    { label: 'Postgraduate research and project', value: 'postgraduate research and project' },
+    { label: 'Establishment', value: 'establishment' },
+    { label: 'Academic Publication and Welfare', value: 'academic publication and welfare' },
+    { label: 'General Administration', value: 'general administration' },
+    { label: 'Engineering', value: 'engineering' },
+    { label: 'Finance', value: 'finance' },
+    { label: 'Library', value: 'library' },
+
   ];
 
   // Sort options
@@ -76,7 +82,7 @@
 
   function getDivisionClass(division) {
     const d = (division || '').toLowerCase();
-    if (d.includes('it')) return 'division-it';
+    if (d.includes('Examination and Registration')) return 'division-exam and registration';
     if (d.includes('academic')) return 'division-academic';
     if (d.includes('admin')) return 'division-admin';
     if (d.includes('facilities') || d.includes('facility')) return 'division-facilities';
@@ -187,6 +193,7 @@
       // Division filter
       if (division) {
         const divName = (a.division_name || '').toLowerCase();
+        console.log('Filtering division:', division, 'against', divName);
         if (!divName.includes(division)) return false;
       }
       return true;

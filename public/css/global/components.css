@@ -679,24 +679,29 @@ body.modal-open .mainContentFull {
   transition: stroke 0.2s ease;
 }
 
-.sidenavNewTicket {
+.sidenavNewTicket,
+.sidenavLink.active.sidenavNewTicket {
   margin-top: 12px;
-  background: linear-gradient(135deg, #8c8cf9 0%, #6b6bf7 100%);
-  color: #fff;
+  background: #EEEDFE;
+  color: #8c8cf9;
   font-weight: 500;
+  transition: all 0.3s ease;
 }
 
-.sidenavNewTicket svg {
-  stroke: #fff;
+.sidenavNewTicket svg,
+.sidenavLink.active.sidenavNewTicket svg {
+  stroke: #8c8cf9;
 }
 
-.sidenavNewTicket:hover {
-  background: linear-gradient(135deg, #7a7af7 0%, #5a5af5 100%);
-  color: #fff;
+.sidenavNewTicket:hover,
+.sidenavLink.active.sidenavNewTicket:hover {
+  background: #d8d8ff;
+  color: #6b6bf7;
 }
 
-.sidenavNewTicket:hover svg {
-  stroke: #fff;
+.sidenavNewTicket:hover svg,
+.sidenavLink.active.sidenavNewTicket:hover svg {
+  stroke: #6b6bf7;
 }
 
 /* Sidenav Bottom / Profile */
@@ -704,6 +709,7 @@ body.modal-open .mainContentFull {
   border-top: 1px solid rgba(0, 0, 0, 0.08);
   padding-top: 12px;
   margin-top: auto;
+  position: relative;
 }
 
 .sidenavProfile {
@@ -862,6 +868,242 @@ body.modal-open .mainContentFull {
   background: #7a7af7;
 }
 
+/* Notification Bell Button */
+.sidenavNotifBtn {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  flex-shrink: 0;
+  border: none;
+  border-radius: 10px;
+  background: transparent;
+  color: #6b7280;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.sidenavNotifBtn:hover {
+  background: rgba(0, 0, 0, 0.05);
+  color: #111827;
+}
+
+/* Notification Badge */
+.sidenavNotifBadge {
+  position: absolute;
+  top: 4px;
+  right: 4px;
+  width: 10px;
+  height: 10px;
+  background: #ef4444;
+  border-radius: 50%;
+  border: 2px solid #fff;
+  pointer-events: none;
+}
+
+/* Notification Dropdown Panel */
+.sidenavNotifDropdown {
+  display: none;
+  position: absolute;
+  bottom: 100%;
+  left: 0;
+  right: 0;
+  margin-bottom: 8px;
+  background: #fff;
+  border: 1px solid rgba(0, 0, 0, 0.1);
+  border-radius: 12px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
+  overflow: hidden;
+  z-index: 9999;
+  max-height: 380px;
+  display: none;
+}
+
+.sidenavNotifDropdown.open {
+  display: flex;
+  flex-direction: column;
+}
+
+/* Notification Header */
+.sidenavNotifHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 14px 16px;
+  border-bottom: 1px solid #f3f4f6;
+  background: #fafafa;
+}
+
+.sidenavNotifTitle {
+  font-size: 14px;
+  font-weight: 600;
+  color: #111827;
+}
+
+.sidenavNotifMarkAll {
+  border: none;
+  background: none;
+  color: #8c8cf9;
+  font-size: 12px;
+  font-weight: 500;
+  cursor: pointer;
+  padding: 2px 6px;
+  border-radius: 6px;
+  transition: background 0.15s ease;
+}
+
+.sidenavNotifMarkAll:hover {
+  background: #eeedfe;
+}
+
+/* Notification List */
+.sidenavNotifList {
+  flex: 1;
+  overflow-y: auto;
+  max-height: 300px;
+}
+
+/* Empty State */
+.sidenavNotifEmpty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 32px 16px;
+  color: #9ca3af;
+}
+
+.sidenavNotifEmpty svg {
+  margin-bottom: 12px;
+  opacity: 0.5;
+}
+
+.sidenavNotifEmpty p {
+  font-size: 14px;
+  font-weight: 500;
+  color: #6b7280;
+  margin: 0;
+}
+
+.sidenavNotifEmpty span {
+  font-size: 12px;
+  color: #9ca3af;
+  margin-top: 2px;
+}
+
+/* Individual Notification Item (for future use) */
+.sidenavNotifItem {
+  display: flex;
+  gap: 12px;
+  padding: 12px 16px;
+  border-bottom: 1px solid #f3f4f6;
+  cursor: pointer;
+  transition: background 0.15s ease;
+}
+
+.sidenavNotifItem:hover {
+  background: #f9fafb;
+}
+
+.sidenavNotifItem.unread {
+  background: #f0f0ff;
+}
+
+.sidenavNotifItem.unread:hover {
+  background: #eae9ff;
+}
+
+.sidenavNotifItemIcon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  background: #eeedfe;
+  color: #8c8cf9;
+  flex-shrink: 0;
+}
+
+.sidenavNotifItemContent {
+  flex: 1;
+  min-width: 0;
+}
+
+.sidenavNotifItemText {
+  font-size: 13px;
+  color: #374151;
+  line-height: 1.4;
+  margin: 0;
+}
+
+.sidenavNotifItemTime {
+  font-size: 11px;
+  color: #9ca3af;
+  margin-top: 2px;
+}
+
+/* Notification Header Actions Row */
+.sidenavNotifActions {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+/* Refresh Button */
+.sidenavNotifRefreshBtn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  border: none;
+  border-radius: 6px;
+  background: none;
+  color: #6b7280;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.sidenavNotifRefreshBtn:hover {
+  background: #f3f4f6;
+  color: #374151;
+}
+
+.sidenavNotifRefreshBtn.spinning svg {
+  animation: notifSpin 0.8s linear infinite;
+}
+
+@keyframes notifSpin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+/* Bell has-unread state */
+.sidenavNotifBtn.has-unread {
+  color: #8c8cf9;
+}
+
+/* Notification list scrollbar */
+.sidenavNotifList::-webkit-scrollbar {
+  width: 4px;
+}
+
+.sidenavNotifList::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.sidenavNotifList::-webkit-scrollbar-thumb {
+  background: #d1d5db;
+  border-radius: 4px;
+}
+
+.sidenavNotifList::-webkit-scrollbar-thumb:hover {
+  background: #9ca3af;
+}
+
 /* ----- SIDENAV STYLES ----- */
 
 /* ----- NAVBAR STYLES (Legacy) ----- */
@@ -941,18 +1183,34 @@ body.modal-open .mainContentFull {
   font-weight: 500;
 }
 
-.navbarNewTicket {
-  color: white;
+.navbarNewTicket,
+.navbarLink.active.navbarNewTicket {
+  background: #EEEDFE;
+  color: #8c8cf9;
   border: none;
   padding: 6px 14px;
   border-radius: 20px;
   cursor: pointer;
-  transition: background 0.2s;
+  font-weight: 500;
+  transition: all 0.3s ease;
 }
 
-.navbarNewTicket:hover {
+.navbarNewTicket svg,
+.navbarLink.active.navbarNewTicket svg {
+  stroke: #8c8cf9;
+}
+
+.navbarNewTicket:hover,
+.navbarLink.active.navbarNewTicket:hover {
+  background: #d8d8ff;
+  color: #6b6bf7;
   transform: none;
   box-shadow: none;
+}
+
+.navbarNewTicket:hover svg,
+.navbarLink.active.navbarNewTicket:hover svg {
+  stroke: #6b6bf7;
 }
 
 .notification {
