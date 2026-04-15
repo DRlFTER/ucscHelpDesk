@@ -362,8 +362,8 @@ private static function getConnection()
                 FROM tickets t
                 INNER JOIN users u ON t.u_id = u.u_id
                 LEFT JOIN division d ON d.did = t.division
-                WHERE t.division = ?";
-        $params = [(int)$divisions[0]['did']];  // Assuming single division for staff
+                WHERE t.assigned_to = ?";
+        $params = [(int)$counselor_id];  // Assuming single division for staff
         $types = 'i';
 
         if ($start_date) {
@@ -422,8 +422,8 @@ private static function getConnection()
                     COUNT(CASE WHEN status = 'agent assigned' THEN 1 END) AS agent_assigned_count,
                     AVG(DATEDIFF(NOW(), created_at)) AS avg_age_days
                 FROM tickets t
-                WHERE t.division = ?";
-        $params = [(int)$divisions[0]['did']];  // Assuming single division for staff
+                WHERE t.assigned_to = ?";
+        $params = [(int)$counselor_id];  // Assuming single division for staff
         $types = 'i';
 
         if ($start_date) {
@@ -479,8 +479,8 @@ private static function getConnection()
                 FROM tickets t
                 INNER JOIN users u ON t.u_id = u.u_id
                 LEFT JOIN division d ON d.did = t.division
-                WHERE t.status = 'pending' AND t.created_at < DATE_SUB(NOW(), INTERVAL 3 DAY) AND t.division = ?";
-        $params = [(int)$divisions[0]['did']];  // Assuming single division for staff
+                WHERE t.status = 'pending' AND t.created_at < DATE_SUB(NOW(), INTERVAL 3 DAY) AND t.assigned_to = ?";
+        $params = [(int)$counselor_id];  // Assuming single division for staff
         $types = 'i';
 
         if ($division_id) {
@@ -535,10 +535,10 @@ public function getOverdueTicketsSummary(string $division_id = ''): array
             FROM tickets t
             WHERE t.status = 'pending' 
               AND t.created_at < DATE_SUB(NOW(), INTERVAL 3 DAY) 
-              AND t.division = ?";
+              AND t.assigned_to = ?";
     
     $stmt = $conn->prepare($sql);
-    $stmt->bind_param('i', $did);
+    $stmt->bind_param('i', $counselor_id);
     $stmt->execute();
     $summary = $stmt->get_result()->fetch_assoc() ?: [];
     $stmt->close();
@@ -552,10 +552,10 @@ public function getOverdueTicketsSummary(string $division_id = ''): array
                 FROM tickets t
                 WHERE t.status = 'pending' 
                   AND t.created_at < DATE_SUB(NOW(), INTERVAL 3 DAY) 
-                  AND t.division = ?";
+                  AND t.assigned_to = ?";
 
     $stmt2 = $conn->prepare($days_sql);
-    $stmt2->bind_param('i', $did);
+    $stmt2->bind_param('i', $counselor_id);
     $stmt2->execute();
     $days_row = $stmt2->get_result()->fetch_assoc();
     $stmt2->close();
@@ -596,11 +596,10 @@ public function getCounselorAssignmentReport(string $start_date = '', string $en
             LEFT JOIN tickets t 
                 ON t.assigned_to = u.u_id 
                 AND t.status = 'agent assigned'
-            WHERE u.role = 'counselor' 
-              AND t.division IN (" . implode(',', array_fill(0, count($did_list), '?')) . ")";
+            WHERE u.u_id = ?";
 
-    $params = $did_list;
-    $types = str_repeat('i', count($did_list));
+    $params = [$counselor_id];
+    $types = "i";
 
     if ($start_date) {
         $sql .= " AND t.created_at >= ?";
@@ -653,11 +652,10 @@ public function getCounselorAssignmentReport(string $start_date = '', string $en
             LEFT JOIN tickets t 
                 ON t.assigned_to = u.u_id 
                 AND t.status = 'agent assigned'
-            WHERE u.role = 'counselor' 
-              AND t.division IN (" . implode(',', array_fill(0, count($did_list), '?')) . ")";
+            WHERE u.u_id = ?";
 
-    $params = $did_list;
-    $types = str_repeat('i', count($did_list));
+    $params = [$counselor_id];
+    $types = "i";
 
     if ($start_date) {
         $sql .= " AND t.created_at >= ?";
@@ -697,9 +695,9 @@ public function getCounselorAssignmentReport(string $start_date = '', string $en
                 FROM tickets t
                 INNER JOIN ticket_timeline tt ON t.ticket_id = tt.ticket_id
                 INNER JOIN users u ON t.u_id = u.u_id
-                WHERE 1=1 AND t.division IN (" . implode(',', array_map(fn($d) => $d['did'], $divisions)) . ")";
-        $params = [];
-        $types = '';
+                WHERE t.assigned_to = ?";
+        $params = [$counselor_id];
+        $types = 'i';
 
         if ($start_date) {
             $sql .= " AND t.created_at >= ?";
@@ -749,9 +747,9 @@ public function getCounselorAssignmentReport(string $start_date = '', string $en
                     COUNT(CASE WHEN level_3 IS NOT NULL AND level_3 != '0000-00-00 00:00:00' THEN 1 END) AS level3_count
                 FROM ticket_timeline tt
                 INNER JOIN tickets t ON tt.ticket_id = t.ticket_id
-                WHERE 1=1";
-        $params = [];
-        $types = '';
+                WHERE t.assigned_to = ?";
+        $params = [$counselor_id];
+        $types = 'i';
 
         if ($start_date) {
             $sql .= " AND t.created_at >= ?";
@@ -835,10 +833,9 @@ public function getTicketVolumeTrendsReport(
             COUNT(t.ticket_id) AS ticket_count
         FROM tickets t
         LEFT JOIN division d ON d.did = t.division
-        WHERE t.division IN ($div_in)
-    ";
-    $params = $allowed_dids;
-    $types = str_repeat('i', count($allowed_dids));
+        WHERE t.assigned_to = ?";
+    $params = [$counselor_id];
+    $types = "i";
 
     if ($start_date) {
         $sql .= " AND t.created_at >= ?";
