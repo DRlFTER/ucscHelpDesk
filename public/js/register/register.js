@@ -92,19 +92,22 @@ function showForm(role, btn) {
 
 function showError(input, message) {
         input.classList.add('inputError');
-        let err = input.parentNode.querySelector('.fieldError');
-        if (!err) {
-                err = document.createElement('span');
-                err.className = 'fieldError';
-                input.after(err);
+        let alertBox = document.querySelector('.registerRight .alert.error');
+        if (!alertBox) {
+                alertBox = document.createElement('div');
+                alertBox.className = 'alert error';
+                alertBox.textContent = message;
+                const roleBtns = document.querySelector('.role-buttons');
+                roleBtns.parentNode.insertBefore(alertBox, roleBtns);
         }
-        err.textContent = message;
 }
 
 function clearError(input) {
         input.classList.remove('inputError');
-        const err = input.parentNode.querySelector('.fieldError');
-        if (err) err.remove();
+        const alertBox = document.querySelector('.registerRight .alert.error');
+        if (alertBox) {
+                alertBox.remove();
+        }
 }
 
 document.querySelectorAll('.form-container form').forEach(form => {
