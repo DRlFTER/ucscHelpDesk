@@ -10,8 +10,7 @@
     <link
       rel="icon"
       type="image/png"
-      sizes="32x32"
-      href="/assets/images/logo-min.svg"
+      href="/assets/imgs/favicon.png"
     />
 
     <link rel="stylesheet" href="/css/global/components.css" />

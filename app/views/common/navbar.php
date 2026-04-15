@@ -86,8 +86,7 @@
 
   <!-- Logo / Brand -->
   <div class="sidenavBrand">
-    <img src="/assets/logo.svg" alt="UCSC Logo" class="sidenavLogo" />
-    <span class="sidenavTitle">UCSC HelpDesk</span>
+    <img src="/assets/imgs/logo.png" alt="UCSC HelpDesk" class="sidenavLogo" />
   </div>
 
   <!-- Navigation Links -->

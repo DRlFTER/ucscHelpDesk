@@ -622,14 +622,17 @@ body.modal-open .mainContentFull {
   display: flex;
   height: 20%;
   align-items: center;
+  justify-content: center;
   gap: 12px;
   padding: 8px 12px;
   margin-bottom: 24px;
 }
 
 .sidenavLogo {
-  width: 32px;
-  height: 32px;
+  width: 175px;
+  max-width: 100%;
+  height: auto;
+  
 }
 
 .sidenavTitle {
