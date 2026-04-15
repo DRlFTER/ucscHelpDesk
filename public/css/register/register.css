@@ -195,6 +195,21 @@ body {
 .selectOption.isSelected { background: #eef2ff; color: #4338ca; }
 .selectOption.isDisabled { color: #9ca3af; cursor: not-allowed; }
 
+//error handling
+
+.inputError {
+    border-color: #e53e3e !important;
+    background-color: #fff5f5;
+}
+
+.fieldError {
+    display: block;
+    color: #e53e3e;
+    font-size: 0.78rem;
+    margin-top: 4px;
+    margin-bottom: 4px;
+}
+
 @media (max-width: 600px) {
   .registerBox {
     width: 96vw;

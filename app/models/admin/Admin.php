@@ -54,7 +54,7 @@ class AdminModel extends Model
             $types = 'ss';
         }
 
-        $sql = "SELECT id, question, answer, created_at FROM faq $whereSql ORDER BY created_at DESC, id DESC LIMIT ? OFFSET ?";
+        $sql = "SELECT id, question, answer, created_at FROM faq $whereSql ORDER BY id DESC LIMIT ? OFFSET ?";
         $stmt = $this->db->prepare($sql);
         if (!$stmt) {
             throw new Exception('Prepare failed: ' . $this->db->error);

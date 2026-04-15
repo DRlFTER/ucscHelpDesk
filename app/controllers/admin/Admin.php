@@ -852,15 +852,20 @@ class Admin extends Controller
         $db = Database::getInstance();
         $idEsc = (int)$id;
         $feedback = null;
-        if ($resFb = $db->query("SELECT rating, feedback, created_at FROM feedbacks WHERE ticket_id = $idEsc LIMIT 1")) {
-            if ($rFb = $resFb->fetch_assoc()) {
-                $feedback = [
-                    'rating' => (int)$rFb['rating'],
-                    'feedback' => (string)$rFb['feedback'],
-                    'createdAt' => date('M d, Y \a\t g:i A', strtotime($rFb['created_at']))
-                ];
+        if ($stmt = $db->prepare("SELECT rating, feedback, created_at FROM feedbacks WHERE ticket_id = ? LIMIT 1")) {
+            $stmt->bind_param("i", $idEsc);
+            $stmt->execute();
+            if ($resFb = $stmt->get_result()) {
+                if ($rFb = $resFb->fetch_assoc()) {
+                    $feedback = [
+                        'rating' => (int)$rFb['rating'],
+                        'feedback' => (string)$rFb['feedback'],
+                        'createdAt' => date('M d, Y \a\t g:i A', strtotime($rFb['created_at']))
+                    ];
+                }
+                $resFb->free();
             }
-            $resFb->free();
+            $stmt->close();
         }
 
         echo json_encode([
@@ -1065,16 +1070,21 @@ class Admin extends Controller
         // Admin can see all posts
         $sql = "SELECT f.q_id, f.created_at, f.title, f.topic, f.status, f.description, f.u_id, f.is_Public, u.name AS student_name,
                 (SELECT COALESCE(SUM(vote_type), 0) FROM forum_votes WHERE post_id = f.q_id) as vote_count,
-                (SELECT vote_type FROM forum_votes WHERE post_id = f.q_id AND u_id = $uId LIMIT 1) as my_vote
+                (SELECT vote_type FROM forum_votes WHERE post_id = f.q_id AND u_id = ? LIMIT 1) as my_vote
                 FROM forum_q f
                 LEFT JOIN users u ON u.u_id = f.u_id
-                WHERE f.q_id = $idEsc
+                WHERE f.q_id = ?
                 LIMIT 1";
 
         $row = null;
-        if ($res = $db->query($sql)) {
-            $row = $res->fetch_assoc();
-            $res->free();
+        if ($stmt = $db->prepare($sql)) {
+            $stmt->bind_param("ii", $uId, $idEsc);
+            $stmt->execute();
+            if ($res = $stmt->get_result()) {
+                $row = $res->fetch_assoc();
+                $res->free();
+            }
+            $stmt->close();
         }
         if (!$row) {
             http_response_code(404);
@@ -1105,14 +1115,33 @@ class Admin extends Controller
 
         // attachments from attachments table
         $attachments = [];
-        if ($res = $db->query("SELECT file_name, file_path FROM attachments WHERE entity_type = 'forum' AND entity_id = $idEsc")) {
-            while ($r = $res->fetch_assoc()) {
-                $attachments[] = [
-                    'name' => (string)($r['file_name'] ?? ''),
-                    'url' => '/' . ltrim((string)($r['file_path'] ?? ''), '/'),
-                ];
+        if ($stmt = $db->prepare("SELECT file_name, file_path FROM attachments WHERE entity_type = 'forum' AND entity_id = ?")) {
+            $stmt->bind_param("i", $idEsc);
+            $stmt->execute();
+            if ($res = $stmt->get_result()) {
+                while ($r = $res->fetch_assoc()) {
+                    $attachments[] = [
+                        'name' => (string)($r['file_name'] ?? ''),
+                        'url' => '/' . ltrim((string)($r['file_path'] ?? ''), '/'),
+                    ];
+                }
+                $res->free();
             }
-            $res->free();
+            $stmt->close();
+        }
+
+        $commentsCount = 0;
+        if ($stmt = $db->prepare("SELECT COUNT(*) as c FROM forum_comments WHERE post_id = ?")) {
+            $pId = (int)($row['q_id'] ?? 0);
+            $stmt->bind_param("i", $pId);
+            $stmt->execute();
+            if ($res = $stmt->get_result()) {
+                if ($r = $res->fetch_assoc()) {
+                    $commentsCount = (int)($r['c'] ?? 0);
+                }
+                $res->free();
+            }
+            $stmt->close();
         }
 
         $payload = [
@@ -1128,7 +1157,7 @@ class Admin extends Controller
             'is_Public' => (int)($row['is_Public'] ?? 0),
             'student' => [ 'id' => (int)($row['u_id'] ?? 0), 'name' => (string)($row['student_name'] ?? 'Student') ],
             'attachments' => $attachments,
-            'commentsCount' => (int)($db->query("SELECT COUNT(*) as c FROM forum_comments WHERE post_id = " . (int)($row['q_id'] ?? 0))->fetch_assoc()['c'] ?? 0),
+            'commentsCount' => $commentsCount,
             'votes' => (int)($row['vote_count'] ?? 0),
             'voted' => (int)($row['my_vote'] ?? 0),
             'isOwner' => ((int)$row['u_id'] === $uId),
@@ -1156,8 +1185,15 @@ class Admin extends Controller
         $voteVal = ($type === 'up') ? 1 : -1;
 
         // Check if post exists (Admin can access all)
-        $check = $db->query("SELECT q_id FROM forum_q WHERE q_id = $id");
-        if (!$check || $check->num_rows === 0) {
+        $exists = false;
+        if ($stmt = $db->prepare("SELECT 1 FROM forum_q WHERE q_id = ? LIMIT 1")) {
+            $stmt->bind_param("i", $id);
+            $stmt->execute();
+            $stmt->store_result();
+            $exists = $stmt->num_rows > 0;
+            $stmt->close();
+        }
+        if (!$exists) {
             http_response_code(404);
             echo json_encode(['error' => 'not_found']);
             return;
@@ -1165,14 +1201,25 @@ class Admin extends Controller
 
         // Check existing vote
         $existing = 0;
-        $checkVote = $db->query("SELECT vote_type FROM forum_votes WHERE post_id = $id AND u_id = $uId");
-        if ($checkVote && $row = $checkVote->fetch_assoc()) {
-            $existing = (int)$row['vote_type'];
+        if ($stmt = $db->prepare("SELECT vote_type FROM forum_votes WHERE post_id = ? AND u_id = ? LIMIT 1")) {
+            $stmt->bind_param("ii", $id, $uId);
+            $stmt->execute();
+            if ($res = $stmt->get_result()) {
+                if ($row = $res->fetch_assoc()) {
+                    $existing = (int)$row['vote_type'];
+                }
+                $res->free();
+            }
+            $stmt->close();
         }
 
         if ($existing === $voteVal) {
             // Toggle off (remove vote)
-            $db->query("DELETE FROM forum_votes WHERE post_id = $id AND u_id = $uId");
+            if ($stmt = $db->prepare("DELETE FROM forum_votes WHERE post_id = ? AND u_id = ?")) {
+                $stmt->bind_param("ii", $id, $uId);
+                $stmt->execute();
+                $stmt->close();
+            }
             $newVote = 0;
         } else {
             // Insert or Update
@@ -1185,10 +1232,17 @@ class Admin extends Controller
         }
 
         // Get new total
-        $totalRes = $db->query("SELECT COALESCE(SUM(vote_type), 0) as cnt FROM forum_votes WHERE post_id = $id");
         $total = 0;
-        if ($totalRes && $r = $totalRes->fetch_assoc()) {
-            $total = (int)$r['cnt'];
+        if ($stmt = $db->prepare("SELECT COALESCE(SUM(vote_type), 0) as cnt FROM forum_votes WHERE post_id = ?")) {
+            $stmt->bind_param("i", $id);
+            $stmt->execute();
+            if ($res = $stmt->get_result()) {
+                if ($r = $res->fetch_assoc()) {
+                    $total = (int)$r['cnt'];
+                }
+                $res->free();
+            }
+            $stmt->close();
         }
 
         echo json_encode(['ok' => true, 'votes' => $total, 'voted' => $newVote]);
@@ -1322,8 +1376,15 @@ class Admin extends Controller
         }
 
         // Admin can view any post
-        $check = $db->query("SELECT q_id FROM forum_q WHERE q_id = $id");
-        if (!$check || $check->num_rows === 0) {
+        $exists = false;
+        if ($stmt = $db->prepare("SELECT 1 FROM forum_q WHERE q_id = ? LIMIT 1")) {
+            $stmt->bind_param("i", $id);
+            $stmt->execute();
+            $stmt->store_result();
+            $exists = $stmt->num_rows > 0;
+            $stmt->close();
+        }
+        if (!$exists) {
             echo json_encode([]);
             return;
         }
@@ -1331,26 +1392,32 @@ class Admin extends Controller
         $sql = "SELECT c.id, c.parent_id, c.content, c.created_at, u.name as author_name, u.role as author_role, u.u_id as author_id
                 FROM forum_comments c
                 LEFT JOIN users u ON u.u_id = c.u_id
-                WHERE c.post_id = $id
+                WHERE c.post_id = ?
                 ORDER BY c.created_at ASC";
         
         $comments = [];
-        if ($res = $db->query($sql)) {
-            while ($row = $res->fetch_assoc()) {
-                $ts = strtotime($row['created_at']);
-                $time = ($ts) ? date('M d, g:i A', $ts) : '';
-                
-                $comments[] = [
-                    'id' => (int)$row['id'],
-                    'parentId' => $row['parent_id'] ? (int)$row['parent_id'] : null,
-                    'text' => $row['content'],
-                    'time' => $time,
-                    'name' => $row['author_name'] ?? 'Unknown',
-                    'role' => $row['author_role'] ?? '',
-                    'authorType' => $row['author_role'] ?? 'admin',
-                    'authorId' => (int)$row['author_id']
-                ];
+        if ($stmt = $db->prepare($sql)) {
+            $stmt->bind_param("i", $id);
+            $stmt->execute();
+            if ($res = $stmt->get_result()) {
+                while ($row = $res->fetch_assoc()) {
+                    $ts = strtotime($row['created_at']);
+                    $time = ($ts) ? date('M d, g:i A', $ts) : '';
+                    
+                    $comments[] = [
+                        'id' => (int)$row['id'],
+                        'parentId' => $row['parent_id'] ? (int)$row['parent_id'] : null,
+                        'text' => $row['content'],
+                        'time' => $time,
+                        'name' => $row['author_name'] ?? 'Unknown',
+                        'role' => $row['author_role'] ?? '',
+                        'authorType' => $row['author_role'] ?? 'admin',
+                        'authorId' => (int)$row['author_id']
+                    ];
+                }
+                $res->free();
             }
+            $stmt->close();
         }
         echo json_encode($comments);
     }
@@ -1379,8 +1446,15 @@ class Admin extends Controller
         }
 
         // Admin can comment on any post
-        $check = $db->query("SELECT q_id FROM forum_q WHERE q_id = $id");
-        if (!$check || $check->num_rows === 0) {
+        $exists = false;
+        if ($stmt = $db->prepare("SELECT 1 FROM forum_q WHERE q_id = ? LIMIT 1")) {
+            $stmt->bind_param("i", $id);
+            $stmt->execute();
+            $stmt->store_result();
+            $exists = $stmt->num_rows > 0;
+            $stmt->close();
+        }
+        if (!$exists) {
             http_response_code(404);
             echo json_encode(['error' => 'not_found']);
             return;
@@ -1391,8 +1465,16 @@ class Admin extends Controller
             $stmt->bind_param("iiis", $id, $uId, $parentId, $text);
             if ($stmt->execute()) {
                 $newId = $stmt->insert_id;
-                $res = $db->query("SELECT c.created_at, u.name as author_name, u.role FROM forum_comments c LEFT JOIN users u ON u.u_id = c.u_id WHERE c.id = $newId");
-                $r = $res ? $res->fetch_assoc() : null;
+                $r = null;
+                if ($stmtFetch = $db->prepare("SELECT c.created_at, u.name as author_name, u.role FROM forum_comments c LEFT JOIN users u ON u.u_id = c.u_id WHERE c.id = ?")) {
+                    $stmtFetch->bind_param("i", $newId);
+                    $stmtFetch->execute();
+                    if ($res = $stmtFetch->get_result()) {
+                        $r = $res->fetch_assoc();
+                        $res->free();
+                    }
+                    $stmtFetch->close();
+                }
                 $time = $r ? date('M d, g:i A', strtotime($r['created_at'])) : 'Just now';
                 
                 echo json_encode([
