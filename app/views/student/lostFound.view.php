@@ -150,7 +150,7 @@ function time_ago_label($datetime)
                     <?php else: ?>
                       <button type="button" class="btnWSvg" disabled style="padding:10px 16px; font-size:14px; border-radius:10px; background:#e5e7eb; color:#374151; border:1px solid #d1d5db; cursor:not-allowed;">Item claimed</button>
                     <?php endif; ?>
-                    <form method="POST" action="/student/lostfound_delete/<?= (int)$it['q_id'] ?>" onsubmit="return confirm('Delete this submission? This cannot be undone.');">
+                    <form method="POST" action="/student/lostfound_delete/<?= (int)$it['q_id'] ?>">
                       <button type="submit" class="btnWSvg btnDangerText" style="padding:10px 16px; font-size:14px; border-radius:10px; background:#fee2e2; color:#b91c1c; border:1px solid #fecaca; cursor:pointer;">Delete</button>
                     </form>
                   <?php elseif ($currentUserId): ?>
