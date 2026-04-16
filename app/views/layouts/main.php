@@ -81,9 +81,23 @@
    <?php
      // Determine if we're on login, register, or 404 pages (hide sidenav)
      $currentPath = parse_url($_SERVER['REQUEST_URI'] ?? '/', PHP_URL_PATH) ?? '/';
-     $hideSidenav = preg_match('#^/(login|register|auth/login|auth/register|_404)#i', $currentPath);
-     // Also hide sidenav if this is the 404 view
-     if (isset($title) && stripos($title, 'Page Not Found') !== false) {
+     // Account for possible sub-directory hosted instances
+     $basePath = preg_replace('#/+#', '/', str_replace(basename($_SERVER['SCRIPT_NAME']), '', $_SERVER['SCRIPT_NAME']));
+     $relativePath = substr($currentPath, strlen($basePath));
+     $relativePath = '/' . ltrim($relativePath, '/');
+     
+     $hideSidenav = preg_match('#^/(login|register|auth/login|auth/register|_404)#i', $relativePath);
+     
+     if (trim($relativePath, '/') === '') {
+         $hideSidenav = true;
+     }
+
+     // Also hide sidenav based on the page title
+     if (isset($title) && (
+         stripos($title, 'Page Not Found') !== false || 
+         stripos($title, 'Log in') !== false || 
+         stripos($title, 'Register') !== false
+     )) {
          $hideSidenav = true;
      }
    ?>
