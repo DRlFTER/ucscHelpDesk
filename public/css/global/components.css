@@ -377,8 +377,13 @@ body.modal-open .mainContentFull {
 }
 
 .btnPrimary {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 8px;
   padding: 10px 20px;
   flex: 1;
+  white-space: nowrap;
   border: none;
   border-radius: 10px;
   background: var(--CTA, #8c8cf9);
@@ -403,8 +408,13 @@ body.modal-open .mainContentFull {
 }
 
 .btnSecondary {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 8px;
   padding: 10px 20px;
   flex: 1;
+  white-space: nowrap;
   border: none;
   border-radius: 10px;
   background: var(--CTA, #e6e6e6);

@@ -538,8 +538,8 @@
         </div>
         <div class="event-modal-footer" style="justify-content: center;">
           <div class="modal-actions">
-            <button class="btn-secondary" type="button" id="confirm-cancel">Cancel</button>
-            <button class="btn-delete" type="button" id="confirm-yes">Delete</button>
+            <button class="btnSecondary btnSecondaryText" type="button" id="confirm-cancel">Cancel</button>
+            <button class="btnPrimary btnDanger btnPrimaryText" type="button" id="confirm-yes">Delete</button>
           </div>
         </div>
       </div>
@@ -630,10 +630,10 @@
           </div>
         </div>
         <div class="event-modal-footer">
-          ${isEdit ? '<button class="btn-delete" type="button">Delete</button>' : "<div></div>"}
+          ${isEdit ? '<button class="btnPrimary btnDanger btnPrimaryText" type="button">Delete</button>' : "<div></div>"}
           <div class="modal-actions">
-            <button class="btn-secondary" type="button" id="modal-cancel">Cancel</button>
-            <button class="btn-primary" type="button" id="modal-save">${isEdit ? "Save" : "Create event"}</button>
+            <button class="btnSecondary btnSecondaryText" type="button" id="modal-cancel">Cancel</button>
+            <button class="btnPrimary btnPrimaryText" type="button" id="modal-save">${isEdit ? "Save" : "Create event"}</button>
           </div>
         </div>
       </div>
@@ -726,7 +726,7 @@
 
     // Delete handler - using custom confirmation modal
     if (isEdit) {
-      modal.querySelector(".btn-delete").addEventListener("click", () => {
+      modal.querySelector(".btnDanger").addEventListener("click", () => {
         showConfirmModal(
           "Are you sure you want to delete this event?",
           async () => {
