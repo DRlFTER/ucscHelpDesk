@@ -48,10 +48,6 @@
   cursor: pointer;
 }
 
-.ticketCard:hover {
-  background: rgba(255, 255, 255, 1);
-  border: 1px solid rgba(140, 140, 249, 0.7);
-}
 
 .label {
   display: block;
@@ -353,11 +349,6 @@ textarea#details {
   background: rgba(255, 255, 255, 0.5);
   transition: all 0.2s ease-in-out;
   cursor: pointer;
-}
-
-.sideCard:hover {
-  background: rgba(255, 255, 255, 1);
-  border: 1px solid rgba(140, 140, 249, 0.7);
 }
 
 .sideCard h3 {
