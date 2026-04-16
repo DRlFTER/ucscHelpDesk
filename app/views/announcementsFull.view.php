@@ -104,15 +104,72 @@
             <textarea id="editContent" class="editTextarea" name="content" required placeholder="Announcement content"><?php echo htmlspecialchars($announcement['content']); ?></textarea>
           </div>
           <div class="formActions">
-            <button type="submit" class="btnPrimary" name="update_ticket">
+            <button type="button" class="btnPrimary" onclick="document.getElementById('updateAnnModal').classList.add('open');">
               <span class="btnPrimaryText">Update Announcement</span>
             </button>
-            <button type="submit" class="btnDanger" name="delete_ticket" onclick="return confirm('Are you sure you want to delete this announcement?');">
+            <button type="button" class="btnDanger" onclick="document.getElementById('deleteAnnModal').classList.add('open');">
               <span class="btnDangerText">Delete Announcement</span>
             </button>
           </div>
         </form>
       </div>
+
+      <!-- Custom Update Modal -->
+      <div id="updateAnnModal" class="modalOverlay">
+        <div class="modalBackdropClose" onclick="document.getElementById('updateAnnModal').classList.remove('open')"></div>
+        <div class="msgHolder">
+          <div class="msgContainer">
+            <h3 class="msgTitle">Update Announcement</h3>
+            <p class="msgText">Are you sure you want to update this announcement with the new details?</p>
+            <div class="msgActions">
+              <button type="button" class="btnSecondary" style="background:#e5e7eb; color:#374151; padding:8px 16px; border:none; border-radius:6px; cursor:pointer;" onclick="document.getElementById('updateAnnModal').classList.remove('open')">Cancel</button>
+              <button type="button" class="btnPrimary" style="background:#8c8cf9; color:#fff; padding:8px 16px; border:none; border-radius:6px; cursor:pointer;" onclick="submitAnnForm('update_ticket')">Yes, Update</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Custom Delete Modal -->
+      <div id="deleteAnnModal" class="modalOverlay">
+        <div class="modalBackdropClose" onclick="document.getElementById('deleteAnnModal').classList.remove('open')"></div>
+        <div class="msgHolder">
+          <div class="msgContainer">
+            <h3 class="msgTitle">Delete Announcement</h3>
+            <p class="msgText">Are you sure you want to delete this announcement? This cannot be undone.</p>
+            <div class="msgActions">
+              <button type="button" class="btnSecondary" style="background:#e5e7eb; color:#374151; padding:8px 16px; border:none; border-radius:6px; cursor:pointer;" onclick="document.getElementById('deleteAnnModal').classList.remove('open')">Cancel</button>
+              <button type="button" class="btnDanger" style="background:#ef4444; color:#fff; padding:8px 16px; border:none; border-radius:6px; cursor:pointer;" onclick="submitAnnForm('delete_ticket')">Yes, Delete</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <script>
+      function submitAnnForm(actionType) {
+        const form = document.querySelector('.editForm');
+        // Add hidden input so the controller knows which action is taken
+        const hiddenInput = document.createElement('input');
+        hiddenInput.type = 'hidden';
+        hiddenInput.name = actionType;
+        hiddenInput.value = '1';
+        form.appendChild(hiddenInput);
+
+        // If deleting, disable required fields to bypass HTML5 validation
+        if (actionType === 'delete_ticket') {
+          form.querySelectorAll('[required]').forEach(el => el.removeAttribute('required'));
+          form.submit();
+          return;
+        }
+
+        // Native check validity if updating
+        if (form.checkValidity()) {
+          form.submit();
+        } else {
+          document.getElementById('updateAnnModal').classList.remove('open');
+          form.reportValidity(); // Show native html5 validation tooltips
+        }
+      }
+      </script>
       <?php endif; ?>
     </div>
   </div>
