@@ -247,7 +247,6 @@
 }
 
 .btn-primary:hover {
-  transform: translate3d(0, -1px, 0);
   box-shadow: 0 6px 20px rgba(140, 140, 249, 0.4);
 }
 
@@ -270,7 +269,6 @@
 .btn-secondary:hover {
   background: #f9fafb;
   border-color: #d1d5db;
-  transform: translate3d(0, -1px, 0);
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
 }
 
@@ -300,7 +298,6 @@
 }
 
 .btn-delete:hover {
-  transform: translate3d(0, -1px, 0);
   box-shadow: 0 4px 14px rgba(220, 38, 38, 0.3);
 }
 

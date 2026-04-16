@@ -80,7 +80,7 @@
     `;
 
     const btn = document.getElementById("welcomeLoginBtn");
-    if (btn) btn.addEventListener("click", () => showLoginPrompt());
+    if (btn) btn.addEventListener("click", () => window.location.href = "/login");
   }
 
   function renderCards(cards) {
