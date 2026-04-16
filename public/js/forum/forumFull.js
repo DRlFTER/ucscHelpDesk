@@ -377,9 +377,85 @@ function wireActions() {
     btn.querySelector('.btnSecondaryText').textContent = active ? 'Following' : 'Follow';
   });
 
-  // Edit post (placeholder only)
+  // Edit post
   document.getElementById("editPostBtn")?.addEventListener("click", () => {
-    alert("Edit post coming soon.");
+    if (!ticketData || !ticketData.id) return;
+    const overlay = document.getElementById("editModal");
+    if (!overlay) return;
+    
+    // Populate data
+    document.getElementById("editTitleInput").value = ticketData.title || "";
+    document.getElementById("editDescInput").value = ticketData.description || "";
+    
+    const existingAttachmentsContainer = document.getElementById("editExistingAttachments");
+    if (existingAttachmentsContainer) {
+        if (ticketData.attachments && ticketData.attachments.length > 0) {
+            existingAttachmentsContainer.innerHTML = ticketData.attachments.map(a => `<div>- ${a.name}</div>`).join('');
+        } else {
+            existingAttachmentsContainer.innerHTML = '<div>No attachments currently.</div>';
+        }
+    }
+    
+    document.getElementById("editAttachmentsInput").value = "";
+
+    overlay.classList.add("open");
+    document.body.classList.add("modal-open");
+
+    const cancelBtn = document.getElementById("cancelEditBtn");
+    const editForm = document.getElementById("editPostForm");
+    const backdropBtn = overlay.querySelector(".modalBackdropClose");
+
+    const close = () => {
+      overlay.classList.remove("open");
+      document.body.classList.remove("modal-open");
+      cancelBtn && cancelBtn.removeEventListener("click", onCancel);
+      editForm && editForm.removeEventListener("submit", onSubmit);
+      backdropBtn && backdropBtn.removeEventListener("click", onCancel);
+    };
+
+    const onCancel = (e) => { e && e.preventDefault(); close(); };
+
+    const onSubmit = async (e) => {
+      e.preventDefault();
+      
+      const submitBtn = document.getElementById("saveEditBtn");
+      submitBtn.disabled = true;
+      submitBtn.querySelector('.btnPrimaryText').textContent = "Saving...";
+      
+      const form = new FormData(editForm);
+      form.append("id", String(ticketData.id));
+
+      try {
+        const res = await fetch(`/${currentRole}/forumUpdate`, {
+            method: "POST",
+            body: form,
+            credentials: "include"
+        });
+        
+        if (res.ok) {
+            const json = await res.json();
+            if (json.ok) {
+                // Refresh page or update data
+                window.location.reload();
+            } else {
+                alert(json.error || "Failed to update post.");
+            }
+        } else {
+            alert("Failed to update post.");
+        }
+      } catch (err) {
+          console.error(err);
+          alert("Error updating post.");
+      } finally {
+          submitBtn.disabled = false;
+          submitBtn.querySelector('.btnPrimaryText').textContent = "Save Changes";
+          close();
+      }
+    };
+
+    cancelBtn && cancelBtn.addEventListener("click", onCancel);
+    editForm && editForm.addEventListener("submit", onSubmit);
+    backdropBtn && backdropBtn.addEventListener("click", onCancel);
   });
 
   // Toggle public/private
