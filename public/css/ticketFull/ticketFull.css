@@ -162,8 +162,8 @@ body.modal-open main {
 }
 .ticketTitle {
   flex: 1;
-  font-size: 18px;
-  font-weight: 600;
+  font-size: 25px;
+  font-weight: 500;
   font-family: "SF Pro";
 }
 .ticketMeta {
