@@ -536,10 +536,10 @@
           </div>
           <p class="confirm-message">${escapeHtml(message)}</p>
         </div>
-        <div class="event-modal-footer" style="justify-content: center;">
-          <div class="modal-actions">
-            <button class="btnSecondary btnSecondaryText" type="button" id="confirm-cancel">Cancel</button>
-            <button class="btnPrimary btnDanger btnPrimaryText" type="button" id="confirm-yes">Delete</button>
+        <div class="event-modal-footer" style="justify-content: center; gap: 16px;">
+          <div class="modal-actions" style="gap: 16px; width: 100%;">
+            <button class="btnSecondary btnSecondaryText" style="flex: 1; white-space: nowrap;" type="button" id="confirm-cancel">Cancel</button>
+            <button class="btnPrimary btnDanger btnPrimaryText" style="flex: 1; white-space: nowrap;" type="button" id="confirm-yes">Delete</button>
           </div>
         </div>
       </div>
@@ -629,11 +629,11 @@
             <textarea id="modal-description" class="form-textarea" placeholder="Add description" rows="3">${escapeHtml(description)}</textarea>
           </div>
         </div>
-        <div class="event-modal-footer">
-          ${isEdit ? '<button class="btnPrimary btnDanger btnPrimaryText" type="button">Delete</button>' : "<div></div>"}
-          <div class="modal-actions">
-            <button class="btnSecondary btnSecondaryText" type="button" id="modal-cancel">Cancel</button>
-            <button class="btnPrimary btnPrimaryText" type="button" id="modal-save">${isEdit ? "Save" : "Create event"}</button>
+        <div class="event-modal-footer" style="gap: 16px; flex-wrap: wrap;">
+          ${isEdit ? '<button class="btnPrimary btnDanger btnPrimaryText" style="flex: 1; white-space: nowrap;" type="button">Delete</button>' : "<div></div>"}
+          <div class="modal-actions" style="flex: 2; gap: 16px;">
+            <button class="btnSecondary btnSecondaryText" style="flex: 1; white-space: nowrap;" type="button" id="modal-cancel">Cancel</button>
+            <button class="btnPrimary btnPrimaryText" style="flex: 1; white-space: nowrap;" type="button" id="modal-save">${isEdit ? "Save" : "Create event"}</button>
           </div>
         </div>
       </div>
