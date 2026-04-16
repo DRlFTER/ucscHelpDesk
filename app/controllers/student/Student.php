@@ -396,7 +396,7 @@ public function templates()
         } catch (Throwable $e) {
         }
 
-    $headContent = '<link rel="stylesheet" href="/css/student/studentTickets.css" />' . "\n" .
+    $headContent = '<link rel="stylesheet" href="/css/tickets/tickets.css" />' . "\n" .
                '<link rel="stylesheet" href="/css/student/studentLostFound.css" />';
         $this->view('student/lostFound', [
             'title' => 'Lost & Found',
