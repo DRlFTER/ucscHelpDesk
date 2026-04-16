@@ -239,7 +239,6 @@ body.modal-open .mainContentFull {
 .backBtn:hover {
   background-color: #f3f4f6;
   border-color: #d1d5db;
-  transform: translateX(-2px);
 }
 
 .backBtn svg {
@@ -390,7 +389,6 @@ body.modal-open .mainContentFull {
 
 .btnPrimary:hover {
   background-color: #6a6af5;
-  transform: translateY(-2px);
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
 }
 
@@ -417,7 +415,6 @@ body.modal-open .mainContentFull {
 
 .btnSecondary:hover {
   background-color: #cecece;
-  transform: translateY(-2px);
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
 }
 
@@ -458,7 +455,6 @@ body.modal-open .mainContentFull {
 
 .btnWSvg:hover {
   background-color: #6a6af5;
-  transform: translateY(-2px);
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
 }
 
@@ -488,7 +484,6 @@ body.modal-open .mainContentFull {
 
 .btnAttach:hover {
   background-color: #e5e7eb;
-  transform: translateY(-2px);
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
 }
 
