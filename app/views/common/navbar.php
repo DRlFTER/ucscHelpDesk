@@ -183,8 +183,8 @@
 </aside>
 <script>
 (function() {
-  // ─── Notification Manager ───
-  const POLL_INTERVAL = 2000; // 2 seconds (simulated real-time)
+  // Notifications
+  const POLL_INTERVAL = 2000;
   let _notifCache = [];
   let _lastPollTime = '';
   let _unreadCount = 0;
@@ -212,7 +212,7 @@
     default: '<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path><path d="M13.73 21a2 2 0 0 1-3.46 0"></path></svg>'
   };
 
-  // ─── Toggle Dropdowns ───
+  // Toggle Dropdowns
   profile.addEventListener('click', function (e) {
     e.stopPropagation();
     notifDropdown.classList.remove('open');
@@ -234,7 +234,7 @@
     notifDropdown.classList.remove('open');
   });
 
-  // ─── Update Bell Icon ───
+  // Update Bell Icon
   function updateBellIcon() {
     const svgContainer = notifBtn.querySelector('svg');
     if (!svgContainer) return;
@@ -249,7 +249,7 @@
     }
   }
 
-  // ─── Render Notifications ───
+  // Render Notifications
   function renderNotifications() {
     if (_notifCache.length === 0) {
       notifList.innerHTML = `
@@ -297,7 +297,7 @@
     });
   }
 
-  // ─── Fetch Notifications (full load) ───
+  // Fetch Notifications
   function fetchNotifications() {
     refreshBtn.classList.add('spinning');
     fetch('/notifications')
@@ -319,7 +319,7 @@
       });
   }
 
-  // ─── Poll for New Notifications ───
+  // Poll for New Notifications
   function pollNotifications() {
     const url = _lastPollTime
       ? '/notifications/poll?since=' + encodeURIComponent(_lastPollTime)
@@ -350,7 +350,7 @@
       });
   }
 
-  // ─── Mark Single Read ───
+  // Mark Single Read
   function markRead(notifId) {
     fetch('/notifications/markRead', {
       method: 'POST',
@@ -371,7 +371,7 @@
     .catch(function() {});
   }
 
-  // ─── Mark All Read ───
+  // Mark All Read
   markAllBtn.addEventListener('click', function(e) {
     e.stopPropagation();
     fetch('/notifications/markAllRead', {
@@ -388,13 +388,13 @@
     .catch(function() {});
   });
 
-  // ─── Refresh Button ───
+  // Refresh Button
   refreshBtn.addEventListener('click', function(e) {
     e.stopPropagation();
     fetchNotifications();
   });
 
-  // ─── Utility ───
+  // Utility
   function escapeHtml(str) {
     if (!str) return '';
     var div = document.createElement('div');
@@ -402,7 +402,7 @@
     return div.innerHTML;
   }
 
-  // ─── Init ───
+  // Init
   document.addEventListener('DOMContentLoaded', function() {
     fetchNotifications();
     _pollTimer = setInterval(pollNotifications, POLL_INTERVAL);

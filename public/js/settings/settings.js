@@ -94,33 +94,6 @@
       ],
     },
     {
-      id: "notifications",
-      title: "Notifications",
-      description: "Where and how you receive notifications.",
-      groups: [
-        {
-          title: "Email notifications",
-          items: [
-            {
-              id: "notif_tickets",
-              label: "Ticket updates",
-              control: { type: "select", options: ["All", "Mentions", "None"] },
-              value: localStorage.getItem("ucsc_notif_tickets") || "All"
-            },
-            {
-              id: "notif_announcements",
-              label: "Announcements",
-              control: {
-                type: "select",
-                options: ["All", "Important only", "None"],
-              },
-              value: localStorage.getItem("ucsc_notif_announcements") || "All"
-            },
-          ],
-        },
-      ],
-    },
-    {
       id: "display",
       title: "Display",
       description: "Layout and visibility settings.",
