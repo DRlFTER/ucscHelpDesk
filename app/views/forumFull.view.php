@@ -136,6 +136,35 @@
 	<button type="button" class="modalBackdropClose" aria-label="Close"></button>
 </div>
 
+<div id="editModal" class="modalOverlay" aria-hidden="true">
+	<div class="msgHolder">
+		<div class="msgContainer" role="dialog" aria-modal="true" aria-labelledby="editModalTitle" style="min-width: 400px; padding: 24px; max-width: 90vw;">
+			<div class="msgContent" style="width: 100%;">
+				<h3 id="editModalTitle" class="msgTitle">Edit Post</h3>
+				<form id="editPostForm" class="editForm" style="display: flex; flex-direction: column; gap: 12px; margin-top: 12px; width: 100%;" enctype="multipart/form-data">
+					<input type="text" id="editTitleInput" name="title" placeholder="Title" required style="padding: 10px; border-radius: 8px; border: 1px solid #d1d5db; font-family: inherit; font-size: 14px;" />
+					<textarea id="editDescInput" name="description" placeholder="Description" required rows="6" style="padding: 10px; border-radius: 8px; border: 1px solid #d1d5db; font-family: inherit; font-size: 14px; resize: vertical;"></textarea>
+					
+					<div class="fileUploadWrapper">
+						<label style="font-size: 13px; font-weight: 500;">Existing Attachments:</label>
+						<div id="editExistingAttachments" style="font-size: 12px; color: #4b5563; margin-bottom: 8px; max-height: 80px; overflow-y: auto;"></div>
+
+						<label for="editAttachmentsInput" style="font-size: 13px; font-weight: 500;">Add/Change Attachments</label>
+						<input type="file" id="editAttachmentsInput" name="attachments[]" multiple style="display: block; margin-top: 4px; font-size: 13px;" />
+                        <p style="font-size: 11px; color: #6b7280; margin-top: 4px;">If you upload new files, all existing attachments will be replaced. Leave empty to keep existing ones.</p>
+					</div>
+
+					<div class="msgActions" style="margin-top: 16px; display: flex; justify-content: flex-end; gap: 8px;">
+						<button id="cancelEditBtn" type="button" class="btnSecondary"><span class="btnSecondaryText">Cancel</span></button>
+						<button id="saveEditBtn" type="submit" class="btnPrimary"><span class="btnPrimaryText">Save Changes</span></button>
+					</div>
+				</form>
+			</div>
+		</div>
+	</div>
+	<button type="button" class="modalBackdropClose" aria-label="Close"></button>
+</div>
+
 <script>
 window.ticketData = <?= json_encode($data ?? []) ?>;
 </script>

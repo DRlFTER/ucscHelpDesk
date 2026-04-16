@@ -1332,6 +1332,93 @@ public function templates()
     }
 
     // Delete a forum post owned by the current student
+    
+    public function forumUpdate()
+    {
+        $this->requireLogin('student');
+        header('Content-Type: application/json');
+
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+            http_response_code(405);
+            echo json_encode(['error' => 'Method not allowed']);
+            return;
+        }
+
+        $uId = (int)($_SESSION['user']['u_id'] ?? 0);
+        $id = isset($_POST['id']) ? (int)$_POST['id'] : 0;
+        $title = isset($_POST['title']) ? trim($_POST['title']) : '';
+        $description = isset($_POST['description']) ? trim($_POST['description']) : '';
+
+        if ($id <= 0 || $uId <= 0 || empty($title) || empty($description)) {
+            http_response_code(400);
+            echo json_encode(['error' => 'Bad request. Title and Description are required.']);
+            return;
+        }
+
+        require_once __DIR__ . '/../../models/ForumPost.php';
+        $forumModel = new ForumPost();
+        
+        $postData = $forumModel->getPost($id);
+        if (!$postData || $postData['u_id'] != $uId) {
+            http_response_code(403);
+            echo json_encode(['error' => 'Not authorized to edit this post']);
+            return;
+        }
+        
+        $ok = $forumModel->updatePost($id, $uId, $title, $description);
+
+        if ($ok) {
+            $hasNewFiles = false;
+            if (isset($_FILES['attachments']) && is_array($_FILES['attachments']['name'])) {
+                foreach ($_FILES['attachments']['size'] as $size) {
+                    if ($size > 0) {
+                        $hasNewFiles = true;
+                        break;
+                    }
+                }
+            }
+
+            if ($hasNewFiles) {
+                require_once __DIR__ . '/../../models/Attachment.php';
+                $attachmentModel = new Attachment();
+                
+                $db = Database::getInstance();
+                $db->query("DELETE FROM attachments WHERE entity_type = 'forum' AND entity_id = $id");
+
+                $fileCount = count($_FILES['attachments']['name']);
+                for ($i = 0; $i < $fileCount; $i++) {
+                    if ($_FILES['attachments']['size'][$i] > 0) {
+                        $fileArr = [
+                            'name' => $_FILES['attachments']['name'][$i],
+                            'type' => $_FILES['attachments']['type'][$i],
+                            'tmp_name' => $_FILES['attachments']['tmp_name'][$i],
+                            'error' => $_FILES['attachments']['error'][$i],
+                            'size' => $_FILES['attachments']['size'][$i]
+                        ];
+                        
+                        if ($fileArr['error'] === UPLOAD_ERR_OK) {
+                            $uploadData = handle_upload($fileArr, 'forum');
+                            if ($uploadData) {
+                                $attachmentModel->insert([
+                                    'entity_type' => 'forum',
+                                    'entity_id' => $id,
+                                    'file_name' => $uploadData['file_name'],
+                                    'file_path' => $uploadData['file_path'],
+                                    'file_type' => $uploadData['file_type'],
+                                    'file_size' => $uploadData['file_size'],
+                                    'uploaded_by' => $uId
+                                ]);
+                            }
+                        }
+                    }
+                }
+            }
+            echo json_encode(['ok' => true]);
+        } else {
+            http_response_code(500);
+            echo json_encode(['error' => 'Failed to update post']);
+        }
+    }
     public function forumDelete()
     {
         $this->requireLogin('student');
