@@ -790,38 +790,6 @@ public function templates()
                         $forumId = $stmt->insert_id;
                         $stmt->close();
                         if ($ok) {
-                            // Handle attachments
-                            if (isset($_FILES['attachments']) && is_array($_FILES['attachments']['name'])) {
-                                require_once __DIR__ . '/../../models/Attachment.php';
-                                $attachmentModel = new Attachment();
-                                
-                                $fileCount = count($_FILES['attachments']['name']);
-                                for ($i = 0; $i < $fileCount; $i++) {
-                                    $fileArr = [
-                                        'name' => $_FILES['attachments']['name'][$i],
-                                        'type' => $_FILES['attachments']['type'][$i],
-                                        'tmp_name' => $_FILES['attachments']['tmp_name'][$i],
-                                        'error' => $_FILES['attachments']['error'][$i],
-                                        'size' => $_FILES['attachments']['size'][$i]
-                                    ];
-                                    
-                                    if ($fileArr['error'] === UPLOAD_ERR_OK) {
-                                        $uploadData = handle_upload($fileArr, 'forum');
-                                        if ($uploadData) {
-                                            $attachmentModel->insert([
-                                                'entity_type' => 'forum',
-                                                'entity_id' => $forumId,
-                                                'file_name' => $uploadData['file_name'],
-                                                'file_path' => $uploadData['file_path'],
-                                                'file_type' => $uploadData['file_type'],
-                                                'file_size' => $uploadData['file_size'],
-                                                'uploaded_by' => $uId
-                                            ]);
-                                        }
-                                    }
-                                }
-                            }
-
                             $flash = ['type' => 'success', 'message' => $isPublic ? 'Post published successfully. Redirecting to Forum…' : 'Draft saved. Redirecting to Forum…'];
                         } else {
                             $flash = ['type' => 'error', 'message' => 'Failed to save the post. Please try again.'];
