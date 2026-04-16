@@ -123,7 +123,7 @@
                         
             <div class="knowledgeBase">
               <div class="kbCarousel">
-                <a href="/student/knowledgebase" class="kbCard" style="background-image: url('/assets/imgs/kb/hanbook.jpg');">
+                <a href="https://ugvle.ucsc.cmb.ac.lk/ugvle_24/pluginfile.php/5570/block_html/content/2024.pdf" class="kbCard" style="background-image: url('/assets/imgs/kb/hanbook.jpg');">
                   <div class="kbCardContent">
                     <div class="kbCardText">
                       <span class="kbCardSubtitle">RESOURCE</span>

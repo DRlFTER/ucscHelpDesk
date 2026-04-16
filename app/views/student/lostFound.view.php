@@ -26,44 +26,45 @@ function time_ago_label($datetime)
 ?>
 
 <main>
-  <div class="lostFoundContainer">
-    <div class="lfHeader">
-      <div class="lfTitles">
-        <a class="backBtn" href="/student/dashboard" aria-label="Back">
-          <img src="/assets/arrow-left.svg" alt="Back" />
-        </a>
-        <div class="titlesText">
-          <h2>Lost &amp; Found</h2>
-          <p class="pageSubtitle">Browse reported lost and found items</p>
+  <div class="fullPage">
+    <div class="pageLayout">
+      <div class="ticketsFilters">
+        <div class="search">
+          <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 22 21" fill="none">
+            <path d="M17.65 18.375L12.1375 12.8625C11.7 13.2125 11.1969 13.4896 10.6281 13.6938C10.0594 13.8979 9.45417 14 8.8125 14C7.22292 14 5.8776 13.4495 4.77656 12.3484C3.67552 11.2474 3.125 9.90208 3.125 8.3125C3.125 6.72292 3.67552 5.3776 4.77656 4.27656C5.8776 3.17552 7.22292 2.625 8.8125 2.625C10.4021 2.625 11.7474 3.17552 12.8484 4.27656C13.9495 5.3776 14.5 6.72292 14.5 8.3125C14.5 8.95417 14.3979 9.55937 14.1938 10.1281C13.9896 10.6969 13.7125 11.2 13.3625 11.6375L18.875 17.15L17.65 18.375ZM8.8125 12.25C9.90625 12.25 10.8359 11.8672 11.6016 11.1016C12.3672 10.3359 12.75 9.40625 12.75 8.3125C12.75 7.21875 12.3672 6.28906 11.6016 5.52344C10.8359 4.75781 9.90625 4.375 8.8125 4.375C7.71875 4.375 6.78906 4.75781 6.02344 5.52344C5.25781 6.28906 4.875 7.21875 4.875 8.3125C4.875 9.40625 5.25781 10.3359 6.02344 11.1016C6.78906 11.8672 7.71875 12.25 8.8125 12.25Z" fill="#808080"/>
+          </svg>
+          <input type="text" placeholder="Search Lost &amp; Found..." />
+        </div>
+        <div class="filters">
+          <a href="/student/newFoundItem" class="btnWSvg" style="text-decoration:none;">
+            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#ffffff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
+            <span class="btnPrimaryText">Found Item</span>
+          </a>
+          <a href="/student/newLostItem" class="btnWSvg" style="text-decoration:none;">
+            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#ffffff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
+            <span class="btnPrimaryText">Lost Item</span>
+          </a>
+          <div class="filterGroup" role="radiogroup" aria-label="Type">
+            <label><input type="radio" name="type" value="all" checked /> All</label>
+            <label><input type="radio" name="type" value="lost" /> Lost</label>
+            <label><input type="radio" name="type" value="found" /> Found</label>
+            <label><input type="radio" name="type" value="my" /> My</label>
+          </div>
         </div>
       </div>
-      <div class="spacer"></div>
-    </div>
 
-    <div class="lfControls">
-      <div class="searchWrap">
-        <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#6b7280" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
-        <input type="text" placeholder="Search Lost &amp; Found..." />
-      </div>
-      <div class="filters">
-        <div class="filterGroup">
-          <label><input type="radio" name="type" value="all" checked /> All</label>
-          <label><input type="radio" name="type" value="lost" /> Lost</label>
-          <label><input type="radio" name="type" value="found" /> Found</label>
-          <label><input type="radio" name="type" value="my" /> My</label>
-        </div>
-      </div>
-    </div>
-
-      <section class="sectionCard">
-        <div class="lfList tickets" data-current-user="<?= (int)($_SESSION['user']['u_id'] ?? 0) ?>">
+      <div class="tickets lfList" data-current-user="<?= (int)($_SESSION['user']['u_id'] ?? 0) ?>">
         <?php if (!empty($items)): ?>
           <?php foreach ($items as $it): ?>
             <?php $statusLower = strtolower($it['status'] ?? ''); $isResolved = ($statusLower === 'found' || $statusLower === 'claimed'); ?>
             <?php
-              $statusClass = 'underReview';
-              if ($statusLower === 'found' || $statusLower === 'claimed') {
-                $statusClass = 'resolved';
+              // Map Lost & Found status to existing global .status colors
+              if ($statusLower === 'claimed') {
+                  $statusClass = 'underReview'; // Yellowish tag
+              } elseif ($statusLower === 'found') {
+                  $statusClass = 'resolved'; // Green tag
+              } else {
+                  $statusClass = 'rejected'; // Red tag
               }
               $statusLabel = $isResolved ? ($statusLower === 'claimed' ? 'Claimed' : 'Found') : 'Lost';
 
@@ -86,12 +87,12 @@ function time_ago_label($datetime)
               $categoryLabel = !empty($it['category']) ? ucfirst($it['category']) : '—';
             ?>
 
-            <article class="lfCard ticket <?= $isResolved ? 'found' : 'lost' ?>" data-u-id="<?= $ownerId ?>">
+            <article class="ticket <?= $isResolved ? 'found' : 'lost' ?>" data-u-id="<?= $ownerId ?>">
               <div class="ticketRow1">
                 <div class="ticketName">
                   <h2><?= htmlspecialchars($it['item_title']) ?></h2>
                    <?php if (!empty($it['item_details'])): ?>
-                   <p class="lfDetailsText" style="margin: 6px 0 10px 0; color:#374151; align-self: stretch;">
+                   <p style="margin: 6px 0 10px 0; color:#374151; font-size:14px; align-self: stretch;">
                      <?= nl2br(htmlspecialchars($it['item_details'])) ?>
                    </p>
                    <?php endif; ?>
@@ -105,24 +106,20 @@ function time_ago_label($datetime)
               </div>
 
               <div class="ticketRow2">
-                <div class="ticketDetails" style="border-right:none;">
+                <div class="ticketDetails">
                   <div class="ticketDetail">
                     <h2>Type:</h2>
                     <div class="ticketDetailHolder"><?= htmlspecialchars($typeLabel) ?></div>
                   </div>
                   <div class="ticketDetail">
-                    <h2>Status:</h2>
-                    <div class="ticketDetailHolder" style="background:#eef2ff; color:#4338ca;">
-                      <?= htmlspecialchars($statusLabel) ?>
-                    </div>
-                  </div>
-                  <div class="ticketDetail">
                     <h2>Category:</h2>
                     <div class="ticketDetailHolder"><?= htmlspecialchars($categoryLabel) ?></div>
                   </div>
+                </div>
+                <div class="ticketData">
                   <div class="ticketDetail">
                     <h2>When:</h2>
-                    <div class="ticketDetailHolder"><?php
+                    <div class="ticketDataHolder"><?php
                       if ($whenTs) {
                         echo htmlspecialchars(date('Y-m-d H:i', $whenTs));
                       } else {
@@ -132,7 +129,7 @@ function time_ago_label($datetime)
                   </div>
                   <div class="ticketDetail">
                     <h2>Contact:</h2>
-                    <div class="ticketDetailHolder"><?php
+                    <div class="ticketDataHolder"><?php
                       $contactPieces = [];
                       if (!empty($it['contact_mobile'])) { $contactPieces[] = htmlspecialchars($it['contact_mobile']); }
                       if (!empty($it['contact_email'])) { $contactPieces[] = htmlspecialchars($it['contact_email']); }
@@ -140,7 +137,7 @@ function time_ago_label($datetime)
                     ?></div>
                   </div>
                 </div>
-                <div style="display:flex; align-items:center; gap:8px; margin-left:auto; flex-wrap:wrap;">
+                <div class="ticketActions" style="display:flex; align-items:center; gap:8px; margin-left:auto; flex-wrap:wrap;">
                   <?php if ($currentUserId && $currentUserId === $ownerId): ?>
                     <?php if (!$isResolved): ?>
                       <form method="POST" action="/student/lostfound_markfound/<?= (int)$it['q_id'] ?>">
@@ -173,22 +170,6 @@ function time_ago_label($datetime)
           <div style="color:#6b7280; font-size:14px;">No items yet.</div>
         <?php endif; ?>
         </div>
-      </section>
-
-      <aside class="lfActions">
-  <a href="/student/newFoundItem" class="btnWSvg btnPrimaryText lfGreen" style="text-decoration:none;">
-          <svg xmlns="http://www.w3.org/2000/svg" width="25" height="25" viewBox="0 0 30 30" fill="none">
-            <path d="M13.75 16.25H6.25V13.75H13.75V6.25H16.25V13.75H23.75V16.25H16.25V23.75H13.75V16.25Z" fill="#FEF7FF"/>
-          </svg>
-          <span>Found Item</span>
-        </a>
-  <a href="/student/newLostItem" class="btnWSvg btnPrimaryText lfRed" style="text-decoration:none;">
-          <svg xmlns="http://www.w3.org/2000/svg" width="25" height="25" viewBox="0 0 30 30" fill="none">
-            <path d="M13.75 16.25H6.25V13.75H13.75V6.25H16.25V13.75H23.75V16.25H16.25V23.75H13.75V16.25Z" fill="#FEF7FF"/>
-          </svg>
-          <span>Lost Item</span>
-        </a>
-      </aside>
     </div>
   </div>
 </main>

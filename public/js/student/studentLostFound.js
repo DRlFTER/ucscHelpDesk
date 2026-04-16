@@ -6,8 +6,8 @@ document.addEventListener('DOMContentLoaded', () => {
   const topLoc = document.getElementById('lfLocationTop');
   const sideDate = document.getElementById('lfDateSide');
   const sideLoc = document.getElementById('lfLocationSide');
-  const cards = Array.from(document.querySelectorAll('.lfList .lfCard'));
-  const searchInput = document.querySelector('.searchWrap input');
+  const cards = Array.from(document.querySelectorAll('.lfList .ticket'));
+  const searchInput = document.querySelector('.search input');
   let searchTerm = '';
 
   // --- Custom select enhancer (from New Ticket) ---
