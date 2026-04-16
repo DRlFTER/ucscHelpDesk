@@ -32,30 +32,6 @@
           }
         });
       }
-
-      // Form submission validation
-      editForm.addEventListener('submit', (e) => {
-        const isDelete = e.submitter && e.submitter.name === 'delete_announcement';
-        
-        if (!isDelete) {
-          let valid = true;
-          
-          if (topicInput && topicInput.value.trim().length < 3) {
-            valid = false;
-            topicInput.style.borderColor = '#f56565';
-          }
-          
-          if (contentTextarea && contentTextarea.value.trim().length < 10) {
-            valid = false;
-            contentTextarea.style.borderColor = '#f56565';
-          }
-          
-          if (!valid) {
-            e.preventDefault();
-            alert('Please fill in all required fields properly.');
-          }
-        }
-      });
     }
 
     // Handle attachment downloads with loading state
