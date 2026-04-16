@@ -242,9 +242,6 @@ document.addEventListener('DOMContentLoaded', () => {
   document.querySelectorAll('form[action^="/student/lostfound_delete/"]').forEach(form => {
     form.addEventListener('submit', async (e) => {
       e.preventDefault();
-      // Respect confirm if present in markup
-      const msg = form.getAttribute('onsubmit')?.match(/confirm\('([^']*)'\)/)?.[1];
-      if (msg && !window.confirm(msg)) return;
 
       const btn = form.querySelector('button[type="submit"]');
       const original = btn ? btn.textContent : '';
