@@ -196,9 +196,9 @@ function renderMessages() {
           </div>
           <div class="replyBox" style="display:none; margin-top:8px;">
             <textarea class="replyInput" placeholder="Write a reply..." rows="2" style="width:100%; border:1px solid #ccc; border-radius:6px; padding:6px; font-size:13px;"></textarea>
-            <div style="text-align:right; margin-top:4px;">
-                <button class="btnPrimary btnSmall sendReplyBtn">Send</button>
-                <button class="btnSecondary btnSmall cancelReplyBtn">Cancel</button>
+            <div style="text-align:left; margin-top:4px; display: flex; justify-content: flex-start; gap: 12px;">
+                <button class="btnReplyText sendReplyBtn" style="color: #8c8cf9; opacity: 1;">Send</button>
+                <button class="btnReplyText cancelReplyBtn">Cancel</button>
             </div>
           </div>
         </div>
