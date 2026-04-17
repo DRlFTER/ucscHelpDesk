@@ -344,7 +344,6 @@ main {
 
 .kbUpdateBtn:hover {
   background: #bfdbfe;
-  transform: translateY(-1px);
   box-shadow: 0 2px 8px rgba(59, 130, 246, 0.2);
 }
 
@@ -375,7 +374,6 @@ main {
 
 .btnWSvg:hover {
   background-color: #6a6af5;
-  transform: translateY(-2px);
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
 }
 
