@@ -32,21 +32,25 @@
 								</button>
 							</div>
 							<div class="titleBlock">
-								<h2 id="ticketTitle" class="ticketTitle"></h2>
-								<span id="ticketStatus" class="status"></span>
+								<div style="display: flex; justify-content: space-between; align-items: center; width: 100%; gap: 12px;">
+									<h2 id="ticketTitle" class="ticketTitle" style="margin: 0; flex: 1;"></h2>
+									<div id="badgeContainer" style="display: flex; gap: 8px; align-items: center;">
+										<span id="ticketStatus" class="status"></span>
+									</div>
+								</div>
+								<div class="summarySection" style="margin-top: 1.5rem;">
+									<h3 class="sectionTitle">Description</h3>
+									<p id="ticketDescriptionText" class="descriptionText"></p>
+								</div>
 							</div>
 						</div>
-						<div class="ticketMeta" id="ticketMeta"></div>
 						<div class="summaryBody">
-							<div class="summarySection">
-								<h3 class="sectionTitle">Description</h3>
-								<p id="ticketDescriptionText" class="descriptionText"></p>
-							</div>
 							<div class="summarySection">
 								<h3 class="sectionTitle">Attachments</h3>
 								<div id="attachmentsList" class="attachmentsList"></div>
 							</div>
 						</div>
+						<div class="ticketMeta" id="ticketMeta"></div>
 					</div>
 
 					<div class="card conversation">

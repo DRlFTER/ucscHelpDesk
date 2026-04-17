@@ -163,12 +163,13 @@ body.modal-open main {
 }
 .ticketTitle {
   flex: 1;
-  font-size: 18px;
+  font-size: 22px;
   font-weight: 600;
   font-family: "SF Pro";
 }
+
 .ticketMeta {
-  font-size: 11.5px;
+  font-size: 15px;
   color: #6b7280;
   display: flex;
   gap: 12px;
@@ -198,8 +199,8 @@ body.modal-open main {
 }
 .descriptionText {
   color: #374151;
-  font-size: 13px;
-  line-height: 1.5;
+  font-size: 15px;
+  line-height: 1;
 }
 
 .attachmentsList {

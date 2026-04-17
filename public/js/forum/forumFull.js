@@ -94,7 +94,7 @@ function renderHeader() {
   statusEl.textContent = ticketData.status || "";
   // Append visibility badge next to status
   const vis = (typeof ticketData.is_Public !== 'undefined' && !ticketData.is_Public) ? 'Private' : 'Public';
-  const wrapper = statusEl.parentElement;
+  const wrapper = document.getElementById("badgeContainer") || statusEl.parentElement;
   if (wrapper) {
     let visEl = wrapper.querySelector('.visibilityBadge');
     if (!visEl) {
@@ -110,7 +110,6 @@ function renderHeader() {
   const meta = [
     { icon: "POST", text: ticketData.code || `FRM-${ticketData.id}` },
     { icon: "Created", text: ticketData.createdOn || "" },
-    { icon: "When", text: ticketData.createdAgo ? `${ticketData.createdAgo}` : "" },
     { icon: "Comments", text: `${(ticketData.commentsCount ?? conversation.length)} comments` },
   ];
   document.getElementById("ticketMeta").innerHTML = meta
