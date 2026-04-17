@@ -153,9 +153,16 @@
 						<label style="font-size: 13px; font-weight: 500;">Existing Attachments:</label>
 						<div id="editExistingAttachments" style="font-size: 12px; color: #4b5563; margin-bottom: 8px; max-height: 80px; overflow-y: auto;"></div>
 
-						<label for="editAttachmentsInput" style="font-size: 13px; font-weight: 500;">Add/Change Attachments</label>
-						<input type="file" id="editAttachmentsInput" name="attachments[]" multiple style="display: block; margin-top: 4px; font-size: 13px;" />
-                        <p style="font-size: 11px; color: #6b7280; margin-top: 4px;">If you upload new files, all existing attachments will be replaced. Leave empty to keep existing ones.</p>
+						<label style="font-size: 13px; font-weight: 500;">Add/Change Attachments</label>
+						<p style="font-size: 11px; color: #6b7280; margin-top: 4px;">If you upload new files, all existing attachments will be replaced. Leave empty to keep existing ones.</p>
+						<div id="editDropzone" class="dropzone">
+							<div class="dzInner">
+								<svg class="dzIconLg" xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 -960 960 960" width="24px" fill="#e3e3e3"><path d="M440-320v-326L336-542l-56-58 200-200 200 200-56 58-104-104v326h-80ZM240-160q-33 0-56.5-23.5T160-240v-120h80v120h480v-120h80v120q0 33-23.5 56.5T720-160H240Z"/></svg>
+								<div>Drag and drop files here or <span class="browse">browse files</span></div>
+								<input type="file" id="editAttachmentsInput" name="attachments[]" multiple hidden />
+							</div>
+							<ul id="editFileList" class="fileList"></ul>
+						</div>
 					</div>
 
 					<div class="msgActions" style="margin-top: 16px; display: flex; justify-content: flex-end; gap: 8px;">
