@@ -684,12 +684,36 @@ class Admin extends Controller
             $categories['data'][] = (int)$row['c'];
         }
 
-        // 6) Platform status (static placeholders for now)
+        // 6) Platform status (functional check)
+        $dbOperational = true;
+        try {
+            $this->adminModel->getTicketsCount();
+        } catch (Exception $e) {
+            $dbOperational = false;
+        }
+        $portalStatus = $dbOperational ? 'Operational' : 'Degraded';
+
+        $emailStatus = 'Operational';
+        $smtpHost = defined('SMTP_HOST') ? SMTP_HOST : 'smtp.gmail.com';
+        $smtpPort = defined('SMTP_PORT') ? SMTP_PORT : 587;
+        
+        // Bypass external network check when running locally (like WAMP) for offline demos
+        $isLocalhost = (strpos(DBHOST, 'localhost') !== false || ($_SERVER['SERVER_NAME'] ?? '') === 'localhost');
+        
+        if (!$isLocalhost) {
+            $fp = @fsockopen($smtpHost, $smtpPort, $errno, $errstr, 0.5);
+            if (!$fp) {
+                $emailStatus = 'Degraded';
+            } else {
+                fclose($fp);
+            }
+        }
+
         $platformStatus = [
-            [ 'name' => 'Student Portal', 'status' => 'Operational' ],
-            [ 'name' => 'Lecturer Portal', 'status' => 'Operational' ],
-            [ 'name' => 'Email Notifications', 'status' => 'Degraded' ],
-            [ 'name' => 'Ticketing System', 'status' => 'Operational' ],
+            [ 'name' => 'Student Portal', 'status' => $portalStatus ],
+            [ 'name' => 'Lecturer Portal', 'status' => $portalStatus ],
+            [ 'name' => 'Email Notifications', 'status' => $emailStatus ],
+            [ 'name' => 'Ticketing System', 'status' => $portalStatus ],
         ];
 
         $payload = [
@@ -1067,7 +1091,6 @@ class Admin extends Controller
         }
 
         $idEsc = (int)$id;
-        // Admin can see all posts
         $sql = "SELECT f.q_id, f.created_at, f.title, f.topic, f.status, f.description, f.u_id, f.is_Public, u.name AS student_name,
                 (SELECT COALESCE(SUM(vote_type), 0) FROM forum_votes WHERE post_id = f.q_id) as vote_count,
                 (SELECT vote_type FROM forum_votes WHERE post_id = f.q_id AND u_id = ? LIMIT 1) as my_vote
