@@ -21,7 +21,7 @@
                     <input type="hidden" name="role" value="student">
             <input type="text" name="fullName" placeholder="Full Name" required>
             <input type="email" name="email" placeholder="Student Email" required>
-            <input type="text" name="regNumber" placeholder="Registration Number / Year" required>
+            <input type="text" name="regNumber" placeholder="Registration Year" required>
             <input type="text" name="number" placeholder="Phone Number (optional)">
                     <input type="password" name="password" placeholder="Password" required>
                     <input type="password" name="confirmPassword" placeholder="Confirm Password" required>

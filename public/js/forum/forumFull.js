@@ -94,7 +94,7 @@ function renderHeader() {
   statusEl.textContent = ticketData.status || "";
   // Append visibility badge next to status
   const vis = (typeof ticketData.is_Public !== 'undefined' && !ticketData.is_Public) ? 'Private' : 'Public';
-  const wrapper = statusEl.parentElement;
+  const wrapper = document.getElementById("badgeContainer") || statusEl.parentElement;
   if (wrapper) {
     let visEl = wrapper.querySelector('.visibilityBadge');
     if (!visEl) {
@@ -110,7 +110,6 @@ function renderHeader() {
   const meta = [
     { icon: "POST", text: ticketData.code || `FRM-${ticketData.id}` },
     { icon: "Created", text: ticketData.createdOn || "" },
-    { icon: "When", text: ticketData.createdAgo ? `${ticketData.createdAgo}` : "" },
     { icon: "Comments", text: `${(ticketData.commentsCount ?? conversation.length)} comments` },
   ];
   document.getElementById("ticketMeta").innerHTML = meta
@@ -197,9 +196,9 @@ function renderMessages() {
           </div>
           <div class="replyBox" style="display:none; margin-top:8px;">
             <textarea class="replyInput" placeholder="Write a reply..." rows="2" style="width:100%; border:1px solid #ccc; border-radius:6px; padding:6px; font-size:13px;"></textarea>
-            <div style="text-align:right; margin-top:4px;">
-                <button class="btnPrimary btnSmall sendReplyBtn">Send</button>
-                <button class="btnSecondary btnSmall cancelReplyBtn">Cancel</button>
+            <div style="text-align:left; margin-top:4px; display: flex; justify-content: flex-start; gap: 12px;">
+                <button class="btnReplyText sendReplyBtn" style="color: #8c8cf9; opacity: 1;">Send</button>
+                <button class="btnReplyText cancelReplyBtn">Cancel</button>
             </div>
           </div>
         </div>
@@ -396,7 +395,59 @@ function wireActions() {
         }
     }
     
-    document.getElementById("editAttachmentsInput").value = "";
+    const dz = document.getElementById("editDropzone");
+    const fileInput = document.getElementById("editAttachmentsInput");
+    const fileList = document.getElementById("editFileList");
+    
+    let buffer = new DataTransfer();
+    
+    if (fileInput) { fileInput.value = ""; }
+    if (fileList) { fileList.innerHTML = ""; }
+
+    function humanKB(size){ const kb = size/1024; return kb < 1024 ? `${Math.round(kb)} KB` : `${(kb/1024).toFixed(2)} MB`; }
+    function syncInput(){ if(fileInput) fileInput.files = buffer.files; }
+    function removeAt(index){ const next = new DataTransfer(); Array.from(buffer.files).forEach((f,i)=>{ if(i!==index) next.items.add(f); }); buffer = next; syncInput(); renderFiles(); }
+    function addFiles(files){ Array.from(files).forEach(f => buffer.items.add(f)); syncInput(); renderFiles(); }
+    function renderFiles(){ 
+      if(!fileList) return; 
+      fileList.innerHTML=''; 
+      Array.from(buffer.files).forEach((f,idx)=>{ 
+        const li=document.createElement('li'); 
+        li.className='fileItem'; 
+        const left=document.createElement('div'); 
+        left.className='fileMeta'; 
+        const icon=document.createElement('div'); 
+        icon.className='fileIcon'; 
+        icon.innerHTML="<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' width='18' height='18' fill='none' stroke='currentColor' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'><path d='M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z'></path><polyline points='14 2 14 8 20 8'></polyline></svg>"; 
+        const name=document.createElement('span'); 
+        name.className='fileName'; 
+        name.textContent=f.name; 
+        const size=document.createElement('span'); 
+        size.className='fileSize'; 
+        size.textContent=humanKB(f.size); 
+        left.appendChild(icon); 
+        left.appendChild(name); 
+        left.appendChild(size); 
+        const removeBtn=document.createElement('button'); 
+        removeBtn.type='button'; 
+        removeBtn.className='fileRemove'; 
+        removeBtn.setAttribute('aria-label',`Remove ${f.name}`); 
+        removeBtn.innerHTML="<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' width='16' height='16' fill='none' stroke='currentColor' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'><line x1='18' y1='6' x2='6' y2='18'></line><line x1='6' y1='6' x2='18' y2='18'></line></svg>"; 
+        removeBtn.addEventListener('click', (e)=>{ e.stopPropagation(); removeAt(idx); }); 
+        li.appendChild(left); 
+        li.appendChild(removeBtn); 
+        fileList.appendChild(li); 
+      }); 
+    }
+
+    if (dz && fileInput && !dz.dataset.bound) {
+      dz.dataset.bound = "1";
+      dz.addEventListener('click', ()=> fileInput.click());
+      dz.addEventListener('dragover', e=>{ e.preventDefault(); dz.classList.add('drag'); });
+      dz.addEventListener('dragleave', ()=> dz.classList.remove('drag'));
+      dz.addEventListener('drop', e=>{ e.preventDefault(); dz.classList.remove('drag'); const dt=e.dataTransfer; if(dt && dt.files) addFiles(dt.files); });
+      fileInput.addEventListener('change', e=> addFiles(e.target.files));
+    }
 
     overlay.classList.add("open");
     document.body.classList.add("modal-open");
