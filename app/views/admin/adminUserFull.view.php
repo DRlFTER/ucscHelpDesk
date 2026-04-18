@@ -29,8 +29,8 @@
 									<div id="basicInfo" class="infoList"></div>
 								</div>
 								<div class="summarySection">
-									<h3 class="sectionTitle">Notes</h3>
-									<p class="descriptionText">suspension is UI only for now.</p>
+									<h3 class="sectionTitle">Status Notice</h3>
+									<p class="descriptionText">Account suspension will immediately restrict user access.</p>
 								</div>
 							</div>
 				</div>
