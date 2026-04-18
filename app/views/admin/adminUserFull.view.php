@@ -45,9 +45,9 @@
 
 				<div class="card ticketActions">
 					<h3 class="visuallyHidden">Actions</h3>
-					<div class="btnHolder">
+					<!-- <div class="btnHolder">
 						<button id="editUserBtn" class="btnPrimary" type="button"><span class="btnPrimaryText">Edit</span></button>
-					</div>
+					</div> -->
 					<div class="btnHolder" id="suspendHolder">
 						<button id="suspendBtn" class="btnSecondary" style="width: 100%;" type="button"><span class="btnSecondaryText">Suspend</span></button>
 					</div>
