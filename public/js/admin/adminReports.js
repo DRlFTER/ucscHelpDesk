@@ -1,12 +1,6 @@
-/**
- * Admin Reports JavaScript
- * Handles report generation, filtering, and export functionality
- */
-
 (function () {
   "use strict";
 
-  // ==================== State ====================
   let currentReportType = null;
   let currentReportData = [];
   let chartInstance = null;
@@ -15,7 +9,7 @@
     staff: [],
   };
 
-  // ==================== DOM Elements ====================
+  // DOM Elements
   const elements = {
     // Quick Report Elements
     reportCards: document.querySelectorAll(".reportCard"),
@@ -52,7 +46,7 @@
     exportCsv: document.getElementById("exportCsv"),
   };
 
-  // ==================== Initialization ====================
+  // Initialization
   async function init() {
     await loadFilterData();
     populateFilters();
@@ -155,7 +149,7 @@
     }
   }
 
-  // ==================== Quick Reports ====================
+  // Quick Reports
   function handleQuickReportClick(card) {
     currentReportType = card.dataset.report;
 
@@ -214,7 +208,7 @@
     );
   }
 
-  // ==================== Custom Reports ====================
+  // Custom Reports
   async function handleCustomReportSubmit(e) {
     e.preventDefault();
     currentReportType = "custom";
@@ -232,7 +226,7 @@
     );
   }
 
-  // ==================== Report Generation ====================
+  // Report Generation
   async function generateReport(url, title) {
     showLoading();
 
@@ -399,7 +393,7 @@
     });
   }
 
-  // ==================== Export Functions ====================
+  // Export Functions
   function exportToPdf() {
     if (!currentReportData || currentReportData.length === 0) {
       alert("No data to export");
@@ -469,7 +463,7 @@
     link.click();
   }
 
-  // ==================== Utility Functions ====================
+  // Utility Functions
   function showLoading() {
     elements.reportResults.style.display = "";
     elements.reportSummary.innerHTML = "";

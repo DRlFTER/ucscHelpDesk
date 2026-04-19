@@ -142,7 +142,14 @@
             <p class="sidenavUserRole"><?= htmlspecialchars($displayRole) ?></p>
             <?php endif; ?>
           </div>
-          <a href="#">Help / FAQ</a>
+          <?php
+            $faqHref = '#';
+            if ($role === 'admin') $faqHref = '/admin/faqs';
+            elseif ($role === 'student') $faqHref = '/student/FAQ';
+            elseif ($role === 'staff') $faqHref = '/staff/staffFAQ';
+            elseif ($role === 'counselor') $faqHref = '/counselor/FAQ';
+          ?>
+          <a href="<?= $faqHref ?>">Help / FAQ</a>
           <a href="/settings">Settings</a>
           <div class="<?= $sessionUser ? 'sidenavLogout' : 'sidenavLogin' ?>">
             <a href="<?= $sessionUser ? '/auth/logout' : '/auth/login' ?>">
