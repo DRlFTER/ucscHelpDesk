@@ -10,6 +10,10 @@ const CounselorReports = {
     init() {
         this.setDefaultDates();
         this.setupEventListeners();
+        
+        // Generate the report immediately on page load
+        this.generateReport();
+        
         console.log('Counselor Reports initialized');
     },
 

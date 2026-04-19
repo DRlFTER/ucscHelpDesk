@@ -1,6 +1,19 @@
 /* Import base dashboard styles */
 @import url('counselorDashboard.css');
 
+/* Ensure reports page can scroll inside the right pane layout */
+.dashboardContent {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+
+.dashboardContent::-webkit-scrollbar {
+  display: none;
+}
+
 /* Filter Section */
 .filterRow {
   display: grid;
