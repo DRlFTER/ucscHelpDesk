@@ -286,129 +286,17 @@ class Counselor extends Controller
 public function reports()
 {
     $this->requireLogin('counselor');
+    
+    $headContent = '
+    <link rel="stylesheet" href="/css/counselor/counselorReports.css"/>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>';
 
-    require_once __DIR__ . '/../../models/counselor/Reports.php';
-    $model = new CounselorReports();
-    $report_type = $_POST['report_type'] ?? ($_GET['type'] ?? 'all_tickets');
-    $start_date = $_POST['start_date'] ?? ($_GET['start'] ?? '');
-    $end_date = $_POST['end_date'] ?? ($_GET['end'] ?? '');
-    $status = $_POST['status'] ?? ($_GET['status'] ?? '');
-    $priority = $_POST['priority'] ?? ($_GET['priority'] ?? '');
-    $division_id = $_POST['division_id'] ?? ($_GET['division_id'] ?? '');
-    $level = (int)($_POST['level'] ?? ($_GET['level'] ?? 0));
-
-    $reports = [];
-    $summary = [];
-    $error = null;
-
-    try {
-        switch ($report_type) {
-            case 'all_tickets':
-                $reports = $model->getAllTicketsReport($start_date, $end_date, $status, $priority);
-                $summary = $model->getAllTicketsSummary($start_date, $end_date, $status, $priority);
-                break;
-            case 'overdue_tickets':
-                $reports = $model->getOverdueTicketsReport($division_id);
-                $summary = $model->getOverdueTicketsSummary($division_id);
-                break;
-            case 'counselor_assignment':
-                $reports = $model->getCounselorAssignmentReport($start_date, $end_date);
-                $summary = $model->getCounselorAssignmentSummary($start_date, $end_date);
-                break;
-            case 'escalation':
-                $reports = $model->getEscalationReport($start_date, $end_date, $level);
-                $summary = $model->getEscalationSummary($start_date, $end_date, $level);
-                break;
-            default:
-                $reports = $model->getAllTicketsReport();
-                $summary = $model->getAllTicketsSummary();
-        }
-    } catch (Exception $e) {
-        $error = $e->getMessage();
-    }
-
-    $divisions = $model->getDivisions();
-
-    // Optional CSV Export
-    if (isset($_GET['csv'])) {
-        $title = ucwords(str_replace('_', ' ', $report_type)) . '_Report_' . date('Y-m-d');
-        header('Content-Type: text/csv; charset=utf-8');
-        header('Content-Disposition: attachment; filename="' . $title . '.csv"');
-        $output = fopen('php://output', 'w');
-
-        if ($report_type === 'all_tickets' && !empty($summary)) {
-            fputcsv($output, ['SUMMARY STATS']);
-            fputcsv($output, ['Total Tickets', $summary['total_tickets'] ?? 0]);
-            fputcsv($output, ['Pending (%)', ($summary['pending_pct'] ?? 0) . '%']);
-            fputcsv($output, ['Resolved (%)', ($summary['resolved_pct'] ?? 0) . '%']);
-            fputcsv($output, []); 
-        } elseif ($report_type === 'overdue_tickets' && !empty($summary)) {
-            fputcsv($output, ['SUMMARY STATS']);
-            fputcsv($output, ['Total Overdue', $summary['total_overdue'] ?? 0]);
-            fputcsv($output, ['Avg Days Overdue', ($summary['avg_days_overdue'] ?? 0) . ' days']);
-            fputcsv($output, []); 
-        } elseif ($report_type === 'counselor_assignment' && !empty($summary)) { 
-            fputcsv($output, ['SUMMARY STATS']);
-            fputcsv($output, ['Total Counselors', $summary['total_counselors'] ?? 0]);
-            fputcsv($output, ['Total Assignments', $summary['total_assignments'] ?? 0]);
-            fputcsv($output, ['Avg per Counselor', ($summary['avg_per_counselor'] ?? 0)]);
-            fputcsv($output, []); 
-        } elseif ($report_type === 'escalation' && !empty($summary)) { 
-            fputcsv($output, ['SUMMARY STATS']);
-            fputcsv($output, ['Total Escalations', $summary['total_escalations'] ?? 0]);
-            fputcsv($output, ['Level 1 (%)', ($summary['level1_pct'] ?? 0) . '%']);
-            fputcsv($output, ['Level 3 (%)', ($summary['level3_pct'] ?? 0) . '%']);
-            fputcsv($output, []); 
-        }
-
-        $headers = [];
-        if ($report_type === 'all_tickets') $headers = ['Ticket ID', 'Title', 'Status', 'Priority', 'Student', 'Category', 'Created'];
-        elseif ($report_type === 'overdue_tickets') $headers = ['Ticket ID', 'Title', 'Student', 'Category', 'Days Overdue', 'Created'];
-        elseif ($report_type === 'counselor_assignment') $headers = ['Counselor Name', 'Email', 'Ticket Count', 'Status'];
-        elseif ($report_type === 'escalation') $headers = ['Ticket ID', 'Title', 'Student', 'Level 1 Date', 'Level 2 Date', 'Level 3 Date', 'Created'];
-        fputcsv($output, $headers);
-
-        foreach ($reports as $row) {
-            $data = [];
-            if ($report_type === 'all_tickets') {
-                $data = [$row['ticket_id'], substr($row['title'], 0, 50) . '...', $row['status'], $row['priority'], $row['student_name'], $row['category'], date('Y-m-d', strtotime($row['created_at']))];
-            } elseif ($report_type === 'overdue_tickets') {
-                $data = [$row['ticket_id'], substr($row['title'], 0, 50) . '...', $row['student_name'], $row['category'], $row['days_overdue'] . ' days', date('Y-m-d', strtotime($row['created_at']))];
-            } elseif ($report_type === 'counselor_assignment') {
-                $data = [$row['counselor_name'], $row['email'], $row['ticket_count'], $row['status'] ?? 'N/A'];
-            } elseif ($report_type === 'escalation') {
-                $data = [
-                    $row['ticket_id'],
-                    substr($row['title'], 0, 50) . '...',
-                    $row['student_name'],
-                    $row['level_1'] ? date('Y-m-d H:i', strtotime($row['level_1'])) : 'N/A',
-                    $row['level_2'] ? date('Y-m-d H:i', strtotime($row['level_2'])) : 'N/A',
-                    $row['level_3'] ? date('Y-m-d H:i', strtotime($row['level_3'])) : 'N/A',
-                    date('Y-m-d', strtotime($row['ticket_date']))
-                ];
-            }
-            fputcsv($output, $data);
-        }
-
-        fclose($output);
-        exit;
-    }
-
-    $headContent = '<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>';
     $this->view('counselor/counselorReports', [
-        'title' => 'Counselor Reports',
+        'title' => 'Reports',
         'head' => $headContent,
-        'reports' => $reports,
-        'summary' => $summary,
-        'report_type' => $report_type,
-        'divisions' => $divisions,
-        'error' => $error,
-        'start_date' => $start_date,
-        'end_date' => $end_date,
-        'status' => $status,
-        'priority' => $priority,
     ]);
 }
+
 public function getReportData()
 {
     $this->requireLogin('counselor');
@@ -1765,93 +1653,6 @@ public function exportReport()
     }
 
     // Delete a forum post (Counselor can delete own posts only)
-    
-    public function forumUpdate()
-    {
-        $this->requireLogin('counselor');
-        header('Content-Type: application/json');
-
-        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
-            http_response_code(405);
-            echo json_encode(['error' => 'Method not allowed']);
-            return;
-        }
-
-        $uId = (int)($_SESSION['user']['u_id'] ?? 0);
-        $id = isset($_POST['id']) ? (int)$_POST['id'] : 0;
-        $title = isset($_POST['title']) ? trim($_POST['title']) : '';
-        $description = isset($_POST['description']) ? trim($_POST['description']) : '';
-
-        if ($id <= 0 || $uId <= 0 || empty($title) || empty($description)) {
-            http_response_code(400);
-            echo json_encode(['error' => 'Bad request. Title and Description are required.']);
-            return;
-        }
-
-        require_once __DIR__ . '/../../models/ForumPost.php';
-        $forumModel = new ForumPost();
-        
-        $postData = $forumModel->getPost($id);
-        if (!$postData || $postData['u_id'] != $uId) {
-            http_response_code(403);
-            echo json_encode(['error' => 'Not authorized to edit this post']);
-            return;
-        }
-        
-        $ok = $forumModel->updatePost($id, $uId, $title, $description);
-
-        if ($ok) {
-            $hasNewFiles = false;
-            if (isset($_FILES['attachments']) && is_array($_FILES['attachments']['name'])) {
-                foreach ($_FILES['attachments']['size'] as $size) {
-                    if ($size > 0) {
-                        $hasNewFiles = true;
-                        break;
-                    }
-                }
-            }
-
-            if ($hasNewFiles) {
-                require_once __DIR__ . '/../../models/Attachment.php';
-                $attachmentModel = new Attachment();
-                
-                $db = Database::getInstance();
-                $db->query("DELETE FROM attachments WHERE entity_type = 'forum' AND entity_id = $id");
-
-                $fileCount = count($_FILES['attachments']['name']);
-                for ($i = 0; $i < $fileCount; $i++) {
-                    if ($_FILES['attachments']['size'][$i] > 0) {
-                        $fileArr = [
-                            'name' => $_FILES['attachments']['name'][$i],
-                            'type' => $_FILES['attachments']['type'][$i],
-                            'tmp_name' => $_FILES['attachments']['tmp_name'][$i],
-                            'error' => $_FILES['attachments']['error'][$i],
-                            'size' => $_FILES['attachments']['size'][$i]
-                        ];
-                        
-                        if ($fileArr['error'] === UPLOAD_ERR_OK) {
-                            $uploadData = handle_upload($fileArr, 'forum');
-                            if ($uploadData) {
-                                $attachmentModel->insert([
-                                    'entity_type' => 'forum',
-                                    'entity_id' => $id,
-                                    'file_name' => $uploadData['file_name'],
-                                    'file_path' => $uploadData['file_path'],
-                                    'file_type' => $uploadData['file_type'],
-                                    'file_size' => $uploadData['file_size'],
-                                    'uploaded_by' => $uId
-                                ]);
-                            }
-                        }
-                    }
-                }
-            }
-            echo json_encode(['ok' => true]);
-        } else {
-            http_response_code(500);
-            echo json_encode(['error' => 'Failed to update post']);
-        }
-    }
     public function forumDelete()
     {
         $this->requireLogin('counselor');
