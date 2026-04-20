@@ -66,6 +66,11 @@ $role = strtolower($sessionUser['role'] ?? 'student');
 					</div>
 
 					<div class="field">
+						<label class="label" for="flag">Flag</label>
+						<input id="flag" name="flag" type="text" placeholder="Identify the flag" style="width: 100%; padding: 10px 14px; border: 1px solid var(--border-color, #d1d5db); border-radius: 8px; font-size: 14px; color: var(--text-color, #374151); background-color: var(--bg-color, #ffffff); outline: none; transition: border-color 0.2s, box-shadow 0.2s;">
+					</div>
+
+					<div class="field">
 						<label class="label">Attachments</label>
 						<div id="dropzone" class="dropzone">
 							<div class="dzInner">

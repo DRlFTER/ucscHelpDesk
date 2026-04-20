@@ -89,6 +89,17 @@ function applyPermissions() {
 
 function renderHeader() {
   document.getElementById("ticketTitle").textContent = ticketData.title || "Post";
+  
+  const flagEl = document.getElementById("ticketFlag");
+  if (flagEl) {
+    if (ticketData.flag) {
+      flagEl.textContent = "Flag: " + ticketData.flag;
+      flagEl.style.display = "inline-flex";
+    } else {
+      flagEl.style.display = "none";
+    }
+  }
+
   const statusEl = document.getElementById("ticketStatus");
   statusEl.className = statusClass(ticketData.status || "");
   statusEl.textContent = ticketData.status || "";

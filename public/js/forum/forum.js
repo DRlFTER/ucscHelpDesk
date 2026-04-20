@@ -290,7 +290,13 @@ window.forumPostsData = [];
       )}" data-id="${esc(t.id)}" data-code="${esc(t.code)}">
                 <div class="ticketRow1">
                     <div class="ticketName">
-                        <h2>${esc(t.title)}</h2>
+                        <h2 style="display: flex; align-items: center;">${esc(t.title)}
+                        ${
+                          t.flag
+                            ? `<span class="status new" style="background:#f3f4f6; color:#374151; border:1px solid #d1d5db; padding:2px 8px; border-radius:12px; font-size:12px; margin-left:8px;">Flag: ${esc(t.flag)}</span>`
+                            : ''
+                        }
+                        </h2>
                         <div class="ticketInfo">
                             <p>${esc(t.code)}</p>
                             <p>${formatDate(t.createdAt)}</p>

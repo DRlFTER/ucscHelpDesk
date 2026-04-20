@@ -77,6 +77,11 @@ include_once(__DIR__ . "/../../views/common/navbar.php");
 						<textarea id="details" name="details" rows="6" placeholder="Describe your issue in detail. Include any error messages, steps to reproduce, or relevant information." required></textarea>
 					</div>
 
+					<div class="field">
+						<label class="label" for="flag" style="color: #000;">Flag <span style="font-size:12px; color:#888; font-weight: normal;">(Optional)</span></label>
+						<input id="flag" name="flag" type="text" placeholder="Add a custom flag..." style="width: 100%; padding: 10px 14px; border: 1px solid var(--border-color, #d1d5db); border-radius: 6px; font-size: 14px; font-family: inherit; color: #374151; box-sizing: border-box;">
+					</div>
+
 					<div class="field" id="meetingField" style="display:none;">
 						<label class="label">Request Meeting</label>
 						<label style="display:flex; align-items:center; gap:10px; cursor:pointer; user-select:none;">

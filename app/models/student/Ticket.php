@@ -16,8 +16,8 @@ class StudentTicket
     public function create(array $data): int
     {
         $conn = self::getConnection();
-    $sql = "INSERT INTO tickets (created_at, title, u_id, status, priority, description, meeting_requested, division,t_type)
-        VALUES (NOW(), ?, ?, ?, ?, ?, ?, ?,?)";
+    $sql = "INSERT INTO tickets (created_at, title, flag, u_id, status, priority, description, meeting_requested, division, t_type)
+        VALUES (NOW(), ?, ?, ?, ?, ?, ?, ?, ?, ?)";
 
         $stmt = $conn->prepare($sql);
         if (!$stmt) {
@@ -25,6 +25,7 @@ class StudentTicket
         }
 
         $title = $data['title'];
+        $flag = $data['flag'] ?? null;
         $u_id = (int)$data['u_id'];
         // Category string from UI (used only for mapping to division)
         $category = trim($data['category']);
@@ -67,7 +68,7 @@ class StudentTicket
             }
         }
 
-    $stmt->bind_param('sissssis', $title, $u_id, $status, $priority, $description, $meetingRequested, $divisionId, $t_type);
+    $stmt->bind_param('ssissssis', $title, $flag, $u_id, $status, $priority, $description, $meetingRequested, $divisionId, $t_type);
         if (!$stmt->execute()) {
             throw new Exception('Execute failed: ' . $stmt->error);
         }

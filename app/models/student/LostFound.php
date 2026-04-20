@@ -9,8 +9,8 @@ class StudentLostFound extends Model
      */
     public function create(array $data): int
     {
-    $sql = "INSERT INTO lost_found (u_id, item_title, category, `when`, item_details, created_at, status, contact_mobile, contact_email)
-        VALUES (?, ?, ?, ?, ?, NOW(), ?, ?, ?)";
+    $sql = "INSERT INTO lost_found (u_id, item_title, category, `when`, item_details, flag, created_at, status, contact_mobile, contact_email)
+        VALUES (?, ?, ?, ?, ?, ?, NOW(), ?, ?, ?)";
 
         $stmt = $this->db->prepare($sql);
         if (!$stmt) {
@@ -22,17 +22,19 @@ class StudentLostFound extends Model
         $category = (string)($data['category'] ?? null);
         $when = (string)($data['when'] ?? null); // expected format YYYY-MM-DD
         $item_details = (string)($data['item_details'] ?? '');
+        $flag = (string)($data['flag'] ?? '');
         $status = (string)($data['status'] ?? 'lost');
         $contact_mobile = isset($data['contact_mobile']) && $data['contact_mobile'] !== '' ? (string)$data['contact_mobile'] : null;
         $contact_email = isset($data['contact_email']) && $data['contact_email'] !== '' ? (string)$data['contact_email'] : null;
 
         $stmt->bind_param(
-            'isssssss',
+            'issssssss',
             $u_id,
             $item_title,
             $category,
             $when,
             $item_details,
+            $flag,
             $status,
             $contact_mobile,
             $contact_email
@@ -55,7 +57,7 @@ class StudentLostFound extends Model
      */
     public function getByStatus(string $status, int $limit = 20): array
     {
-    $sql = "SELECT q_id, u_id, item_title, category, `when`, item_details, status, contact_mobile, contact_email, created_at
+    $sql = "SELECT q_id, u_id, item_title, category, `when`, item_details, flag, status, contact_mobile, contact_email, created_at
         FROM lost_found
         WHERE status = ?
         ORDER BY created_at DESC

@@ -66,6 +66,7 @@ class Student extends Controller
 
     $headContent = '
     <link rel="stylesheet" href="/css/student/studentDashboard.css"/>';
+
          $this->view('dashboardStudent', [
             'title' => 'Student Dashboard',
             'head' => $headContent,
@@ -99,6 +100,7 @@ class Student extends Controller
                     require_once __DIR__ . '/../../models/student/Ticket.php';
                     $ticketModel = new StudentTicket();
                     $meetingRequested = isset($_POST['meeting_requested']) && $_POST['meeting_requested'] ? 'Requested' : null;
+                    $flag = trim($_POST['flag'] ?? '');
                     $ticketId = $ticketModel->create([
                         'title' => $title,
                         'u_id' => (int)($_SESSION['user']['u_id'] ?? 0),
@@ -108,6 +110,7 @@ class Student extends Controller
                         'description' => $details,
                         'meeting_requested' => $meetingRequested,
                         'type' => $t_type,
+                        'flag' => $flag,
                     ]);
 
                     // Handle attachments
@@ -419,6 +422,7 @@ public function templates()
             $category = trim($_POST['category'] ?? '');
             $when = trim($_POST['when'] ?? '');
             $details = trim($_POST['details'] ?? '');
+            $flag = trim($_POST['flag'] ?? '');
             $contact_mobile = trim($_POST['contact_mobile'] ?? '');
             $contact_email = trim($_POST['contact_email'] ?? '');
 
@@ -441,6 +445,7 @@ public function templates()
                         'status' => 'lost',
                         'contact_mobile' => $contact_mobile !== '' ? $contact_mobile : null,
                         'contact_email' => $contact_email !== '' ? $contact_email : null,
+                        'flag' => $flag,
                     ]);
 
                     $_SESSION['lf_flash'] = ['type' => 'success', 'message' => 'Lost item submitted successfully.'];
@@ -473,6 +478,7 @@ public function templates()
             $category = trim($_POST['category'] ?? '');
             $when = trim($_POST['when'] ?? '');
             $details = trim($_POST['details'] ?? '');
+            $flag = trim($_POST['flag'] ?? '');
             $contact_mobile = trim($_POST['contact_mobile'] ?? '');
             $contact_email = trim($_POST['contact_email'] ?? '');
 
@@ -495,6 +501,7 @@ public function templates()
                         'status' => 'found',
                         'contact_mobile' => $contact_mobile !== '' ? $contact_mobile : null,
                         'contact_email' => $contact_email !== '' ? $contact_email : null,
+                        'flag' => $flag,
                     ]);
 
                     $_SESSION['lf_flash'] = ['type' => 'success', 'message' => 'Found item submitted successfully.'];
@@ -769,6 +776,7 @@ public function templates()
             $title = trim($_POST['title'] ?? '');
             $topic = trim($_POST['category'] ?? ''); // hidden input synced from subcategory
             $description = trim($_POST['details'] ?? '');
+            $flag = trim($_POST['flag'] ?? '');
             $type = trim($_POST['ticketType'] ?? 'public'); // 'public' or 'draft'
 
             $errors = [];
@@ -783,9 +791,9 @@ public function templates()
                     $status = 'open'; // only 'open' | 'answered' exist for now
                     $uId = (int)($_SESSION['user']['u_id'] ?? 0);
 
-                    $stmt = $db->prepare("INSERT INTO forum_q (is_Public, title, topic, description, u_id, status, created_at) VALUES (?,?,?,?,?,?, NOW())");
+                    $stmt = $db->prepare("INSERT INTO forum_q (is_Public, title, topic, description, flag, u_id, status, created_at) VALUES (?,?,?,?,?,?,?, NOW())");
                     if ($stmt) {
-                        $stmt->bind_param('isssis', $isPublic, $title, $topic, $description, $uId, $status);
+                        $stmt->bind_param('issssis', $isPublic, $title, $topic, $description, $flag, $uId, $status);
                         $ok = $stmt->execute();
                         $forumId = $stmt->insert_id;
                         $stmt->close();
@@ -897,7 +905,7 @@ public function templates()
         }
         // 'comments' default to created_at for now
 
-    $sql = "SELECT f.q_id, f.created_at, f.title, f.topic, f.status, f.u_id, f.is_Public, u.name AS student_name,
+    $sql = "SELECT f.q_id, f.created_at, f.title, f.flag, f.topic, f.status, f.u_id, f.is_Public, u.name AS student_name,
                 (SELECT COALESCE(SUM(vote_type), 0) FROM forum_votes WHERE post_id = f.q_id) as vote_count,
                 (SELECT vote_type FROM forum_votes WHERE post_id = f.q_id AND u_id = $uId LIMIT 1) as my_vote
                 FROM forum_q f
@@ -928,6 +936,7 @@ public function templates()
                 'code' => 'FRM-' . (string)($r['q_id'] ?? ''),
                 'createdAt' => $mapDate($r['created_at'] ?? null),
                 'title' => (string)($r['title'] ?? ''),
+                'flag' => (string)($r['flag'] ?? ''),
                 'student' => [ 'id' => (int)($r['u_id'] ?? 0), 'name' => (string)($r['student_name'] ?? 'Student') ],
                 'topic' => (string)($r['topic'] ?? ''),
                 'status' => strtolower((string)($r['status'] ?? 'open')),
@@ -1056,7 +1065,7 @@ public function templates()
         }
 
         $idEsc = (int)$id;
-        $sql = "SELECT f.q_id, f.created_at, f.title, f.topic, f.status, f.description, f.u_id, f.is_Public, u.name AS student_name,
+        $sql = "SELECT f.q_id, f.created_at, f.title, f.flag, f.topic, f.status, f.description, f.u_id, f.is_Public, u.name AS student_name,
                 (SELECT COALESCE(SUM(vote_type), 0) FROM forum_votes WHERE post_id = f.q_id) as vote_count,
                 (SELECT vote_type FROM forum_votes WHERE post_id = f.q_id AND u_id = $uId LIMIT 1) as my_vote
                 FROM forum_q f
@@ -1114,6 +1123,7 @@ public function templates()
             'code' => 'FRM-' . (int)($row['q_id'] ?? 0),
             'title' => (string)($row['title'] ?? 'Post'),
             'description' => (string)($row['description'] ?? ''),
+            'flag' => (string)($row['flag'] ?? ''),
             'topic' => (string)($row['topic'] ?? ''),
             'status' => $statusUi,
             'createdAt' => (string)($row['created_at'] ?? ''),
@@ -1514,7 +1524,7 @@ public function templates()
         if ($page > $totalPages) { $page = $totalPages; }
         $offset = ($page - 1) * $perPage;
 
-    $sql = "SELECT t.ticket_id, t.created_at, t.title, d.name AS division_name, t.status, t.priority, t.meeting_requested, t.t_type, u.name AS student_name, u.u_id AS student_id
+    $sql = "SELECT t.ticket_id, t.created_at, t.title, t.flag, d.name AS division_name, t.status, t.priority, t.meeting_requested, t.t_type, u.name AS student_name, u.u_id AS student_id
         FROM tickets t
         LEFT JOIN division d ON d.did = t.division
         LEFT JOIN users u ON u.u_id = t.u_id
@@ -1561,6 +1571,7 @@ public function templates()
                 'code' => 'TKT-' . (string)($r['ticket_id'] ?? ''),
                 'createdAt' => $mapDate($r['created_at'] ?? null),
                 'title' => (string)($r['title'] ?? ''),
+                'flag' => (string)($r['flag'] ?? ''),
                 'student' => [ 'id' => (int)($r['student_id'] ?? 0), 'name' => (string)($r['student_name'] ?? 'Unknown') ],
                 'category' => (string)($r['division_name'] ?? ''),
                 'status' => $mapStatus($r['status'] ?? ''),
@@ -1609,7 +1620,7 @@ public function templates()
         }
 
         $idEsc = (int)$id;
-    $sql = "SELECT t.ticket_id, t.created_at, t.title, d.name AS division_name, t.status, t.priority, t.description, t.u_id, u.name AS student_name,
+    $sql = "SELECT t.ticket_id, t.created_at, t.title, t.flag, d.name AS division_name, t.status, t.priority, t.description, t.u_id, u.name AS student_name,
                sa.name AS staff_name, sh.position, sh.level, tl.assigned AS assigned_at, tl.under_review AS under_review_at, tl.resolved AS resolved_at
         FROM tickets t
         LEFT JOIN users u ON u.u_id = t.u_id
@@ -1793,6 +1804,7 @@ public function templates()
             'id' => (int)$ticket['ticket_id'],
             'code' => 'TKT-' . (int)$ticket['ticket_id'],
             'title' => (string)($ticket['title'] ?? 'Ticket'),
+            'flag' => (string)($ticket['flag'] ?? ''),
             'status' => $statusUi,
             'createdOn' => $createdPretty,
             'description' => (string)($ticket['description'] ?? ''),
