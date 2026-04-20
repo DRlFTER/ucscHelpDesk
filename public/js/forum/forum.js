@@ -1,10 +1,10 @@
-// Global Forum JS - works for all roles (student, admin, staff, counselor)
+
 window.forumPostsData = [];
 
 (function () {
-  const CACHE_TTL_MS = 5 * 60 * 1000; // 5 minutes
+  const CACHE_TTL_MS = 5 * 60 * 1000;
 
-  // Detect current role from URL path
+
   function getCurrentRole() {
     const path = window.location.pathname;
     const parts = path.split('/');
@@ -12,7 +12,7 @@ window.forumPostsData = [];
     if (parts.includes('staff')) return 'staff';
     if (parts.includes('counselor')) return 'counselor';
     if (parts.includes('student')) return 'student';
-    return 'student'; // default
+    return 'student';
   }
 
   const currentRole = getCurrentRole();
@@ -80,7 +80,7 @@ window.forumPostsData = [];
 
   populateSelect(categorySelect, categories);
   populateSelect(statusSelect, statuses);
-  // Populate Sort by (custom so first doesn't become empty value)
+
   if (sortSelect) {
     sortSelect.innerHTML = "";
     sortOptions.forEach((label, idx) => {
@@ -290,7 +290,13 @@ window.forumPostsData = [];
       )}" data-id="${esc(t.id)}" data-code="${esc(t.code)}">
                 <div class="ticketRow1">
                     <div class="ticketName">
-                        <h2>${esc(t.title)}</h2>
+                        <h2 style="display: flex; align-items: center;">${esc(t.title)}
+                        ${
+                          t.flag
+                            ? `<span class="status new" style="background:#f3f4f6; color:#374151; border:1px solid #d1d5db; padding:2px 8px; border-radius:12px; font-size:12px; margin-left:8px;">Flag: ${esc(t.flag)}</span>`
+                            : ''
+                        }
+                        </h2>
                         <div class="ticketInfo">
                             <p>${esc(t.code)}</p>
                             <p>${formatDate(t.createdAt)}</p>
@@ -453,7 +459,7 @@ window.forumPostsData = [];
         renderPosts(window.forumPostsData);
         renderPagination();
 
-        // Background refresh
+
         fetch(`forumData?${qs.toString()}`, { credentials: "include" })
           .then((res) => (res.ok ? res.json() : Promise.reject(new Error("Bad response"))))
           .then((fresh) => {
@@ -507,7 +513,7 @@ window.forumPostsData = [];
     });
   });
 
-  // Listen to radio changes for type filter
+
   document.querySelectorAll('.filterGroup input[name="type"]').forEach((el) => {
     el.addEventListener('change', () => {
       page = 1;

@@ -58,13 +58,13 @@ function time_ago_label($datetime)
           <?php foreach ($items as $it): ?>
             <?php $statusLower = strtolower($it['status'] ?? ''); $isResolved = ($statusLower === 'found' || $statusLower === 'claimed'); ?>
             <?php
-              // Map Lost & Found status to existing global .status colors
+              
               if ($statusLower === 'claimed') {
-                  $statusClass = 'underReview'; // Yellowish tag
+                  $statusClass = 'underReview'; 
               } elseif ($statusLower === 'found') {
-                  $statusClass = 'resolved'; // Green tag
+                  $statusClass = 'resolved'; 
               } else {
-                  $statusClass = 'rejected'; // Red tag
+                  $statusClass = 'rejected'; 
               }
               $statusLabel = $isResolved ? ($statusLower === 'claimed' ? 'Claimed' : 'Found') : 'Lost';
 
@@ -90,7 +90,11 @@ function time_ago_label($datetime)
             <article class="ticket <?= $isResolved ? 'found' : 'lost' ?>" data-u-id="<?= $ownerId ?>">
               <div class="ticketRow1">
                 <div class="ticketName">
-                  <h2><?= htmlspecialchars($it['item_title']) ?></h2>
+                  <h2 style="display: flex; align-items: center;"><?= htmlspecialchars($it['item_title']) ?>
+                  <?php if (!empty($it['flag'])): ?>
+                    <span class="status new" style="background:#f3f4f6; color:#374151; border:1px solid #d1d5db; padding:2px 8px; border-radius:12px; font-size:12px; margin-left:8px;">Flag: <?= htmlspecialchars($it['flag']) ?></span>
+                  <?php endif; ?>
+                  </h2>
                    <?php if (!empty($it['item_details'])): ?>
                    <p style="margin: 6px 0 10px 0; color:#374151; font-size:14px; align-self: stretch;">
                      <?= nl2br(htmlspecialchars($it['item_details'])) ?>

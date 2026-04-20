@@ -22,7 +22,10 @@
         <section class="ticketLeft">
         <div class="card ticketSummary" id="ticketSummaryCard" <?= $__vt ? ('style="view-transition-name: ' . htmlspecialchars($__vt) . '"') : '' ?> >
           <div class="ticketHeader">
-            <h2 id="ticketTitle" class="ticketTitle"></h2>
+            <div style="display: flex; align-items: center; gap: 10px;">
+              <h2 id="ticketTitle" class="ticketTitle" style="margin: 0;"></h2>
+              <span id="ticketFlag" class="status" style="display:none; background:#e0e7ff; color:#0369a1; border:1px solid #bae6fd;"></span>
+            </div>
             <span id="ticketStatus" class="status"></span>
           </div>
           <div class="ticketMeta" id="ticketMeta"></div>

@@ -1,4 +1,4 @@
-// Global Forum Full view JS - works for all roles (student, admin, staff, counselor)
+
 (function () {
   function setNavbarVar() {
     const nav = document.querySelector(".navbar");
@@ -18,7 +18,7 @@
   }
 })();
 
-// Detect current role from URL path
+
 function getCurrentRole() {
   const path = window.location.pathname;
   const parts = path.split('/');
@@ -26,13 +26,13 @@ function getCurrentRole() {
   if (parts.includes('staff')) return 'staff';
   if (parts.includes('counselor')) return 'counselor';
   if (parts.includes('student')) return 'student';
-  return 'student'; // default
+  return 'student';
 }
 
 const currentRole = getCurrentRole();
 let ticketData = null;
 
-// Forum interactions
+
 let voteState = { voted: false, count: 0 };
 let conversation = [];
 
@@ -43,7 +43,7 @@ async function loadComments() {
         if (res.ok) {
             conversation = await res.json();
             renderMessages();
-            // update header count
+
             ticketData.commentsCount = conversation.length;
             renderHeader();
         }
@@ -53,9 +53,9 @@ async function loadComments() {
 function statusClass(status) {
   const normalized = (status || "").toLowerCase().replace(/\s+/g, "");
   switch (normalized) {
-    case "answered": // forum answered
+    case "answered":
       return "status resolved";
-    case "open": // forum open
+    case "open":
       return "status underReview";
     default:
       return "status";
@@ -89,10 +89,21 @@ function applyPermissions() {
 
 function renderHeader() {
   document.getElementById("ticketTitle").textContent = ticketData.title || "Post";
+  
+  const flagEl = document.getElementById("ticketFlag");
+  if (flagEl) {
+    if (ticketData.flag) {
+      flagEl.textContent = "Flag: " + ticketData.flag;
+      flagEl.style.display = "inline-flex";
+    } else {
+      flagEl.style.display = "none";
+    }
+  }
+
   const statusEl = document.getElementById("ticketStatus");
   statusEl.className = statusClass(ticketData.status || "");
   statusEl.textContent = ticketData.status || "";
-  // Append visibility badge next to status
+
   const vis = (typeof ticketData.is_Public !== 'undefined' && !ticketData.is_Public) ? 'Private' : 'Public';
   const wrapper = document.getElementById("badgeContainer") || statusEl.parentElement;
   if (wrapper) {
@@ -116,7 +127,7 @@ function renderHeader() {
     .map((m) => `<span>${m.text}</span>`)
     .join("");
 
-  // votes
+
   voteState.count = Number(ticketData.votes || 0);
   voteState.voted = Number(ticketData.voted || 0);
   const voteCountEl = document.getElementById("voteCount");
@@ -156,7 +167,7 @@ function renderAttachments() {
 
 function renderMessages() {
   const m = document.getElementById("messages");
-  // Build tree
+
   const map = {};
   const roots = [];
   conversation.forEach(c => {
@@ -164,17 +175,17 @@ function renderMessages() {
       map[c.id] = c;
       if (c.parentId) {
           if (map[c.parentId]) map[c.parentId].children.push(c);
-          else roots.push(c); // Orphan fallback
+          else roots.push(c);
       } else {
           roots.push(c);
       }
   });
 
-  // Recursive render
+
   const renderList = (list, depth = 0) => {
       return list.map(msg => {
           const typeClass = msg.authorType === "staff" ? "staff" : "student";
-          // Indentation for replies
+
           const style = depth > 0 ? `margin-left: ${Math.min(depth * 30, 90)}px; border-left: 2px solid #e5e7eb; padding-left: 10px;` : '';
           
           return `
@@ -229,7 +240,7 @@ function renderInfo() {
     .join("");
 }
 
-// timeline not used in forum version
+
 function renderTimeline() {}
 
 function wireActions() {
@@ -251,7 +262,7 @@ function wireActions() {
           if (res.ok) {
               const json = await res.json();
               if (json.ok && json.comment) {
-                  conversation.push(json.comment); // Will be root 
+                  conversation.push(json.comment);
                   input.value = "";
                   renderMessages();
                   ticketData.commentsCount = (ticketData.commentsCount || 0) + 1;
@@ -304,12 +315,12 @@ function wireActions() {
   if (voteBtn) voteBtn.addEventListener("click", () => handleVote('up'));
   if (voteDownBtn) voteDownBtn.addEventListener("click", () => handleVote('down'));
 
-  // Comment actions (upvote/reply) via event delegation
+
   const messagesEl = document.getElementById("messages");
   if (messagesEl) {
     messagesEl.addEventListener("click", async (e) => {
-    //   const up = e.target.closest(".msgUpvote");
-    //   if (up) { up.classList.toggle("isActive"); return; }
+
+
       
       const rep = e.target.closest(".msgReply");
       if (rep) { 
@@ -354,7 +365,7 @@ function wireActions() {
                   if (json.ok && json.comment) {
                       conversation.push(json.comment);
                       input.value = "";
-                      box.style.display = 'none'; // hide reply box
+                      box.style.display = 'none';
                       renderMessages();
                       ticketData.commentsCount = (ticketData.commentsCount || 0) + 1;
                       renderHeader();
@@ -366,7 +377,7 @@ function wireActions() {
   }
 
 
-  // Quick actions
+
   document.getElementById("copyLinkBtn")?.addEventListener("click", () => {
     try { navigator.clipboard.writeText(window.location.href); } catch {}
   });
@@ -376,13 +387,13 @@ function wireActions() {
     btn.querySelector('.btnSecondaryText').textContent = active ? 'Following' : 'Follow';
   });
 
-  // Edit post
+
   document.getElementById("editPostBtn")?.addEventListener("click", () => {
     if (!ticketData || !ticketData.id) return;
     const overlay = document.getElementById("editModal");
     if (!overlay) return;
     
-    // Populate data
+
     document.getElementById("editTitleInput").value = ticketData.title || "";
     document.getElementById("editDescInput").value = ticketData.description || "";
     
@@ -486,7 +497,7 @@ function wireActions() {
         if (res.ok) {
             const json = await res.json();
             if (json.ok) {
-                // Refresh page or update data
+
                 window.location.reload();
             } else {
                 alert(json.error || "Failed to update post.");
@@ -509,7 +520,7 @@ function wireActions() {
     backdropBtn && backdropBtn.addEventListener("click", onCancel);
   });
 
-  // Toggle public/private
+
   const toggleBtn = document.getElementById("toggleVisibilityBtn");
   if (toggleBtn) {
     const applyLabel = (state) => {
@@ -542,7 +553,7 @@ function wireActions() {
     });
   }
 
-  // Toggle status open/answered
+
   const toggleStatusBtn = document.getElementById('toggleStatusBtn');
   if (toggleStatusBtn) {
     const applyStatusButton = (statusNow) => {
@@ -632,7 +643,7 @@ async function fetchPost(id) {
   renderDescription();
   renderAttachments();
   
-  // Fetch comments
+
   if (ticketData.id) {
       loadComments();
   }
@@ -643,7 +654,7 @@ async function fetchPost(id) {
   applyPermissions();
   wireActions();
 })();
-// end
+
 
 function openDeleteModal() {
   const overlay = document.getElementById("deleteModal");
@@ -676,7 +687,7 @@ function openDeleteModal() {
         credentials: "include",
       });
       if (!res.ok) throw new Error("delete_failed");
-      // Clear cached post and bust list cache once
+
       try { localStorage.removeItem(cacheKeyFor(ticketData.id)); } catch (e) {}
       try { localStorage.setItem("forum_cache_bust", String(Date.now())); } catch (e) {}
       window.location.href = `/${currentRole}/forum`;

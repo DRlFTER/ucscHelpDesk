@@ -1,7 +1,7 @@
 <?php
 $head = '<link rel="stylesheet" href="/css/forum/newForum.css">';
 
-// Get user role for form action
+
 $sessionUser = $_SESSION['user'] ?? null;
 $role = strtolower($sessionUser['role'] ?? 'student');
 ?>
@@ -63,6 +63,11 @@ $role = strtolower($sessionUser['role'] ?? 'student');
 					<div class="field">
 						<label class="label" for="details">Description <span style="color:#ef4444; margin-left:2px">*</span></label>
 						<textarea id="details" name="details" rows="6" placeholder="Write your question or discussion details here." required></textarea>
+					</div>
+
+					<div class="field">
+						<label class="label" for="flag">Flag</label>
+						<input id="flag" name="flag" type="text" placeholder="Identify the flag" style="width: 100%; padding: 10px 14px; border: 1px solid var(--border-color, #d1d5db); border-radius: 8px; font-size: 14px; color: var(--text-color, #374151); background-color: var(--bg-color, #ffffff); outline: none; transition: border-color 0.2s, box-shadow 0.2s;">
 					</div>
 
 					<div class="field">

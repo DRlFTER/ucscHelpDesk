@@ -1,7 +1,7 @@
 document.addEventListener('DOMContentLoaded', () => {
-  // Category (All/Lost/Found) radios
+
   const radios = Array.from(document.querySelectorAll('.filterGroup input[type="radio"][name="type"]'));
-  // Advanced filter selects (top + sidebar)
+
   const topDate = document.getElementById('lfDateTop');
   const topLoc = document.getElementById('lfLocationTop');
   const sideDate = document.getElementById('lfDateSide');
@@ -10,7 +10,7 @@ document.addEventListener('DOMContentLoaded', () => {
   const searchInput = document.querySelector('.search input');
   let searchTerm = '';
 
-  // --- Custom select enhancer (from New Ticket) ---
+
   function enhanceSelect(select){
     if (!select || select.dataset.enhanced === '1') return;
     select.dataset.enhanced = '1';
@@ -84,13 +84,13 @@ document.addEventListener('DOMContentLoaded', () => {
     wrap.appendChild(list);
   }
 
-  // Enhance all four selects if present
+
   ['lfDateTop','lfLocationTop','lfDateSide','lfLocationSide'].forEach(id => {
     const el = document.getElementById(id);
     if (el) enhanceSelect(el);
   });
 
-  // --- Filtering logic: combine category and advanced filters ---
+
   function getStateFilter(){
     return (radios.find(r => r.checked)?.value || 'all').toLowerCase();
   }
@@ -111,7 +111,7 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   function passesAdvanced(card){
-    // Search term matching (tokenized, case-insensitive)
+
     if (searchTerm) {
       const tokens = searchTerm.split(/\s+/).filter(Boolean);
       const text = card.textContent.toLowerCase();
@@ -120,12 +120,12 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     const locVal = (topLoc?.value || sideLoc?.value || 'all');
-    // Location: text match for now (demo content)
+
     if (locVal !== 'all') {
       const text = card.textContent.toLowerCase();
       if (!text.includes(String(locVal).toLowerCase())) return false;
     }
-    // Date: stub for now; add data-timestamp on cards to implement ranges
+
     return true;
   }
 
@@ -137,10 +137,10 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   }
 
-  // Category listeners
+
   radios.forEach(r => r.addEventListener('change', render));
 
-  // Select syncing and listeners
+
   function sync(from, to){ if (from && to) to.value = from.value; }
   [topDate, topLoc, sideDate, sideLoc].forEach(el => {
     if (!el) return;
@@ -153,10 +153,10 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   });
 
-  // Initial render
+
   render();
 
-  // --- Search input (debounced) ---
+
   if (searchInput) {
     let t = null;
     searchInput.addEventListener('input', (e) => {
@@ -168,45 +168,45 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   }
 
-  // Progressive enhancement: AJAX-mark as found to avoid full reload
+
   document.querySelectorAll('form[action^="/student/lostfound_markfound/"]').forEach(form => {
     form.addEventListener('submit', async (e) => {
-      // Allow normal POST if fetch fails
+
       e.preventDefault();
       const btn = form.querySelector('[data-mark-found-btn]');
       if (btn) { btn.disabled = true; btn.textContent = 'Marking…'; }
       try {
         const resp = await fetch(form.action, { method: 'POST', credentials: 'same-origin' });
         if (!resp.ok) throw new Error('Request failed');
-        // Swap button to disabled 'Item found' and update card state visually
+
         if (btn) {
           btn.textContent = 'Item claimed';
           btn.disabled = true;
           btn.style.background = '#e5e7eb';
           btn.style.color = '#374151';
           btn.style.borderColor = '#d1d5db';
-          // Update badge
+
           const card = form.closest('.lfCard');
           if (card) {
             card.classList.remove('lost');
             card.classList.add('found');
             const badge = card.querySelector('.state');
             if (badge) { badge.classList.remove('lost'); badge.classList.remove('found'); badge.classList.add('claimed'); badge.textContent = 'Claimed'; }
-            // Re-apply filters in case current view hides claimed/found
+
             render();
           }
-          // Ensure server state/order reflected – lightweight reload
+
           setTimeout(() => { try { window.location.reload(); } catch {} }, 250);
         }
       } catch (err) {
         if (btn) { btn.disabled = false; btn.textContent = 'Mark as claimed'; }
-        // fall back to default navigation on error
+
         form.submit();
       }
     });
   });
 
-  // AJAX-claim for non-owners on found items
+
   document.querySelectorAll('form[action^="/student/lostfound_claim/"]').forEach(form => {
     form.addEventListener('submit', async (e) => {
       e.preventDefault();
@@ -238,7 +238,7 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   });
 
-  // AJAX delete to avoid full page refresh; remove card from list on success
+
   document.querySelectorAll('form[action^="/student/lostfound_delete/"]').forEach(form => {
     form.addEventListener('submit', async (e) => {
       e.preventDefault();
@@ -258,7 +258,7 @@ document.addEventListener('DOMContentLoaded', () => {
             setTimeout(() => { try { window.location.reload(); } catch {} }, 120);
           }, 220);
         }
-        // Optional: lightweight toast
+
         try {
           const el = document.createElement('div');
           el.textContent = 'Deleted.';
@@ -269,7 +269,7 @@ document.addEventListener('DOMContentLoaded', () => {
         } catch {}
       } catch (err) {
         if (btn) { btn.disabled = false; btn.textContent = original || 'Delete'; }
-        // Fallback to normal navigation
+
         form.submit();
       }
     });

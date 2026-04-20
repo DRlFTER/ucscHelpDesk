@@ -1,13 +1,13 @@
 <?php
-/**
- * Forum Post Model
- */
+
+
+
 
 class ForumPost extends Model
 {
-    /**
-     * Get a forum post by ID
-     */
+    
+
+
     public function getPost($postId)
     {
         $query = "SELECT * FROM forum_q WHERE q_id = ?";
@@ -17,10 +17,10 @@ class ForumPost extends Model
         return $stmt->get_result()->fetch_assoc();
     }
 
-    /**
-     * Update a forum post (title, description)
-     * Verifies that u_id matches to enforce ownership
-     */
+    
+
+
+
     public function updatePost($postId, $userId, $title, $description)
     {
         $query = "UPDATE forum_q SET title = ?, description = ? WHERE q_id = ? AND u_id = ?";

@@ -1,5 +1,5 @@
 <?php
-	// Detect role from session for dynamic links
+	
 	$sessionUser = $_SESSION['user'] ?? null;
 	$role = strtolower($sessionUser['role'] ?? 'student');
 ?>

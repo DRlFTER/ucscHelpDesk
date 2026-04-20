@@ -2,7 +2,7 @@
 	$title = 'Forum Post';
 	$head = '<link rel="stylesheet" href="/css/forum/forumFull.css"><link rel="stylesheet">';
 	
-	// Detect role from session for dynamic links
+	
 	$sessionUser = $_SESSION['user'] ?? null;
 	$role = strtolower($sessionUser['role'] ?? 'student');
 ?>
@@ -35,6 +35,7 @@
 								<div style="display: flex; justify-content: space-between; align-items: center; width: 100%; gap: 12px;">
 									<h2 id="ticketTitle" class="ticketTitle" style="margin: 0; flex: 1;"></h2>
 									<div id="badgeContainer" style="display: flex; gap: 8px; align-items: center;">
+										<span id="ticketFlag" class="status new" style="display:none; background:#f3f4f6; color:#374151; border:1px solid #d1d5db; padding:2px 8px; border-radius:12px; font-size:12px; margin-left:8px;"></span>
 										<span id="ticketStatus" class="status"></span>
 									</div>
 								</div>
