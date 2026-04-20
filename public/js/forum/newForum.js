@@ -1,5 +1,5 @@
 (function(){
-  // Toggle between public/draft post options
+
   const typeInput = document.getElementById('ticketType');
   const toggleBtns = document.querySelectorAll('.ticketToggle .btnAttach');
   toggleBtns.forEach(btn => {
@@ -11,7 +11,7 @@
     });
   });
 
-  // File upload dropzone handling
+
   const dz = document.getElementById('dropzone');
   const fileInput = document.getElementById('fileInput');
   const fileList = document.getElementById('fileList');
@@ -61,7 +61,7 @@
     fileInput.addEventListener('change', e=> addFiles(e.target.files));
   }
 
-  // Custom select dropdown enhancement
+
   function enhanceSelect(select){
     if (!select || select.dataset.enhanced==='1') return; 
     select.dataset.enhanced='1';
@@ -117,7 +117,7 @@
     wrap.appendChild(list);
   }
 
-  // Sync main category based on subcategory selection
+
   const subcat = document.getElementById('subcategory');
   const mainCatInput = document.getElementById('mainCategory');
   if (subcat && mainCatInput) {

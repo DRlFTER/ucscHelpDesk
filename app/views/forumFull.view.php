@@ -2,7 +2,7 @@
 	$title = 'Forum Post';
 	$head = '<link rel="stylesheet" href="/css/forum/forumFull.css"><link rel="stylesheet">';
 	
-	// Detect role from session for dynamic links
+	
 	$sessionUser = $_SESSION['user'] ?? null;
 	$role = strtolower($sessionUser['role'] ?? 'student');
 ?>

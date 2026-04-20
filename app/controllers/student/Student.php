@@ -113,14 +113,14 @@ class Student extends Controller
                         'flag' => $flag,
                     ]);
 
-                    // Handle attachments
+                    
                     if ($ticketId && isset($_FILES['attachments']) && is_array($_FILES['attachments']['name'])) {
                         require_once __DIR__ . '/../../models/Attachment.php';
                         $attachmentModel = new Attachment();
                         
                         $fileCount = count($_FILES['attachments']['name']);
                         for ($i = 0; $i < $fileCount; $i++) {
-                            // Reconstruct the individual file array for handle_upload
+                            
                             $fileArr = [
                                 'name' => $_FILES['attachments']['name'][$i],
                                 'type' => $_FILES['attachments']['type'][$i],
@@ -188,8 +188,8 @@ class Student extends Controller
         ]);
     }
 
-   // Updated templates() method in controllers/student.php
-// Replace the existing templates() method with this:
+   
+
 
 public function templates()
 {
@@ -226,7 +226,7 @@ public function templates()
         if (!$u_id || !$template_id) {
             $errors[] = 'Invalid submission.';
         } else {
-            // Fetch specific template for validation and data
+            
             $template = null;
             try {
                 $template = $tplModel->getById($template_id);
@@ -242,7 +242,7 @@ public function templates()
             if (!$template || empty($template['fields'])) {
                 $errors[] = 'Invalid template selected.';
             } else {
-                // Validate required fields
+                
                 $field_values = [];
                 foreach ($template['fields'] as $field) {
                     $value = trim($_POST[$field] ?? '');
@@ -252,14 +252,14 @@ public function templates()
                     $field_values[$field] = $value;
                 }
 
-                // Handle file upload (optional)
+                
                 $file_path = null;
                 $upload_dir = __DIR__ . '/../../../uploads/tickets/';
                 if (!is_dir($upload_dir)) {
                     mkdir($upload_dir, 0777, true);
                 }
                 $allowed_types = ['pdf', 'jpg', 'jpeg', 'png', 'doc', 'docx'];
-                $max_size = 5 * 1024 * 1024; // 5MB
+                $max_size = 5 * 1024 * 1024; 
 
                 $file = $_FILES['file'] ?? null;
                 if ($file && $file['error'] === UPLOAD_ERR_OK) {
@@ -281,7 +281,7 @@ public function templates()
                     $errors[] = 'File upload error: ' . $file['error'];
                 }
                 if (empty($errors)) {
-                    // Build numbered description from fields
+                    
                     $description = '';
                     $counter = 1;
                     foreach ($field_values as $field => $value) {
@@ -290,22 +290,22 @@ public function templates()
                         $counter++;
                     }
 
-                    // Prepare ticket data
+                    
                     $data = [
                         'title' => $template['name'],
                         'u_id' => $u_id,
-                        'category' => $template['category'], // Division name for mapping
-                        'priority' => 'Medium', // Default
+                        'category' => $template['category'], 
+                        'priority' => 'Medium', 
                         'status' => 'pending',
                         'description' => $description,
-                        'meeting_requested' => null, // No request in template
+                        'meeting_requested' => null, 
                         'type' => 'template',
                     ];
 
                     try {
                         $ticket_id = $ticketModel->create($data);
 
-                        // Add file if uploaded
+                        
                         if ($file_path) {
                             $ticketModel->addFile($ticket_id, $file_path, $_FILES['file']['name']);
                         }
@@ -555,7 +555,7 @@ public function templates()
         exit;
     }
 
-    // Claim a found item by any logged-in user
+    
     public function lostfound_claim($id = null)
     {
         $this->requireLogin('student');
@@ -582,12 +582,12 @@ public function templates()
         exit;
     }
 
-    // Student announcements page
+    
     public function announcements()
     {
         $this->requireLogin('student');
 
-        // Load all announcements from student model (no dependency on staff files)
+        
         require_once __DIR__ . '/../../models/student/Announcement.php';
         $annModel = new StudentAnnouncement();
         $announcements = [];
@@ -599,7 +599,7 @@ public function templates()
         }
         $dbError = method_exists($annModel, 'getLastError') ? $annModel->getLastError() : null;
 
-        // Use globalized announcements stylesheet
+        
         $headContent = '<link rel="stylesheet" href="/css/announcements/announcements.css" />';
         $this->view('announcements', [
             'title' => 'Announcements',
@@ -610,7 +610,7 @@ public function templates()
         ]);
     }
 
-    // Student full announcement view
+    
     public function announcement($id = null)
     {
         $this->requireLogin('student');
@@ -620,7 +620,7 @@ public function templates()
             exit;
         }
 
-        // Reuse staff announcement model for single fetch and files
+        
         require_once __DIR__ . '/../../models/staff/Announcement.php';
         $model = new Announcement();
         $announcement = null;
@@ -636,7 +636,7 @@ public function templates()
         }
         try { $files = $model->getFiles($announcement_id); } catch (Throwable $e) { $files = []; }
 
-        // Use globalized announcement full stylesheet
+        
         $headContent = '<link rel="stylesheet" href="/css/announcements/announcementFull.css" />';
         $this->view('announcementsFull', [
             'title' => 'Announcement Details',
@@ -647,15 +647,15 @@ public function templates()
         ]);
     }
 
-    // Student FAQ page
+    
     public function faq()
     {
         $this->requireLogin('student');
         
-        // Fetch FAQs from database
+        
         require_once __DIR__ . '/../../models/staff/Faq.php';
         $faqModel = new StaffFaqModel();
-        // Get all FAQs (limit 100 for now)
+        
         $faqs = $faqModel->getFaqs('', 100, 0);
 
         $headContent = '<link rel="stylesheet" href="/css/student/studentFAQ.css" />';
@@ -666,7 +666,7 @@ public function templates()
         ]);
     }
 
-    // Student Knowledge Base page
+    
     public function knowledgebase()
     {
         $this->requireLogin('student');
@@ -680,7 +680,7 @@ public function templates()
             $articles = [];
         }
 
-        // Group by section
+        
         $grouped = [];
         foreach ($articles as $row) {
             $sec = $row['section'] ?? 'Other';
@@ -691,25 +691,25 @@ public function templates()
                 ];
             }
             
-            // Format date
+            
             $updated = $row['updated'] ?? '';
             if ($updated) {
                 $ts = strtotime($updated);
                 if ($ts) $updated = date('F Y', $ts);
             }
 
-            // Determine color based on type
+            
             $type = $row['type'] ?? 'Guide';
             $color = 'blue';
             if (stripos($type, 'schedule') !== false) $color = 'green';
             
-            // Get files
+            
             $files = $kbModel->getFilesByArticle($row['base_id']);
             $fileUrl = null;
             if (!empty($files)) {
-                // Use the first file
+                
                 $fileUrl = $files[0]['file_path'] ?? null;
-                // Ensure path starts with / if relative
+                
                 if ($fileUrl && $fileUrl[0] !== '/') {
                     $fileUrl = '/' . $fileUrl;
                 }
@@ -731,7 +731,7 @@ public function templates()
         ]);
     }
 
-    // Student Calendar page
+    
     public function calender()
     {
         $this->requireLogin('student');
@@ -745,7 +745,7 @@ public function templates()
         ]);
     }
 
-    // Student forum page (using global forum view)
+    
     public function forum()
     {
         $this->requireLogin('student');
@@ -766,18 +766,18 @@ public function templates()
         ]);
     }
 
-    // Create new forum post
+    
     public function newForum()
     {
         $this->requireLogin('student');
 
-        // Handle submission
+        
         if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $title = trim($_POST['title'] ?? '');
-            $topic = trim($_POST['category'] ?? ''); // hidden input synced from subcategory
+            $topic = trim($_POST['category'] ?? ''); 
             $description = trim($_POST['details'] ?? '');
             $flag = trim($_POST['flag'] ?? '');
-            $type = trim($_POST['ticketType'] ?? 'public'); // 'public' or 'draft'
+            $type = trim($_POST['ticketType'] ?? 'public'); 
 
             $errors = [];
             if ($title === '') $errors[] = 'Title is required.';
@@ -788,7 +788,7 @@ public function templates()
                 try {
                     $db = Database::getInstance();
                     $isPublic = ($type === 'public') ? 1 : 0;
-                    $status = 'open'; // only 'open' | 'answered' exist for now
+                    $status = 'open'; 
                     $uId = (int)($_SESSION['user']['u_id'] ?? 0);
 
                     $stmt = $db->prepare("INSERT INTO forum_q (is_Public, title, topic, description, flag, u_id, status, created_at) VALUES (?,?,?,?,?,?,?, NOW())");
@@ -818,7 +818,7 @@ public function templates()
         ]);
     }
 
-    // Forum posts data (JSON) sourced from forum_q
+    
     public function forumData()
     {
         $this->requireLogin('student');
@@ -840,7 +840,7 @@ public function templates()
         $sort    = isset($_GET['sort']) ? trim((string)$_GET['sort']) : 'latest';
         $type    = isset($_GET['type']) ? trim((string)$_GET['type']) : '';
 
-        // Map category slug to topic label used in DB
+        
         $topicMap = [
             'general' => 'General',
             'it-support' => 'IT Support',
@@ -852,11 +852,11 @@ public function templates()
         $topicValue = '';
         if ($category !== '') {
             $key = strtolower($category);
-            $topicValue = $topicMap[$key] ?? $category; // allow direct match
+            $topicValue = $topicMap[$key] ?? $category; 
         }
 
     $where = [];
-        // Visibility: default show public or own. If 'my', only own posts.
+        
         if (strtolower($type) === 'my') {
             $where[] = "f.u_id = $uId";
         } else {
@@ -895,7 +895,7 @@ public function templates()
         if ($page > $totalPages) { $page = $totalPages; }
         $offset = ($page - 1) * $perPage;
 
-        // Sorting
+        
         $orderSql = 'ORDER BY f.created_at DESC';
         $srt = strtolower($sort);
         if ($srt === 'oldest') {
@@ -903,7 +903,7 @@ public function templates()
         } elseif ($srt === 'votes') {
             $orderSql = 'ORDER BY (SELECT COALESCE(SUM(vote_type), 0) FROM forum_votes WHERE post_id = f.q_id) DESC, f.created_at DESC';
         }
-        // 'comments' default to created_at for now
+        
 
     $sql = "SELECT f.q_id, f.created_at, f.title, f.flag, f.topic, f.status, f.u_id, f.is_Public, u.name AS student_name,
                 (SELECT COALESCE(SUM(vote_type), 0) FROM forum_votes WHERE post_id = f.q_id) as vote_count,
@@ -959,7 +959,7 @@ public function templates()
         exit;
     }
 
-    // Toggle forum post visibility (Make Public/Private) for the owner's post
+    
     public function forumToggleVisibility()
     {
         $this->requireLogin('student');
@@ -1005,7 +1005,7 @@ public function templates()
         }
     }
 
-    // Toggle forum post status between 'open' and 'answered' (owner only)
+    
     public function forumToggleStatus()
     {
         $this->requireLogin('student');
@@ -1049,7 +1049,7 @@ public function templates()
         }
     }
 
-    // Single forum post data from forum_q
+    
     public function forumPostData()
     {
         $this->requireLogin('student');
@@ -1091,7 +1091,7 @@ public function templates()
             if ($ts !== false) $createdPretty = date('M d, Y \\a\\t g:i A', $ts);
         }
 
-        // Simple relative time description
+        
         $createdAgo = '';
         if ($createdAt) {
             $ts = strtotime($createdAt);
@@ -1106,7 +1106,7 @@ public function templates()
 
         $statusUi = strtolower((string)($row['status'] ?? 'open')) === 'answered' ? 'Answered' : 'Open';
 
-        // attachments from attachments table
+        
         $attachments = [];
         if ($res = $db->query("SELECT file_name, file_path FROM attachments WHERE entity_type = 'forum' AND entity_id = $idEsc")) {
             while ($r = $res->fetch_assoc()) {
@@ -1159,7 +1159,7 @@ public function templates()
 
         $voteVal = ($type === 'up') ? 1 : -1;
 
-        // Check if post exists & accessible
+        
         $check = $db->query("SELECT q_id FROM forum_q WHERE q_id = $id AND (is_Public = 1 OR u_id = $uId)");
         if (!$check || $check->num_rows === 0) {
             http_response_code(404);
@@ -1167,7 +1167,7 @@ public function templates()
             return;
         }
 
-        // Check existing vote
+        
         $existing = 0;
         $checkVote = $db->query("SELECT vote_type FROM forum_votes WHERE post_id = $id AND u_id = $uId");
         if ($checkVote && $row = $checkVote->fetch_assoc()) {
@@ -1175,11 +1175,11 @@ public function templates()
         }
 
         if ($existing === $voteVal) {
-            // Toggle off (remove vote)
+            
             $db->query("DELETE FROM forum_votes WHERE post_id = $id AND u_id = $uId");
             $newVote = 0;
         } else {
-            // Insert or Update
+            
             $stmt = $db->prepare("INSERT INTO forum_votes (post_id, u_id, vote_type) VALUES (?, ?, ?) ON DUPLICATE KEY UPDATE vote_type = ?");
             if ($stmt) {
                 $stmt->bind_param("iiii", $id, $uId, $voteVal, $voteVal);
@@ -1188,7 +1188,7 @@ public function templates()
             $newVote = $voteVal;
         }
 
-        // Get new total
+        
         $totalRes = $db->query("SELECT COALESCE(SUM(vote_type), 0) as cnt FROM forum_votes WHERE post_id = $id");
         $total = 0;
         if ($totalRes && $r = $totalRes->fetch_assoc()) {
@@ -1211,7 +1211,7 @@ public function templates()
             return;
         }
 
-        // Check view permission
+        
         $check = $db->query("SELECT q_id FROM forum_q WHERE q_id = $id AND (is_Public = 1 OR u_id = $uId)");
         if (!$check || $check->num_rows === 0) {
             echo json_encode([]);
@@ -1227,7 +1227,7 @@ public function templates()
         $comments = [];
         if ($res = $db->query($sql)) {
             while ($row = $res->fetch_assoc()) {
-                // Formatting time
+                
                 $ts = strtotime($row['created_at']);
                 $time = ($ts) ? date('M d, g:i A', $ts) : '';
                 
@@ -1238,7 +1238,7 @@ public function templates()
                     'time' => $time,
                     'name' => $row['author_name'] ?? 'Unknown',
                     'role' => $row['author_role'] ?? '',
-                    'authorType' => $row['author_role'] ?? 'student', // simplified
+                    'authorType' => $row['author_role'] ?? 'student', 
                     'authorId' => (int)$row['author_id']
                 ];
             }
@@ -1269,7 +1269,7 @@ public function templates()
             return;
         }
 
-        // Check permissions
+        
         $check = $db->query("SELECT q_id FROM forum_q WHERE q_id = $id AND (is_Public = 1 OR u_id = $uId)");
         if (!$check || $check->num_rows === 0) {
             http_response_code(403);
@@ -1282,7 +1282,7 @@ public function templates()
             $stmt->bind_param("iiis", $id, $uId, $parentId, $text);
             if ($stmt->execute()) {
                 $newId = $stmt->insert_id;
-                // Fetch back to return UI friendly data
+                
                 $res = $db->query("SELECT c.created_at, u.name as author_name, u.role FROM forum_comments c LEFT JOIN users u ON u.u_id = c.u_id WHERE c.id = $newId");
                 $r = $res ? $res->fetch_assoc() : null;
                 $time = $r ? date('M d, g:i A', strtotime($r['created_at'])) : 'Just now';
@@ -1309,7 +1309,7 @@ public function templates()
         }
     }
 
-    // Delete a forum post owned by the current student
+    
     
     public function forumUpdate()
     {
@@ -1418,7 +1418,7 @@ public function templates()
 
         $db = Database::getInstance();
         $idEsc = (int)$id;
-        // Ensure ownership
+        
         $ownRow = null;
         if ($res = $db->query("SELECT q_id FROM forum_q WHERE q_id = $idEsc AND u_id = $uId")) {
             $ownRow = $res->fetch_assoc();
@@ -1430,7 +1430,7 @@ public function templates()
             return;
         }
 
-        // Delete post; replies are ON DELETE CASCADE (see schema)
+        
         $ok = $db->query("DELETE FROM forum_q WHERE q_id = $idEsc AND u_id = $uId");
         if (!$ok) {
             http_response_code(500);
@@ -1443,7 +1443,7 @@ public function templates()
 
 
 
-    // Student tickets list (using global tickets view)
+    
     public function tickets()
     {
         $this->requireLogin('student');
@@ -1455,10 +1455,10 @@ public function templates()
         ]);
     }
 
-    /**
-     * Return current student's tickets as JSON for the Tickets page.
-     * Mirrors admin shape but scoped to logged-in student.
-     */
+    
+
+
+
     public function ticketsData()
     {
         $this->requireLogin('student');
@@ -1481,12 +1481,12 @@ public function templates()
         $priority= isset($_GET['priority']) ? trim((string)$_GET['priority']) : '';
 
         $where = [];
-        // Scope to current user OR public tickets
+        
         $where[] = "(t.u_id = $uId OR t.t_type = 'public')";
 
         if ($search !== '') {
             $s = $db->real_escape_string($search);
-            $where[] = "(t.title LIKE '%$s%')"; // student can search by title only
+            $where[] = "(t.title LIKE '%$s%')"; 
         }
         if ($category !== '') {
             $c = $db->real_escape_string($category);
@@ -1593,7 +1593,7 @@ public function templates()
         exit;
     }
 
-    // Render full ticket view for a single student ticket
+    
     public function ticketFull()
     {
         $this->requireLogin('student');
@@ -1605,7 +1605,7 @@ public function templates()
         ]);
     }
 
-    // Return JSON data for a single ticket owned by the current student
+    
     public function ticketData()
     {
         $this->requireLogin('student');
@@ -1647,7 +1647,7 @@ public function templates()
             ? 'Under Review'
             : (in_array($statusRaw, ['resolved','closed','agent-closed']) ? 'Resolved' : ucfirst($statusRaw));
 
-        // attachments from attachments table
+        
         $attachments = [];
         if ($res = $db->query("SELECT file_name, file_path FROM attachments WHERE entity_type = 'ticket' AND entity_id = $idEsc")) {
             while ($r = $res->fetch_assoc()) {
@@ -1666,9 +1666,9 @@ public function templates()
             if ($ts !== false) $createdPretty = date('M d, Y \\a\\t g:i A', $ts);
         }
 
-        // --- Timeline Logic ---
+        
         $timeline = [];
-        // 1. Created
+        
         $timeline[] = [
             'label' => 'Ticket created',
             'time' => $createdPretty ?: '—',
@@ -1676,7 +1676,7 @@ public function templates()
             'pending' => false
         ];
 
-        // 2. Assigned to staff
+        
         $staffName = $ticket['staff_name'] ?? null;
         $position = $ticket['position'] ?? null;
         $level = $ticket['level'] ?? null;
@@ -1694,12 +1694,12 @@ public function templates()
                 if ($position) $assignLabel .= " ({$position})";
                 if ($level) $assignLabel .= " [Level {$level}]";
             }
-            // Use assigned_at timestamp from ticket_timeline if available
+            
             if ($assignedAt && $assignedAt !== '0000-00-00 00:00:00') {
                 $ts = strtotime($assignedAt);
                 $assignTime = ($ts !== false) ? date('M d, Y \a\t g:i A', $ts) : 'Assigned';
             } else {
-                $assignTime = 'Assigned'; // Fallback if no timestamp
+                $assignTime = 'Assigned'; 
             }
             $assignColor = 'blue';
             $assignPending = false;
@@ -1712,25 +1712,25 @@ public function templates()
             'pending' => $assignPending
         ];
 
-        // 3. Under Review
+        
         $underReviewAt = $ticket['under_review_at'] ?? null;
         $reviewLabel = 'Under review';
         $reviewTime = 'Pending';
         $reviewColor = 'gray';
         $reviewPending = true;
 
-        // Check if under_review timestamp exists in ticket_timeline
+        
         if ($underReviewAt && $underReviewAt !== '0000-00-00 00:00:00') {
             $ts = strtotime($underReviewAt);
             $reviewTime = ($ts !== false) ? date('M d, Y \a\t g:i A', $ts) : 'In Progress';
             $reviewColor = 'yellow';
             $reviewPending = false;
-            // If resolved, mark review as completed
+            
             if (in_array($statusRaw, ['resolved', 'closed', 'agent-closed'])) {
                 $reviewColor = 'green';
             }
         } elseif (in_array($statusRaw, ['agent assigned', 'resolved', 'closed', 'agent-closed'])) {
-            // Fallback: if status indicates review but no timestamp
+            
             $reviewTime = 'In Progress';
             $reviewColor = 'yellow';
             $reviewPending = false;
@@ -1746,21 +1746,21 @@ public function templates()
             'pending' => $reviewPending
         ];
 
-        // 4. Resolved
+        
         $resolvedAt = $ticket['resolved_at'] ?? null;
         $resolveLabel = 'Resolved';
         $resolveTime = 'Pending';
         $resolveColor = 'gray';
         $resolvePending = true;
 
-        // Check if resolved timestamp exists in ticket_timeline
+        
         if ($resolvedAt && $resolvedAt !== '0000-00-00 00:00:00') {
             $ts = strtotime($resolvedAt);
             $resolveTime = ($ts !== false) ? date('M d, Y \a\t g:i A', $ts) : 'Completed';
             $resolveColor = 'green';
             $resolvePending = false;
         } elseif (in_array($statusRaw, ['resolved', 'closed', 'agent-closed'])) {
-            // Fallback: if status is resolved but no timestamp
+            
             $resolveTime = 'Completed';
             $resolveColor = 'green';
             $resolvePending = false;
@@ -1771,9 +1771,9 @@ public function templates()
             'color' => $resolveColor,
             'pending' => $resolvePending
         ];
-        // ----------------------
+        
 
-        // Fetch staff responses for conversation
+        
         $messages = [];
         if ($res = $db->query("SELECT tr.response, tr.date_time, u.name AS staff_name, (
                 SELECT d.name FROM staff_division sd
@@ -1894,7 +1894,7 @@ public function templates()
         }
     }
 
-    // Delete a ticket owned by the current student
+    
     public function ticketDelete()
     {
         $this->requireLogin('student');
@@ -1915,7 +1915,7 @@ public function templates()
         }
 
         $db = Database::getInstance();
-        // Ensure ownership
+        
         $idEsc = (int)$id;
         $ownRow = null;
         if ($res = $db->query("SELECT ticket_id FROM tickets WHERE ticket_id = $idEsc AND u_id = $studentId")) {
@@ -1928,14 +1928,14 @@ public function templates()
             return;
         }
 
-        // Optionally delete attachments first if FK constraints exist
+        
         $db->query("DELETE FROM attachments WHERE entity_type = 'ticket' AND entity_id = $idEsc");
         $db->query("DELETE FROM tickets WHERE ticket_id = $idEsc AND u_id = $studentId");
 
         echo json_encode(['success' => true]);
     }
 
-    // Mark a ticket owned by the current student as resolved
+    
     public function ticketResolve()
     {
         $this->requireLogin('student');
@@ -1957,7 +1957,7 @@ public function templates()
 
         $db = Database::getInstance();
         $idEsc = (int)$id;
-        // Ensure ownership
+        
         $ownRow = null;
         if ($res = $db->query("SELECT ticket_id FROM tickets WHERE ticket_id = $idEsc AND u_id = $studentId")) {
             $ownRow = $res->fetch_assoc();
@@ -1969,7 +1969,7 @@ public function templates()
             return;
         }
 
-        // Update status to resolved
+        
         $ok = $db->query("UPDATE tickets SET status = 'resolved' WHERE ticket_id = $idEsc AND u_id = $studentId");
         if (!$ok) {
             http_response_code(500);
@@ -1977,10 +1977,10 @@ public function templates()
             return;
         }
 
-        // Update ticket_timeline resolved timestamp
+        
         $db->query("UPDATE ticket_timeline SET resolved = CURRENT_TIMESTAMP WHERE ticket_id = $idEsc");
 
-        // Trigger notification for status change
+        
         require_once __DIR__ . '/../../lib/NotificationHelper.php';
         NotificationHelper::notifyTicketStatusChange($idEsc, 'resolved', $studentId);
 
@@ -2027,7 +2027,7 @@ public function templates()
         require_once __DIR__ . '/../../models/TicketChat.php';
         $chatModel = new TicketChat();
         
-        // Verify ticket ownership
+        
         $db = Database::getInstance();
         $studentId = (int)($_SESSION['user']['u_id'] ?? 0);
         $checkSql = "SELECT u_id FROM tickets WHERE ticket_id = $ticketId AND u_id = $studentId";
@@ -2042,7 +2042,7 @@ public function templates()
         
         if ($chat) {
             $messages = $chatModel->getMessages($chat['chat_id']);
-            // Mark messages as read
+            
             $chatModel->markMessagesAsRead($chat['chat_id'], $studentId);
         }
 
@@ -2071,7 +2071,7 @@ public function templates()
         require_once __DIR__ . '/../../models/TicketChat.php';
         $chatModel = new TicketChat();
         
-        // Verify ticket ownership and get assigned staff
+        
         $db = Database::getInstance();
         $studentId = (int)($_SESSION['user']['u_id'] ?? 0);
         $checkSql = "SELECT u_id, assigned_to FROM tickets WHERE ticket_id = $ticketId AND u_id = $studentId";
@@ -2099,7 +2099,7 @@ public function templates()
         if ($chatId) {
             $success = $chatModel->sendMessage($chatId, $studentId, $message);
             if ($success) {
-                // Trigger notification for the other party
+                
                 require_once __DIR__ . '/../../lib/NotificationHelper.php';
                 NotificationHelper::notifyTicketMessage($ticketId, $studentId, $_SESSION['user']['name'] ?? 'Student');
                 echo json_encode(['success' => true]);

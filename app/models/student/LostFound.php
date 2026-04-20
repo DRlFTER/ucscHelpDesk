@@ -2,11 +2,11 @@
 
 class StudentLostFound extends Model
 {
-    /**
-     * Create a new Lost & Found record.
-     * Expected keys in $data: u_id, item_title, category, when, item_details, status, contact_mobile, contact_email
-     * Returns inserted q_id
-     */
+    
+
+
+
+
     public function create(array $data): int
     {
     $sql = "INSERT INTO lost_found (u_id, item_title, category, `when`, item_details, flag, created_at, status, contact_mobile, contact_email)
@@ -20,7 +20,7 @@ class StudentLostFound extends Model
         $u_id = (int)($data['u_id'] ?? 0);
         $item_title = (string)($data['item_title'] ?? '');
         $category = (string)($data['category'] ?? null);
-        $when = (string)($data['when'] ?? null); // expected format YYYY-MM-DD
+        $when = (string)($data['when'] ?? null); 
         $item_details = (string)($data['item_details'] ?? '');
         $flag = (string)($data['flag'] ?? '');
         $status = (string)($data['status'] ?? 'lost');
@@ -51,10 +51,10 @@ class StudentLostFound extends Model
         return $id;
     }
 
-    /**
-     * Get records by status (e.g., 'lost', 'found', 'claimed').
-     * Returns an array of associative rows.
-     */
+    
+
+
+
     public function getByStatus(string $status, int $limit = 20): array
     {
     $sql = "SELECT q_id, u_id, item_title, category, `when`, item_details, flag, status, contact_mobile, contact_email, created_at
@@ -81,10 +81,10 @@ class StudentLostFound extends Model
         return $rows;
     }
 
-    /**
-     * Delete a Lost & Found record owned by the given user.
-     * Returns true if a row was deleted.
-     */
+    
+
+
+
     public function deleteByIdForUser(int $q_id, int $u_id): bool
     {
         $sql = "DELETE FROM lost_found WHERE q_id = ? AND u_id = ? LIMIT 1";
@@ -103,10 +103,10 @@ class StudentLostFound extends Model
         return $affected > 0;
     }
 
-    /**
-     * Mark a Lost & Found record as 'found' for the owning user.
-     * Returns true if a row was updated.
-     */
+    
+
+
+
     public function markFoundByIdForUser(int $q_id, int $u_id): bool
     {
         $sql = "UPDATE lost_found SET status = 'claimed' WHERE q_id = ? AND u_id = ? AND status <> 'claimed' LIMIT 1";
@@ -125,9 +125,9 @@ class StudentLostFound extends Model
         return $affected > 0;
     }
 
-    /**
-     * Mark a Lost & Found record as 'claimed' by q_id without ownership restriction.
-     */
+    
+
+
     public function markClaimedById(int $q_id): bool
     {
         $sql = "UPDATE lost_found SET status = 'claimed' WHERE q_id = ? AND status <> 'claimed' LIMIT 1";

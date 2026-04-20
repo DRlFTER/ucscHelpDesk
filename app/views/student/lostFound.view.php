@@ -58,13 +58,13 @@ function time_ago_label($datetime)
           <?php foreach ($items as $it): ?>
             <?php $statusLower = strtolower($it['status'] ?? ''); $isResolved = ($statusLower === 'found' || $statusLower === 'claimed'); ?>
             <?php
-              // Map Lost & Found status to existing global .status colors
+              
               if ($statusLower === 'claimed') {
-                  $statusClass = 'underReview'; // Yellowish tag
+                  $statusClass = 'underReview'; 
               } elseif ($statusLower === 'found') {
-                  $statusClass = 'resolved'; // Green tag
+                  $statusClass = 'resolved'; 
               } else {
-                  $statusClass = 'rejected'; // Red tag
+                  $statusClass = 'rejected'; 
               }
               $statusLabel = $isResolved ? ($statusLower === 'claimed' ? 'Claimed' : 'Found') : 'Lost';
 

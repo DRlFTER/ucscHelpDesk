@@ -1,7 +1,7 @@
 <?php
 $head = '<link rel="stylesheet" href="/css/forum/newForum.css">';
 
-// Get user role for form action
+
 $sessionUser = $_SESSION['user'] ?? null;
 $role = strtolower($sessionUser['role'] ?? 'student');
 ?>
