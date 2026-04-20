@@ -16,8 +16,8 @@ class StudentTicket
     public function create(array $data): int
     {
         $conn = self::getConnection();
-    $sql = "INSERT INTO tickets (created_at, title, flag, u_id, status, priority, description, meeting_requested, division, t_type)
-        VALUES (NOW(), ?, ?, ?, ?, ?, ?, ?, ?, ?)";
+    $sql = "INSERT INTO tickets (created_at, title, flag, u_id, status, priority, description, meeting_requested, division, t_type, expiration_date)
+        VALUES (NOW(), ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
 
         $stmt = $conn->prepare($sql);
         if (!$stmt) {
@@ -26,6 +26,7 @@ class StudentTicket
 
         $title = $data['title'];
         $flag = $data['flag'] ?? null;
+        $expiration_date = $data['expiration_date'] ?? null;
         $u_id = (int)$data['u_id'];
         // Category string from UI (used only for mapping to division)
         $category = trim($data['category']);
@@ -68,7 +69,7 @@ class StudentTicket
             }
         }
 
-    $stmt->bind_param('ssissssis', $title, $flag, $u_id, $status, $priority, $description, $meetingRequested, $divisionId, $t_type);
+    $stmt->bind_param('ssissssiss', $title, $flag, $u_id, $status, $priority, $description, $meetingRequested, $divisionId, $t_type, $expiration_date);
         if (!$stmt->execute()) {
             throw new Exception('Execute failed: ' . $stmt->error);
         }
@@ -112,7 +113,7 @@ class StudentTicket
     public function getByIdForUser(int $ticket_id, int $u_id): ?array
     {
         $conn = self::getConnection();
-    $sql = "SELECT t.ticket_id, t.created_at, t.title, d.name AS category, t.status, t.priority, t.description, t.meeting_requested, t.t_type
+    $sql = "SELECT t.ticket_id, t.created_at, t.title, d.name AS category, t.status, t.priority, t.description, t.meeting_requested, t.t_type, t.flag, t.expiration_date
         FROM tickets t
         LEFT JOIN division d ON d.did = t.division
         WHERE t.ticket_id = ? AND (t.u_id = ? OR t.t_type = 'public')

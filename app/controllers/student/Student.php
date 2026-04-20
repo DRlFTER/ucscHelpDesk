@@ -100,6 +100,7 @@ class Student extends Controller
                     require_once __DIR__ . '/../../models/student/Ticket.php';
                     $ticketModel = new StudentTicket();
                     $meetingRequested = isset($_POST['meeting_requested']) && $_POST['meeting_requested'] ? 'Requested' : null;
+                    $expiration_date = trim($_POST['expiration_date'] ?? null);
                     $flag = trim($_POST['flag'] ?? '');
                     $ticketId = $ticketModel->create([
                         'title' => $title,
@@ -111,6 +112,7 @@ class Student extends Controller
                         'meeting_requested' => $meetingRequested,
                         'type' => $t_type,
                         'flag' => $flag,
+                        'expiration_date' => $expiration_date,
                     ]);
 
                     
@@ -1524,7 +1526,7 @@ public function templates()
         if ($page > $totalPages) { $page = $totalPages; }
         $offset = ($page - 1) * $perPage;
 
-    $sql = "SELECT t.ticket_id, t.created_at, t.title, t.flag, d.name AS division_name, t.status, t.priority, t.meeting_requested, t.t_type, u.name AS student_name, u.u_id AS student_id
+    $sql = "SELECT t.ticket_id, t.created_at, t.title, t.flag, d.name AS division_name, t.status, t.priority, t.meeting_requested, t.t_type, u.name AS student_name, u.u_id AS student_id, expiration_date
         FROM tickets t
         LEFT JOIN division d ON d.did = t.division
         LEFT JOIN users u ON u.u_id = t.u_id
@@ -1578,6 +1580,7 @@ public function templates()
                 'meeting' => $mapMeeting($r['meeting_requested'] ?? ''),
                 'priority' => strtolower((string)($r['priority'] ?? '')),
                 'visibility' => (string)($r['t_type'] ?? 'private'),
+                'expiration_date' => $mapDate($r['expiration_date'] ?? null),
             ];
         }
 
@@ -1621,7 +1624,7 @@ public function templates()
 
         $idEsc = (int)$id;
     $sql = "SELECT t.ticket_id, t.created_at, t.title, t.flag, d.name AS division_name, t.status, t.priority, t.description, t.u_id, u.name AS student_name,
-               sa.name AS staff_name, sh.position, sh.level, tl.assigned AS assigned_at, tl.under_review AS under_review_at, tl.resolved AS resolved_at
+               sa.name AS staff_name, sh.position, sh.level, tl.assigned AS assigned_at, tl.under_review AS under_review_at, tl.resolved AS resolved_at, t.expiration_date
         FROM tickets t
         LEFT JOIN users u ON u.u_id = t.u_id
         LEFT JOIN division d ON d.did = t.division

@@ -354,6 +354,11 @@
           flagHtml = `<div class="status" style="background:#e0e7ff; color:#0369a1; border:1px solid #bae6fd;">Flag: ${esc(t.flag)}</div>`;
         }
 
+        let expirationBadge = '';
+        if  (t.expiration_date) {
+          expirationBadge = `<div class="status" style="background:#fef2f2; color:#dc2626; border:1px solid #fca5a5;">Expires: ${esc(t.expiration_date)}</div>`;
+        }
+
         const inner = `
         <div class="ticketRow1">
           <div class="ticketName">
@@ -368,6 +373,7 @@
             ${flagHtml}
             ${visibilityHtml}
             ${overdueBadge}
+            ${expirationBadge}
             <div class="status ${status.cls}">${esc(status.label)}</div>
           </div>
         </div>

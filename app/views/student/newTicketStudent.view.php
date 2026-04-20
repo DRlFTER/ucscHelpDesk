@@ -91,6 +91,11 @@ include_once(__DIR__ . "/../../views/common/navbar.php");
 					</div>
 
 					<div class="field">
+						<label class="label" for="expirationDate">Set Expiration Date</label>
+						<input id="expirationDate" name="expiration_date" type="date" style="width: 100%; padding: 10px 14px; border: 1px solid var(--border-color, #d1d5db); border-radius: 6px; font-size: 14px; font-family: inherit; color: #374151; box-sizing: border-box;">
+					</div>
+
+					<div class="field">
 						<label class="label">Attachments</label>
 						<div id="dropzone" class="dropzone">
 							<div class="dzInner">
